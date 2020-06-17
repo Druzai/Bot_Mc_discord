@@ -110,27 +110,6 @@ async def restart(ctx):
         IsServerOn = False
         await stop_server(ctx, "launch_r.bat")
         await start_server(ctx)
-        '''
-        print("Stopping server")
-        await ctx.send("```Stopping server.......\nWait please about 15 seconds```")
-        os.chdir("D:\Minecraft_server\mcrcon")
-        os.startfile("launch_r.bat")
-        await asyncio.sleep(15)
-        IsServerOn = False
-        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Server"))
-        IsStopping = False
-        IsLoading = True
-        print("Loading server")
-        await ctx.send("```Loading server.......\nWait please about 40 seconds)```")
-        os.chdir("D:\Minecraft_server\server_mods")
-        os.startfile("Start_bot.bat")
-        await asyncio.sleep(40)
-        print("Server's on now")
-        await ctx.send("```Server's on now```")
-        IsLoading = False
-        IsServerOn = True
-        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name="Minecraft Server"))
-        '''
     else:
         await send_status(ctx)
 
@@ -174,7 +153,7 @@ async def help(ctx):
 
 @bot.command(pass_context=True)
 @commands.has_permissions(administrator=True)
-async def clear(ctx, count):
+async def clear(ctx, count=1):
     await ctx.channel.purge(limit=int(count) + 1)
 
 
