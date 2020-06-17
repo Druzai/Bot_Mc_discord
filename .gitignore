@@ -1,1 +1,4 @@
 token.txt
+build
+__pycache__
+Discord_bot.spec
