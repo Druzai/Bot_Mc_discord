@@ -1,6 +1,6 @@
 from os import startfile, chdir
 from re import findall
-from random import randint, choice
+from random import getrandbits, choice
 import discord
 import asyncio
 from datetime import datetime
@@ -172,14 +172,14 @@ async def restart(ctx):
 @bot.command(pass_context=True)
 async def say(ctx):
     """Петросян"""
-    if randint(2):
+    if bool(getrandbits(1)):
         _300_answers = [
             'Ну, держи!',
             'Ah, shit, here we go again.',
             'Ты сам напросился...'
         ]
         await ctx.send(choice(_300_answers))
-        if randint(2):
+        if bool(getrandbits(1)):
             _300_quotes = [
                 'Я назову собаку именем твоим...',
                 '( ͡° ͜ʖ ͡°)',
