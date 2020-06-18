@@ -23,7 +23,7 @@ async def send_status(ctx):
         elif IsStopping:
             await ctx.send("```Server is stopping!```")
         else:
-            ctx.send("```Server've already been stopped!```")
+            await ctx.send("```Server've already been stopped!```")
 
 
 async def start_server(ctx):
@@ -61,7 +61,8 @@ async def stop_server(ctx, file_name="launch.bat"):
 async def on_ready():
     print('Logged in as')
     print(bot.user.name)
-    print(bot.user.id)
+    #print(bot.user.id)
+    print("Discord version ", discord.__version__)
     print('------')
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Server"))
     print("Bot is ready!")
@@ -140,7 +141,7 @@ async def say(ctx):
 @bot.command(pass_context=True)
 async def help(ctx):
     await ctx.channel.purge(limit=1)
-    emb = discord.Embed(title='Список всех команд',
+    emb = discord.Embed(title='Список всех команд (через %)',
                         color=discord.Color.green())
     emb.add_field(name='get_status', value='Возвращает статус сервера')
     emb.add_field(name='start', value='Запускает сервер')
@@ -168,6 +169,15 @@ async def send_error(ctx, error):
     if isinstance(error, commands.MissingRole):
         print(f'У {ctx.author} нет роли для команды')
         await ctx.send(f'{ctx.author}, у вас нет роли для выполнения этой команды')
+    if isinstance(error, commands.CommandNotFound):
+        print(f'{ctx.author} ввёл несуществующую команду')
+        await ctx.send(f'{ctx.author}, вы ввели несуществующую команду')
+    if isinstance(error, commands.UserInputError):
+        print(f'{ctx.author} неправильно ввёл команду')
+        await ctx.send(f'{ctx.author}, вы неправильно ввели команду')
+    if isinstance(error, commands.DisabledCommand):
+        print(f'{ctx.author} ввёл отключённую команду')
+        await ctx.send(f'{ctx.author}, вы ввели отлючённую команду')
 
 
 @get_status.error
@@ -192,6 +202,11 @@ async def stop_error(ctx, error):
 
 @clear.error
 async def clear_error(ctx, error):
+    await send_error(ctx, error)
+
+
+@bot.event
+async def on_command_error(ctx, error):
     await send_error(ctx, error)
 
 
