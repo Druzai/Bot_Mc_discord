@@ -1,13 +1,16 @@
-import os
+from os import startfile, chdir
+from re import findall
 from random import randint, choice
 import discord
 import asyncio
+from datetime import datetime
 from discord.ext import commands
 
 token = open('token.txt', 'r').readline()
 IsServerOn = False
 IsLoading = False
 IsStopping = False
+LastUpdateTime = datetime.now()
 bot = commands.Bot(command_prefix='%', description="Server bot")
 bot.remove_command('help')
 
@@ -31,9 +34,8 @@ async def start_server(ctx):
     IsLoading = True
     print("Loading server")
     await ctx.send("```Loading server.......\nWait please about 40 seconds)```")
-    # os.system("D:\Minecraft_server\server_mods\Test.bat")
-    os.chdir("D:\Minecraft_server\server_mods")
-    os.startfile("Start_bot.bat")
+    chdir("D:\Minecraft_server\server_mods")
+    startfile("Start_bot.bat")
     await asyncio.sleep(40)
     print("Server's on now")
     await ctx.send("```Server's on now```")
@@ -47,8 +49,8 @@ async def stop_server(ctx, file_name="launch.bat"):
     IsStopping = True
     print("Stopping server")
     await ctx.send("```Stopping server.......\nWait please about 15 seconds```")
-    os.chdir("D:\Minecraft_server\mcrcon")
-    os.startfile(file_name)
+    chdir("D:\Minecraft_server\mcrcon")
+    startfile(file_name)
     await asyncio.sleep(15)
     IsStopping = False
     IsServerOn = False
@@ -57,14 +59,48 @@ async def stop_server(ctx, file_name="launch.bat"):
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Server"))
 
 
+async def write_list(ctx, need_to_write=True):
+    global IsServerOn
+    count = 0
+    with open("D:\Minecraft_server\mcrcon\list.txt", 'r') as f:
+        str_f = f.readline()
+        if str_f:
+            count = int(findall(r"\d+[/]\d+", str_f)[0].split("/")[0])
+            players = str_f.strip().split(":")[1].split(", ")
+    if len(str_f) > 0:
+        if need_to_write:
+            if count == 0:
+                await ctx.send("```Игроков на сервере нет```")
+            else:
+                message = "```Игроков на сервере - " + str(count) + "\nИгроки: " + players[0]
+                for i in range(1, len(players)):
+                    message += "\n" + " " * 8 + players[i] if i and i % 3 == 0 else ", " + players[i]
+                message += "```"
+                await ctx.send(message)
+        else:
+            IsServerOn = True
+    else:
+        if need_to_write:
+            await ctx.send(f"{ctx.author.mention}, сервер сейчас выключен")
+        else:
+            IsServerOn = False
+
+
 @bot.event
 async def on_ready():
+    global IsServerOn, LastUpdateTime
     print('Logged in as')
     print(bot.user.name)
-    #print(bot.user.id)
     print("Discord version ", discord.__version__)
     print('------')
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Server"))
+    chdir("D:\Minecraft_server\mcrcon")
+    startfile("launch_list.bat")
+    await write_list(bot, False)
+    LastUpdateTime = datetime.now()
+    if IsServerOn:
+        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name="Minecraft Server"))
+    else:
+        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Server"))
     print("Bot is ready!")
 
 
@@ -77,6 +113,24 @@ async def get_status(ctx):
         await ctx.send("```Server online```")
     else:
         await ctx.send("```Server offline```")
+
+
+@bot.command(pass_context=True)
+@commands.has_role('Майнкрафтер')
+async def get_list(ctx, command="not"):
+    global LastUpdateTime
+    if command == "--update" or command == "-u":
+        if (datetime.now() - LastUpdateTime).seconds > 5:
+            chdir("D:\Minecraft_server\mcrcon")
+            startfile("launch_list.bat")
+            await write_list(ctx)
+            LastUpdateTime = datetime.now()
+        else:
+            await ctx.send(f"{ctx.author.mention}, обновлять список игроков можно раз в 5 секунд, подождите")
+    elif command == "not":
+        await write_list(ctx)
+    else:
+        await send_error(ctx, error=commands.UserInputError)
 
 
 @bot.command(pass_context=True)
@@ -142,8 +196,10 @@ async def say(ctx):
 async def help(ctx):
     await ctx.channel.purge(limit=1)
     emb = discord.Embed(title='Список всех команд (через %)',
-                        color=discord.Color.green())
+                        color=discord.Color.gold())
     emb.add_field(name='get_status', value='Возвращает статус сервера')
+    emb.add_field(name='get_list [--update, -u]',
+                  value='Возвращает список игроков (с параметром обновлённый список)')
     emb.add_field(name='start', value='Запускает сервер')
     emb.add_field(name='stop', value='Останавливает сервер')
     emb.add_field(name='restart', value='Перезапускает сервер')
@@ -160,49 +216,25 @@ async def clear(ctx, count=1):
 
 # ERRORS
 async def send_error(ctx, error):
+    author = ctx.author.mention
     if isinstance(error, commands.MissingRequiredArgument):
         print(f'{ctx.author} не указал аргумент')
-        await ctx.send(f'{ctx.author}, пожалуйста, введи все аргументы ')
+        await ctx.send(f'{author}, пожалуйста, введи все аргументы ')
     if isinstance(error, commands.MissingPermissions):
         print(f'У {ctx.author} мало прав для команды')
-        await ctx.send(f'{ctx.author}, у вас недостаточно прав для выполнения этой команды')
+        await ctx.send(f'{author}, у вас недостаточно прав для выполнения этой команды')
     if isinstance(error, commands.MissingRole):
         print(f'У {ctx.author} нет роли для команды')
-        await ctx.send(f'{ctx.author}, у вас нет роли для выполнения этой команды')
+        await ctx.send(f'{author}, у вас нет роли для выполнения этой команды')
     if isinstance(error, commands.CommandNotFound):
         print(f'{ctx.author} ввёл несуществующую команду')
-        await ctx.send(f'{ctx.author}, вы ввели несуществующую команду')
+        await ctx.send(f'{author}, вы ввели несуществующую команду')
     if isinstance(error, commands.UserInputError):
-        print(f'{ctx.author} неправильно ввёл команду')
-        await ctx.send(f'{ctx.author}, вы неправильно ввели команду')
+        print(f'{ctx.author} неправильно ввёл команду или её аргументы')
+        await ctx.send(f'{author}, вы неправильно ввели команду или её агрументы')
     if isinstance(error, commands.DisabledCommand):
         print(f'{ctx.author} ввёл отключённую команду')
-        await ctx.send(f'{ctx.author}, вы ввели отлючённую команду')
-
-
-@get_status.error
-async def get_status_error(ctx, error):
-    await send_error(ctx, error)
-
-
-@start.error
-async def start_error(ctx, error):
-    await send_error(ctx, error)
-
-
-@restart.error
-async def restart_error(ctx, error):
-    await send_error(ctx, error)
-
-
-@stop.error
-async def stop_error(ctx, error):
-    await send_error(ctx, error)
-
-
-@clear.error
-async def clear_error(ctx, error):
-    await send_error(ctx, error)
+        await ctx.send(f'{author}, вы ввели отлючённую команду')
 
 
 @bot.event
