@@ -1,12 +1,16 @@
 from os import startfile, chdir
 from re import findall
-from random import getrandbits, choice
+from random import choice, randint
 import discord
+import vk_api
 import asyncio
 from datetime import datetime
 from discord.ext import commands
 
 token = open('token.txt', 'r').readline()
+with open('vk_l_p.txt', 'r') as f:
+    log_vk = f.readline()
+    pass_vk = f.readline()
 IsServerOn = False
 IsLoading = False
 IsStopping = False
@@ -95,6 +99,7 @@ async def on_ready():
     print('------')
     chdir("D:\Minecraft_server\mcrcon")
     startfile("launch_list.bat")
+    await asyncio.sleep(1)
     await write_list(bot, False)
     LastUpdateTime = datetime.now()
     if IsServerOn:
@@ -123,6 +128,7 @@ async def get_list(ctx, command="not"):
         if (datetime.now() - LastUpdateTime).seconds > 5:
             chdir("D:\Minecraft_server\mcrcon")
             startfile("launch_list.bat")
+            await asyncio.sleep(1)
             await write_list(ctx)
             LastUpdateTime = datetime.now()
         else:
@@ -172,24 +178,59 @@ async def restart(ctx):
 @bot.command(pass_context=True)
 async def say(ctx):
     """Петросян"""
-    if bool(getrandbits(1)):
+    if bool(randint(0, 3)):
         _300_answers = [
             'Ну, держи!',
             'Ah, shit, here we go again.',
-            'Ты сам напросился...'
+            'Ты сам напросился...',
+            'Не следовало тебе меня спрашивать...',
+            'Ха-ха-ха-ха.... Извини',
+            '( ͡° ͜ʖ ͡°)',
+            'Ну что пацаны, аниме?',
+            'Ну чё, народ, погнали, на\\*уй! Ё\\*\\*\\*ный в рот!'
         ]
-        await ctx.send(choice(_300_answers))
-        if bool(getrandbits(1)):
-            _300_quotes = [
-                'Я назову собаку именем твоим...',
-                '( ͡° ͜ʖ ͡°)',
-            ]
-            await ctx.send(choice(_300_quotes))
-        else:
-            await ctx.send(file=discord.File("D:\Minecraft_server\Ha_\VIXcr28RiVo.jpg"))
+        _300_communities = [
+            -45045130, # - Хрень, какой-то паблик
+            -45523862, # - Томат
+            -67580761, # - КБ
+            -57846937, # - MDK
+            -12382740, # - ЁП
+            -45745333, # - 4ch
+            -76628628, # - Silvername
+        ]
+        try:
+            # Тырим с вк фотки)
+            own_id = choice(_300_communities)
+            vk_session = vk_api.VkApi(log_vk, pass_vk)
+            vk_session.auth()
+            vk = vk_session.get_api()
+            photos_count = vk.photos.get(owner_id=own_id, album_id="wall", count=1).get('count')
+            photo_sizes = vk.photos.get(owner_id=own_id,
+                                        album_id="wall",
+                                        count=1,
+                                        offset=randint(0, photos_count) - 1).get('items')[0].get('sizes')
+            max_photo_height = 0
+            photo_url = ""
+            for i in photo_sizes:
+                if i.get('height') > max_photo_height:
+                    max_photo_height = i.get('height')
+            for i in photo_sizes:
+                if i.get('height') == max_photo_height:
+                    photo_url = i.get('url')
+                    break
+            e = discord.Embed(title=choice(_300_answers),
+                              color=discord.Color.from_rgb(randint(0, 255), randint(0, 255), randint(0, 255)))
+            e.set_image(url=photo_url)
+            await ctx.send(embed=e)
+        except(BaseException):
+            e = discord.Embed(title="Ошибка vk:  Что-то пошло не так",
+                              color=discord.Color.red())
+            e.set_image(url="http://cdn.bolshoyvopros.ru/files/users/images/bd/02/bd027e654c2fbb9f100e372dc2156d4d.jpg")
+            await ctx.send(embed=e)
+
+
     else:
-        await ctx.send("Я бы мог рассказать что-то, но мне лень. ( ͡° ͜ʖ ͡°)")
-        await ctx.send("Returning to my duties.")
+        await ctx.send("Я бы мог рассказать что-то, но мне лень. ( ͡° ͜ʖ ͡°)\nReturning to my duties.")
 
 
 @bot.command(pass_context=True)
