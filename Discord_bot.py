@@ -1,11 +1,11 @@
-from os import startfile, chdir, path
-from re import findall
+from os import startfile, chdir, path, system
 from random import choice, randint
 import discord
 import vk_api
 import asyncio
 from datetime import datetime
 from discord.ext import commands
+from mcstatus import MinecraftServer
 
 print("Reading token")
 token = open('token.txt', 'r').readline()
@@ -27,8 +27,11 @@ else:
         print("Done!")
     else:
         print("Vk account data not received\nOk, a cat is fine too...\nNote: command %say won't work")
+IP_addr = str(input("Enter server's IP-address from Radmin: "))
+await_time = int(input("Set await time between check-ups 'Server on/off' (in seconds, int): "))
 
 chdir("..")
+query = 0
 IsServerOn = False
 IsLoading = False
 IsStopping = False
@@ -52,12 +55,18 @@ async def send_status(ctx):
 
 
 async def start_server(ctx):
-    global IsServerOn, IsLoading, IsStopping
+    global IsServerOn, IsLoading, IsStopping, query
     IsLoading = True
     print("Loading server")
-    await ctx.send("```Loading server.......\nWait please about 40 seconds)```")
+    await ctx.send("```Loading server.......\nPlease wait)```")
     startfile("Start_bot.bat")
-    await asyncio.sleep(40)
+    while True:
+        await asyncio.sleep(1)
+        try:
+            query = MinecraftServer.lookup(IP_addr + ":25585").query()
+            break
+        except(BaseException):
+            pass
     print("Server's on now")
     await ctx.send("```Server's on now```")
     IsLoading = False
@@ -65,15 +74,30 @@ async def start_server(ctx):
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name="Minecraft Server"))
 
 
-async def stop_server(ctx, file_name="launch.bat"):
+async def stop_server(ctx, How_many_sec=10, IsRestart=False):
     global IsServerOn, IsLoading, IsStopping
     IsStopping = True
     print("Stopping server")
-    await ctx.send("```Stopping server.......\nWait please about 15 seconds```")
+    await ctx.send("```Stopping server.......\nPlease wait```")
     chdir("mcrcon")
-    startfile(file_name)
+    command_ = 'mcrcon.exe -H ' + IP_addr + ' -P 25575 -p rconpassword'
+    w = -1
+    i = 2
+    while True:
+        if How_many_sec % i == 0:
+            w = i
+            break
+        i += 1
+    if not IsRestart:
+        command_ += ' -w ' + str(w) + ' "say Server\'s shutting down in ' + str(How_many_sec) + ' seconds"'
+    else:
+        command_ += ' -w ' + str(w) + ' "say Server\'s restarting in ' + str(How_many_sec) + ' seconds"'
+    for i in range(How_many_sec, -1, -w):
+        command_ += ' "say ' + str(i) + '"'
+    command_ += ' stop'
+    system(command_)
     chdir("..")
-    await asyncio.sleep(15)
+    await asyncio.sleep(How_many_sec + 1)
     IsStopping = False
     IsServerOn = False
     print("Server's off now")
@@ -81,51 +105,43 @@ async def stop_server(ctx, file_name="launch.bat"):
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Server"))
 
 
-async def write_list(ctx, need_to_write=True):
-    global IsServerOn
-    count = 0
-    with open("mcrcon\list.txt", 'r') as f:
-        str_f = f.readline()
-        if str_f:
-            count = int(findall(r"\d+[/]\d+", str_f)[0].split("/")[0])
-            players = str_f.strip().split(":")[1].split(", ")
-    if len(str_f) > 0:
-        if need_to_write:
-            if count == 0:
-                await ctx.send("```Игроков на сервере нет```")
-            else:
-                message = "```Игроков на сервере - " + str(count) + "\nИгроки: " + players[0]
-                for i in range(1, len(players)):
-                    message += "\n" + " " * 8 + players[i] if i and i % 3 == 0 else ", " + players[i]
-                message += "```"
-                await ctx.send(message)
-        else:
-            IsServerOn = True
-    else:
-        if need_to_write:
-            await ctx.send(f"{ctx.author.mention}, сервер сейчас выключен")
-        else:
-            IsServerOn = False
+async def server_checkups():
+    global query, await_time, IsServerOn
+    while True:
+        await asyncio.sleep(await_time)
+        try:
+            query = MinecraftServer.lookup(IP_addr + ":25585").query()
+            if not IsServerOn:
+                IsServerOn = True
+                await bot.change_presence(
+                    activity=discord.Activity(type=discord.ActivityType.playing, name="Minecraft Server"))
+        except(BaseException):
+            if IsServerOn:
+                IsServerOn = False
+                await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Server"))
 
 
 @bot.event
 async def on_ready():
-    global IsServerOn, LastUpdateTime
+    global IsServerOn, LastUpdateTime, query
+    print('------')
     print('Logged in discord as')
     print(bot.user.name)
     print("Discord version ", discord.__version__)
     print('------')
-    chdir("mcrcon")
-    startfile("launch_list.bat")
-    chdir("..")
-    await asyncio.sleep(1)
-    await write_list(bot, False)
+    try:
+        query = MinecraftServer.lookup(IP_addr + ":25585").query()
+        IsServerOn = True
+    except(BaseException):
+        IsServerOn = False
     LastUpdateTime = datetime.now()
     if IsServerOn:
         await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name="Minecraft Server"))
     else:
         await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Server"))
     print("Bot is ready!")
+    print("Starting server check-ups.")
+    await server_checkups()
 
 
 # COMMANDS
@@ -142,19 +158,17 @@ async def status(ctx):
 @bot.command(pass_context=True)
 @commands.has_role('Майнкрафтер')
 async def list(ctx, command="-u"):
-    global LastUpdateTime
+    global query
     if command == "-u":
-        if (datetime.now() - LastUpdateTime).seconds > 5:
-            chdir("mcrcon")
-            startfile("launch_list.bat")
-            chdir("..")
-            await asyncio.sleep(1)
-            await write_list(ctx)
-            LastUpdateTime = datetime.now()
-        else:
-            await ctx.send(f"{ctx.author.mention}, обновлять список игроков можно раз в 5 секунд, подождите")
-    elif command == "-c":
-        await write_list(ctx)
+        try:
+            query = MinecraftServer.lookup(IP_addr + ":25585").query()
+            if query.players.online == 0:
+                await ctx.send("```Игроков на сервере нет```")
+            else:
+                await ctx.send("```Игроков на сервере - {0}\nИгроки: {1}```".format(query.players.online,
+                                                                                    ", ".join(query.players.names)))
+        except(BaseException):
+            await ctx.send(f"{ctx.author.mention}, сервер сейчас выключен")
     else:
         await send_error(ctx, error=commands.UserInputError)
 
@@ -172,24 +186,25 @@ async def start(ctx):
 
 @bot.command(pass_context=True)
 @commands.has_role('Майнкрафтер')
-async def stop(ctx):
+async def stop(ctx, command="10"):
     """End server"""
     global IsServerOn, IsLoading, IsStopping
     if IsServerOn and not IsStopping and not IsLoading:
-        await stop_server(ctx)
+        await stop_server(ctx, int(command))
     else:
         await send_status(ctx)
 
 
 @bot.command(pass_context=True)
 @commands.has_role('Майнкрафтер')
-async def restart(ctx):
+async def restart(ctx, command="10"):
     """Restart server"""
     global IsServerOn, IsLoading, IsStopping
     if IsServerOn and not IsStopping and not IsLoading:
         print("Restarting server")
         IsServerOn = False
-        await stop_server(ctx, "launch_r.bat")
+        # await stop_server(ctx, "launch_r.bat")
+        await stop_server(ctx, int(command), True)
         await start_server(ctx)
     else:
         await send_status(ctx)
@@ -212,13 +227,13 @@ async def say(ctx):
                 'Ну чё, народ, погнали, на\\*уй! Ё\\*\\*\\*ный в рот!'
             ]
             _300_communities = [
-                -45045130, # - Хрень, какой-то паблик
-                -45523862, # - Томат
-                -67580761, # - КБ
-                -57846937, # - MDK
-                -12382740, # - ЁП
-                -45745333, # - 4ch
-                -76628628, # - Silvername
+                -45045130,  # - Хрень, какой-то паблик
+                -45523862,  # - Томат
+                -67580761,  # - КБ
+                -57846937,  # - MDK
+                -12382740,  # - ЁП
+                -45745333,  # - 4ch
+                -76628628,  # - Silvername
             ]
             try:
                 # Тырим с вк фотки)
@@ -249,12 +264,13 @@ async def say(ctx):
             except(BaseException):
                 e = discord.Embed(title="Ошибка vk:  Что-то пошло не так",
                                   color=discord.Color.red())
-                e.set_image(url="http://cdn.bolshoyvopros.ru/files/users/images/bd/02/bd027e654c2fbb9f100e372dc2156d4d.jpg")
+                e.set_image(
+                    url="http://cdn.bolshoyvopros.ru/files/users/images/bd/02/bd027e654c2fbb9f100e372dc2156d4d.jpg")
                 await ctx.send(embed=e)
         else:
             await ctx.send("Я бы мог рассказать что-то, но мне лень. ( ͡° ͜ʖ ͡°)\nReturning to my duties.")
     else:
-        e = discord.Embed(title="Ошибка vk:  Не введёны данные аккаунта",
+        e = discord.Embed(title="Ошибка vk:  Не введены данные аккаунта",
                           color=discord.Color.red())
         e.set_image(url="http://cdn.bolshoyvopros.ru/files/users/images/bd/02/bd027e654c2fbb9f100e372dc2156d4d.jpg")
         await ctx.send(embed=e)
@@ -266,11 +282,11 @@ async def help(ctx):
     emb = discord.Embed(title='Список всех команд (через %)',
                         color=discord.Color.gold())
     emb.add_field(name='status', value='Возвращает статус сервера')
-    emb.add_field(name='list [-c]',
-                  value='Возвращает новый список игроков (с параметром старый список)')
+    emb.add_field(name='list',
+                  value='Возвращает список игроков')
     emb.add_field(name='start', value='Запускает сервер')
-    emb.add_field(name='stop', value='Останавливает сервер')
-    emb.add_field(name='restart', value='Перезапускает сервер')
+    emb.add_field(name='stop [10]', value='Останавливает сервер, цифры после комманды - сколько времени идёт отсчёт')
+    emb.add_field(name='restart [10]', value='Перезапускает сервер, цифры после комманды - сколько времени идёт отсчёт')
     emb.add_field(name='say', value='"Петросянит" ( ͡° ͜ʖ ͡°)')
     emb.add_field(name='clear {1}', value='Удаляет {} строк')
     await ctx.send(embed=emb)
@@ -310,4 +326,8 @@ async def on_command_error(ctx, error):
     await send_error(ctx, error)
 
 
-bot.run(token)
+try:
+    bot.run(token)
+except(BaseException):
+    print("Error: Maybe you need to update discord.py")
+system("pause")
