@@ -8,7 +8,14 @@ from discord.ext import commands
 from mcstatus import MinecraftServer
 
 print("Reading token")
-token = open('token.txt', 'r').readline()
+if path.isfile('token.txt'):
+    token = open('token.txt', 'r').readline()
+else:
+    print("File not founded. Enter token.")
+    token = str(input())
+    with open('token.txt', 'w') as tk:
+        tk.write(token)
+    print("File with token created.")
 print("Done!")
 Vk_get = False
 print("Reading file 'vk_l_p.txt' for login & password")
@@ -27,14 +34,28 @@ else:
         print("Done!")
     else:
         print("Vk account data not received\nOk, a cat is fine too...\nNote: command %say won't work")
-IP_addr = str(input("Enter server's IP-address from Radmin: "))
+IP_addr = str(input("Enter server's IP-address from Radmin: ")) # Сделать отдельный файл или ещё лучше json
 await_time = int(input("Set await time between check-ups 'Server on/off' (in seconds, int): "))
-
+if path.isfile('menu_id.txt'):
+    menu_id = open('menu_id.txt', 'r').readline()
+else:
+    print("File not founded. Would you like to enter menu message id. y/n")
+    if input() == 'y':
+        menu_id = str(input("Enter menu message id: "))
+        with open('menu_id.txt', 'w') as mi:
+            mi.write(menu_id)
+        print("File with menu message id created.")
+    else:
+        print("Menu via reactions won't work. To make it work type '%menu' to create new menu.")
+print("All done!")
+current_bot_path = path.dirname(path.realpath('token.txt'))
 chdir("..")
 query = 0
 IsServerOn = False
 IsLoading = False
 IsStopping = False
+IsReaction = False
+react_auth_mention = ""
 LastUpdateTime = datetime.now()
 bot = commands.Bot(command_prefix='%', description="Server bot")
 bot.remove_command('help')
@@ -77,24 +98,27 @@ async def start_server(ctx):
 async def stop_server(ctx, How_many_sec=10, IsRestart=False):
     global IsServerOn, IsLoading, IsStopping
     IsStopping = True
-    print("Stopping server")
-    await ctx.send("```Stopping server.......\nPlease wait```")
     chdir("mcrcon")
     command_ = 'mcrcon.exe -H ' + IP_addr + ' -P 25575 -p rconpassword'
-    w = -1
-    i = 2
-    while True:
-        if How_many_sec % i == 0:
-            w = i
-            break
-        i += 1
-    if not IsRestart:
-        command_ += ' -w ' + str(w) + ' "say Server\'s shutting down in ' + str(How_many_sec) + ' seconds"'
-    else:
-        command_ += ' -w ' + str(w) + ' "say Server\'s restarting in ' + str(How_many_sec) + ' seconds"'
-    for i in range(How_many_sec, -1, -w):
-        command_ += ' "say ' + str(i) + '"'
+    if How_many_sec != 0:
+        w = 1
+        if How_many_sec > 5:
+            while True:
+                w += 1
+                if How_many_sec % w == 0 and w <= 10:
+                    break
+                elif How_many_sec % w == 0 and w > 10:
+                    How_many_sec += 1
+                    w = 1
+        if not IsRestart:
+            command_ += ' -w ' + str(w) + ' "say Server\'s shutting down in ' + str(How_many_sec) + ' seconds"'
+        else:
+            command_ += ' -w ' + str(w) + ' "say Server\'s restarting in ' + str(How_many_sec) + ' seconds"'
+        for i in range(How_many_sec, -1, -w):
+            command_ += ' "say ' + str(i) + ' sec to go"'
     command_ += ' stop'
+    print("Stopping server")
+    await ctx.send("```Stopping server.......\nPlease wait " + str(How_many_sec + 1) + " sec.```")
     system(command_)
     chdir("..")
     await asyncio.sleep(How_many_sec + 1)
@@ -113,11 +137,13 @@ async def server_checkups():
             query = MinecraftServer.lookup(IP_addr + ":25585").query()
             if not IsServerOn:
                 IsServerOn = True
+            if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 0:
                 await bot.change_presence(
                     activity=discord.Activity(type=discord.ActivityType.playing, name="Minecraft Server"))
         except(BaseException):
             if IsServerOn:
                 IsServerOn = False
+            if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 2:
                 await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Server"))
 
 
@@ -168,7 +194,11 @@ async def list(ctx, command="-u"):
                 await ctx.send("```Игроков на сервере - {0}\nИгроки: {1}```".format(query.players.online,
                                                                                     ", ".join(query.players.names)))
         except(BaseException):
-            await ctx.send(f"{ctx.author.mention}, сервер сейчас выключен")
+            if IsReaction:
+                author = react_auth_mention
+            else:
+                author = ctx.author.mention
+            await ctx.send(f"{author}, сервер сейчас выключен")
     else:
         await send_error(ctx, error=commands.UserInputError)
 
@@ -203,7 +233,6 @@ async def restart(ctx, command="10"):
     if IsServerOn and not IsStopping and not IsLoading:
         print("Restarting server")
         IsServerOn = False
-        # await stop_server(ctx, "launch_r.bat")
         await stop_server(ctx, int(command), True)
         await start_server(ctx)
     else:
@@ -285,11 +314,66 @@ async def help(ctx):
     emb.add_field(name='list',
                   value='Возвращает список игроков')
     emb.add_field(name='start', value='Запускает сервер')
-    emb.add_field(name='stop [10]', value='Останавливает сервер, цифры после комманды - сколько времени идёт отсчёт')
-    emb.add_field(name='restart [10]', value='Перезапускает сервер, цифры после комманды - сколько времени идёт отсчёт')
+    emb.add_field(name='stop {10}', value='Останавливает сервер, {} (сек) сколько идёт отсчёт, 0 убирает таймер')
+    emb.add_field(name='restart {10}', value='Перезапускает сервер, {} (сек) сколько идёт отсчёт, 0 убирает таймер')
+    emb.add_field(name='menu', value='Создаёт меню-пульт для удобного управления командами')
     emb.add_field(name='say', value='"Петросянит" ( ͡° ͜ʖ ͡°)')
     emb.add_field(name='clear {1}', value='Удаляет {} строк')
     await ctx.send(embed=emb)
+
+
+@bot.command(pass_context=True)
+async def menu(ctx):
+    global menu_id
+    await ctx.channel.purge(limit=1)
+    emb = discord.Embed(title='Список всех команд через реакции',
+                        color=discord.Color.teal())
+    emb.add_field(name='status', value=':speech_left:')
+    emb.add_field(name='list',
+                  value=':clipboard:')
+    emb.add_field(name='start', value=':wheelchair:')
+    emb.add_field(name='stop 10', value=':stop_button:')
+    emb.add_field(name='restart 10', value=':arrows_counterclockwise:')
+    add_reactions_to = await ctx.send(embed=emb)
+    menu_id = str(add_reactions_to.id)
+    open(current_bot_path + '\\menu_id.txt', 'w').write(menu_id)
+    await add_reactions_to.add_reaction("🗨")
+    await add_reactions_to.add_reaction("📋")
+    await add_reactions_to.add_reaction("♿")
+    await add_reactions_to.add_reaction("⏹")
+    await add_reactions_to.add_reaction("🔄")
+
+@bot.event
+async def on_raw_reaction_add(payload):
+    global IsReaction, react_auth_mention
+    if payload.message_id == int(menu_id) and payload.member.id != bot.user.id:
+        if payload.emoji.name == "🗨" or payload.emoji.name == "📋" or payload.emoji.name == "♿" or payload.emoji.name == "⏹" or payload.emoji.name == "🔄":
+            IsReaction = True
+            react_auth_mention = payload.member.mention
+            channel = bot.get_channel(payload.channel_id)
+            if payload.emoji.name == "🗨":
+                await status(channel)
+            elif payload.emoji.name == "📋":
+                await list(channel)
+            elif payload.emoji.name == "♿":
+                await start(channel)
+            elif payload.emoji.name == "⏹":
+                await stop(channel)
+            elif payload.emoji.name == "🔄":
+                await restart(channel)
+            IsReaction = False
+            message = await channel.fetch_message(payload.message_id)
+            user = bot.get_user(payload.user_id)
+            await message.remove_reaction(payload.emoji, user)
+            await asyncio.sleep(10)
+            messages = await channel.history(limit=20).flatten()
+            pu = 0
+            for i in messages:
+                if i.id == int(menu_id):
+                    break
+                pu += 1
+            await channel.purge(limit=pu)
+
 
 
 @bot.command(pass_context=True)
@@ -300,7 +384,10 @@ async def clear(ctx, count=1):
 
 # ERRORS
 async def send_error(ctx, error):
-    author = ctx.author.mention
+    if IsReaction:
+        author = react_auth_mention
+    else:
+        author = ctx.author.mention
     if isinstance(error, commands.MissingRequiredArgument):
         print(f'{ctx.author} не указал аргумент')
         await ctx.send(f'{author}, пожалуйста, введи все аргументы ')
