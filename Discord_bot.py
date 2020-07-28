@@ -1,61 +1,142 @@
-from os import startfile, chdir, path, system
+from os import startfile, chdir, path, system, getcwd
 from random import choice, randint
 import discord
 import vk_api
 import asyncio
+import json
+from cryptography.fernet import Fernet
 from datetime import datetime
 from discord.ext import commands
 from mcstatus import MinecraftServer
 
-print("Reading token")
-if path.isfile('token.txt'):
-    token = open('token.txt', 'r').readline()
+# json and encrypt :)
+IsRewrite = False
+if not path.isfile('key'):
+    key = Fernet.generate_key()
+    with open("key", "wb") as key_file:
+        key_file.write(key)
+key = open("key", "rb").read()
+crypt = Fernet(key)
+# Crypt
+if not path.isfile('bot.json'):
+    config = {
+        "Token": None,
+        "IP-adress": None,
+        "Menu_message_id": None,
+        "Ask Await time": True,
+        "Await time check-ups": 10,
+        "Vk_ask": True,
+        "Vk_login": None,
+        "Vk_pass": None
+    }
+    with open('bot.json', 'w') as f:
+        json.dump(config, f, indent=2)
+with open('bot.json', 'r') as f:
+    config = json.load(f)
+# Decrypt
+if config.get("Token"):
+    config["Token"] = crypt.decrypt(config["Token"].encode()).decode()
+if config.get("Vk_login"):
+    config["Vk_login"] = crypt.decrypt(config["Vk_login"].encode()).decode()
+if config.get("Vk_pass"):
+    config["Vk_pass"] = crypt.decrypt(config["Vk_pass"].encode()).decode()
+print("Reading config")
+if config.get("Token"):
+    token = config.get("Token")
 else:
-    print("File not founded. Enter token.")
-    token = str(input())
-    with open('token.txt', 'w') as tk:
-        tk.write(token)
-    print("File with token created.")
-print("Done!")
+    IsRewrite = True
+    token = str(input("Token not founded. Enter token: "))
+    config["Token"] = crypt.encrypt(token.encode()).decode()
+
 Vk_get = False
-print("Reading file 'vk_l_p.txt' for login & password")
-if path.isfile('vk_l_p.txt'):
-    with open('vk_l_p.txt', 'r') as f:
-        log_vk = f.readline()
-        pass_vk = f.readline()
+if config.get("Vk_login") and config.get("Vk_pass"):
+    log_vk = config.get("Vk_login")
+    pass_vk = config.get("Vk_pass")
     Vk_get = True
-    print("File founded and read\nDone!")
+    if config.get("Vk_ask"):
+        print("Would you like to change vk account data? y/n")
+        if input() == 'y':
+            log_vk = str(input("Enter vk login: "))
+            pass_vk = str(input("Enter vk pass: "))
+            config["Vk_login"] = crypt.encrypt(log_vk.encode()).decode()
+            config["Vk_pass"] = crypt.encrypt(pass_vk.encode()).decode()
+            IsRewrite = True
+        print("Never ask about it again? y/n")
+        if input() == 'y':
+            config["Vk_ask"] = False
+            print("I'll never ask you about it again.")
+        else:
+            print("Vk account data received. Why man?")
+    else:
+        print("Vk account data received.")
 else:
-    print("File not founded. Would you like to enter vk account data? y/n")
+    print("Would you like to enter vk account data? y/n")
     if input() == 'y':
         log_vk = str(input("Enter vk login: "))
         pass_vk = str(input("Enter vk pass: "))
+        config["Vk_login"] = crypt.encrypt(log_vk.encode()).decode()
+        config["Vk_pass"] = crypt.encrypt(pass_vk.encode()).decode()
         Vk_get = True
-        print("Done!")
-    else:
-        print("Vk account data not received\nOk, a cat is fine too...\nNote: command %say won't work")
-IP_addr = str(input("Enter server's IP-address from Radmin: ")) # Сделать отдельный файл или ещё лучше json
-await_time = int(input("Set await time between check-ups 'Server on/off' (in seconds, int): "))
-if path.isfile('menu_id.txt'):
-    menu_id = open('menu_id.txt', 'r').readline()
-else:
-    print("File not founded. Would you like to enter menu message id. y/n")
+        IsRewrite = True
+    print("Never ask about it again? y/n")
     if input() == 'y':
-        menu_id = str(input("Enter menu message id: "))
-        with open('menu_id.txt', 'w') as mi:
-            mi.write(menu_id)
-        print("File with menu message id created.")
+        config["Vk_ask"] = False
+        if config.get("Vk_login") and config.get("Vk_pass"):
+            print("I'll never ask you about it again.")
+        else:
+            print("Vk account data not received.\nI'll never ask you about it again.\nNote: command %say won't work.")
     else:
-        print("Menu via reactions won't work. To make it work type '%menu' to create new menu.")
-print("All done!")
-current_bot_path = path.dirname(path.realpath('token.txt'))
+        if not config.get("Vk_login") and not config.get("Vk_pass"):
+            print("Vk account data received. Why man?")
+        else:
+            print("Vk account data not received.\nI'll ask you again *evil laughter*.\nNote: command %say won't work.")
+
+if config.get("IP-adress"):
+    IP_adress = config.get("IP-adress")
+else:
+    IsRewrite = True
+    IP_adress = str(input("Enter server's IP-address from Radmin: "))
+    config["IP-adress"] = IP_adress
+
+if config.get("Menu_message_id"):
+    menu_id = config.get("Menu_message_id")
+else:
+    print("Menu message id not found. Would you like to enter it? y/n")
+    if input() == 'y':
+        IsRewrite = True
+        menu_id = str(input("Enter menu message id: "))
+        config["Menu_message_id"] = menu_id
+    else:
+        print("Menu via reactions won't work. To make it work type '%menu' to create new menu and its id.")
+
+if config.get("Ask Await time"):
+    print("Await time check-ups. Now it set to " + str(config.get("Await time check-ups")) + " seconds. Would you like to change it? y/n")
+    if input() == 'y':
+        IsRewrite = True
+        await_time = int(input("Set await time between check-ups 'Server on/off' (in seconds, int): "))
+        config["Await time check-ups"] = await_time
+    print("Never ask about it again? y/n")
+    if input() == 'y':
+        config["Ask Await time"] = False
+        print("Await time will be brought from config.")
+else:
+    await_time = config.get("Await time check-ups")
+    print("Await time check-ups set to " + str(config.get("Await time check-ups")) + " seconds.")
+
+if IsRewrite:
+    with open('bot.json', 'w') as f:
+        json.dump(config, f, indent=2)
+    print("Config saved!")
+print("Config loaded!")
+current_bot_path = path.abspath(getcwd())
 chdir("..")
+ansii_com = {"status": "🗨", "list": "📋", "start": "♿", "stop": "⏹", "restart": "🔄"}
 query = 0
 IsServerOn = False
 IsLoading = False
 IsStopping = False
 IsReaction = False
-react_auth_mention = ""
+react_auth = ""
 LastUpdateTime = datetime.now()
 bot = commands.Bot(command_prefix='%', description="Server bot")
 bot.remove_command('help')
@@ -84,7 +165,7 @@ async def start_server(ctx):
     while True:
         await asyncio.sleep(1)
         try:
-            query = MinecraftServer.lookup(IP_addr + ":25585").query()
+            query = MinecraftServer.lookup(IP_adress + ":25585").query()
             break
         except(BaseException):
             pass
@@ -96,10 +177,10 @@ async def start_server(ctx):
 
 
 async def stop_server(ctx, How_many_sec=10, IsRestart=False):
-    global IsServerOn, IsLoading, IsStopping
+    global IsServerOn, IsLoading, IsStopping, query
     IsStopping = True
     chdir("mcrcon")
-    command_ = 'mcrcon.exe -H ' + IP_addr + ' -P 25575 -p rconpassword'
+    command_ = 'mcrcon.exe -H ' + IP_adress + ' -P 25575 -p rconpassword'
     if How_many_sec != 0:
         w = 1
         if How_many_sec > 5:
@@ -117,11 +198,17 @@ async def stop_server(ctx, How_many_sec=10, IsRestart=False):
         for i in range(How_many_sec, -1, -w):
             command_ += ' "say ' + str(i) + ' sec to go"'
     command_ += ' stop'
-    print("Stopping server")
-    await ctx.send("```Stopping server.......\nPlease wait " + str(How_many_sec + 1) + " sec.```")
+    # print("Stopping server")
+    await ctx.send("```Stopping server.......\nPlease wait " + str(How_many_sec) + " sec.```")
     system(command_)
     chdir("..")
-    await asyncio.sleep(How_many_sec + 1)
+    while True:
+        await asyncio.sleep(1)
+        try:
+            query = MinecraftServer.lookup(IP_adress + ":25585").query()
+        except(BaseException):
+            break
+    # await asyncio.sleep(How_many_sec)
     IsStopping = False
     IsServerOn = False
     print("Server's off now")
@@ -134,7 +221,7 @@ async def server_checkups():
     while True:
         await asyncio.sleep(await_time)
         try:
-            query = MinecraftServer.lookup(IP_addr + ":25585").query()
+            query = MinecraftServer.lookup(IP_adress + ":25585").query()
             if not IsServerOn:
                 IsServerOn = True
             if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 0:
@@ -156,7 +243,7 @@ async def on_ready():
     print("Discord version ", discord.__version__)
     print('------')
     try:
-        query = MinecraftServer.lookup(IP_addr + ":25585").query()
+        query = MinecraftServer.lookup(IP_adress + ":25585").query()
         IsServerOn = True
     except(BaseException):
         IsServerOn = False
@@ -172,7 +259,7 @@ async def on_ready():
 
 # COMMANDS
 @bot.command(pass_context=True)
-@commands.has_role('Майнкрафтер')
+# @commands.has_role('Майнкрафтер')
 async def status(ctx):
     """Shows server status"""
     if IsServerOn:
@@ -182,12 +269,12 @@ async def status(ctx):
 
 
 @bot.command(pass_context=True)
-@commands.has_role('Майнкрафтер')
+# @commands.has_role('Майнкрафтер')
 async def list(ctx, command="-u"):
     global query
     if command == "-u":
         try:
-            query = MinecraftServer.lookup(IP_addr + ":25585").query()
+            query = MinecraftServer.lookup(IP_adress + ":25585").query()
             if query.players.online == 0:
                 await ctx.send("```Игроков на сервере нет```")
             else:
@@ -195,12 +282,12 @@ async def list(ctx, command="-u"):
                                                                                     ", ".join(query.players.names)))
         except(BaseException):
             if IsReaction:
-                author = react_auth_mention
+                author = react_auth.mention
             else:
                 author = ctx.author.mention
             await ctx.send(f"{author}, сервер сейчас выключен")
     else:
-        await send_error(ctx, error=commands.UserInputError)
+        raise commands.UserInputError()
 
 
 @bot.command(pass_context=True)
@@ -219,10 +306,14 @@ async def start(ctx):
 async def stop(ctx, command="10"):
     """End server"""
     global IsServerOn, IsLoading, IsStopping
-    if IsServerOn and not IsStopping and not IsLoading:
-        await stop_server(ctx, int(command))
-    else:
-        await send_status(ctx)
+    try:
+        if int(command) >= 0:
+            if IsServerOn and not IsStopping and not IsLoading:
+                await stop_server(ctx, int(command))
+            else:
+                await send_status(ctx)
+    except(ValueError):
+        raise commands.UserInputError()
 
 
 @bot.command(pass_context=True)
@@ -230,13 +321,17 @@ async def stop(ctx, command="10"):
 async def restart(ctx, command="10"):
     """Restart server"""
     global IsServerOn, IsLoading, IsStopping
-    if IsServerOn and not IsStopping and not IsLoading:
-        print("Restarting server")
-        IsServerOn = False
-        await stop_server(ctx, int(command), True)
-        await start_server(ctx)
-    else:
-        await send_status(ctx)
+    try:
+        if int(command) >= 0:
+            if IsServerOn and not IsStopping and not IsLoading:
+                print("Restarting server")
+                IsServerOn = False
+                await stop_server(ctx, int(command), True)
+                await start_server(ctx)
+            else:
+                await send_status(ctx)
+    except(ValueError):
+        raise commands.UserInputError()
 
 
 @bot.command(pass_context=True)
@@ -264,10 +359,10 @@ async def say(ctx):
                 -45745333,  # - 4ch
                 -76628628,  # - Silvername
             ]
+            own_id = choice(_300_communities)
+            chdir(current_bot_path)
             try:
                 # Тырим с вк фотки)
-                own_id = choice(_300_communities)
-                chdir("BOT_Folder")
                 vk_session = vk_api.VkApi(log_vk, pass_vk)
                 vk_session.auth()
                 vk = vk_session.get_api()
@@ -324,7 +419,7 @@ async def help(ctx):
 
 @bot.command(pass_context=True)
 async def menu(ctx):
-    global menu_id
+    global menu_id, config
     await ctx.channel.purge(limit=1)
     emb = discord.Embed(title='Список всех команд через реакции',
                         color=discord.Color.teal())
@@ -336,44 +431,50 @@ async def menu(ctx):
     emb.add_field(name='restart 10', value=':arrows_counterclockwise:')
     add_reactions_to = await ctx.send(embed=emb)
     menu_id = str(add_reactions_to.id)
-    open(current_bot_path + '\\menu_id.txt', 'w').write(menu_id)
-    await add_reactions_to.add_reaction("🗨")
-    await add_reactions_to.add_reaction("📋")
-    await add_reactions_to.add_reaction("♿")
-    await add_reactions_to.add_reaction("⏹")
-    await add_reactions_to.add_reaction("🔄")
+    config["Menu_message_id"] = menu_id
+    with open(current_bot_path + '\\bot.json', 'w') as f_:
+        json.dump(config, f_, indent=2)
+    await add_reactions_to.add_reaction(ansii_com.get("status"))
+    await add_reactions_to.add_reaction(ansii_com.get("list"))
+    await add_reactions_to.add_reaction(ansii_com.get("start"))
+    await add_reactions_to.add_reaction(ansii_com.get("stop"))
+    await add_reactions_to.add_reaction(ansii_com.get("restart"))
+
 
 @bot.event
 async def on_raw_reaction_add(payload):
-    global IsReaction, react_auth_mention
+    global IsReaction, react_auth
     if payload.message_id == int(menu_id) and payload.member.id != bot.user.id:
-        if payload.emoji.name == "🗨" or payload.emoji.name == "📋" or payload.emoji.name == "♿" or payload.emoji.name == "⏹" or payload.emoji.name == "🔄":
+        channel = bot.get_channel(payload.channel_id)
+        message = await channel.fetch_message(payload.message_id)
+        user = bot.get_user(payload.user_id)
+        await message.remove_reaction(payload.emoji, user)
+        if payload.emoji.name in ansii_com.values():
             IsReaction = True
-            react_auth_mention = payload.member.mention
-            channel = bot.get_channel(payload.channel_id)
-            if payload.emoji.name == "🗨":
+            react_auth = payload.member
+            if payload.emoji.name == ansii_com.get("status"):
                 await status(channel)
-            elif payload.emoji.name == "📋":
+            elif payload.emoji.name == ansii_com.get("list"):
                 await list(channel)
-            elif payload.emoji.name == "♿":
-                await start(channel)
-            elif payload.emoji.name == "⏹":
-                await stop(channel)
-            elif payload.emoji.name == "🔄":
-                await restart(channel)
+            else:
+                if 'Майнкрафтер' not in str(payload.member.roles):
+                    await send_error(channel, commands.MissingRole('Майнкрафтер'))
+                else:
+                    if payload.emoji.name == ansii_com.get("start"):
+                        await start(channel)
+                    elif payload.emoji.name == ansii_com.get("stop"):
+                        await stop(channel)
+                    elif payload.emoji.name == ansii_com.get("restart"):
+                        await restart(channel)
             IsReaction = False
-            message = await channel.fetch_message(payload.message_id)
-            user = bot.get_user(payload.user_id)
-            await message.remove_reaction(payload.emoji, user)
             await asyncio.sleep(10)
-            messages = await channel.history(limit=20).flatten()
+            messages = await channel.history(limit=35).flatten()
             pu = 0
             for i in messages:
                 if i.id == int(menu_id):
                     break
                 pu += 1
             await channel.purge(limit=pu)
-
 
 
 @bot.command(pass_context=True)
@@ -385,26 +486,28 @@ async def clear(ctx, count=1):
 # ERRORS
 async def send_error(ctx, error):
     if IsReaction:
-        author = react_auth_mention
+        author = react_auth.mention
+        author2 = react_auth
     else:
         author = ctx.author.mention
+        author2 = ctx.author
     if isinstance(error, commands.MissingRequiredArgument):
-        print(f'{ctx.author} не указал аргумент')
+        print(f'{author2} не указал аргумент')
         await ctx.send(f'{author}, пожалуйста, введи все аргументы ')
     if isinstance(error, commands.MissingPermissions):
-        print(f'У {ctx.author} мало прав для команды')
+        print(f'У {author2} мало прав для команды')
         await ctx.send(f'{author}, у вас недостаточно прав для выполнения этой команды')
     if isinstance(error, commands.MissingRole):
-        print(f'У {ctx.author} нет роли для команды')
+        print(f'У {author2} нет роли для команды')
         await ctx.send(f'{author}, у вас нет роли для выполнения этой команды')
     if isinstance(error, commands.CommandNotFound):
-        print(f'{ctx.author} ввёл несуществующую команду')
+        print(f'{author2} ввёл несуществующую команду')
         await ctx.send(f'{author}, вы ввели несуществующую команду')
     if isinstance(error, commands.UserInputError):
-        print(f'{ctx.author} неправильно ввёл команду или её аргументы')
-        await ctx.send(f'{author}, вы неправильно ввели команду или её агрументы')
+        print(f'{author2} неправильно ввёл аргумент(ы) команды')
+        await ctx.send(f'{author}, вы неправильно ввели агрумент(ы) команды')
     if isinstance(error, commands.DisabledCommand):
-        print(f'{ctx.author} ввёл отключённую команду')
+        print(f'{author2} ввёл отключённую команду')
         await ctx.send(f'{author}, вы ввели отлючённую команду')
 
 
@@ -416,5 +519,5 @@ async def on_command_error(ctx, error):
 try:
     bot.run(token)
 except(BaseException):
-    print("Error: Maybe you need to update discord.py")
+    print("Bot/Discord Error: Maybe you need to update discord.py or your token is wrong. ¯\_(ツ)_/¯")
 system("pause")
