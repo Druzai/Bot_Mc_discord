@@ -18,13 +18,17 @@ if not path.isfile('key'):
 key = open("key", "rb").read()
 crypt = Fernet(key)
 # Crypt
+if not path.isfile('op_keys'):
+    open('op_keys', 'wb').write(crypt.encrypt(json.dumps(dict()).encode()))
+keys_for_nicks = json.loads(crypt.decrypt(open('op_keys', 'rb').read())).keys()
 if not path.isfile('bot.json'):
     config = {
         "Token": None,
         "IP-adress": None,
         "Menu_message_id": None,
-        "Ask Await time": True,
-        "Await time check-ups": 10,
+        "Ask await time check-ups": True,
+        "Await time check-ups": 15,
+        "Await time op": 600,
         "Vk_ask": True,
         "Vk_login": None,
         "Vk_pass": None
@@ -70,26 +74,29 @@ if config.get("Vk_login") and config.get("Vk_pass"):
     else:
         print("Vk account data received.")
 else:
-    print("Would you like to enter vk account data? y/n")
-    if input() == 'y':
-        log_vk = str(input("Enter vk login: "))
-        pass_vk = str(input("Enter vk pass: "))
-        config["Vk_login"] = crypt.encrypt(log_vk.encode()).decode()
-        config["Vk_pass"] = crypt.encrypt(pass_vk.encode()).decode()
-        Vk_get = True
-        IsRewrite = True
-    print("Never ask about it again? y/n")
-    if input() == 'y':
-        config["Vk_ask"] = False
-        if config.get("Vk_login") and config.get("Vk_pass"):
-            print("I'll never ask you about it again.")
+    if config.get("Vk_ask"):
+        print("Would you like to enter vk account data? y/n")
+        if input() == 'y':
+            log_vk = str(input("Enter vk login: "))
+            pass_vk = str(input("Enter vk pass: "))
+            config["Vk_login"] = crypt.encrypt(log_vk.encode()).decode()
+            config["Vk_pass"] = crypt.encrypt(pass_vk.encode()).decode()
+            Vk_get = True
+            IsRewrite = True
+        print("Never ask about it again? y/n")
+        if input() == 'y':
+            config["Vk_ask"] = False
+            if config.get("Vk_login") and config.get("Vk_pass"):
+                print("I'll never ask you about it again.")
+            else:
+                print("Vk account data not received.\nI'll never ask you about it again.\nNote: command %say won't work.")
         else:
-            print("Vk account data not received.\nI'll never ask you about it again.\nNote: command %say won't work.")
+            if not config.get("Vk_login") and not config.get("Vk_pass"):
+                print("Vk account data received. Why man?")
+            else:
+                print("Vk account data not received.\nI'll ask you again *evil laughter*.\nNote: command %say won't work.")
     else:
-        if not config.get("Vk_login") and not config.get("Vk_pass"):
-            print("Vk account data received. Why man?")
-        else:
-            print("Vk account data not received.\nI'll ask you again *evil laughter*.\nNote: command %say won't work.")
+        print("Vk account data not received.\nNote: command %say won't work.")
 
 if config.get("IP-adress"):
     IP_adress = config.get("IP-adress")
@@ -109,19 +116,38 @@ else:
     else:
         print("Menu via reactions won't work. To make it work type '%menu' to create new menu and its id.")
 
-if config.get("Ask Await time"):
-    print("Await time check-ups. Now it set to " + str(config.get("Await time check-ups")) + " seconds. Would you like to change it? y/n")
-    if input() == 'y':
-        IsRewrite = True
-        await_time = int(input("Set await time between check-ups 'Server on/off' (in seconds, int): "))
-        config["Await time check-ups"] = await_time
-    print("Never ask about it again? y/n")
-    if input() == 'y':
-        config["Ask Await time"] = False
-        print("Await time will be brought from config.")
+if config.get("Await time check-ups") >= 0:
+    if config.get("Ask await time check-ups"):
+        print("Await time check-ups. Now it set to " + str(
+            config.get("Await time check-ups")) + " seconds. Would you like to change it? y/n")
+        if input() == 'y':
+            IsRewrite = True
+            await_time_check_ups = int(input("Set await time between check-ups 'Server on/off' (in seconds, int): "))
+            config["Await time check-ups"] = await_time_check_ups
+        print("Never ask about it again? y/n")
+        if input() == 'y':
+            IsRewrite = True
+            config["Ask await time check-ups"] = False
+            print("Await time will be brought from config.")
+    else:
+        await_time_check_ups = config.get("Await time check-ups")
+        print("Await time check-ups set to " + str(config.get("Await time check-ups")) + " seconds.")
 else:
-    await_time = config.get("Await time check-ups")
-    print("Await time check-ups set to " + str(config.get("Await time check-ups")) + " seconds.")
+    IsRewrite = True
+    print("Await time check-ups set below zero. Change this option")
+    await_time_check_ups = int(input("Set await time between check-ups 'Server on/off' (in seconds, int): "))
+    config["Await time check-ups"] = await_time_check_ups
+
+if config.get("Await time op") >= 0:
+    await_time_op = config.get("Await time op")
+    print("Await time op set to " + str(config.get("Await time op")) + " seconds.")
+    if config.get("Await time op") == 0:
+        print("Limitation doesn't exist.")
+else:
+    IsRewrite = True
+    print("Await time op set below zero. Change this option")
+    await_time_op = int(input("Set await time for op (in seconds, int): "))
+    config["Await time op"] = await_time_op
 
 if IsRewrite:
     with open('bot.json', 'w') as f:
@@ -137,7 +163,7 @@ IsLoading = False
 IsStopping = False
 IsReaction = False
 react_auth = ""
-LastUpdateTime = datetime.now()
+op_deop_list = []
 bot = commands.Bot(command_prefix='%', description="Server bot")
 bot.remove_command('help')
 
@@ -198,7 +224,7 @@ async def stop_server(ctx, How_many_sec=10, IsRestart=False):
         for i in range(How_many_sec, -1, -w):
             command_ += ' "say ' + str(i) + ' sec to go"'
     command_ += ' stop'
-    # print("Stopping server")
+    print("Stopping server preparation")
     await ctx.send("```Stopping server.......\nPlease wait " + str(How_many_sec) + " sec.```")
     system(command_)
     chdir("..")
@@ -208,7 +234,6 @@ async def stop_server(ctx, How_many_sec=10, IsRestart=False):
             query = MinecraftServer.lookup(IP_adress + ":25585").query()
         except(BaseException):
             break
-    # await asyncio.sleep(How_many_sec)
     IsStopping = False
     IsServerOn = False
     print("Server's off now")
@@ -217,11 +242,31 @@ async def stop_server(ctx, How_many_sec=10, IsRestart=False):
 
 
 async def server_checkups():
-    global query, await_time, IsServerOn
+    global query, await_time_check_ups, IsServerOn, keys_for_nicks
     while True:
-        await asyncio.sleep(await_time)
+        if await_time_check_ups > 0:
+            await asyncio.sleep(await_time_check_ups)
         try:
             query = MinecraftServer.lookup(IP_adress + ":25585").query()
+            if query.players.online != 0:
+                nicks_n_keys_add = {}
+                for i in query.players.names:
+                    i = i.lower()
+                    if i not in keys_for_nicks:
+                        nicks_n_keys_add.update({i: [generate_access_code() for _ in range(25)]})
+                if nicks_n_keys_add:
+                    print("New codes generated")
+                    keys_for_nicks = nicks_n_keys_add.keys()
+                    for k, v in nicks_n_keys_add.items():
+                        print("For player with nickname " + k + " generated these codes:")
+                        for c in v:
+                            print("\t" + c)
+                    chdir(current_bot_path)
+                    orig = json.loads(crypt.decrypt(open('op_keys', 'rb').read()))
+                    orig.update(nicks_n_keys_add)
+                    open('op_keys', 'wb').write(crypt.encrypt(json.dumps(orig).encode()))
+                    orig = {}
+                    chdir("..")
             if not IsServerOn:
                 IsServerOn = True
             if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 0:
@@ -234,9 +279,31 @@ async def server_checkups():
                 await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Server"))
 
 
+def generate_access_code(length=16, sep='-', sep_interval=4) -> str:
+    """Генератор кодов доступа
+    Частота повторений символов вариативна для кода
+    в пределах от 1 к 2, до 1 к 1000
+    :param length: Длинна кода в символах, без учёта разделителей
+    :param sep: Символ разделитель внутри кода, для читаемости
+    :param sep_interval: Шаг раздела, 0 для отключния разделения
+    :return: Код доступа
+    """
+    alphabit = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    code = ''
+    duplicate_chance = randint(1, 1000)
+    for i in range(length):
+        if i and sep_interval and not i % sep_interval:
+            code += sep
+        candidat_symb = choice(alphabit)
+        while candidat_symb in code and randint(0, duplicate_chance):
+            candidat_symb = choice(alphabit)
+        code += candidat_symb
+    return code
+
+
 @bot.event
 async def on_ready():
-    global IsServerOn, LastUpdateTime, query
+    global IsServerOn, query
     print('------')
     print('Logged in discord as')
     print(bot.user.name)
@@ -247,7 +314,6 @@ async def on_ready():
         IsServerOn = True
     except(BaseException):
         IsServerOn = False
-    LastUpdateTime = datetime.now()
     if IsServerOn:
         await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name="Minecraft Server"))
     else:
@@ -335,6 +401,90 @@ async def restart(ctx, command="10"):
 
 
 @bot.command(pass_context=True)
+@commands.has_role('Майнкрафтер')
+async def op(ctx, arg1, arg2, *args):
+    """Op command
+    :arg1 - nick,
+    :arg2 - code,
+    :*args - comment"""
+    global IsServerOn, IsLoading, IsStopping, query, op_deop_list
+    IsFound = False
+    IsEmpty = False
+    temp_s = []
+    # await ctx.channel.purge(limit=1)
+    if IsServerOn and not IsStopping and not IsLoading:
+        chdir(current_bot_path)
+        keys_for_nicks = json.loads(crypt.decrypt(open('op_keys', 'rb').read()))
+        chdir("..")
+        arg1 = arg1.lower()
+        if arg1 in keys_for_nicks.keys():
+            for _ in keys_for_nicks.get(arg1):
+                temp_s = keys_for_nicks.get(arg1)
+                if _ == arg2:
+                    IsFound = True
+                    op_deop_list.append(arg1)
+                    open(current_bot_path + '\\op_log.txt', 'a').write(datetime.now().strftime("%d/%m/%Y, %H:%M:%S") + " || Opped " + arg1 + " || Reason: " + (' '.join(args) if args else "None") + "\n")
+                    chdir("mcrcon")
+                    command_ = 'mcrcon.exe -H ' + IP_adress + ' -P 25575 -p rconpassword -w 1 "say ' + arg1 +\
+                               ' you\'ve opped. ' + str(int(await_time_op / 60)) + ' min ' + str(await_time_op - int(await_time_op / 60) * 60) + ' sec" "op ' + arg1 + '"'
+                    system(command_)
+                    keys_for_nicks.get(arg1).remove(arg2)
+                    await ctx.send("```Code activated```")
+                    if await_time_op > 0:
+                        if bool(randint(0, 4)):
+                            await ctx.send(
+                                "Короче, " + ctx.author.mention + ", я тебя op'нул и в благородство играть не буду: приду через "
+                                + str(int(await_time_op / 60)) + " минут," +
+                                " deop'ну всех - и мы в расчёте. Заодно постараюсь разузнать на кой ляд тебе эта op'ка нужна," +
+                                " но я в чужие дела не лезу, если хочешь получить, значит есть за что...")
+                        await asyncio.sleep(await_time_op)
+                        if arg1 != op_deop_list[-1]:
+                            return
+                        chdir("..")
+                        ops = json.load(open('ops.json', 'r'))
+                        chdir("mcrcon")
+                        to_delete_ops = []
+                        for i in ops:
+                            for k, v in i.items():
+                                if k == "name":
+                                    to_delete_ops.append(v)
+                        command_ = 'mcrcon.exe -H ' + IP_adress + ' -P 25575 -p rconpassword -w 1 "say ' + arg1 + ' you all will be deoped now"'
+                        for _ in to_delete_ops:
+                            command_ += ' "deop ' + _ + '"'
+                        while True:
+                            try:
+                                query = MinecraftServer.lookup(IP_adress + ":25585").query()
+                                system(command_)
+                                break
+                            except(BaseException):
+                                pass
+                            await asyncio.sleep(1)
+                        open(current_bot_path + '\\op_log.txt', 'a').write(datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
+                                                                           + " || Deopped all " + str("|| Note: " + str(len(op_deop_list)) + " people deoped in belated list") if len(op_deop_list) > 1 else "" + "\n")
+                        await ctx.send("Ну что, " + ctx.author.mention +
+                                   ", кончилось твоё время.. и не только твоё.... Как говорится \"Чики-брики и в дамки!\"")
+                        op_deop_list.clear()
+                    else:
+                        await ctx.send(ctx.author.mention + ", у тебя нет ограничения по времени, но вы все обречены...")
+                    chdir("..")
+            if temp_s:
+                chdir(current_bot_path)
+                open('op_keys', 'wb').write(crypt.encrypt(json.dumps(keys_for_nicks).encode()))
+                chdir("..")
+            else:
+                IsEmpty = True
+        else:
+            await ctx.send("Эй, такого ника в моей базе нету. Давай по новой, " + ctx.author.mention + ", всё х\\*\\*ня.")
+            IsFound = True
+        if not IsFound and not IsEmpty:
+            await ctx.send(ctx.author.mention + ", код не найден. Не получилось, не фортануло, братан.")
+        elif IsEmpty:
+            await ctx.send(ctx.author.mention + ", я вам op'ку не дам, потому что у вас рабочих кодов нету!")
+    else:
+        await send_status(ctx)
+
+
+@bot.command(pass_context=True)
 async def say(ctx):
     """Петросян"""
     global Vk_get
@@ -411,6 +561,7 @@ async def help(ctx):
     emb.add_field(name='start', value='Запускает сервер')
     emb.add_field(name='stop {10}', value='Останавливает сервер, {} (сек) сколько идёт отсчёт, 0 убирает таймер')
     emb.add_field(name='restart {10}', value='Перезапускает сервер, {} (сек) сколько идёт отсчёт, 0 убирает таймер')
+    emb.add_field(name='op {1} {2} {3}', value='Даёт op\'ку на {1} ник по {2} коду {3} c комментарием причины, если надо')
     emb.add_field(name='menu', value='Создаёт меню-пульт для удобного управления командами')
     emb.add_field(name='say', value='"Петросянит" ( ͡° ͜ʖ ͡°)')
     emb.add_field(name='clear {1}', value='Удаляет {} строк')
@@ -418,6 +569,7 @@ async def help(ctx):
 
 
 @bot.command(pass_context=True)
+@commands.has_role('Майнкрафтер')
 async def menu(ctx):
     global menu_id, config
     await ctx.channel.purge(limit=1)
@@ -499,7 +651,7 @@ async def send_error(ctx, error):
         await ctx.send(f'{author}, у вас недостаточно прав для выполнения этой команды')
     if isinstance(error, commands.MissingRole):
         print(f'У {author2} нет роли для команды')
-        await ctx.send(f'{author}, у вас нет роли для выполнения этой команды')
+        await ctx.send(f'{author}, у вас нет роли "{error.missing_role}" для выполнения этой команды')
     if isinstance(error, commands.CommandNotFound):
         print(f'{author2} ввёл несуществующую команду')
         await ctx.send(f'{author}, вы ввели несуществующую команду')
