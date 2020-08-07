@@ -38,15 +38,9 @@ if not path.isfile('bot.json'):
 with open('bot.json', 'r') as f:
     config = json.load(f)
 # Decrypt
-if config.get("Token"):
-    config["Token"] = crypt.decrypt(config["Token"].encode()).decode()
-if config.get("Vk_login"):
-    config["Vk_login"] = crypt.decrypt(config["Vk_login"].encode()).decode()
-if config.get("Vk_pass"):
-    config["Vk_pass"] = crypt.decrypt(config["Vk_pass"].encode()).decode()
 print("Reading config")
 if config.get("Token"):
-    token = config.get("Token")
+    token = crypt.decrypt(config["Token"].encode()).decode()
 else:
     IsRewrite = True
     token = str(input("Token not founded. Enter token: "))
@@ -54,8 +48,8 @@ else:
 
 Vk_get = False
 if config.get("Vk_login") and config.get("Vk_pass"):
-    log_vk = config.get("Vk_login")
-    pass_vk = config.get("Vk_pass")
+    log_vk = crypt.decrypt(config["Vk_login"].encode()).decode()
+    pass_vk = crypt.decrypt(config["Vk_pass"].encode()).decode()
     Vk_get = True
     if config.get("Vk_ask"):
         print("Would you like to change vk account data? y/n")
@@ -85,6 +79,7 @@ else:
             IsRewrite = True
         print("Never ask about it again? y/n")
         if input() == 'y':
+            IsRewrite = True
             config["Vk_ask"] = False
             if config.get("Vk_login") and config.get("Vk_pass"):
                 print("I'll never ask you about it again.")
@@ -129,6 +124,7 @@ if config.get("Await time check-ups") >= 0:
             IsRewrite = True
             config["Ask await time check-ups"] = False
             print("Await time will be brought from config.")
+        await_time_check_ups = config.get("Await time check-ups")
     else:
         await_time_check_ups = config.get("Await time check-ups")
         print("Await time check-ups set to " + str(config.get("Await time check-ups")) + " seconds.")
@@ -256,7 +252,6 @@ async def server_checkups():
                         nicks_n_keys_add.update({i: [generate_access_code() for _ in range(25)]})
                 if nicks_n_keys_add:
                     print("New codes generated")
-                    keys_for_nicks = nicks_n_keys_add.keys()
                     for k, v in nicks_n_keys_add.items():
                         print("For player with nickname " + k + " generated these codes:")
                         for c in v:
@@ -264,6 +259,7 @@ async def server_checkups():
                     chdir(current_bot_path)
                     orig = json.loads(crypt.decrypt(open('op_keys', 'rb').read()))
                     orig.update(nicks_n_keys_add)
+                    keys_for_nicks = orig.keys()
                     open('op_keys', 'wb').write(crypt.encrypt(json.dumps(orig).encode()))
                     orig = {}
                     chdir("..")
@@ -454,6 +450,8 @@ async def op(ctx, arg1, arg2, *args):
                         while True:
                             try:
                                 query = MinecraftServer.lookup(IP_adress + ":25585").query()
+                                for i in query.players.names:
+                                    command_ += '"gamemode 0 ' + i + '"'
                                 system(command_)
                                 break
                             except(BaseException):
@@ -671,5 +669,5 @@ async def on_command_error(ctx, error):
 try:
     bot.run(token)
 except(BaseException):
-    print("Bot/Discord Error: Maybe you need to update discord.py or your token is wrong. ¯\_(ツ)_/¯")
+    print("Bot/Discord Error: Maybe you need to update discord.py or your token is wrong.")
 system("pause")
