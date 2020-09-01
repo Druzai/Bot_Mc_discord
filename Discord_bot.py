@@ -7,7 +7,9 @@ import json
 from cryptography.fernet import Fernet
 from datetime import datetime
 from discord.ext import commands
-from mcstatus import MinecraftServer
+# from mcstatus import MinecraftServer # delete
+from mcipc.query import Client as Client_q
+from mcipc.rcon import Client as Client_r
 
 # json and encrypt :)
 IsRewrite = False
@@ -153,7 +155,7 @@ print("Config loaded!")
 current_bot_path = path.abspath(getcwd())
 chdir("..")
 ansii_com = {"status": "🗨", "list": "📋", "start": "♿", "stop": "⏹", "restart": "🔄"}
-query = 0
+# query = 0
 IsServerOn = False
 IsLoading = False
 IsStopping = False
@@ -179,18 +181,26 @@ async def send_status(ctx):
 
 
 async def start_server(ctx):
-    global IsServerOn, IsLoading, IsStopping, query
+    global IsServerOn, IsLoading, IsStopping#, query
     IsLoading = True
     print("Loading server")
     await ctx.send("```Loading server.......\nPlease wait)```")
     startfile("Start_bot.bat")
     while True:
-        await asyncio.sleep(1)
+        #await asyncio.sleep(1)
+        try:
+            with Client_q(IP_adress, 25585, timeout=1) as cl_q:
+                info = cl_q.basic_stats
+            break
+        except (BaseException):
+            pass
+        """
         try:
             query = MinecraftServer.lookup(IP_adress + ":25585").query()
             break
         except(BaseException):
             pass
+        """
     print("Server's on now")
     await ctx.send("```Server's on now```")
     IsLoading = False
@@ -199,9 +209,36 @@ async def start_server(ctx):
 
 
 async def stop_server(ctx, How_many_sec=10, IsRestart=False):
-    global IsServerOn, IsLoading, IsStopping, query
+    global IsServerOn, IsLoading, IsStopping#, query
     IsStopping = True
-    chdir("mcrcon")
+    print("Stopping server")
+    await ctx.send("```Stopping server.......\nPlease wait " + str(How_many_sec) + " sec.```")
+    try:
+        with Client_r(IP_adress, 25575, timeout=1) as cl_r:
+            cl_r.login('rconpassword')
+            if How_many_sec != 0:
+                w = 1
+                if How_many_sec > 5:
+                    while True:
+                        w += 1
+                        if How_many_sec % w == 0 and w <= 10:
+                            break
+                        elif How_many_sec % w == 0 and w > 10:
+                            How_many_sec += 1
+                            w = 1
+
+                if not IsRestart:
+                    cl_r.say('Server\'s shutting down in ' + str(How_many_sec) + ' seconds')
+                else:
+                    cl_r.say('Server\'s restarting in ' + str(How_many_sec) + ' seconds')
+                for i in range(How_many_sec, -1, -w):
+                    cl_r.say('say ' + str(i) + ' sec to go')
+                    await asyncio.sleep(w)
+            cl_r.run("stop")
+    except (BaseException):
+        print("Exeption: Couldn't connect to server, check its connection")
+        pass
+    """chdir("mcrcon")
     command_ = 'mcrcon.exe -H ' + IP_adress + ' -P 25575 -p rconpassword'
     if How_many_sec != 0:
         w = 1
@@ -219,17 +256,21 @@ async def stop_server(ctx, How_many_sec=10, IsRestart=False):
             command_ += ' -w ' + str(w) + ' "say Server\'s restarting in ' + str(How_many_sec) + ' seconds"'
         for i in range(How_many_sec, -1, -w):
             command_ += ' "say ' + str(i) + ' sec to go"'
-    command_ += ' stop'
-    print("Stopping server preparation")
-    await ctx.send("```Stopping server.......\nPlease wait " + str(How_many_sec) + " sec.```")
-    system(command_)
-    chdir("..")
+    command_ += ' stop'"""
+    # system(command_)
+    # chdir("..")
     while True:
-        await asyncio.sleep(1)
+        try:
+            with Client_q(IP_adress, 25585, timeout=1) as cl_q:
+                info = cl_q.basic_stats
+            break
+        except (BaseException):
+            pass
+        """await asyncio.sleep(1)
         try:
             query = MinecraftServer.lookup(IP_adress + ":25585").query()
         except(BaseException):
-            break
+            break"""
     IsStopping = False
     IsServerOn = False
     print("Server's off now")
@@ -237,16 +278,18 @@ async def stop_server(ctx, How_many_sec=10, IsRestart=False):
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Server"))
 
 
-async def server_checkups():
-    global query, await_time_check_ups, IsServerOn, keys_for_nicks
+async def server_checkups(always_=True):
+    global await_time_check_ups, IsServerOn, keys_for_nicks # query,
     while True:
-        if await_time_check_ups > 0:
+        if await_time_check_ups > 0 and always_:
             await asyncio.sleep(await_time_check_ups)
         try:
-            query = MinecraftServer.lookup(IP_adress + ":25585").query()
-            if query.players.online != 0:
+            with Client_q(IP_adress, 25585, timeout=1) as cl_q:
+                info = cl_q.full_stats
+                # query = MinecraftServer.lookup(IP_adress + ":25585").query()
+            if info.num_players != 0:
                 nicks_n_keys_add = {}
-                for i in query.players.names:
+                for i in info.players:
                     i = i.lower()
                     if i not in keys_for_nicks:
                         nicks_n_keys_add.update({i: [generate_access_code() for _ in range(25)]})
@@ -268,11 +311,13 @@ async def server_checkups():
             if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 0:
                 await bot.change_presence(
                     activity=discord.Activity(type=discord.ActivityType.playing, name="Minecraft Server"))
-        except(BaseException):
+        except (BaseException):
             if IsServerOn:
                 IsServerOn = False
             if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 2:
                 await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Server"))
+        if not always_:
+            break
 
 
 def generate_access_code(length=16, sep='-', sep_interval=4) -> str:
@@ -299,17 +344,23 @@ def generate_access_code(length=16, sep='-', sep_interval=4) -> str:
 
 @bot.event
 async def on_ready():
-    global IsServerOn, query
+    global IsServerOn #, query
     print('------')
     print('Logged in discord as')
     print(bot.user.name)
     print("Discord version ", discord.__version__)
     print('------')
     try:
+        with Client_q(IP_adress, 25585, timeout=1) as cl_q:
+            info = cl_q.basic_stats
+        IsServerOn = True
+    except (BaseException):
+        IsServerOn = False
+    """try:
         query = MinecraftServer.lookup(IP_adress + ":25585").query()
         IsServerOn = True
     except(BaseException):
-        IsServerOn = False
+        IsServerOn = False"""
     if IsServerOn:
         await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name="Minecraft Server"))
     else:
@@ -324,8 +375,27 @@ async def on_ready():
 # @commands.has_role('Майнкрафтер')
 async def status(ctx):
     """Shows server status"""
+    await server_checkups(False)
     if IsServerOn:
-        await ctx.send("```Server online```")
+        # await ctx.send("```Server online```")
+        try:
+            with Client_r(IP_adress, 25575, timeout=1) as cl_r:
+                cl_r.login('rconpassword')
+                time_ticks = int(cl_r.run("time query daytime").split(" ")[2])
+            message = "Time in minecraft: "
+            if 450 <= time_ticks <= 11616:
+                message += "Day, "
+            elif 11617 <= time_ticks <= 13800:
+                message += "Sunset, "
+            elif 13801 <= time_ticks <= 22550:
+                message += "Night, "
+            else:
+                message += "Sunrise, "
+            await ctx.send("```Server online\n" + message + str((6 + time_ticks // 1000) % 24) +
+                     ":" + str((time_ticks % 1000) * 60 // 1000) + "```")
+        except (BaseException):
+            print("Serv's down")
+        """rcon check daytime cycle"""
     else:
         await ctx.send("```Server offline```")
 
@@ -333,9 +403,23 @@ async def status(ctx):
 @bot.command(pass_context=True)
 # @commands.has_role('Майнкрафтер')
 async def list(ctx, command="-u"):
-    global query
+    global IsReaction #query
     if command == "-u":
         try:
+            with Client_q(IP_adress, 25585, timeout=1) as cl_q:
+                info = cl_q.full_stats
+                if info.num_players == 0:
+                    await ctx.send("```Игроков на сервере нет```")
+                else:
+                    await ctx.send("```Игроков на сервере - {0}\nИгроки: {1}```".format(info.num_players,
+                                                                                        ", ".join(info.players)))
+        except (BaseException):
+            if IsReaction:
+                author = react_auth.mention
+            else:
+                author = ctx.author.mention
+            await ctx.send(f"{author}, сервер сейчас выключен")
+        """try:
             query = MinecraftServer.lookup(IP_adress + ":25585").query()
             if query.players.online == 0:
                 await ctx.send("```Игроков на сервере нет```")
@@ -347,7 +431,7 @@ async def list(ctx, command="-u"):
                 author = react_auth.mention
             else:
                 author = ctx.author.mention
-            await ctx.send(f"{author}, сервер сейчас выключен")
+            await ctx.send(f"{author}, сервер сейчас выключен")"""
     else:
         raise commands.UserInputError()
 
@@ -357,6 +441,7 @@ async def list(ctx, command="-u"):
 async def start(ctx):
     """Start server"""
     global IsServerOn, IsLoading, IsStopping
+    await server_checkups(False)
     if not IsServerOn and not IsStopping and not IsLoading:
         await start_server(ctx)
     else:
@@ -368,6 +453,7 @@ async def start(ctx):
 async def stop(ctx, command="10"):
     """End server"""
     global IsServerOn, IsLoading, IsStopping
+    await server_checkups(False)
     try:
         if int(command) >= 0:
             if IsServerOn and not IsStopping and not IsLoading:
@@ -383,6 +469,7 @@ async def stop(ctx, command="10"):
 async def restart(ctx, command="10"):
     """Restart server"""
     global IsServerOn, IsLoading, IsStopping
+    await server_checkups(False)
     try:
         if int(command) >= 0:
             if IsServerOn and not IsStopping and not IsLoading:
@@ -403,7 +490,7 @@ async def op(ctx, arg1, arg2, *args):
     :arg1 - nick,
     :arg2 - code,
     :*args - comment"""
-    global IsServerOn, IsLoading, IsStopping, query, op_deop_list
+    global IsServerOn, IsLoading, IsStopping, op_deop_list # , query
     IsFound = False
     IsEmpty = False
     temp_s = []
@@ -420,10 +507,17 @@ async def op(ctx, arg1, arg2, *args):
                     IsFound = True
                     op_deop_list.append(arg1)
                     open(current_bot_path + '\\op_log.txt', 'a').write(datetime.now().strftime("%d/%m/%Y, %H:%M:%S") + " || Opped " + arg1 + " || Reason: " + (' '.join(args) if args else "None") + "\n")
-                    chdir("mcrcon")
+                    try:
+                        with Client_r(IP_adress, 25575, timeout=1) as cl_r:
+                            cl_r.login('rconpassword')
+                            cl_r.say(arg1 + ' you\'ve opped for ' + str(int(await_time_op / 60)) + ' min ' + str(await_time_op - int(await_time_op / 60) * 60) + ' sec.')
+                            cl_r.mkop(arg1)
+                    except (BaseException):
+                        await ctx.send(ctx.author.mention + ", а сервак то не работает, попробуй-ка позже.")
+                    """chdir("mcrcon")
                     command_ = 'mcrcon.exe -H ' + IP_adress + ' -P 25575 -p rconpassword -w 1 "say ' + arg1 +\
                                ' you\'ve opped. ' + str(int(await_time_op / 60)) + ' min ' + str(await_time_op - int(await_time_op / 60) * 60) + ' sec" "op ' + arg1 + '"'
-                    system(command_)
+                    system(command_)"""
                     keys_for_nicks.get(arg1).remove(arg2)
                     await ctx.send("```Code activated```")
                     if await_time_op > 0:
@@ -444,19 +538,38 @@ async def op(ctx, arg1, arg2, *args):
                             for k, v in i.items():
                                 if k == "name":
                                     to_delete_ops.append(v)
-                        command_ = 'mcrcon.exe -H ' + IP_adress + ' -P 25575 -p rconpassword -w 1 "say ' + arg1 + ' you all will be deoped now"'
+                        """command_ = 'mcrcon.exe -H ' + IP_adress + ' -P 25575 -p rconpassword -w 1 "say ' + arg1 + ' you all will be deoped now"'
                         for _ in to_delete_ops:
-                            command_ += ' "deop ' + _ + '"'
+                            command_ += ' "deop ' + _ + '"'"""
                         while True:
+                            """try:
+                                with Client_q(IP_adress, 25585, timeout=1) as cl_q:
+                                    info = cl_q.full_stats
+                                IsServerOn = True
+                            except (BaseException):
+                                IsServerOn = False"""
+                            try:
+                                with Client_r(IP_adress, 25575, timeout=1) as cl_r:
+                                    cl_r.login('rconpassword')
+                                    cl_r.say(arg1 + ' you all will be deoped now.')
+                                    for _ in to_delete_ops:
+                                        cl_r.deop(_)
+                                    list = cl_r.run("list").split(":")[1].split(", ")
+                                    for _ in list:
+                                        cl_r.run("gamemode 0 " + _)
+                                break
+                            except (BaseException):
+                                pass
+                            """-------------------------------------------------------------------
                             try:
                                 query = MinecraftServer.lookup(IP_adress + ":25585").query()
                                 for i in query.players.names:
-                                    command_ += '"gamemode 0 ' + i + '"'
+                                    command_ += ' "gamemode 0 ' + i + '"'
                                 system(command_)
                                 break
                             except(BaseException):
-                                pass
-                            await asyncio.sleep(1)
+                                pass"""
+                            # await asyncio.sleep(1)
                         open(current_bot_path + '\\op_log.txt', 'a').write(datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
                                                                            + " || Deopped all " + str("|| Note: " + str(len(op_deop_list)) + " people deoped in belated list") if len(op_deop_list) > 1 else "" + "\n")
                         await ctx.send("Ну что, " + ctx.author.mention +
