@@ -9,7 +9,6 @@ from datetime import datetime
 from discord.ext import commands
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r
-from sys import platform
 
 # json and encrypt :)
 IsRewrite = False
@@ -30,6 +29,7 @@ if not path.isfile('bot.json'):
         "Menu_message_id": None,
         "Ask await time check-ups": True,
         "Await time check-ups": 15,
+        "Forceload": False,
         "Await time op": 600,
         "Vk_ask": True,
         "Vk_login": None,
@@ -161,7 +161,7 @@ IsServerOn = False
 IsLoading = False
 IsStopping = False
 IsReaction = False
-IsForceload = False
+IsForceload = config.get("Forceload")
 react_auth = ""
 op_deop_list = []
 bot = commands.Bot(command_prefix='%', description="Server bot")
@@ -187,10 +187,7 @@ async def start_server(ctx):
     IsLoading = True
     print("Loading server")
     await ctx.send("```Loading server.......\nPlease wait)```")
-    if platform == "linux" or platform == "linux2":
-        system("screen ./Start_bot.sh")
-    elif platform == "win32":
-        startfile("Start_bot.bat")
+    startfile("Start_bot.bat")
     while True:
         try:
             with Client_q(IP_adress, 25585, timeout=1) as cl_q:
@@ -607,19 +604,30 @@ async def say(ctx):
 @commands.has_role('Майнкрафтер')
 async def forceload(ctx, command=" "):
     global IsForceload
-    if command == "on":
-        if not IsForceload:
-            IsForceload = True
-    elif command == "off":
-        if IsForceload:
-            IsForceload = False
+    if command == "on" or command == "off":
+        rw = False
+        if command == "on":
+            if not IsForceload:
+                IsForceload = True
+                rw = True
+                config["Forceload"] = IsForceload
+                await ctx.send("```Forceload on```")
+        elif command == "off":
+            if IsForceload:
+                IsForceload = False
+                rw = True
+                config["Forceload"] = IsForceload
+                await ctx.send("```Forceload off```")
+        if rw:
+            with open(current_bot_path + '\\bot.json', 'w') as f_:
+                json.dump(config, f_, indent=2)
     elif command == " ":
         if IsForceload:
             await ctx.send("```Forceload on```")
         else:
             await ctx.send("```Forceload off```")
     else:
-        await ctx.send("```Command usage: on/off```")
+        raise commands.UserInputError()
 
 
 @bot.command(pass_context=True)
@@ -725,7 +733,7 @@ async def send_error(ctx, error):
         print(f'У {author2} мало прав для команды')
         await ctx.send(f'{author}, у вас недостаточно прав для выполнения этой команды')
     if isinstance(error, commands.MissingRole):
-        print(f'У {author2} нет роли для команды')
+        print(f'У {author2} нет роли "{error.missing_role}" для команды')
         await ctx.send(f'{author}, у вас нет роли "{error.missing_role}" для выполнения этой команды')
     if isinstance(error, commands.CommandNotFound):
         print(f'{author2} ввёл несуществующую команду')
