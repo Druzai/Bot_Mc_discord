@@ -186,7 +186,8 @@ async def start_server(ctx):
     global IsServerOn, IsLoading, IsStopping
     IsLoading = True
     print("Loading server")
-    await ctx.send("```Loading server.......\nPlease wait)```")
+    if ctx:
+        await ctx.send("```Loading server.......\nPlease wait)```")
     startfile("Start_bot.bat")
     while True:
         try:
@@ -195,7 +196,8 @@ async def start_server(ctx):
             break
         except (BaseException):
             pass
-    await ctx.send("```Server's on now```")
+    if ctx:
+        await ctx.send("```Server's on now```")
     IsLoading = False
     IsServerOn = True
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name="Minecraft Server"))
@@ -247,8 +249,6 @@ async def stop_server(ctx, How_many_sec=10, IsRestart=False):
 async def server_checkups(always_=True):
     global await_time_check_ups, IsServerOn, keys_for_nicks, IsStopping, IsLoading
     while True:
-        if await_time_check_ups > 0 and always_:
-            await asyncio.sleep(await_time_check_ups)
         try:
             with Client_q(IP_adress, 25585, timeout=1) as cl_q:
                 info = cl_q.full_stats
@@ -286,10 +286,13 @@ async def server_checkups(always_=True):
                     for channel in guild.channels:
                         try:
                             await channel.fetch_message(menu_id)
-                            await start_server(channel)
+                            await channel.send(f'```Bot detected: Server\'s offline!\nTime: {datetime.now().strftime("%d/%m, %H:%M:%S")}\nStarting up server again!```')
+                            await start_server(None)
                             break
                         except(BaseException):
                             pass
+        if await_time_check_ups > 0 and always_:
+            await asyncio.sleep(await_time_check_ups)
         if not always_:
             break
 
@@ -324,7 +327,7 @@ async def on_ready():
     print(bot.user.name)
     print("Discord version ", discord.__version__)
     print('------')
-    try:
+    """try:
         with Client_q(IP_adress, 25585, timeout=1) as cl_q:
             info = cl_q.basic_stats
         IsServerOn = True
@@ -333,7 +336,8 @@ async def on_ready():
     if IsServerOn:
         await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name="Minecraft Server"))
     else:
-        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Server"))
+        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Server"))"""
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="nsfw"))
     print("Bot is ready!")
     print("Starting server check-ups.")
     await server_checkups()
