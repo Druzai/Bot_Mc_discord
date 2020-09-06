@@ -20,6 +20,11 @@ Libraries:
 * [cryptography](https://github.com/pyca/cryptography) - lib for encrypting nessesary data to config file
 * [mcipc](https://github.com/conqp/mcipc) - lib for easy using query and rcon to connect to minecraft server
 * [pyinstaller](https://github.com/pyinstaller/pyinstaller) - lib to build project to executable file, you can use another one if you can't for some reason
+### Installation
+Type in command promt, you must have [requirements.txt](requirements.txt) in root folder of the project
+```
+pip install -r requirements.txt
+```
 ### Build
 Type in command promt in root directory of the project to build it
 ```
