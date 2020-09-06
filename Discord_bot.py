@@ -1,4 +1,5 @@
-from os import startfile, chdir, path, system, getcwd
+from sys import platform
+from os import chdir, path, system, getcwd
 from random import choice, randint
 import discord
 import vk_api
@@ -9,6 +10,8 @@ from datetime import datetime
 from discord.ext import commands
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r
+if platform == "win32":
+    from os import startfile
 
 # json and encrypt :)
 IsRewrite = False
@@ -188,7 +191,10 @@ async def start_server(ctx):
     print("Loading server")
     if ctx:
         await ctx.send("```Loading server.......\nPlease wait)```")
-    startfile("Start_bot.bat")
+    if platform == "linux" or platform == "linux2":
+        system("screen -dmS Minecraft_Server ./Start_bot.sh")
+    elif platform == "win32":
+        startfile("Start_bot.bat")
     while True:
         try:
             with Client_q(IP_adress, 25585, timeout=1) as cl_q:
