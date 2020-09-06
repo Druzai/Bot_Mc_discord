@@ -600,7 +600,7 @@ async def say(ctx):
         await ctx.send(embed=e)
 
 
-@bot.command(pass_context=True)
+@bot.command(pass_context=True, aliases=["fl"])
 @commands.has_role('Майнкрафтер')
 async def forceload(ctx, command=" "):
     global IsForceload
@@ -644,7 +644,7 @@ async def help(ctx):
     emb.add_field(name='op {1} {2} {3}',
                   value='Даёт op\'ку на {1} ник по {2} коду {3} c комментарием причины, если надо')
     emb.add_field(name='menu', value='Создаёт меню-пульт для удобного управления командами')
-    emb.add_field(name='forceload {on/off}',
+    emb.add_field(name='forceload/fl {on/off}',
                   value='По {on/off} постоянная загрузка сервера, когда он отключен, без аргументов - статус')
     emb.add_field(name='say', value='"Петросянит" ( ͡° ͜ʖ ͡°)')
     emb.add_field(name='clear {1}', value='Удаляет {1} строк')
