@@ -1,16 +1,16 @@
 # Bot_Mc_discord
 ### Commands
-* %help - list all commands (currently in russian)
-* %status - return status of the server
-* %list - return list of the players on server
-* %start - start server
-* %stop {10} - stop server, {} (sec) countdown, 0 - remove timer
-* %restart {10} - restart server, {} (sec) countdown, 0 - remove timer
-* %op {1} {2} {3} - Give op to {1} player using {2} code {3} with reason comment, if needed, after setted time deop that player
-* %menu - Create menu-panel (embed) for easy command management
-* %forceload/fl {on/off} - By {on / off} constant loading of the server when it is shutted down, if no arguments - return status
-* %say - return embed with random picture from VK
-* %clear {1} - Delete {1} messages
+* `%help` - list all commands (currently in russian)
+* `%status` - return status of the server
+* `%list` - return list of the players on server
+* `%start` - start server
+* `%stop {10}` - stop server, {} (sec) countdown, 0 - remove timer
+* `%restart {10}` - restart server, {} (sec) countdown, 0 - remove timer
+* `%op {1} {2} {3}` - Give op to {1} player using {2} code {3} with reason comment, if needed, after setted time deop that player
+* `%menu` - Create menu-panel (embed) for easy command management
+* `%forceload/fl {on/off}` - By {on / off} constant loading of the server when it is shutted down, if no arguments - return status
+* `%say` - return embed with random picture from VK
+* `%clear {1}` - Delete {1} messages
 ### Requirements
 * Python 3.5-3.8
 ____________
