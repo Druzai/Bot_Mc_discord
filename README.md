@@ -40,7 +40,7 @@ You have to start bot file from folder located in your root minecraft server dir
 ```
 %your_minecraft_server_dir%\%bot_folder%\bot_executable_file
 ```
-And for the bot to properly work you have to have Start_bot.bat in your root minecraft server directory! Example:
+And for the bot to properly work you have to have Start_bot.bat in your root minecraft server directory! Example of file:
 ```
 rem ask_int - consists how many GB you're allocating for server on start up
 rem your_jar_file - jar file that starts up your server. It can be for vanilla: standart server.jar or for modded server: spigot.jar, forge.jar
@@ -64,7 +64,7 @@ You have execute bot file using terminal from folder located in your root minecr
 ```
 screen -dmS %your_session_name% %your_minecraft_server_dir%\%bot_folder%\bot_executable_file
 ```
-And for the bot to properly work you have to have Start_bot.sh in your root minecraft server directory!
+And for the bot to properly work you have to have Start_bot.sh in your root minecraft server directory! Example of file:
 ```
 # ask_int - consists how many GB you're allocating for server on start up
 # your_jar_file - jar file that starts up your server. It can be for vanilla: standart server.jar or for modded server: spigot.jar, forge.jar
