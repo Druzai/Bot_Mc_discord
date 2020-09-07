@@ -416,11 +416,17 @@ async def start(ctx):
 @commands.has_role('Майнкрафтер')
 async def stop(ctx, command="10"):
     """End server"""
-    global IsServerOn, IsLoading, IsStopping
+    global IsServerOn, IsLoading, IsStopping, IsForceload
     await server_checkups(False)
     try:
         if int(command) >= 0:
             if IsServerOn and not IsStopping and not IsLoading:
+                if IsForceload:
+                    IsForceload = False
+                    config["Forceload"] = IsForceload
+                    await ctx.send("```Forceload off```")
+                    with open(current_bot_path + '\\bot.json', 'w') as f_:
+                        json.dump(config, f_, indent=2)
                 await stop_server(ctx, int(command))
             else:
                 await send_status(ctx)
