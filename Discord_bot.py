@@ -53,8 +53,6 @@ if not path.isfile('bot.json'):
         "Vk_ask": True,
         "Vk_login": None,
         "Vk_pass": None,
-        "Querry_port": 25575,
-        "Rcon_port": 25585,
         "Main_minecraft_dirs": [],
         "Minecaft_dirs_ask": True,
         "Prefered_minecraft_dir": 0
@@ -244,6 +242,9 @@ if config.get("Main_minecraft_dirs"):
     if config.get("Minecaft_dirs_ask"):
         Minecraft_dirs_list = change_list_mine(Minecraft_dirs_list, len(Minecraft_dirs_list))
         config["Main_minecraft_dirs"] = Minecraft_dirs_list
+        if "y" == input("Never ask about it again? y/n\n"):
+            config["Minecaft_dirs_ask"] = False
+            print("Minecraft dirs will be brought from config.")
         IsRewrite = True
     else:
         print("Minecraft dir set to path" + Minecraft_dirs_list[Mine_dir_numb][0] + " also known as " +
@@ -772,7 +773,7 @@ async def whitelist(ctx, *args):
 @commands.has_role('Майнкрафтер')
 async def server(ctx, *args):
     global Mine_dir_numb
-    if len(args) and (args[0] == "list" or args[0] == "select"):
+    if len(args) and (args[0] == "list" or args[0] == "select" or args[0] == "show"):
         if args[0] == "list":
             send_ = "```List of servers"
             for i in range(len(Minecraft_dirs_list)):
@@ -795,11 +796,13 @@ async def server(ctx, *args):
                     await ctx.send("```Use server list, there's no such server on the list!```")
             except(BaseException):
                 await ctx.send("```Argument for 'select' must be a number!```")
-                return
+        elif args[0] == "show":
+            await ctx.send(
+                "```Selected server #" + str(Mine_dir_numb) + ". " + Minecraft_dirs_list[Mine_dir_numb][1] + "```")
         else:
             await ctx.send("```Wrong command!\nCommands: select, list```")
     else:
-        await ctx.send("```Commands: select, list```")
+        await ctx.send("```Commands: select, list, show```")
         raise commands.UserInputError()
 
 
@@ -822,7 +825,7 @@ async def help(ctx):
     emb.add_field(name='whitelist/wl {1}',
                   value='Использует whitelist с сервера майна, аргументы {1} - on, off, add, del, list.  С add и del ещё пишется ник игрока')
     emb.add_field(name='server {1}',
-                  value='Использует список серверов в боте, аргументы {1} - select, list.  При select ещё пишется номер сервера из list')
+                  value='Использует список серверов в боте, аргументы {1} - select, list, show.  При select ещё пишется номер сервера из list')
     emb.add_field(name='say', value='"Петросянит" ( ͡° ͜ʖ ͡°)')
     emb.add_field(name='clear {1}', value='Удаляет {1} строк')
     await ctx.send(embed=emb)

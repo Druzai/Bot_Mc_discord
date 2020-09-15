@@ -10,7 +10,7 @@
 * `%menu` - create menu-panel (embed) for easy command management
 * `%forceload/fl {on/off}` - by {`on` / `off`} constant loading of the server when it is shutted down, if no arguments - return status
 * `%whitelist/wl {1}` - uses whitelist from minecraft server, {1} arguments are `on`, `off`, `add`, `del`, `list`. If you use `add` or `del`, the player's nickname is also must be written
-* `server {1}` - uses a list of servers stored in the bot, arguments {1} - `select`, `list`. With `select`, the server number from the `list` is also must be written
+* `server {1}` - uses a list of servers stored in the bot, arguments {1} - `select`, `list`, `show`. With `select`, the server number from the `list` is also must be written
 * `%say` - return embed with random picture from VK
 * `%clear {1}` - delete {1} messages
 ### Requirements
