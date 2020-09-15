@@ -1,5 +1,6 @@
 from sys import platform
-from os import chdir, path, system, getcwd
+from os import chdir, path, system, getcwd, listdir
+from pathlib import Path
 from random import choice, randint
 import discord
 import vk_api
@@ -10,8 +11,22 @@ from datetime import datetime
 from discord.ext import commands
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r
+
 if platform == "win32":
     from os import startfile
+
+# variables
+IsServerOn = False
+IsLoading = False
+IsStopping = False
+IsRestarting = False
+IsReaction = False
+ansii_com = {"status": "🗨", "list": "📋", "start": "♿", "stop": "⏹", "restart": "🔄"}
+port_querry = 0
+port_rcon = 0
+rcon_pass = ""
+react_auth = ""
+op_deop_list = []
 
 # json and encrypt :)
 IsRewrite = False
@@ -29,6 +44,7 @@ if not path.isfile('bot.json'):
     config = {
         "Token": None,
         "IP-adress": None,
+        "Adress_local": None,
         "Menu_message_id": None,
         "Ask await time check-ups": True,
         "Await time check-ups": 15,
@@ -36,7 +52,12 @@ if not path.isfile('bot.json'):
         "Await time op": 600,
         "Vk_ask": True,
         "Vk_login": None,
-        "Vk_pass": None
+        "Vk_pass": None,
+        "Querry_port": 25575,
+        "Rcon_port": 25585,
+        "Main_minecraft_dirs": [],
+        "Minecaft_dirs_ask": True,
+        "Prefered_minecraft_dir": 0
     }
     with open('bot.json', 'w') as f:
         json.dump(config, f, indent=2)
@@ -104,8 +125,15 @@ if config.get("IP-adress"):
     IP_adress = config.get("IP-adress")
 else:
     IsRewrite = True
-    IP_adress = str(input("Enter server's IP-address from Radmin: "))
+    IP_adress = str(input("Enter server's real IP-address or DNS-name: "))
     config["IP-adress"] = IP_adress
+
+if config.get("Adress_local"):
+    Adress_local = config.get("Adress_local")
+else:
+    IsRewrite = True
+    Adress_local = str(input("Enter server's local address: "))
+    config["Adress_local"] = Adress_local
 
 if config.get("Menu_message_id"):
     menu_id = config.get("Menu_message_id")
@@ -152,21 +180,100 @@ else:
     await_time_op = int(input("Set await time for op (in seconds, int): "))
     config["Await time op"] = await_time_op
 
+
+def change_list_mine(l_ist, o):
+    bo = False
+    l = [["", ""] for _ in range(0, o)]
+    for j in range(o):
+        if len(l_ist) > 0:
+            l[j] = l_ist[j]
+            l_ist.pop(0)
+    i = 0
+    while i < o:
+        print("This is " + str(i + 1) + " path")
+        if l[i][0]:
+            print(
+                "Current editable minecraft path: " + l[i][0] + "\nWould you like to change path AND its comment? y/n")
+        else:
+            print("There is no right path")
+            bo = True
+        if bo or input() == "y":
+            bo = False
+            l[i][0] = input("Enter right path: ")
+            try:
+                x = listdir(l[i][0])
+                if len(x) > 0:
+                    for _ in x:
+                        if path.isfile(Path(l[i][0] + '/' + _)) and _ == "server.properties":
+                            print("Current comment about this path: '" + (
+                                l[i][1] if l[i][1] else "-None-") + "'\nChange it? y/n")
+                            t = ""
+                            if "y" == input():
+                                t = input("Enter comment about this path: ")
+                            l[i][1] = t
+                            i += 1
+                            break
+                else:
+                    print("This path doesn't contain file server.properties. Try again")
+            except(BaseException):
+                l[i][0] = ""
+                print("This path written wrong, try again")
+        else:
+            print("Path won't change!")
+            i += 1
+    return l
+
+
+def read_server_properties():
+    global port_querry, port_rcon, rcon_pass
+    with open(Path(Minecraft_dirs_list[Mine_dir_numb][0] + "/server.properties"), "r") as f:
+        for i in f.readlines():
+            if i.find("query.port") >= 0:
+                port_querry = int(i.split("=")[1])
+            if i.find("rcon.port") >= 0:
+                port_rcon = int(i.split("=")[1])
+            if i.find("rcon.password") >= 0:
+                rcon_pass = i.split("=")[1].strip()
+
+
+current_bot_path = path.abspath(getcwd())
+Minecraft_dirs_list = []
+Mine_dir_numb = config.get("Prefered_minecraft_dir")
+if config.get("Main_minecraft_dirs"):
+    Minecraft_dirs_list = config.get("Main_minecraft_dirs")
+    if config.get("Minecaft_dirs_ask"):
+        Minecraft_dirs_list = change_list_mine(Minecraft_dirs_list, len(Minecraft_dirs_list))
+        config["Main_minecraft_dirs"] = Minecraft_dirs_list
+        IsRewrite = True
+    else:
+        print("Minecraft dir set to path" + Minecraft_dirs_list[Mine_dir_numb][0] + " also known as " +
+              (Minecraft_dirs_list[Mine_dir_numb][1] if Minecraft_dirs_list[Mine_dir_numb][1] else "-None-"))
+else:
+    chdir("..")
+    x = listdir(path.abspath(getcwd()))
+    if len(x) > 0:
+        for _ in x:
+            r = Path(path.abspath(getcwd()) + '/' + _)
+            if path.isfile(Path(path.abspath(getcwd()) + '/' + _)) and _ == "server.properties":
+                Minecraft_dirs_list.append([path.abspath(getcwd()), ""])
+                break
+    chdir(current_bot_path)
+    _ = int(input("How much servers you intend to keep? "))
+    Minecraft_dirs_list = change_list_mine(Minecraft_dirs_list, _)
+    config["Main_minecraft_dirs"] = Minecraft_dirs_list
+    if "y" == input("Never ask about it again? y/n\n"):
+        config["Minecaft_dirs_ask"] = False
+        print("Minecraft dirs will be brought from config.")
+    IsRewrite = True
+
 if IsRewrite:
     with open('bot.json', 'w') as f:
         json.dump(config, f, indent=2)
     print("Config saved!")
 print("Config loaded!")
-current_bot_path = path.abspath(getcwd())
-chdir("..")
-ansii_com = {"status": "🗨", "list": "📋", "start": "♿", "stop": "⏹", "restart": "🔄"}
-IsServerOn = False
-IsLoading = False
-IsStopping = False
-IsReaction = False
 IsForceload = config.get("Forceload")
-react_auth = ""
-op_deop_list = []
+read_server_properties()
+print("Server properties read!")
 bot = commands.Bot(command_prefix='%', description="Server bot")
 bot.remove_command('help')
 
@@ -186,18 +293,20 @@ async def send_status(ctx):
 
 
 async def start_server(ctx):
-    global IsServerOn, IsLoading, IsStopping
+    global IsServerOn, IsLoading, IsRestarting
     IsLoading = True
     print("Loading server")
     if ctx:
         await ctx.send("```Loading server.......\nPlease wait)```")
+    chdir(Path(Minecraft_dirs_list[Mine_dir_numb][0]))
     if platform == "linux" or platform == "linux2":
-        system("screen -dmS Minecraft_Server ./Start_bot.sh")
+        system("screen -dmS " + Minecraft_dirs_list[Mine_dir_numb][1] + " ./Start_bot.sh")
     elif platform == "win32":
         startfile("Start_bot.bat")
+    chdir(current_bot_path)
     while True:
         try:
-            with Client_q(IP_adress, 25585, timeout=1) as cl_q:
+            with Client_q(Adress_local, port_querry, timeout=1) as cl_q:
                 info = cl_q.basic_stats
             break
         except (BaseException):
@@ -206,17 +315,19 @@ async def start_server(ctx):
         await ctx.send("```Server's on now```")
     IsLoading = False
     IsServerOn = True
+    if IsRestarting:
+        IsRestarting = False
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name="Minecraft Server"))
 
 
 async def stop_server(ctx, How_many_sec=10, IsRestart=False):
-    global IsServerOn, IsLoading, IsStopping
+    global IsServerOn, IsStopping
     IsStopping = True
     print("Stopping server")
     await ctx.send("```Stopping server.......\nPlease wait " + str(How_many_sec) + " sec.```")
     try:
-        with Client_r(IP_adress, 25575, timeout=1) as cl_r:
-            cl_r.login('rconpassword')
+        with Client_r(Adress_local, port_rcon, timeout=1) as cl_r:
+            cl_r.login(rcon_pass)
             if How_many_sec != 0:
                 w = 1
                 if How_many_sec > 5:
@@ -227,7 +338,6 @@ async def stop_server(ctx, How_many_sec=10, IsRestart=False):
                         elif How_many_sec % w == 0 and w > 10:
                             How_many_sec += 1
                             w = 1
-
                 if not IsRestart:
                     cl_r.say('Server\'s shutting down in ' + str(How_many_sec) + ' seconds')
                 else:
@@ -241,7 +351,7 @@ async def stop_server(ctx, How_many_sec=10, IsRestart=False):
         pass
     while True:
         try:
-            with Client_q(IP_adress, 25585, timeout=1) as cl_q:
+            with Client_q(Adress_local, port_querry, timeout=1) as cl_q:
                 info = cl_q.basic_stats
         except (BaseException):
             break
@@ -256,7 +366,7 @@ async def server_checkups(always_=True):
     global await_time_check_ups, IsServerOn, keys_for_nicks, IsStopping, IsLoading
     while True:
         try:
-            with Client_q(IP_adress, 25585, timeout=1) as cl_q:
+            with Client_q(Adress_local, port_querry, timeout=1) as cl_q:
                 info = cl_q.full_stats
             if info.num_players != 0:
                 nicks_n_keys_add = {}
@@ -270,13 +380,11 @@ async def server_checkups(always_=True):
                         print("For player with nickname " + k + " generated these codes:")
                         for c in v:
                             print("\t" + c)
-                    chdir(current_bot_path)
-                    orig = json.loads(crypt.decrypt(open('op_keys', 'rb').read()))
+                    orig = json.loads(crypt.decrypt(open(Path(current_bot_path + '/op_keys'), 'rb').read()))
                     orig.update(nicks_n_keys_add)
                     keys_for_nicks = orig.keys()
-                    open('op_keys', 'wb').write(crypt.encrypt(json.dumps(orig).encode()))
+                    open(Path(current_bot_path + '/op_keys'), 'wb').write(crypt.encrypt(json.dumps(orig).encode()))
                     orig = {}
-                    chdir("..")
             if not IsServerOn:
                 IsServerOn = True
             if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 0:
@@ -287,12 +395,13 @@ async def server_checkups(always_=True):
                 IsServerOn = False
             if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 2:
                 await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Server"))
-            if always_ and IsForceload and not IsStopping and not IsLoading:
+            if always_ and IsForceload and not IsStopping and not IsLoading and not IsRestarting:
                 for guild in bot.guilds:
                     for channel in guild.channels:
                         try:
                             await channel.fetch_message(menu_id)
-                            await channel.send(f'```Bot detected: Server\'s offline!\nTime: {datetime.now().strftime("%d/%m, %H:%M:%S")}\nStarting up server again!```')
+                            await channel.send(
+                                f'```Bot detected: Server\'s offline!\nTime: {datetime.now().strftime("%d/%m, %H:%M:%S")}\nStarting up server again!```')
                             await start_server(None)
                             break
                         except(BaseException):
@@ -333,16 +442,6 @@ async def on_ready():
     print(bot.user.name)
     print("Discord version ", discord.__version__)
     print('------')
-    """try:
-        with Client_q(IP_adress, 25585, timeout=1) as cl_q:
-            info = cl_q.basic_stats
-        IsServerOn = True
-    except (BaseException):
-        IsServerOn = False
-    if IsServerOn:
-        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name="Minecraft Server"))
-    else:
-        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Server"))"""
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="nsfw"))
     print("Bot is ready!")
     print("Starting server check-ups.")
@@ -356,8 +455,8 @@ async def status(ctx):
     await server_checkups(False)
     if IsServerOn:
         try:
-            with Client_r(IP_adress, 25575, timeout=1) as cl_r:
-                cl_r.login('rconpassword')
+            with Client_r(Adress_local, port_rcon, timeout=1) as cl_r:
+                cl_r.login(rcon_pass)
                 time_ticks = int(cl_r.run("time query daytime").split(" ")[2])
             message = "Time in minecraft: "
             if 450 <= time_ticks <= 11616:
@@ -369,13 +468,13 @@ async def status(ctx):
             else:
                 message += "Sunrise, "
             await ctx.send("```Server online\n" + message + str((6 + time_ticks // 1000) % 24) +
-                           ":" + str((time_ticks % 1000) * 60 // 1000) + "```")
+                           ":" + str((time_ticks % 1000) * 60 // 1000) + "\nServer adress: " + IP_adress + "```")
         except (BaseException):
-            await ctx.send("```Server online```")
+            await ctx.send("```Server online\nServer adress: " + IP_adress + "```")
             print("Serv's down via rcon")
         """rcon check daytime cycle"""
     else:
-        await ctx.send("```Server offline```")
+        await ctx.send("```Server offline\nServer adress: " + IP_adress + "```")
 
 
 @bot.command(pass_context=True)
@@ -383,7 +482,7 @@ async def list(ctx, command="-u"):
     global IsReaction
     if command == "-u":
         try:
-            with Client_q(IP_adress, 25585, timeout=1) as cl_q:
+            with Client_q(Adress_local, port_querry, timeout=1) as cl_q:
                 info = cl_q.full_stats
                 if info.num_players == 0:
                     await ctx.send("```Игроков на сервере нет```")
@@ -425,7 +524,7 @@ async def stop(ctx, command="10"):
                     IsForceload = False
                     config["Forceload"] = IsForceload
                     await ctx.send("```Forceload off```")
-                    with open(current_bot_path + '\\bot.json', 'w') as f_:
+                    with open(Path(current_bot_path + '/bot.json'), 'w') as f_:
                         json.dump(config, f_, indent=2)
                 await stop_server(ctx, int(command))
             else:
@@ -438,13 +537,13 @@ async def stop(ctx, command="10"):
 @commands.has_role('Майнкрафтер')
 async def restart(ctx, command="10"):
     """Restart server"""
-    global IsServerOn, IsLoading, IsStopping
+    global IsServerOn, IsLoading, IsStopping, IsRestarting
     await server_checkups(False)
     try:
         if int(command) >= 0:
             if IsServerOn and not IsStopping and not IsLoading:
+                IsRestarting = True
                 print("Restarting server")
-                IsServerOn = False
                 await stop_server(ctx, int(command), True)
                 await start_server(ctx)
             else:
@@ -460,15 +559,12 @@ async def op(ctx, arg1, arg2, *args):
     :arg1 - nick,
     :arg2 - code,
     :*args - comment"""
-    global IsServerOn, IsLoading, IsStopping, op_deop_list  # , query
+    global IsServerOn, IsLoading, IsStopping, op_deop_list
     IsFound = False
     IsEmpty = False
     temp_s = []
-    # await ctx.channel.purge(limit=1)
     if IsServerOn and not IsStopping and not IsLoading:
-        chdir(current_bot_path)
-        keys_for_nicks = json.loads(crypt.decrypt(open('op_keys', 'rb').read()))
-        chdir("..")
+        keys_for_nicks = json.loads(crypt.decrypt(open(Path(current_bot_path + '/op_keys'), 'rb').read()))
         arg1 = arg1.lower()
         if arg1 in keys_for_nicks.keys():
             for _ in keys_for_nicks.get(arg1):
@@ -476,17 +572,18 @@ async def op(ctx, arg1, arg2, *args):
                 if _ == arg2:
                     IsFound = True
                     op_deop_list.append(arg1)
-                    open(current_bot_path + '\\op_log.txt', 'a').write(
+                    open(Path(current_bot_path + '/op_log.txt'), 'a').write(
                         datetime.now().strftime("%d/%m/%Y, %H:%M:%S") + " || Opped " + arg1 + " || Reason: " + (
                             ' '.join(args) if args else "None") + "\n")
                     try:
-                        with Client_r(IP_adress, 25575, timeout=1) as cl_r:
-                            cl_r.login('rconpassword')
+                        with Client_r(Adress_local, port_rcon, timeout=1) as cl_r:
+                            cl_r.login(rcon_pass)
                             cl_r.say(arg1 + ' you\'ve opped for ' + str(int(await_time_op / 60)) + ' min ' + str(
                                 await_time_op - int(await_time_op / 60) * 60) + ' sec.')
                             cl_r.mkop(arg1)
                     except (BaseException):
-                        await ctx.send(ctx.author.mention + ", а сервак-то не работает (по крайней мере я пытался), попробуй-ка позже.")
+                        await ctx.send(
+                            ctx.author.mention + ", а сервак-то не работает (по крайней мере я пытался), попробуй-ка позже.")
                         return
                     keys_for_nicks.get(arg1).remove(arg2)
                     await ctx.send("```Code activated```")
@@ -500,9 +597,7 @@ async def op(ctx, arg1, arg2, *args):
                         await asyncio.sleep(await_time_op)
                         if arg1 != op_deop_list[-1]:
                             return
-                        chdir("..")
-                        ops = json.load(open('ops.json', 'r'))
-                        chdir("mcrcon")
+                        ops = json.load(open(Path(Minecraft_dirs_list[Mine_dir_numb][0] + '/ops.json'), 'r'))
                         to_delete_ops = []
                         for i in ops:
                             for k, v in i.items():
@@ -510,8 +605,8 @@ async def op(ctx, arg1, arg2, *args):
                                     to_delete_ops.append(v)
                         while True:
                             try:
-                                with Client_r(IP_adress, 25575, timeout=1) as cl_r:
-                                    cl_r.login('rconpassword')
+                                with Client_r(Adress_local, port_rcon, timeout=1) as cl_r:
+                                    cl_r.login(rcon_pass)
                                     cl_r.say(arg1 + ' you all will be deoped now.')
                                     for _ in to_delete_ops:
                                         cl_r.deop(_)
@@ -521,21 +616,19 @@ async def op(ctx, arg1, arg2, *args):
                                 break
                             except (BaseException):
                                 pass
-                        open(current_bot_path + '\\op_log.txt', 'a').write(datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
-                                                                           + " || Deopped all " + str(
-                            "|| Note: " + str(len(op_deop_list)) + " people deoped in belated list") if len(
-                            op_deop_list) > 1 else "" + "\n")
+                        open(Path(current_bot_path + '/op_log.txt'), 'a').write(
+                            datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
+                            + " || Deopped all " + str(
+                                "|| Note: " + str(len(op_deop_list)) + " people deoped in belated list") if len(
+                                op_deop_list) > 1 else "" + "\n")
                         await ctx.send("Ну что, " + ctx.author.mention +
                                        ", кончилось твоё время.. и не только твоё.... Как говорится \"Чики-брики и в дамки!\"")
                         op_deop_list.clear()
                     else:
                         await ctx.send(
                             ctx.author.mention + ", у тебя нет ограничения по времени, но вы все обречены...")
-                    chdir("..")
             if temp_s:
-                chdir(current_bot_path)
-                open('op_keys', 'wb').write(crypt.encrypt(json.dumps(keys_for_nicks).encode()))
-                chdir("..")
+                open(Path(current_bot_path + 'op_keys'), 'wb').write(crypt.encrypt(json.dumps(keys_for_nicks).encode()))
             else:
                 IsEmpty = True
         else:
@@ -582,7 +675,6 @@ async def say(ctx):
                 vk_session = vk_api.VkApi(log_vk, pass_vk)
                 vk_session.auth()
                 vk = vk_session.get_api()
-                chdir("..")
                 photos_count = vk.photos.get(owner_id=own_id, album_id="wall", count=1).get('count')
                 photo_sizes = vk.photos.get(owner_id=own_id,
                                             album_id="wall",
@@ -635,7 +727,7 @@ async def forceload(ctx, command=" "):
                 config["Forceload"] = IsForceload
                 await ctx.send("```Forceload off```")
         if rw:
-            with open(current_bot_path + '\\bot.json', 'w') as f_:
+            with open(Path(current_bot_path + '/bot.json'), 'w') as f_:
                 json.dump(config, f_, indent=2)
     elif command == " ":
         if IsForceload:
@@ -643,6 +735,71 @@ async def forceload(ctx, command=" "):
         else:
             await ctx.send("```Forceload off```")
     else:
+        raise commands.UserInputError()
+
+
+@bot.command(pass_context=True, aliases=["wl"])
+@commands.has_role('Майнкрафтер')
+async def whitelist(ctx, *args):
+    if len(args) and (args[0] == "add" or args[0] == "del" or args[0] == "list" or args[0] == "on" or args[0] == "off"):
+        try:
+            with Client_r(Adress_local, port_rcon, timeout=1) as cl_r:
+                cl_r.login(rcon_pass)
+                if args[0] == "on":
+                    cl_r.run("whitelist on")
+                elif args[0] == "off":
+                    cl_r.run("whitelist off")
+                elif args[0] == "add":
+                    cl_r.run("whitelist add", args[1])
+                elif args[0] == "del":
+                    cl_r.run("whitelist remove", args[1])
+                elif args[0] == "list":
+                    white_list = cl_r.run("whitelist list")
+                    white_list = white_list.split(':')
+                    white_list[0] += ":"
+                    await ctx.send("```" + "\n".join(white_list) + "```")
+                else:
+                    await ctx.send("```Wrong command!```")
+        except (BaseException):
+            await ctx.send("```Couldn't connect to server, try again(```")
+            pass
+    else:
+        await ctx.send("```Commands: on, off, add, del, list```")
+        raise commands.UserInputError()
+
+
+@bot.command(pass_context=True)
+@commands.has_role('Майнкрафтер')
+async def server(ctx, *args):
+    global Mine_dir_numb
+    if len(args) and (args[0] == "list" or args[0] == "select"):
+        if args[0] == "list":
+            send_ = "```List of servers"
+            for i in range(len(Minecraft_dirs_list)):
+                send_ += "\n" + str(i) + ". " + Minecraft_dirs_list[i][1]
+            send_ += "```"
+            await ctx.send(send_)
+        elif args[0] == "select":
+            if len(args) < 2:
+                await ctx.send("Э, " + ctx.author.mention + ", где число?")
+                return
+            try:
+                if int(args[1]) <= len(Minecraft_dirs_list):
+                    if int(args[1]) == Mine_dir_numb:
+                        await ctx.send("```My, you selected selected server, insane?)```")
+                        return
+                    Mine_dir_numb = int(args[1])
+                    read_server_properties()
+                    await ctx.send("```Server properties read!```")
+                else:
+                    await ctx.send("```Use server list, there's no such server on the list!```")
+            except(BaseException):
+                await ctx.send("```Argument for 'select' must be a number!```")
+                return
+        else:
+            await ctx.send("```Wrong command!\nCommands: select, list```")
+    else:
+        await ctx.send("```Commands: select, list```")
         raise commands.UserInputError()
 
 
@@ -662,6 +819,10 @@ async def help(ctx):
     emb.add_field(name='menu', value='Создаёт меню-пульт для удобного управления командами')
     emb.add_field(name='forceload/fl {on/off}',
                   value='По {on/off} постоянная загрузка сервера, когда он отключен, без аргументов - статус')
+    emb.add_field(name='whitelist/wl {1}',
+                  value='Использует whitelist с сервера майна, аргументы {1} - on, off, add, del, list.  С add и del ещё пишется ник игрока')
+    emb.add_field(name='server {1}',
+                  value='Использует список серверов в боте, аргументы {1} - select, list.  При select ещё пишется номер сервера из list')
     emb.add_field(name='say', value='"Петросянит" ( ͡° ͜ʖ ͡°)')
     emb.add_field(name='clear {1}', value='Удаляет {1} строк')
     await ctx.send(embed=emb)
@@ -683,7 +844,7 @@ async def menu(ctx):
     add_reactions_to = await ctx.send(embed=emb)
     menu_id = str(add_reactions_to.id)
     config["Menu_message_id"] = menu_id
-    with open(current_bot_path + '\\bot.json', 'w') as f_:
+    with open(Path(current_bot_path + '/bot.json'), 'w') as f_:
         json.dump(config, f_, indent=2)
     await add_reactions_to.add_reaction(ansii_com.get("status"))
     await add_reactions_to.add_reaction(ansii_com.get("list"))

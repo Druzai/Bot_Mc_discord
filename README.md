@@ -6,15 +6,18 @@
 * `%start` - start server
 * `%stop {10}` - stop server, {} (sec) countdown, 0 - remove timer
 * `%restart {10}` - restart server, {} (sec) countdown, 0 - remove timer
-* `%op {1} {2} {3}` - Give op to {1} player using {2} code {3} with reason comment, if needed, after setted time deop that player
-* `%menu` - Create menu-panel (embed) for easy command management
-* `%forceload/fl {on/off}` - By {on / off} constant loading of the server when it is shutted down, if no arguments - return status
+* `%op {1} {2} {3}` - give op to {1} player using {2} code {3} with reason comment, if needed, after setted time deop that player
+* `%menu` - create menu-panel (embed) for easy command management
+* `%forceload/fl {on/off}` - by {`on` / `off`} constant loading of the server when it is shutted down, if no arguments - return status
+* `%whitelist/wl {1}` - uses whitelist from minecraft server, {1} arguments are `on`, `off`, `add`, `del`, `list`. If you use `add` or `del`, the player's nickname is also must be written
+* `server {1}` - uses a list of servers stored in the bot, arguments {1} - `select`, `list`. With `select`, the server number from the `list` is also must be written
 * `%say` - return embed with random picture from VK
-* `%clear {1}` - Delete {1} messages
+* `%clear {1}` - delete {1} messages
 ### Requirements
 * [Python 3.5-3.8](https://www.python.org/downloads/)
 * [Java RE](https://www.java.com/en/download/)
 * For Linux required [screen](https://linuxize.com/post/how-to-use-linux-screen/) command
+* You must enable query and rcon in server.properties!
 ____________
 > Libraries for Python: 
 * [discord](https://github.com/Rapptz/discord.py) - main lib to run bot
@@ -33,6 +36,7 @@ Type in command promt in root directory of the project to build it
 pyinstaller -F --icon=bot.ico Discord_bot.py
 ```
 ### Run
+Note: for using almost all commands you have to have role "Майнкрафтер"
 * Windows
 
 
@@ -73,5 +77,5 @@ your_jar_file='server.jar'
 java -Xmx$ask_int -Xms$ask_int -jar $your_jar_file nogui
 ```
 ### Tested Platforms
-* Windows 32/64 bit
+* Windows 7 or higher (32/64 bit)
 * Linux (Ubuntu/Debian/CentOS)
