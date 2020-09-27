@@ -41,7 +41,7 @@ if not path.isfile('key'):
     with open("key", "wb") as key_file:
         key_file.write(key)
 key = open("key", "rb").read()  # Key to decrypt
-crypt = Fernet(key)
+crypt = Fernet(key)  # Initialized crypt module with key
 # Crypt
 if not path.isfile('op_keys'):
     open('op_keys', 'wb').write(crypt.encrypt(json.dumps(dict()).encode()))
@@ -410,9 +410,17 @@ async def server_checkups(always_=True):
                     orig = {}
             if not IsServerOn:
                 IsServerOn = True
-            if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 0:
-                await bot.change_presence(
-                    activity=discord.Activity(type=discord.ActivityType.playing, name="Minecraft Server"))
+            try:
+                if int(bot.guilds[0].get_member(bot.user.id).activities[0].name.split(", ")[1].split(" ")[0]) != 0:
+                    await bot.change_presence(
+                        activity=discord.Activity(type=discord.ActivityType.playing,
+                                                  name="Minecraft Server, " + str(
+                                                      info.num_players) + " player(s) online"))
+            except(BaseException):
+                if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 0 or info.num_players != 0:
+                    await bot.change_presence(
+                        activity=discord.Activity(type=discord.ActivityType.playing, name="Minecraft Server, " + str(
+                            info.num_players) + " player(s) online"))
         except (BaseException):
             if IsServerOn:
                 IsServerOn = False
