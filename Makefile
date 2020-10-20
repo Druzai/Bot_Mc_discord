@@ -26,5 +26,5 @@ clear_lin:
 	@echo Cleaned
 
 clear_win:
-	rd /s /q build __pycache__
+	cmd /c "rd /s /q build __pycache__"
 	@echo Cleaned
