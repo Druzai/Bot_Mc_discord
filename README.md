@@ -35,6 +35,7 @@ Type in command promt in root directory of the project to build it
 ```
 pyinstaller -F --icon=bot.ico Discord_bot.py
 ```
+Or using `make` type make in root directory
 ### Run
 Note: for using almost all commands you have to have role "Майнкрафтер"
 * Windows

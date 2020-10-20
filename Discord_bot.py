@@ -325,7 +325,15 @@ async def start_server(ctx, shut_up=False):
     elif platform == "win32":
         startfile("Start_bot.bat")
     chdir(current_bot_path)
+    await asyncio.sleep(5)
+    check_time = datetime.now()
     while True:
+        if (datetime.now() - check_time).seconds > 300:
+            await ctx.send("```Error while loading server```")
+            IsLoading = False
+            if IsRestarting:
+                IsRestarting = False
+            return
         await asyncio.sleep(await_sleep)
         try:
             with Client_q(Adress_local, port_querry, timeout=0.5) as cl_q:
@@ -335,6 +343,9 @@ async def start_server(ctx, shut_up=False):
             pass
     if ctx:
         await ctx.send("```Server's on now```")
+        if randint(0, 8) == 0:
+            await asyncio.sleep(1)
+            await ctx.send("Kept you waiting, huh?")
     IsLoading = False
     IsServerOn = True
     if IsRestarting:
@@ -620,7 +631,7 @@ async def op(ctx, arg1, arg2, *args):
                     keys_for_nicks.get(arg1).remove(arg2)
                     await ctx.send("```Code activated```")
                     if await_time_op > 0:
-                        if bool(randint(0, 4)):
+                        if randint(0, 2) == 1:
                             await ctx.send(
                                 "Короче, " + ctx.author.mention + ", я тебя op'нул и в благородство играть не буду: приду через "
                                 + str(int(await_time_op / 60)) + " минут," +
