@@ -23,8 +23,10 @@ $(target):
 
 clear_lin:
 	$(shell rm -f -r ./build ./__pycache__)
+	$(shell rm -f *.spec)
 	@echo Cleaned
 
 clear_win:
 	cmd /c "rd /s /q build __pycache__"
+	del *.spec
 	@echo Cleaned
