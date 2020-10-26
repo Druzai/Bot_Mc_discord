@@ -422,7 +422,8 @@ async def server_checkups(always_=True):
             if not IsServerOn:
                 IsServerOn = True
             try:
-                if int(bot.guilds[0].get_member(bot.user.id).activities[0].name.split(", ")[1].split(" ")[0]) != 0 or info.num_players != 0:
+                if int(bot.guilds[0].get_member(bot.user.id).activities[0].name.split(", ")[1].split(" ")[
+                           0]) != 0 or info.num_players != 0:
                     await bot.change_presence(
                         activity=discord.Activity(type=discord.ActivityType.playing,
                                                   name="Minecraft Server, " + str(
@@ -873,7 +874,7 @@ async def help(ctx):
     emb.add_field(name='server {1}',
                   value='Использует список серверов в боте, аргументы {1} - select, list, show.  При select ещё пишется номер сервера из list')
     emb.add_field(name='say', value='"Петросянит" ( ͡° ͜ʖ ͡°)')
-    emb.add_field(name='clear {1}', value='Удаляет {1} строк')
+    emb.add_field(name='clear {1}', value='Если положительное число удаляет {1} сообщений, если отрицательное - удаляет n сообщений до {1} от начала канала')
     await ctx.send(embed=emb)
 
 
@@ -943,7 +944,11 @@ async def on_raw_reaction_add(payload):
 @bot.command(pass_context=True)
 # @commands.has_permissions(administrator=True)
 async def clear(ctx, count=1):
-    await ctx.channel.purge(limit=int(count) + 1)
+    if count > 0:
+        await ctx.channel.purge(limit=int(count) + 1, bulk=False)
+    else:
+        message_created_time = (await ctx.channel.history(limit=-count, oldest_first=True).flatten())[-1].created_at
+        await ctx.channel.purge(limit=None, after=message_created_time, bulk=False)
 
 
 # Handling errors

@@ -12,7 +12,7 @@
 * `%whitelist/wl {1}` - uses whitelist from minecraft server, {1} arguments are `on`, `off`, `add`, `del`, `list`. If you use `add` or `del`, the player's nickname is also must be written
 * `server {1}` - uses a list of servers stored in the bot, arguments {1} - `select`, `list`, `show`. With `select`, the server number from the `list` is also must be written
 * `%say` - return embed with random picture from VK
-* `%clear {1}` - delete {1} messages
+* `%clear {1}` - If positive number it deletes {1} messages, if negative number - deletes n messages up to {1} from the beginging of the channel
 ### Requirements
 * [Python 3.5-3.8](https://www.python.org/downloads/)
 * [Java RE](https://www.java.com/en/download/)
