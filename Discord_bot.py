@@ -830,7 +830,7 @@ async def server(ctx, *args):
             try:
                 if int(args[1]) <= len(Minecraft_dirs_list):
                     if int(args[1]) == Mine_dir_numb:
-                        await ctx.send("```My, you selected selected server, insane?)```")
+                        await ctx.send("```My, you have chosen selected server, insane?)\n ...Pasan ramsi poputal```")
                         return
                     Mine_dir_numb = int(args[1])
                     read_server_properties()
