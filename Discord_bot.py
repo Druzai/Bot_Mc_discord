@@ -21,7 +21,7 @@ IsLoading = False
 IsStopping = False
 IsRestarting = False
 IsReaction = False
-ansii_com = {"status": "🗨", "list": "📋", "start": "♿", "stop": "⏹", "restart": "🔄"}  # Symbols for menu
+ansii_com = {"status": "🗨", "list": "📋", "start": "♿", "stop": "⏹", "restart": "🔄", "update": '📶'}  # Symbols for menu
 port_querry = 0
 port_rcon = 0
 rcon_pass = ""
@@ -495,7 +495,6 @@ async def on_ready():
 @bot.command(pass_context=True)
 async def status(ctx):
     """Shows server status"""
-    await server_checkups(False)
     if IsServerOn:
         try:
             with Client_r(Adress_local, port_rcon, timeout=1) as cl_r:
@@ -512,7 +511,7 @@ async def status(ctx):
                 message += "Sunrise, "
             await ctx.send("```Server online\n" + message + str((6 + time_ticks // 1000) % 24) +
                            ":" + str((time_ticks % 1000) * 60 // 1000) + "\nServer adress: " + IP_adress + "```")
-        except (BaseException):
+        except(BaseException):
             await ctx.send("```Server online\nServer adress: " + IP_adress + "```")
             print("Serv's down via rcon")
         """rcon check daytime cycle"""
@@ -548,7 +547,6 @@ async def list(ctx, command="-u"):
 async def start(ctx):
     """Start server"""
     global IsServerOn, IsLoading, IsStopping
-    await server_checkups(False)
     if not IsServerOn and not IsStopping and not IsLoading:
         await start_server(ctx)
     else:
@@ -560,7 +558,6 @@ async def start(ctx):
 async def stop(ctx, command="10"):
     """Stop server"""
     global IsServerOn, IsLoading, IsStopping, IsForceload
-    await server_checkups(False)
     try:
         if int(command) >= 0:
             if IsServerOn and not IsStopping and not IsLoading:
@@ -582,7 +579,6 @@ async def stop(ctx, command="10"):
 async def restart(ctx, command="10"):
     """Restart server"""
     global IsServerOn, IsLoading, IsStopping, IsRestarting
-    await server_checkups(False)
     try:
         if int(command) >= 0:
             if IsServerOn and not IsStopping and not IsLoading:
@@ -891,6 +887,7 @@ async def menu(ctx):
     emb.add_field(name='start', value=':wheelchair:')
     emb.add_field(name='stop 10', value=':stop_button:')
     emb.add_field(name='restart 10', value=':arrows_counterclockwise:')
+    emb.add_field(name='update', value=':signal_strength:')
     add_reactions_to = await ctx.send(embed=emb)
     menu_id = str(add_reactions_to.id)
     config["Menu_message_id"] = menu_id
@@ -901,6 +898,7 @@ async def menu(ctx):
     await add_reactions_to.add_reaction(ansii_com.get("start"))
     await add_reactions_to.add_reaction(ansii_com.get("stop"))
     await add_reactions_to.add_reaction(ansii_com.get("restart"))
+    await add_reactions_to.add_reaction(ansii_com.get("update"))
 
 
 @bot.event
@@ -918,6 +916,9 @@ async def on_raw_reaction_add(payload):
                 await status(channel)
             elif payload.emoji.name == ansii_com.get("list"):
                 await list(channel)
+            elif payload.emoji.name == ansii_com.get("update"):
+                await server_checkups(False)
+                return
             else:
                 if 'Майнкрафтер' not in str(payload.member.roles):
                     await send_error(channel, commands.MissingRole('Майнкрафтер'))
