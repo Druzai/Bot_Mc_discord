@@ -228,7 +228,7 @@ def change_list_mine(l_ist, o):  # Function to add or delete servers paths in li
                                 l[i][1] if l[i][1] else "-None-") + "'\nChange it? y/n")
                             t = ""
                             if "y" == input():
-                                t = input("Enter comment about this path: ")
+                                t = input("Enter comment about this path (IMPORTANT on Linux comment WITHOUT spaces): ")
                             l[i][1] = t
                             i += 1
                             break
@@ -328,7 +328,7 @@ async def start_server(ctx, shut_up=False):
     await asyncio.sleep(5)
     check_time = datetime.now()
     while True:
-        if (datetime.now() - check_time).seconds > 300:
+        if (datetime.now() - check_time).seconds > 600:
             await ctx.send("```Error while loading server```")
             IsLoading = False
             if IsRestarting:
