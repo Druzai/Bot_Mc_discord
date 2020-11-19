@@ -782,23 +782,30 @@ async def forceload(ctx, command=" "):
 @bot.command(pass_context=True, aliases=["wl"])
 @commands.has_role('Майнкрафтер')
 async def whitelist(ctx, *args):
-    if len(args) and (args[0] == "add" or args[0] == "del" or args[0] == "list" or args[0] == "on" or args[0] == "off"):
+    if len(args) and (args[0] == "add" or args[0] == "del" or args[0] == "list" or args[0] == "on" or args[0] == "off" or args[0] == "reload"):
         try:
             with Client_r(Adress_local, port_rcon, timeout=1) as cl_r:
                 cl_r.login(rcon_pass)
                 if args[0] == "on":
-                    cl_r.run("whitelist on")
+                    white_list = cl_r.run("whitelist on")
+                    await ctx.send("```" + white_list + "```")
                 elif args[0] == "off":
-                    cl_r.run("whitelist off")
+                    white_list = cl_r.run("whitelist off")
+                    await ctx.send("```" + white_list + "```")
                 elif args[0] == "add":
-                    cl_r.run("whitelist add", args[1])
+                    white_list = cl_r.run("whitelist add", args[1])
+                    await ctx.send("```" + white_list + "```")
                 elif args[0] == "del":
-                    cl_r.run("whitelist remove", args[1])
+                    white_list = cl_r.run("whitelist remove", args[1])
+                    await ctx.send("```" + white_list + "```")
                 elif args[0] == "list":
                     white_list = cl_r.run("whitelist list")
                     white_list = white_list.split(':')
                     white_list[0] += ":"
                     await ctx.send("```" + "\n".join(white_list) + "```")
+                elif args[0] == "reload":
+                    white_list = cl_r.run("whitelist reload")
+                    await ctx.send("```" + white_list + "```")
                 else:
                     await ctx.send("```Wrong command!```")
         except (BaseException):
@@ -866,7 +873,7 @@ async def help(ctx):
     emb.add_field(name='forceload/fl {on/off}',
                   value='По {on/off} постоянная загрузка сервера, когда он отключен, без аргументов - статус')
     emb.add_field(name='whitelist/wl {1}',
-                  value='Использует whitelist с сервера майна, аргументы {1} - on, off, add, del, list.  С add и del ещё пишется ник игрока')
+                  value='Использует whitelist с сервера майна, аргументы {1} - on, off, add, del, list, reload.  С add и del ещё пишется ник игрока')
     emb.add_field(name='server {1}',
                   value='Использует список серверов в боте, аргументы {1} - select, list, show.  При select ещё пишется номер сервера из list')
     emb.add_field(name='say', value='"Петросянит" ( ͡° ͜ʖ ͡°)')

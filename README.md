@@ -9,7 +9,7 @@
 * `%op {1} {2} {3}` - give op to {1} player using {2} code {3} with reason comment, if needed, after setted time deop that player
 * `%menu` - create menu-panel (embed) for easy command management
 * `%forceload/fl {on/off}` - by {`on` / `off`} constant loading of the server when it is shutted down, if no arguments - return status
-* `%whitelist/wl {1}` - uses whitelist from minecraft server, {1} arguments are `on`, `off`, `add`, `del`, `list`. If you use `add` or `del`, the player's nickname is also must be written
+* `%whitelist/wl {1}` - uses whitelist from minecraft server, {1} arguments are `on`, `off`, `add`, `del`, `list`, `reload`. If you use `add` or `del`, the player's nickname is also must be written
 * `server {1}` - uses a list of servers stored in the bot, arguments {1} - `select`, `list`, `show`. With `select`, the server number from the `list` is also must be written
 * `%say` - return embed with random picture from VK
 * `%clear {1}` - If positive number it deletes {1} messages, if negative number - deletes n messages up to {1} from the beginging of the channel
@@ -17,7 +17,7 @@
 * [Python 3.5-3.8](https://www.python.org/downloads/)
 * [Java RE](https://www.java.com/en/download/)
 * For Linux required [screen](https://linuxize.com/post/how-to-use-linux-screen/) command
-* You must enable query and rcon in server.properties!
+* You must enable query and rcon, its ports & rcon password in server.properties!
 ____________
 > Libraries for Python: 
 * [discord](https://github.com/Rapptz/discord.py) - main lib to run bot
