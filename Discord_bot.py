@@ -21,7 +21,8 @@ IsLoading = False
 IsStopping = False
 IsRestarting = False
 IsReaction = False
-ansii_com = {"status": "🗨", "list": "📋", "start": "♿", "stop": "⏹", "restart": "🔄", "update": '📶'}  # Symbols for menu
+ansii_com = {"status": "🗨", "list": "📋", "start": "♿", "stop": "⏹", "restart": "🔄",
+             "update": '📶'}  # Symbols for menu
 port_querry = 0
 port_rcon = 0
 rcon_pass = ""
@@ -510,13 +511,16 @@ async def status(ctx):
             else:
                 message += "Sunrise, "
             await ctx.send("```Server online\n" + message + str((6 + time_ticks // 1000) % 24) +
-                           ":" + str((time_ticks % 1000) * 60 // 1000) + "\nServer adress: " + IP_adress + "```")
+                           ":" + str((time_ticks % 1000) * 60 // 1000) + "\nServer adress: " + IP_adress +
+                           "\nSelected server: " + Minecraft_dirs_list[Mine_dir_numb][1] + "```")
         except(BaseException):
-            await ctx.send("```Server online\nServer adress: " + IP_adress + "```")
+            await ctx.send("```Server online\nServer adress: " + IP_adress + "\nSelected server: " +
+                           Minecraft_dirs_list[Mine_dir_numb][1] + "```")
             print("Serv's down via rcon")
         """rcon check daytime cycle"""
     else:
-        await ctx.send("```Server offline\nServer adress: " + IP_adress + "```")
+        await ctx.send("```Server offline\nServer adress: " + IP_adress + "\nSelected server: " +
+                       Minecraft_dirs_list[Mine_dir_numb][1] + "```")
 
 
 @bot.command(pass_context=True)
@@ -782,7 +786,9 @@ async def forceload(ctx, command=" "):
 @bot.command(pass_context=True, aliases=["wl"])
 @commands.has_role('Майнкрафтер')
 async def whitelist(ctx, *args):
-    if len(args) and (args[0] == "add" or args[0] == "del" or args[0] == "list" or args[0] == "on" or args[0] == "off" or args[0] == "reload"):
+    if len(args) and (
+            args[0] == "add" or args[0] == "del" or args[0] == "list" or args[0] == "on" or args[0] == "off" or args[
+        0] == "reload"):
         try:
             with Client_r(Adress_local, port_rcon, timeout=1) as cl_r:
                 cl_r.login(rcon_pass)
@@ -877,7 +883,8 @@ async def help(ctx):
     emb.add_field(name='server {1}',
                   value='Использует список серверов в боте, аргументы {1} - select, list, show.  При select ещё пишется номер сервера из list')
     emb.add_field(name='say', value='"Петросянит" ( ͡° ͜ʖ ͡°)')
-    emb.add_field(name='clear {1}', value='Если положительное число удаляет {1} сообщений, если отрицательное - удаляет n сообщений до {1} от начала канала')
+    emb.add_field(name='clear {1}',
+                  value='Если положительное число удаляет {1} сообщений, если отрицательное - удаляет n сообщений до {1} от начала канала')
     await ctx.send(embed=emb)
 
 
