@@ -46,8 +46,11 @@ crypt = Fernet(key)  # Initialized crypt module with key
 # Crypt
 if not path.isfile('op_keys'):
     open('op_keys', 'wb').write(crypt.encrypt(json.dumps(dict()).encode()))
-keys_for_nicks = json.loads(
-    crypt.decrypt(open('op_keys', 'rb').read())).keys()  # Dict for storing codes for each player seen on server
+keys_for_nicks_nicks = json.loads(
+    crypt.decrypt(open('op_keys', 'rb').read())).keys()  # Dict for each player nicks seen on server
+if not path.isfile('id-to-nicks.json'):
+    open('id-to-nicks.json', 'w').write(json.dumps(dict()))
+id_to_nicks = json.loads(open('id-to-nicks.json', 'r').read())  # Dict for func assotiate
 if not path.isfile('bot.json'):
     config = {
         "Token": None,
@@ -398,7 +401,7 @@ async def stop_server(ctx, How_many_sec=10, IsRestart=False):
 
 
 async def server_checkups(always_=True):
-    global await_time_check_ups, IsServerOn, keys_for_nicks, IsStopping, IsLoading, IsRestarting
+    global await_time_check_ups, IsServerOn, keys_for_nicks_nicks, IsStopping, IsLoading, IsRestarting
     while True:
         try:
             with Client_q(Adress_local, port_querry, timeout=1) as cl_q:
@@ -407,7 +410,7 @@ async def server_checkups(always_=True):
                 nicks_n_keys_add = {}
                 for i in info.players:
                     i = i.lower()
-                    if i not in keys_for_nicks:
+                    if i not in keys_for_nicks_nicks:
                         nicks_n_keys_add.update({i: [generate_access_code() for _ in range(25)]})
                 if nicks_n_keys_add:
                     print("New codes generated")
@@ -417,7 +420,7 @@ async def server_checkups(always_=True):
                             print("\t" + c)
                     orig = json.loads(crypt.decrypt(open(Path(current_bot_path + '/op_keys'), 'rb').read()))
                     orig.update(nicks_n_keys_add)
-                    keys_for_nicks = orig.keys()
+                    keys_for_nicks_nicks = orig.keys()
                     open(Path(current_bot_path + '/op_keys'), 'wb').write(crypt.encrypt(json.dumps(orig).encode()))
                     orig = {}
             if not IsServerOn:
@@ -689,6 +692,63 @@ async def op(ctx, arg1, arg2, *args):
 
 
 @bot.command(pass_context=True)
+# @commands.has_role('Майнкрафтер')
+@commands.has_permissions(administrator=True)
+async def assoc(ctx, arg1: str, arg2, arg3):
+    """
+    syntax: Nick_Discord +=/-= Nick_minecraft
+    """
+    global id_to_nicks
+    comm_operators = ["+=", "-="]
+    if arg1.startswith("<@!"):
+        try:
+            id = arg1[3:-1]
+            int(id)
+        except BaseException:
+            await ctx.send("Wrong 1-st argument used!")
+            return
+        arg3 = arg3.lower()
+        if arg2 == comm_operators[0]:
+            if arg3 not in id_to_nicks.keys():
+                id_to_nicks[arg3] = id
+                await ctx.send("Now " + arg1 + " associates with nick in minecraft " + arg3)
+            else:
+                await ctx.send("Existing `mention to nick` link!")
+        elif arg2 == comm_operators[1]:
+            if arg3 in id_to_nicks.keys():
+                del id_to_nicks[arg3]
+                await ctx.send("Now link " + arg1 + " -> " + arg3 + " do not exist!")
+            else:
+                await ctx.send("Doesn't have `mention to nick` link already!")
+        else:
+            await ctx.send("Wrong command syntax! Right example: `%assoc @me += My_nick`")
+        with open('id-to-nicks.json', 'w') as f:
+            json.dump(id_to_nicks, f, indent=2)
+    else:
+        await ctx.send("Wrong 1-st argument! You can mention ONLY members")
+
+
+@bot.command(pass_context=True)
+# @commands.has_role('Майнкрафтер')
+async def codes(ctx, arg1):
+    member = ctx.author
+    id = str(member.id)
+    arg1 = arg1.lower()
+    if arg1 != "" and arg1 in id_to_nicks.keys() and id_to_nicks.get(arg1) == id:
+        keys_for_nicks = json.loads(crypt.decrypt(open(Path(current_bot_path + '/op_keys'), 'rb').read()))
+        if arg1 not in keys_for_nicks.keys():
+            await ctx.send("Don't have such nickname logged in minecraft")
+            return
+        message = "For player with nickname " + arg1 + " generated " + str(len(keys_for_nicks.get(arg1))) + " codes:\n"
+        for value in keys_for_nicks.get(arg1):
+            message += "`" + value + "`\n"
+        await member.send(message)
+    else:
+        gifs_list = listdir(Path(current_bot_path + '/Gendalf_Top'))
+        await member.send('You shall not PASS! Ты не владеешь данным ником :ambulance:', file=discord.File(Path(current_bot_path + '/Gendalf_Top/' + choice(gifs_list))))
+
+
+@bot.command(pass_context=True)
 async def say(ctx):
     """Петросян"""
     global Vk_get
@@ -875,6 +935,9 @@ async def help(ctx):
     emb.add_field(name='restart {10}', value='Перезапускает сервер, {} (сек) сколько идёт отсчёт, 0 убирает таймер')
     emb.add_field(name='op {1} {2} {3}',
                   value='Даёт op\'ку на {1} ник по {2} коду {3} c комментарием причины, если надо')
+    emb.add_field(name='assoc {1} {2} {3}',
+                  value='Ассоциирует {1} упоминание ника в дискорде по {2} команде (+=/-=) (добавить или удалить) {3} c ником в майнкрафте **для админа**')
+    emb.add_field(name='codes {1}', value='Даёт коды на {1} ник в лс')
     emb.add_field(name='menu', value='Создаёт меню-пульт для удобного управления командами')
     emb.add_field(name='forceload/fl {on/off}',
                   value='По {on/off} постоянная загрузка сервера, когда он отключен, без аргументов - статус')
