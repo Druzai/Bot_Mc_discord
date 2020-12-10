@@ -238,7 +238,7 @@ def change_list_mine(l_ist, o):  # Function to add or delete servers paths in li
                             break
                 else:
                     print("This path doesn't contain file server.properties. Try again")
-            except(BaseException):
+            except BaseException:
                 l[i][0] = ""
                 print("This path written wrong, try again")
         else:
@@ -343,7 +343,7 @@ async def start_server(ctx, shut_up=False):
             with Client_q(Adress_local, port_querry, timeout=0.5) as cl_q:
                 info = cl_q.basic_stats
             break
-        except (BaseException):
+        except BaseException:
             pass
     if ctx:
         await ctx.send("```Server's on now```")
@@ -383,7 +383,7 @@ async def stop_server(ctx, How_many_sec=10, IsRestart=False):
                     cl_r.say(str(i) + ' sec to go')
                     await asyncio.sleep(w)
             cl_r.run("stop")
-    except (BaseException):
+    except BaseException:
         print("Exeption: Couldn't connect to server, check its connection")
         pass
     while True:
@@ -391,7 +391,7 @@ async def stop_server(ctx, How_many_sec=10, IsRestart=False):
         try:
             with Client_q(Adress_local, port_querry, timeout=0.5) as cl_q:
                 info = cl_q.basic_stats
-        except (BaseException):
+        except BaseException:
             break
     IsStopping = False
     IsServerOn = False
@@ -432,12 +432,12 @@ async def server_checkups(always_=True):
                         activity=discord.Activity(type=discord.ActivityType.playing,
                                                   name="Minecraft Server, " + str(
                                                       info.num_players) + " player(s) online"))
-            except(BaseException):
+            except BaseException:
                 if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 0 or info.num_players != 0:
                     await bot.change_presence(
                         activity=discord.Activity(type=discord.ActivityType.playing, name="Minecraft Server, " + str(
                             info.num_players) + " player(s) online"))
-        except (BaseException):
+        except BaseException:
             if IsServerOn:
                 IsServerOn = False
             if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 2:
@@ -451,7 +451,7 @@ async def server_checkups(always_=True):
                                 f'```Bot detected: Server\'s offline!\nTime: {datetime.now().strftime("%d/%m, %H:%M:%S")}\nStarting up server again!```')
                             await start_server(channel, True)
                             break
-                        except(BaseException):
+                        except BaseException:
                             pass
         if await_time_check_ups > 0 and always_:
             await asyncio.sleep(await_time_check_ups)
@@ -516,7 +516,7 @@ async def status(ctx):
             await ctx.send("```Server online\n" + message + str((6 + time_ticks // 1000) % 24) +
                            ":" + str((time_ticks % 1000) * 60 // 1000) + "\nServer adress: " + IP_adress +
                            "\nSelected server: " + Minecraft_dirs_list[Mine_dir_numb][1] + "```")
-        except(BaseException):
+        except BaseException:
             await ctx.send("```Server online\nServer adress: " + IP_adress + "\nSelected server: " +
                            Minecraft_dirs_list[Mine_dir_numb][1] + "```")
             print("Serv's down via rcon")
@@ -539,7 +539,7 @@ async def list(ctx, command="-u"):
                 else:
                     await ctx.send("```Игроков на сервере - {0}\nИгроки: {1}```".format(info.num_players,
                                                                                         ", ".join(info.players)))
-        except (BaseException):
+        except BaseException:
             if IsReaction:
                 author = react_auth.mention
             else:
@@ -619,16 +619,17 @@ async def op(ctx, arg1, arg2, *args):
                 if _ == arg2:
                     IsFound = True
                     op_deop_list.append(arg1)
-                    open(Path(current_bot_path + '/op_log.txt'), 'a').write(
+                    open(Path(current_bot_path + '/op_log.txt'), 'a', encoding='utf-8').write(
                         datetime.now().strftime("%d/%m/%Y, %H:%M:%S") + " || Opped " + arg1 + " || Reason: " + (
                             ' '.join(args) if args else "None") + "\n")
                     try:
                         with Client_r(Adress_local, port_rcon, timeout=1) as cl_r:
                             cl_r.login(rcon_pass)
-                            cl_r.say(arg1 + ' you\'ve opped for ' + str(int(await_time_op / 60)) + ' min ' + str(
-                                await_time_op - int(await_time_op / 60) * 60) + ' sec.')
+                            cl_r.say(arg1 + ' you\'ve opped for' + (
+                                "" if await_time_op // 60 == 0 else " " + str(await_time_op // 60) + ' min') + (
+                                         "." if await_time_op % 60 == 0 else " " + str(await_time_op % 60) + ' sec.'))
                             cl_r.mkop(arg1)
-                    except (BaseException):
+                    except BaseException:
                         await ctx.send(
                             ctx.author.mention + ", а сервак-то не работает (по крайней мере я пытался), попробуй-ка позже.")
                         return
@@ -662,13 +663,12 @@ async def op(ctx, arg1, arg2, *args):
                                     for _ in list:
                                         cl_r.run("gamemode 0 " + _)
                                 break
-                            except (BaseException):
+                            except BaseException:
                                 pass
-                        open(Path(current_bot_path + '/op_log.txt'), 'a').write(
-                            datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
-                            + " || Deopped all " + str(
-                                "|| Note: " + str(len(op_deop_list)) + " people deoped in belated list") if len(
-                                op_deop_list) > 1 else "" + "\n")
+                        open(Path(current_bot_path + '/op_log.txt'), 'a', encoding='utf-8').write(
+                            datetime.now().strftime("%d/%m/%Y, %H:%M:%S") + " || Deopped all " + (
+                                str("|| Note: " + str(len(op_deop_list)) + " people deoped in belated list") if len(
+                                    op_deop_list) > 1 else "") + "\n")
                         await ctx.send("Ну что, " + ctx.author.mention +
                                        ", кончилось твоё время.. и не только твоё.... Как говорится \"Чики-брики и в дамки!\"")
                         op_deop_list.clear()
@@ -676,7 +676,8 @@ async def op(ctx, arg1, arg2, *args):
                         await ctx.send(
                             ctx.author.mention + ", у тебя нет ограничения по времени, но вы все обречены...")
             if temp_s:
-                open(Path(current_bot_path + 'op_keys'), 'wb').write(crypt.encrypt(json.dumps(keys_for_nicks).encode()))
+                open(Path(current_bot_path + '/op_keys'), 'wb').write(
+                    crypt.encrypt(json.dumps(keys_for_nicks).encode()))
             else:
                 IsEmpty = True
         else:
@@ -745,7 +746,8 @@ async def codes(ctx, arg1):
         await member.send(message)
     else:
         gifs_list = listdir(Path(current_bot_path + '/Gendalf_Top'))
-        await member.send('You shall not PASS! Ты не владеешь данным ником :ambulance:', file=discord.File(Path(current_bot_path + '/Gendalf_Top/' + choice(gifs_list))))
+        await member.send('You shall not PASS! Ты не владеешь данным ником :ambulance:',
+                          file=discord.File(Path(current_bot_path + '/Gendalf_Top/' + choice(gifs_list))))
 
 
 @bot.command(pass_context=True)
@@ -798,7 +800,7 @@ async def say(ctx):
                                   color=discord.Color.from_rgb(randint(0, 255), randint(0, 255), randint(0, 255)))
                 e.set_image(url=photo_url)
                 await ctx.send(embed=e)
-            except(BaseException):
+            except BaseException:
                 e = discord.Embed(title="Ошибка vk:  Что-то пошло не так",
                                   color=discord.Color.red())
                 e.set_image(
@@ -874,7 +876,7 @@ async def whitelist(ctx, *args):
                     await ctx.send("```" + white_list + "```")
                 else:
                     await ctx.send("```Wrong command!```")
-        except (BaseException):
+        except BaseException:
             await ctx.send("```Couldn't connect to server, try again(```")
             pass
     else:
@@ -910,7 +912,7 @@ async def server(ctx, *args):
                         json.dump(config, f_, indent=2)
                 else:
                     await ctx.send("```Use server list, there's no such server on the list!```")
-            except(BaseException):
+            except BaseException:
                 await ctx.send("```Argument for 'select' must be a number!```")
         elif args[0] == "show":
             await ctx.send(
@@ -1064,6 +1066,6 @@ async def on_command_error(ctx, error):
 
 try:
     bot.run(token)
-except(BaseException):
+except BaseException:
     print("Bot/Discord Error: Maybe you need to update discord.py or your token is wrong.")
 system("pause")
