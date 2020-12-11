@@ -745,9 +745,15 @@ async def codes(ctx, arg1):
             message += "`" + value + "`\n"
         await member.send(message)
     else:
-        gifs_list = listdir(Path(current_bot_path + '/Gendalf_Top'))
-        await member.send('You shall not PASS! Ты не владеешь данным ником :ambulance:',
-                          file=discord.File(Path(current_bot_path + '/Gendalf_Top/' + choice(gifs_list))))
+        # Check if /Gendalf_Top exists!
+        if Path(current_bot_path + '/Gendalf_Top').is_dir():
+            gifs_list = listdir(Path(current_bot_path + '/Gendalf_Top'))
+            await member.send('You shall not PASS! Ты не владеешь данным ником :ambulance:',
+                              file=discord.File(Path(current_bot_path + '/Gendalf_Top/' + choice(gifs_list))))
+        else:
+            print("Folder 'Gendalf_Top' hasn't been found in that path '" + current_bot_path +
+                  "'. Maybe you want to create it and fill it with images related to Gendalf :)")
+            await member.send('You shall not PASS! Ты не владеешь данным ником :ambulance:')
 
 
 @bot.command(pass_context=True)
@@ -848,9 +854,8 @@ async def forceload(ctx, command=" "):
 @bot.command(pass_context=True, aliases=["wl"])
 @commands.has_role('Майнкрафтер')
 async def whitelist(ctx, *args):
-    if len(args) and (
-            args[0] == "add" or args[0] == "del" or args[0] == "list" or args[0] == "on" or args[0] == "off" or args[
-        0] == "reload"):
+    if len(args) and (args[0] == "add" or args[0] == "del" or args[0] == "list" or args[0] == "on" or args[0] == "off"
+                      or args[0] == "reload"):
         try:
             with Client_r(Adress_local, port_rcon, timeout=1) as cl_r:
                 cl_r.login(rcon_pass)
@@ -903,6 +908,10 @@ async def server(ctx, *args):
                 if int(args[1]) <= len(Minecraft_dirs_list):
                     if int(args[1]) == Mine_dir_numb:
                         await ctx.send("```My, you have chosen selected server, insane?)\n ...Pasan ramsi poputal```")
+                        return
+                    if IsServerOn:
+                        await ctx.send("```You can't change servers, while some instance(s) is/are still running" +
+                                       "\nPlease stop it, before trying again```")
                         return
                     Mine_dir_numb = int(args[1])
                     read_server_properties()
