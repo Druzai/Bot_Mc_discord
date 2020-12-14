@@ -21,6 +21,7 @@ IsLoading = False
 IsStopping = False
 IsRestarting = False
 IsReaction = False
+IsDoOp = False
 ansii_com = {"status": "🗨", "list": "📋", "start": "♿", "stop": "⏹", "restart": "🔄",
              "update": '📶'}  # Symbols for menu
 port_querry = 0
@@ -564,10 +565,15 @@ async def start(ctx):
 @commands.has_role('Майнкрафтер')
 async def stop(ctx, command="10"):
     """Stop server"""
-    global IsServerOn, IsLoading, IsStopping, IsForceload
+    global IsServerOn, IsLoading, IsStopping, IsForceload, IsDoOp
     try:
         if int(command) >= 0:
             if IsServerOn and not IsStopping and not IsLoading:
+                if IsDoOp:
+                    await ctx.send("```Some player still oped, wait for them```")
+                    if str(ctx.author.id) == "279875599672016899":
+                        await ctx.send("Ну что, " + ctx.author.mention + ", думал я тебя не переиграю, не уничтожу.... Я тебя уничтожу.")
+                    return
                 if IsForceload:
                     IsForceload = False
                     config["Forceload"] = IsForceload
@@ -585,10 +591,15 @@ async def stop(ctx, command="10"):
 @commands.has_role('Майнкрафтер')
 async def restart(ctx, command="10"):
     """Restart server"""
-    global IsServerOn, IsLoading, IsStopping, IsRestarting
+    global IsServerOn, IsLoading, IsStopping, IsRestarting, IsDoOp
     try:
         if int(command) >= 0:
             if IsServerOn and not IsStopping and not IsLoading:
+                if IsDoOp:
+                    await ctx.send("```Some player still oped, wait for them```")
+                    if str(ctx.author.id) == "279875599672016899":
+                        await ctx.send("Ну что, " + ctx.author.mention + ", думал я тебя не переиграю, не уничтожу.... Я тебя уничтожу.")
+                    return
                 IsRestarting = True
                 print("Restarting server")
                 await stop_server(ctx, int(command), True)
@@ -606,9 +617,10 @@ async def op(ctx, arg1, arg2, *args):
     :arg1 - nick,
     :arg2 - code,
     :*args - comment"""
-    global IsServerOn, IsLoading, IsStopping, op_deop_list
+    global IsServerOn, IsLoading, IsStopping, op_deop_list, IsDoOp
     IsFound = False
     IsEmpty = False
+    IsDoOp = True
     temp_s = []  # List of player(s) who used this command, it need to determinate should bot rewrite 'op_keys' or not
     if IsServerOn and not IsStopping and not IsLoading:
         keys_for_nicks = json.loads(crypt.decrypt(open(Path(current_bot_path + '/op_keys'), 'rb').read()))
@@ -672,9 +684,11 @@ async def op(ctx, arg1, arg2, *args):
                         await ctx.send("Ну что, " + ctx.author.mention +
                                        ", кончилось твоё время.. и не только твоё.... Как говорится \"Чики-брики и в дамки!\"")
                         op_deop_list.clear()
+                        IsDoOp = False
                     else:
                         await ctx.send(
                             ctx.author.mention + ", у тебя нет ограничения по времени, но вы все обречены...")
+                        IsDoOp = False
             if temp_s:
                 open(Path(current_bot_path + '/op_keys'), 'wb').write(
                     crypt.encrypt(json.dumps(keys_for_nicks).encode()))
