@@ -22,6 +22,7 @@ IsStopping = False
 IsRestarting = False
 IsReaction = False
 IsDoOp = False
+IsVoting = False
 ansii_com = {"status": "🗨", "list": "📋", "start": "♿", "stop": "⏹", "restart": "🔄",
              "update": '📶'}  # Symbols for menu
 port_querry = 0
@@ -35,6 +36,9 @@ op_deop_list = []  # List of nicks of players to op and then to deop
 Minecraft_dirs_list = []  # List of available to run servers
 Mine_dir_numb = 0  # Selected server's number
 current_bot_path = path.abspath(getcwd())
+poll = [0, 0]
+poll_voted_uniq = []
+await_date = datetime.now()
 
 # json and encrypt :)
 IsRewrite = False
@@ -572,7 +576,8 @@ async def stop(ctx, command="10"):
                 if IsDoOp:
                     await ctx.send("```Some player still oped, wait for them```")
                     if str(ctx.author.id) == "279875599672016899":
-                        await ctx.send("Ну что, " + ctx.author.mention + ", думал я тебя не переиграю, не уничтожу.... Я тебя уничтожу.")
+                        await ctx.send(
+                            "Ну что, " + ctx.author.mention + ", думал я тебя не переиграю, не уничтожу.... Я тебя уничтожу.")
                     return
                 if IsForceload:
                     IsForceload = False
@@ -598,7 +603,8 @@ async def restart(ctx, command="10"):
                 if IsDoOp:
                     await ctx.send("```Some player still oped, wait for them```")
                     if str(ctx.author.id) == "279875599672016899":
-                        await ctx.send("Ну что, " + ctx.author.mention + ", думал я тебя не переиграю, не уничтожу.... Я тебя уничтожу.")
+                        await ctx.send(
+                            "Ну что, " + ctx.author.mention + ", думал я тебя не переиграю, не уничтожу.... Я тебя уничтожу.")
                     return
                 IsRestarting = True
                 print("Restarting server")
@@ -622,7 +628,7 @@ async def op(ctx, arg1, arg2, *args):
     IsEmpty = False
     IsDoOp = True
     temp_s = []  # List of player(s) who used this command, it need to determinate should bot rewrite 'op_keys' or not
-    if IsServerOn and not IsStopping and not IsLoading:
+    if IsServerOn and not IsStopping and not IsLoading and not IsRestarting:
         keys_for_nicks = json.loads(crypt.decrypt(open(Path(current_bot_path + '/op_keys'), 'rb').read()))
         arg1 = arg1.lower()
         if arg1 in keys_for_nicks.keys():
@@ -1045,13 +1051,67 @@ async def on_raw_reaction_add(payload):
 
 
 @bot.command(pass_context=True)
-# @commands.has_permissions(administrator=True)
+# @commands.has_permissions(administrator=True) #TODO if 50+ messages give poll!
 async def clear(ctx, count=1):
+    global poll, await_date, IsVoting
+    try:
+        int(str(count))
+    except BaseException:
+        await ctx.send("Ты дебик? Чё ты там написал? Как мне это понимать? А? '" + str(count) + "' Убейся там!")
     if count > 0:
         await ctx.channel.purge(limit=int(count) + 1, bulk=False)
     else:
-        message_created_time = (await ctx.channel.history(limit=-count, oldest_first=True).flatten())[-1].created_at
-        await ctx.channel.purge(limit=None, after=message_created_time, bulk=False)
+        if await_date.second - datetime.now().second > 60:
+            await ctx.send("<@everyone>, this man " + ctx.author.mention +
+                           " trying to delete whole history of this channel. Will you let that happen? Vote with `%yes` or `%no`. To win the poll need 3 votes! So keep it up! I'm waiting")
+            reset_poll()
+            IsVoting = True
+            while poll[0] < 2 or poll[1] < 2:
+                await asyncio.sleep(1)
+            if poll[0] == 2 and poll[1] < 2:
+                message_created_time = (await ctx.channel.history(limit=-count, oldest_first=True).flatten())[
+                    -1].created_at
+                await ctx.channel.purge(limit=None, after=message_created_time, bulk=False)
+            else:
+                await ctx.send("Well, you're save for now")
+            await_date = datetime.now()
+            IsVoting = False
+        else:
+            await ctx.send(ctx.author.mention + ", what are you doing? Time hasn't passed yet")
+
+
+def reset_poll():
+    global poll, poll_voted_uniq
+    poll = [0, 0]
+    poll_voted_uniq.clear()
+
+
+@bot.command(pass_context=True)
+async def yes(ctx):
+    global poll, poll_voted_uniq
+    if not IsVoting:
+        await ctx.send("I don't see opened poll >:(")
+    else:
+        if ctx.author.id not in poll_voted_uniq:
+            poll_voted_uniq.append(ctx.author.id)
+            poll[0] += 1
+            await ctx.send("Current numbers: yes - " + str(poll[0]) + ", no - " + str(poll[1]))
+        else:
+            await ctx.send("You've already voted!")
+
+
+@bot.command(pass_context=True)
+async def no(ctx):
+    global poll, poll_voted_uniq
+    if not IsVoting:
+        await ctx.send("I don't see opened poll >:(")
+    else:
+        if ctx.author.id not in poll_voted_uniq:
+            poll_voted_uniq.append(ctx.author.id)
+            poll[1] += 1
+            await ctx.send("Current numbers: yes - " + str(poll[0]) + ", no - " + str(poll[1]))
+        else:
+            await ctx.send("You've already voted!")
 
 
 # Handling errors
