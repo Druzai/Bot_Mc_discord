@@ -343,6 +343,11 @@ async def start_server(ctx, shut_up=False):
             if IsRestarting:
                 IsRestarting = False
             return
+        timedelta_secs = (datetime.now() - check_time).seconds
+        output_bot = "Server, elapsed time: " + (
+            str(timedelta_secs // 60) + ":" + str(timedelta_secs % 60) if timedelta_secs // 60 != 0 else str(
+                timedelta_secs % 60) + " sec")
+        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=output_bot))
         await asyncio.sleep(await_sleep)
         try:
             with Client_q(Adress_local, port_querry, timeout=0.5) as cl_q:
