@@ -1066,12 +1066,12 @@ async def clear(ctx, count=1):
     if count > 0:
         await ctx.channel.purge(limit=int(count) + 1, bulk=False)
     else:
-        if await_date.second - datetime.now().second > 60:
-            await ctx.send("<@everyone>, this man " + ctx.author.mention +
-                           " trying to delete whole history of this channel. Will you let that happen? Vote with `%yes` or `%no`. To win the poll need 3 votes! So keep it up! I'm waiting")
+        if (datetime.now() - await_date).seconds > 30:
+            await ctx.send("@everyone, this man " + ctx.author.mention +
+                           " trying to delete whole history of this channel. Will you let that happen? Vote with `%yes` or `%no`. To win the poll need 2 votes! So keep it up! I'm waiting")
             reset_poll()
             IsVoting = True
-            while poll[0] < 2 or poll[1] < 2:
+            while poll[0] < 2 and poll[1] < 2:
                 await asyncio.sleep(1)
             if poll[0] == 2 and poll[1] < 2:
                 message_created_time = (await ctx.channel.history(limit=-count, oldest_first=True).flatten())[
@@ -1082,7 +1082,7 @@ async def clear(ctx, count=1):
             await_date = datetime.now()
             IsVoting = False
         else:
-            await ctx.send(ctx.author.mention + ", what are you doing? Time hasn't passed yet")
+            await ctx.send(ctx.author.mention + ", what are you doing? Time hasn't passed yet. I have 30 secs timer! Waiting...")
 
 
 def reset_poll():
@@ -1095,7 +1095,7 @@ def reset_poll():
 async def yes(ctx):
     global poll, poll_voted_uniq
     if not IsVoting:
-        await ctx.send("I don't see opened poll >:(")
+        await ctx.send("I don't see opened poll :japanese_goblin:")
     else:
         if ctx.author.id not in poll_voted_uniq:
             poll_voted_uniq.append(ctx.author.id)
@@ -1109,7 +1109,7 @@ async def yes(ctx):
 async def no(ctx):
     global poll, poll_voted_uniq
     if not IsVoting:
-        await ctx.send("I don't see opened poll >:(")
+        await ctx.send("I don't see opened poll :japanese_goblin:")
     else:
         if ctx.author.id not in poll_voted_uniq:
             poll_voted_uniq.append(ctx.author.id)
