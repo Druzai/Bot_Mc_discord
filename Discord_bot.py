@@ -15,10 +15,8 @@ from mcipc.rcon import Client as Client_r
 if platform == "win32":
     from os import startfile
 # TODO: features
-#  Add to bot.json role in discord for enabling usable commands & Start_bot.bat ot Start_bot.sh
 #  Make in classes
 #  Make rus/eng localization and get it from dict from file or so
-#  Make customizable role for massages for some bot commands
 
 # variables
 IsServerOn = False
@@ -38,6 +36,8 @@ await_time_check_ups = 0  # Variable for awaiting while bot pinging server for i
 await_time_op = 0  # Variable for awaiting while player can be operator
 await_sleep = 0  # Variable for awaiting while bot pinging server for info in query and rcon protocol
 op_deop_list = []  # List of nicks of players to op and then to deop
+Command_role = ""
+script_name = ""
 Minecraft_dirs_list = []  # List of available to run servers
 Mine_dir_numb = 0  # Selected server's number
 current_bot_path = path.abspath(getcwd())
@@ -69,6 +69,8 @@ if not path.isfile('bot.json'):
         "IP-adress": None,
         "Adress_local": None,
         "Menu_message_id": None,
+        "Command role for discord": "",
+        "Name of *.bat or *.sh file": "",
         "Await sleep in connecting to server": -1,
         "Ask await time check-ups": True,
         "Await time check-ups": 15,
@@ -167,6 +169,24 @@ else:
         config["Menu_message_id"] = menu_id
     else:
         print("Menu via reactions won't work. To make it work type '%menu' to create new menu and its id.")
+# Getting naming of the script file
+if config.get("Name of *.bat or *.sh file"):
+    script_name = config.get("Name of *.bat or *.sh file")
+    print("Bot will search for file '" + script_name + ".bat' or '" + script_name + ".sh' in main minecraft directory to start the server!")
+else:
+    IsRewrite = True
+    print("Set name of file-script for bot to start the server with it\n")
+    script_name = input()
+    config["Name of *.bat or *.sh file"] = script_name
+# Getting discord role for specific commands
+if config.get("Command role for discord"):
+    Command_role = config.get("Command role for discord")
+    print("Current role for some commands is '" + Command_role + "'")
+else:
+    IsRewrite = True
+    print("Set discord role for some specific commands such as start, stop, etc.\n")
+    Command_role = input()
+    config["Command role for discord"] = Command_role
 # Getting await time check-ups
 if config.get("Await time check-ups") >= 0:
     if config.get("Ask await time check-ups"):
@@ -356,9 +376,9 @@ async def start_server(ctx, shut_up=False):
         await ctx.send("```Loading server.......\nPlease wait)```")
     chdir(Path(Minecraft_dirs_list[Mine_dir_numb][0]))
     if platform == "linux" or platform == "linux2":
-        system("screen -dmS " + Minecraft_dirs_list[Mine_dir_numb][1] + " ./Start_bot.sh")
+        system("screen -dmS " + Minecraft_dirs_list[Mine_dir_numb][1] + " ./" + script_name + ".sh")
     elif platform == "win32":
-        startfile("Start_bot.bat")
+        startfile(script_name + ".bat")
     chdir(current_bot_path)
     await asyncio.sleep(5)
     check_time = datetime.now()
@@ -614,7 +634,7 @@ async def list(ctx, command="-u"):
 
 
 @bot.command(pass_context=True)
-@commands.has_role('Майнкрафтер')
+@commands.has_role(Command_role)
 async def start(ctx):
     """Start server"""
     global IsServerOn, IsLoading, IsStopping
@@ -625,7 +645,7 @@ async def start(ctx):
 
 
 @bot.command(pass_context=True)
-@commands.has_role('Майнкрафтер')
+@commands.has_role(Command_role)
 async def stop(ctx, command="10"):
     """Stop server"""
     global IsServerOn, IsLoading, IsStopping, IsForceload, IsDoOp
@@ -652,7 +672,7 @@ async def stop(ctx, command="10"):
 
 
 @bot.command(pass_context=True)
-@commands.has_role('Майнкрафтер')
+@commands.has_role(Command_role)
 async def restart(ctx, command="10"):
     """Restart server"""
     global IsServerOn, IsLoading, IsStopping, IsRestarting, IsDoOp
@@ -676,7 +696,7 @@ async def restart(ctx, command="10"):
 
 
 @bot.command(pass_context=True)
-@commands.has_role('Майнкрафтер')
+@commands.has_role(Command_role)
 async def op(ctx, arg1, arg2, *args):
     """Op command
     :arg1 - nick,
@@ -772,7 +792,7 @@ async def op(ctx, arg1, arg2, *args):
 
 
 @bot.command(pass_context=True)
-# @commands.has_role('Майнкрафтер')
+# @commands.has_role(Command_role)
 @commands.has_permissions(administrator=True)
 async def assoc(ctx, arg1: str, arg2, arg3):
     """
@@ -809,7 +829,7 @@ async def assoc(ctx, arg1: str, arg2, arg3):
 
 
 @bot.command(pass_context=True)
-# @commands.has_role('Майнкрафтер')
+# @commands.has_role(Command_role)
 async def codes(ctx, arg1):
     member = ctx.author
     id = str(member.id)
@@ -901,7 +921,7 @@ async def say(ctx):
 
 
 @bot.command(pass_context=True, aliases=["fl"])
-@commands.has_role('Майнкрафтер')
+@commands.has_role(Command_role)
 async def forceload(ctx, command=" "):
     global IsForceload
     if command == "on" or command == "off":
@@ -931,7 +951,7 @@ async def forceload(ctx, command=" "):
 
 
 @bot.command(pass_context=True, aliases=["wl"])
-@commands.has_role('Майнкрафтер')
+@commands.has_role(Command_role)
 async def whitelist(ctx, *args):
     if len(args) and (args[0] == "add" or args[0] == "del" or args[0] == "list" or args[0] == "on" or args[0] == "off"
                       or args[0] == "reload"):
@@ -969,7 +989,7 @@ async def whitelist(ctx, *args):
 
 
 @bot.command(pass_context=True)
-@commands.has_role('Майнкрафтер')
+@commands.has_role(Command_role)
 async def server(ctx, *args):
     global Mine_dir_numb
     if len(args) and (args[0] == "list" or args[0] == "select" or args[0] == "show"):
@@ -1043,7 +1063,7 @@ async def help(ctx):
 
 
 @bot.command(pass_context=True)
-@commands.has_role('Майнкрафтер')
+@commands.has_role(Command_role)
 async def menu(ctx):
     global menu_id, config
     await ctx.channel.purge(limit=1)
@@ -1088,8 +1108,8 @@ async def on_raw_reaction_add(payload):
                 await server_checkups(False)
                 return
             else:
-                if 'Майнкрафтер' not in str(payload.member.roles):
-                    await send_error(channel, commands.MissingRole('Майнкрафтер'))
+                if Command_role not in str(payload.member.roles):
+                    await send_error(channel, commands.MissingRole(Command_role))
                 else:
                     if payload.emoji.name == ansii_com.get("start"):
                         await start(channel)
