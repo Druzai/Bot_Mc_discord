@@ -14,6 +14,11 @@ from mcipc.rcon import Client as Client_r
 
 if platform == "win32":
     from os import startfile
+# TODO: features
+#  Add to bot.json role in discord for enabling usable commands & Start_bot.bat ot Start_bot.sh
+#  Make in classes
+#  Make rus/eng localization and get it from dict from file or so
+#  Make customizable role for massages for some bot commands
 
 # variables
 IsServerOn = False
@@ -24,7 +29,7 @@ IsReaction = False
 IsDoOp = False
 IsVoting = False
 ansii_com = {"status": "🗨", "list": "📋", "start": "♿", "stop": "⏹", "restart": "🔄",
-             "update": '📶'}  # Symbols for menu
+             "update": "📶"}  # Symbols for menu
 port_querry = 0
 port_rcon = 0
 rcon_pass = ""
@@ -39,6 +44,8 @@ current_bot_path = path.abspath(getcwd())
 poll = [0, 0]
 poll_voted_uniq = []
 await_date = datetime.now()
+Server_Start_Stop = [[], []]  # List 1-st start pos, 2-nd stop pos
+Progress_bar_time = 0
 
 # json and encrypt :)
 IsRewrite = False
@@ -55,7 +62,7 @@ keys_for_nicks_nicks = json.loads(
     crypt.decrypt(open('op_keys', 'rb').read())).keys()  # Dict for each player nicks seen on server
 if not path.isfile('id-to-nicks.json'):
     open('id-to-nicks.json', 'w').write(json.dumps(dict()))
-id_to_nicks = json.loads(open('id-to-nicks.json', 'r').read())  # Dict for func assotiate
+id_to_nicks = json.loads(open('id-to-nicks.json', 'r').read())  # Dict for func associate
 if not path.isfile('bot.json'):
     config = {
         "Token": None,
@@ -72,7 +79,7 @@ if not path.isfile('bot.json'):
         "Vk_pass": None,
         "Main_minecraft_dirs": [],
         "Minecaft_dirs_ask": True,
-        "Prefered_minecraft_dir": 0
+        "Prefered_minecraft_dir": 0,
     }
     with open('bot.json', 'w') as f:
         json.dump(config, f, indent=2)
@@ -211,7 +218,7 @@ else:
 
 def change_list_mine(l_ist, o):  # Function to add or delete servers paths in list 'Minecraft_dirs_list'
     force_to_write = False
-    l = [["", ""] for _ in range(0, o)]  # Temporal list, it returns in the end
+    l = [["", "", 0] for _ in range(0, o)]  # Temporal list, it returns in the end
     for j in range(o):
         if len(l_ist) > 0:
             l[j] = l_ist[j]
@@ -264,6 +271,21 @@ def read_server_properties():
                 rcon_pass = i.split("=")[1].strip()
 
 
+def server_start_stop_states(ToWrite=False):
+    global Server_Start_Stop
+    if ToWrite:
+        with open(Path(Minecraft_dirs_list[Mine_dir_numb][0] + "/StartStopStates.json"), "w") as f_:
+            json.dump(Server_Start_Stop, f_, indent=2)
+    else:
+        if not path.isfile(Path(Minecraft_dirs_list[Mine_dir_numb][0] + "/StartStopStates.json")):
+            Server_Start_Stop = [[], []]
+            with open(Path(Minecraft_dirs_list[Mine_dir_numb][0] + "/StartStopStates.json"), "w") as f_:
+                json.dump(Server_Start_Stop, f_, indent=2)
+        else:
+            with open(Path(Minecraft_dirs_list[Mine_dir_numb][0] + "/StartStopStates.json"), "r") as f_:
+                Server_Start_Stop = json.load(f_)
+
+
 # Getting list of available servers
 Mine_dir_numb = config.get("Prefered_minecraft_dir")
 if config.get("Main_minecraft_dirs"):
@@ -295,6 +317,10 @@ else:
         config["Minecaft_dirs_ask"] = False
         print("Minecraft dirs will be brought from config.")
     IsRewrite = True
+# Getting Server start & stop states
+server_start_stop_states()
+# Getting progress bar time for selected server
+Progress_bar_time = Minecraft_dirs_list[Mine_dir_numb][2]
 # Rewriting bot setting if needed
 if IsRewrite:
     with open('bot.json', 'w') as f:
@@ -323,7 +349,7 @@ async def send_status(ctx):
 
 
 async def start_server(ctx, shut_up=False):
-    global IsServerOn, IsLoading, IsRestarting
+    global IsServerOn, IsLoading, IsRestarting, Server_Start_Stop, Progress_bar_time, Minecraft_dirs_list
     IsLoading = True
     print("Loading server")
     if ctx and not shut_up:
@@ -344,9 +370,13 @@ async def start_server(ctx, shut_up=False):
                 IsRestarting = False
             return
         timedelta_secs = (datetime.now() - check_time).seconds
-        output_bot = "Server, elapsed time: " + (
-            str(timedelta_secs // 60) + ":" + str(timedelta_secs % 60) if timedelta_secs // 60 != 0 else str(
-                timedelta_secs % 60) + " sec")
+        if Progress_bar_time:
+            percentage = round((timedelta_secs / Progress_bar_time) * 100)
+            output_bot = "Loading: " + (str(percentage) + "%") if percentage < 101 else "100%..."
+        else:
+            output_bot = "Server, elapsed time: " + (
+                str(timedelta_secs // 60) + ":" + str(timedelta_secs % 60) if timedelta_secs // 60 != 0 else str(
+                    timedelta_secs % 60) + " sec")
         await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=output_bot))
         await asyncio.sleep(await_sleep)
         try:
@@ -355,8 +385,12 @@ async def start_server(ctx, shut_up=False):
             break
         except BaseException:
             pass
+    if Progress_bar_time:
+        Progress_bar_time = (Progress_bar_time + (datetime.now() - check_time).seconds) // 2
+    else:
+        Progress_bar_time = (datetime.now() - check_time).seconds
     if ctx:
-        await ctx.send("```Server's on now```")
+        await ctx.send(ctx.author.mention + "\n```Server's on now```")
         if randint(0, 8) == 0:
             await asyncio.sleep(1)
             await ctx.send("Kept you waiting, huh?")
@@ -364,11 +398,18 @@ async def start_server(ctx, shut_up=False):
     IsServerOn = True
     if IsRestarting:
         IsRestarting = False
+    if Minecraft_dirs_list[Mine_dir_numb][2] != Progress_bar_time:
+        Minecraft_dirs_list[Mine_dir_numb][2] = Progress_bar_time
+        config["Main_minecraft_dirs"] = Minecraft_dirs_list
+        with open(Path(current_bot_path + '/bot.json'), 'w') as f_:
+            json.dump(config, f_, indent=2)
+    Server_Start_Stop[0] = [datetime.now().strftime("%d/%m/%y, %H:%M:%S"), str(ctx.author)]
+    server_start_stop_states(True)
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name="Minecraft Server"))
 
 
 async def stop_server(ctx, How_many_sec=10, IsRestart=False):
-    global IsServerOn, IsStopping
+    global IsServerOn, IsStopping, Server_Start_Stop
     IsStopping = True
     print("Stopping server")
     await ctx.send("```Stopping server.......\nPlease wait " + str(How_many_sec) + " sec.```")
@@ -406,7 +447,9 @@ async def stop_server(ctx, How_many_sec=10, IsRestart=False):
     IsStopping = False
     IsServerOn = False
     print("Server's off now")
-    await ctx.send("```Server's off now```")
+    await ctx.send(ctx.author.mention + "\n```Server's off now```")
+    Server_Start_Stop[1] = [datetime.now().strftime("%d/%m/%y, %H:%M:%S"), str(ctx.author)]
+    server_start_stop_states(True)
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Server"))
 
 
@@ -458,7 +501,7 @@ async def server_checkups(always_=True):
                         try:
                             await channel.fetch_message(menu_id)
                             await channel.send(
-                                f'```Bot detected: Server\'s offline!\nTime: {datetime.now().strftime("%d/%m, %H:%M:%S")}\nStarting up server again!```')
+                                f'```Bot detected: Server\'s offline!\nTime: {datetime.now().strftime("%d/%m/%y, %H:%M:%S")}\nStarting up server again!```')
                             await start_server(channel, True)
                             break
                         except BaseException:
@@ -509,6 +552,17 @@ async def on_ready():
 @bot.command(pass_context=True)
 async def status(ctx):
     """Shows server status"""
+    states = "\n"
+    for i in range(len(Server_Start_Stop)):
+        if len(Server_Start_Stop[i]) == 0:
+            continue
+        if i == 0:
+            states += "Server has been started at "
+        else:
+            states += "Server has been stopped at "
+        states += Server_Start_Stop[i][0] + ", by " + Server_Start_Stop[i][1]
+        if i != len(Server_Start_Stop):
+            states += "\n"
     if IsServerOn:
         try:
             with Client_r(Adress_local, port_rcon, timeout=1) as cl_r:
@@ -524,16 +578,16 @@ async def status(ctx):
             else:
                 message += "Sunrise, "
             await ctx.send("```Server online\n" + message + str((6 + time_ticks // 1000) % 24) +
-                           ":" + str((time_ticks % 1000) * 60 // 1000) + "\nServer adress: " + IP_adress +
-                           "\nSelected server: " + Minecraft_dirs_list[Mine_dir_numb][1] + "```")
+                           ":" + f"{((time_ticks % 1000) * 60 // 1000):02d}" + "\nServer adress: " + IP_adress +
+                           "\nSelected server: " + Minecraft_dirs_list[Mine_dir_numb][1] + states + "```")
         except BaseException:
             await ctx.send("```Server online\nServer adress: " + IP_adress + "\nSelected server: " +
-                           Minecraft_dirs_list[Mine_dir_numb][1] + "```")
+                           Minecraft_dirs_list[Mine_dir_numb][1] + states + "```")
             print("Serv's down via rcon")
         """rcon check daytime cycle"""
     else:
         await ctx.send("```Server offline\nServer adress: " + IP_adress + "\nSelected server: " +
-                       Minecraft_dirs_list[Mine_dir_numb][1] + "```")
+                       Minecraft_dirs_list[Mine_dir_numb][1] + states + "```")
 
 
 @bot.command(pass_context=True)
@@ -940,6 +994,7 @@ async def server(ctx, *args):
                         return
                     Mine_dir_numb = int(args[1])
                     read_server_properties()
+                    server_start_stop_states()
                     await ctx.send("```Server properties read!```")
                     config["Prefered_minecraft_dir"] = Mine_dir_numb
                     with open(Path(current_bot_path + '/bot.json'), 'w') as f_:
@@ -1056,7 +1111,7 @@ async def on_raw_reaction_add(payload):
 
 
 @bot.command(pass_context=True)
-# @commands.has_permissions(administrator=True) #TODO if 50+ messages give poll!
+# @commands.has_permissions(administrator=True) # TODO: if 50+ messages give poll!
 async def clear(ctx, count=1):
     global poll, await_date, IsVoting
     try:
@@ -1082,7 +1137,8 @@ async def clear(ctx, count=1):
             await_date = datetime.now()
             IsVoting = False
         else:
-            await ctx.send(ctx.author.mention + ", what are you doing? Time hasn't passed yet. I have 30 secs timer! Waiting...")
+            await ctx.send(
+                ctx.author.mention + ", what are you doing? Time hasn't passed yet. I have 30 secs timer! Waiting...")
 
 
 def reset_poll():
