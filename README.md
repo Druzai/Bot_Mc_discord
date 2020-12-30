@@ -26,7 +26,7 @@ ____________
 * [vk_api](https://github.com/python273/vk_api) - lib for connecting & using VK to download and post photoes from selected communities
 * [cryptography](https://github.com/pyca/cryptography) - lib for encrypting nessesary data to config file
 * [mcipc](https://github.com/conqp/mcipc) - lib for easy using query and rcon to connect to minecraft server
-* [pyinstaller](https://github.com/pyinstaller/pyinstaller) - lib to build project to executable file, you can use another one if you can't for some reason
+* [pyinstaller](https://github.com/pyinstaller/pyinstaller) - lib to build project to executable file, you can use another one if you can't for some reason, but my makefile works only with this library
 ### Installation
 Type in command promt, you must have [requirements.txt](requirements.txt) in root folder of the project
 ```
@@ -37,7 +37,7 @@ Type in command promt in root directory of the project to build it
 ```
 pyinstaller -F --icon=bot.ico --distpath=./ Discord_bot.py
 ```
-Or using `make` type "make" in root directory
+Or using [make utility](https://www.gnu.org/software/make/) type "make" in root directory
 ### Run
 Note: for using almost all commands you have to have role "Майнкрафтер"
 * Windows
@@ -47,7 +47,7 @@ You have to start bot file from folder located in your root minecraft server dir
 ```
 %your_minecraft_server_dir%\%bot_folder%\bot_executable_file
 ```
-And for the bot to properly work you have to have Start_bot.bat in your root minecraft server directory! Example of file:
+And for the bot to properly work you have to have ***.bat (in bot setting you can set name for this script) in your root minecraft server directory! Example of file:
 ```
 rem ask_int - consists how many GB you're allocating for server on start up
 rem your_jar_file - jar file that starts up your server. It can be for vanilla: standart server.jar or for modded server: spigot.jar, forge.jar
@@ -71,7 +71,7 @@ You have execute bot file using terminal from folder located in your root minecr
 ```
 screen -dmS %your_session_name% %your_minecraft_server_dir%\%bot_folder%\bot_executable_file
 ```
-And for the bot to properly work you have to have Start_bot.sh in your root minecraft server directory! Example of file:
+And for the bot to properly work you have to have ***.sh (in bot setting you can set name for this script) in your root minecraft server directory! Example of file:
 ```
 # ask_int - consists how many GB you're allocating for server on start up
 # your_jar_file - jar file that starts up your server. It can be for vanilla: standart server.jar or for modded server: spigot.jar, forge.jar
