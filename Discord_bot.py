@@ -395,7 +395,7 @@ async def start_server(ctx, shut_up=False):
             output_bot = "Loading: " + (str(percentage) + "%") if percentage < 101 else "100%..."
         else:
             output_bot = "Server, elapsed time: " + (
-                str(timedelta_secs // 60) + ":" + str(timedelta_secs % 60) if timedelta_secs // 60 != 0 else str(
+                str(timedelta_secs // 60) + ":" + f"{(timedelta_secs % 60):02d}" if timedelta_secs // 60 != 0 else str(
                     timedelta_secs % 60) + " sec")
         await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=output_bot))
         await asyncio.sleep(await_sleep)
@@ -409,8 +409,14 @@ async def start_server(ctx, shut_up=False):
         Progress_bar_time = (Progress_bar_time + (datetime.now() - check_time).seconds) // 2
     else:
         Progress_bar_time = (datetime.now() - check_time).seconds
+    if IsReaction:
+        author_mention = react_auth.mention
+        author = react_auth
+    else:
+        author_mention = ctx.author.mention
+        author = ctx.author
     if ctx:
-        await ctx.send(ctx.author.mention + "\n```Server's on now```")
+        await ctx.send(author_mention + "\n```Server's on now```")
         if randint(0, 8) == 0:
             await asyncio.sleep(1)
             await ctx.send("Kept you waiting, huh?")
@@ -423,7 +429,7 @@ async def start_server(ctx, shut_up=False):
         config["Main_minecraft_dirs"] = Minecraft_dirs_list
         with open(Path(current_bot_path + '/bot.json'), 'w') as f_:
             json.dump(config, f_, indent=2)
-    Server_Start_Stop[0] = [datetime.now().strftime("%d/%m/%y, %H:%M:%S"), str(ctx.author)]
+    Server_Start_Stop[0] = [datetime.now().strftime("%d/%m/%y, %H:%M:%S"), str(author)]
     server_start_stop_states(True)
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name="Minecraft Server"))
 
@@ -466,9 +472,15 @@ async def stop_server(ctx, How_many_sec=10, IsRestart=False):
             break
     IsStopping = False
     IsServerOn = False
+    if IsReaction:
+        author_mention = react_auth.mention
+        author = react_auth
+    else:
+        author_mention = ctx.author.mention
+        author = ctx.author
     print("Server's off now")
-    await ctx.send(ctx.author.mention + "\n```Server's off now```")
-    Server_Start_Stop[1] = [datetime.now().strftime("%d/%m/%y, %H:%M:%S"), str(ctx.author)]
+    await ctx.send(author_mention + "\n```Server's off now```")
+    Server_Start_Stop[1] = [datetime.now().strftime("%d/%m/%y, %H:%M:%S"), str(author)]
     server_start_stop_states(True)
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Server"))
 
@@ -625,10 +637,10 @@ async def list(ctx, command="-u"):
                                                                                         ", ".join(info.players)))
         except BaseException:
             if IsReaction:
-                author = react_auth.mention
+                author_mention = react_auth.mention
             else:
-                author = ctx.author.mention
-            await ctx.send(f"{author}, сервер сейчас выключен")
+                author_mention = ctx.author.mention
+            await ctx.send(f"{author_mention}, сервер сейчас выключен")
     else:
         raise commands.UserInputError()
 
@@ -653,7 +665,7 @@ async def stop(ctx, command="10"):
         if int(command) >= 0:
             if IsServerOn and not IsStopping and not IsLoading:
                 if IsDoOp:
-                    await ctx.send("```Some player still oped, wait for them```")
+                    await ctx.send("```Some player still oped, wait for them```") # TODO: mb delete these lines, you're like a kid...
                     if str(ctx.author.id) == "279875599672016899":
                         await ctx.send(
                             "Ну что, " + ctx.author.mention + ", думал я тебя не переиграю, не уничтожу.... Я тебя уничтожу.")
@@ -1118,7 +1130,7 @@ async def on_raw_reaction_add(payload):
                     elif payload.emoji.name == ansii_com.get("restart"):
                         await restart(channel)
             IsReaction = False
-            await asyncio.sleep(10)
+            await asyncio.sleep(10)  # TODO: fix deleting menu when several reactions added and bot can't check every react)
             # Code below deletes all messages up to menu message
             # It's working, but not working fully as intended)
             messages = await channel.history(limit=35).flatten()
@@ -1198,29 +1210,29 @@ async def no(ctx):
 # Handling errors
 async def send_error(ctx, error):
     if IsReaction:
-        author = react_auth.mention
-        author2 = react_auth
+        author_mention = react_auth.mention
+        author = react_auth
     else:
-        author = ctx.author.mention
-        author2 = ctx.author
+        author_mention = ctx.author.mention
+        author = ctx.author
     if isinstance(error, commands.MissingRequiredArgument):
-        print(f'{author2} не указал аргумент')
-        await ctx.send(f'{author}, пожалуйста, введи все аргументы ')
+        print(f'{author} не указал аргумент')
+        await ctx.send(f'{author_mention}, пожалуйста, введи все аргументы ')
     if isinstance(error, commands.MissingPermissions):
-        print(f'У {author2} мало прав для команды')
-        await ctx.send(f'{author}, у вас недостаточно прав для выполнения этой команды')
+        print(f'У {author} мало прав для команды')
+        await ctx.send(f'{author_mention}, у вас недостаточно прав для выполнения этой команды')
     if isinstance(error, commands.MissingRole):
-        print(f'У {author2} нет роли "{error.missing_role}" для команды')
-        await ctx.send(f'{author}, у вас нет роли "{error.missing_role}" для выполнения этой команды')
+        print(f'У {author} нет роли "{error.missing_role}" для команды')
+        await ctx.send(f'{author_mention}, у вас нет роли "{error.missing_role}" для выполнения этой команды')
     if isinstance(error, commands.CommandNotFound):
-        print(f'{author2} ввёл несуществующую команду')
-        await ctx.send(f'{author}, вы ввели несуществующую команду')
+        print(f'{author} ввёл несуществующую команду')
+        await ctx.send(f'{author_mention}, вы ввели несуществующую команду')
     if isinstance(error, commands.UserInputError):
-        print(f'{author2} неправильно ввёл аргумент(ы) команды')
-        await ctx.send(f'{author}, вы неправильно ввели агрумент(ы) команды')
+        print(f'{author} неправильно ввёл аргумент(ы) команды')
+        await ctx.send(f'{author_mention}, вы неправильно ввели агрумент(ы) команды')
     if isinstance(error, commands.DisabledCommand):
-        print(f'{author2} ввёл отключённую команду')
-        await ctx.send(f'{author}, вы ввели отлючённую команду')
+        print(f'{author} ввёл отключённую команду')
+        await ctx.send(f'{author_mention}, вы ввели отлючённую команду')
 
 
 @bot.event
