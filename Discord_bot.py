@@ -23,7 +23,6 @@ IsServerOn = False
 IsLoading = False
 IsStopping = False
 IsRestarting = False
-IsReaction = False
 IsDoOp = False
 IsVoting = False
 ansii_com = {"status": "🗨", "list": "📋", "start": "♿", "stop": "⏹", "restart": "🔄",
@@ -360,18 +359,14 @@ bot.remove_command('help')
 async def send_status(ctx, IsReaction=False):
     global IsServerOn, IsLoading, IsStopping
     if IsServerOn:
-        msg = "```Server've already started!```"
+        await send_msg(ctx, "```Server've already started!```", IsReaction)
     else:
         if IsLoading:
-            msg = "```Server is loading!```"
+            await send_msg(ctx, "```Server is loading!```", IsReaction)
         elif IsStopping:
-            msg = "```Server is stopping!```"
+            await send_msg(ctx, "```Server is stopping!```", IsReaction)
         else:
-            msg = "```Server've already been stopped!```"
-    if IsReaction:
-        await ctx.send(content=msg, delete_after=await_time_before_message_deletion)
-    else:
-        await ctx.send(msg)
+            await send_msg(ctx, "```Server've already been stopped!```", IsReaction)
 
 
 async def start_server(ctx, shut_up=False, IsReaction=False):
@@ -379,11 +374,7 @@ async def start_server(ctx, shut_up=False, IsReaction=False):
     IsLoading = True
     print("Loading server")
     if ctx and not shut_up:
-        msg = "```Loading server.......\nPlease wait)```"
-        if IsReaction:
-            await ctx.send(content=msg, delete_after=await_time_before_message_deletion)
-        else:
-            await ctx.send(msg)
+        await send_msg(ctx, "```Loading server.......\nPlease wait)```", IsReaction)
     chdir(Path(Minecraft_dirs_list[Mine_dir_numb][0]))
     if platform == "linux" or platform == "linux2":
         system("screen -dmS " + Minecraft_dirs_list[Mine_dir_numb][1] + " ./" + script_name + ".sh")
@@ -394,11 +385,7 @@ async def start_server(ctx, shut_up=False, IsReaction=False):
     check_time = datetime.now()
     while True:
         if (datetime.now() - check_time).seconds > 600:
-            msg = "```Error while loading server```"
-            if IsReaction:
-                await ctx.send(content=msg, delete_after=await_time_before_message_deletion)
-            else:
-                await ctx.send(msg)
+            await send_msg(ctx, "```Error while loading server```", IsReaction)
             IsLoading = False
             if IsRestarting:
                 IsRestarting = False
@@ -423,20 +410,11 @@ async def start_server(ctx, shut_up=False, IsReaction=False):
         Progress_bar_time = (Progress_bar_time + (datetime.now() - check_time).seconds) // 2
     else:
         Progress_bar_time = (datetime.now() - check_time).seconds
-    if IsReaction:
-        author_mention = react_auth.mention
-        author = react_auth
-    else:
-        author_mention = ctx.author.mention
-        author = ctx.author
+    author, author_mention = get_author_and_mention(ctx, IsReaction)
     if ctx:
-        msg = author_mention + "\n```Server's on now```"
+        await send_msg(ctx, author_mention + "\n```Server's on now```", IsReaction)
         if randint(0, 8) == 0:
-            msg += "\nKept you waiting, huh?"
-        if IsReaction:
-            await ctx.send(content=msg, delete_after=await_time_before_message_deletion)
-        else:
-            await ctx.send(msg)
+            await send_msg(ctx, "Kept you waiting, huh?", IsReaction)
     IsLoading = False
     IsServerOn = True
     if IsRestarting:
@@ -455,11 +433,7 @@ async def stop_server(ctx, How_many_sec=10, IsRestart=False, IsReaction=False):
     global IsServerOn, IsStopping, Server_Start_Stop
     IsStopping = True
     print("Stopping server")
-    msg = "```Stopping server.......\nPlease wait " + str(How_many_sec) + " sec.```"
-    if IsReaction:
-        await ctx.send(content=msg, delete_after=await_time_before_message_deletion)
-    else:
-        await ctx.send(msg)
+    await send_msg(ctx, "```Stopping server.......\nPlease wait " + str(How_many_sec) + " sec.```", IsReaction)
     try:
         with Client_r(Adress_local, port_rcon, timeout=1) as cl_r:
             cl_r.login(rcon_pass)
@@ -483,11 +457,7 @@ async def stop_server(ctx, How_many_sec=10, IsRestart=False, IsReaction=False):
             cl_r.run("stop")
     except BaseException:
         print("Exeption: Couldn't connect to server, check its connection")
-        msg = "Couldn't connect to server to shut it down!"
-        if IsReaction:
-            await ctx.send(content=msg, delete_after=await_time_before_message_deletion)
-        else:
-            await ctx.send(msg)
+        await send_msg(ctx, "Couldn't connect to server to shut it down!", IsReaction)
         return
     while True:
         await asleep(await_sleep)
@@ -498,18 +468,9 @@ async def stop_server(ctx, How_many_sec=10, IsRestart=False, IsReaction=False):
             break
     IsStopping = False
     IsServerOn = False
-    if IsReaction:
-        author_mention = react_auth.mention
-        author = react_auth
-    else:
-        author_mention = ctx.author.mention
-        author = ctx.author
+    author, author_mention = get_author_and_mention(ctx, IsReaction)
     print("Server's off now")
-    msg = author_mention + "\n```Server's off now```"
-    if IsReaction:
-        await ctx.send(content=msg, delete_after=await_time_before_message_deletion)
-    else:
-        await ctx.send(msg)
+    await send_msg(ctx, author_mention + "\n```Server's off now```", IsReaction)
     Server_Start_Stop[1] = [datetime.now().strftime("%d/%m/%y, %H:%M:%S"), str(author)]
     server_start_stop_states(True)
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Server"))
@@ -596,6 +557,22 @@ def generate_access_code(length=16, sep='-', sep_interval=4) -> str:
     return code
 
 
+async def send_msg(ctx, msg, IsReaction=False):
+    if IsReaction:
+        await ctx.send(content=msg, delete_after=await_time_before_message_deletion)
+    else:
+        await ctx.send(msg)
+
+
+def get_author_and_mention(ctx, IsReaction=False):
+    if IsReaction:
+        author_mention = react_auth.mention
+        author = react_auth
+    else:
+        author_mention = ctx.author.mention
+        author = ctx.author
+    return author, author_mention
+
 @bot.event
 async def on_ready():
     global IsServerOn
@@ -639,57 +616,34 @@ async def status(ctx, IsReaction=False):
                 message += "Night, "
             else:
                 message += "Sunrise, "
-            msg = "```Server online\n" + message + str((6 + time_ticks // 1000) % 24) + ":" + \
-                  f"{((time_ticks % 1000) * 60 // 1000):02d}" + "\nServer adress: " + IP_adress + "\nSelected server: " \
-                  + Minecraft_dirs_list[Mine_dir_numb][1] + states + "```"
-            if IsReaction:
-                await ctx.send(content=msg, delete_after=await_time_before_message_deletion)
-            else:
-                await ctx.send(msg)
-
+            await send_msg(ctx, "```Server online\n" + message + str((6 + time_ticks // 1000) % 24) + ":"
+                           + f"{((time_ticks % 1000) * 60 // 1000):02d}" + "\nServer adress: " + IP_adress +
+                           "\nSelected server: " + Minecraft_dirs_list[Mine_dir_numb][1] + states + "```", IsReaction)
         except BaseException:
-            msg = "```Server online\nServer adress: " + IP_adress + "\nSelected server: " + \
-                  Minecraft_dirs_list[Mine_dir_numb][1] + states + "```"
-            if IsReaction:
-                await ctx.send(content=msg, delete_after=await_time_before_message_deletion)
-            else:
-                await ctx.send(msg)
+            await send_msg(ctx, "```Server online\nServer adress: " + IP_adress + "\nSelected server: " +
+                           Minecraft_dirs_list[Mine_dir_numb][1] + states + "```", IsReaction)
             print("Serv's down via rcon")
         """rcon check daytime cycle"""
     else:
-        msg = "```Server offline\nServer adress: " + IP_adress + "\nSelected server: " + \
-              Minecraft_dirs_list[Mine_dir_numb][1] + states + "```"
-        if IsReaction:
-            await ctx.send(content=msg, delete_after=await_time_before_message_deletion)
-        else:
-            await ctx.send(msg)
+        await send_msg(ctx, "```Server offline\nServer adress: " + IP_adress + "\nSelected server: " +
+                       Minecraft_dirs_list[Mine_dir_numb][1] + states + "```", IsReaction)
 
 
 @bot.command(pass_context=True)
 async def list(ctx, command="-u", IsReaction=False):
     """Shows list of players"""
-    # global IsReaction
     if command == "-u":
         try:
             with Client_q(Adress_local, port_querry, timeout=1) as cl_q:
                 info = cl_q.full_stats
                 if info.num_players == 0:
-                    msg = "```Игроков на сервере нет```"
+                    await send_msg(ctx, "```Игроков на сервере нет```", IsReaction)
                 else:
-                    msg = "```Игроков на сервере - {0}\nИгроки: {1}```".format(info.num_players,
-                                                                               ", ".join(info.players))
-                if IsReaction:
-                    await ctx.send(content=msg, delete_after=await_time_before_message_deletion)
-                else:
-                    await ctx.send(msg)
+                    await send_msg(ctx, "```Игроков на сервере - {0}\nИгроки: {1}```".format(info.num_players,
+                                                                               ", ".join(info.players)), IsReaction)
         except BaseException:
-            if IsReaction:
-                author_mention = react_auth.mention
-                msg = f"{author_mention}, сервер сейчас выключен"
-                await ctx.send(content=msg, delete_after=await_time_before_message_deletion)
-            else:
-                author_mention = ctx.author.mention
-                await ctx.send(f"{author_mention}, сервер сейчас выключен")
+            _, author_mention = get_author_and_mention(ctx, IsReaction)
+            await send_msg(ctx, f"{author_mention}, сервер сейчас выключен", IsReaction)
     else:
         await send_error(ctx, commands.UserInputError(), IsReaction=IsReaction)
 
@@ -714,7 +668,7 @@ async def stop(ctx, command="10", IsReaction=False):
         if int(command) >= 0:
             if IsServerOn and not IsStopping and not IsLoading:
                 if IsDoOp:
-                    await ctx.send("```Some player/s still oped, waiting for them```")
+                    await send_msg(ctx, "```Some player/s still oped, waiting for them```", IsReaction)
                     return
                 if IsForceload:
                     IsForceload = False
@@ -738,7 +692,7 @@ async def restart(ctx, command="10", IsReaction=False):
         if int(command) >= 0:
             if IsServerOn and not IsStopping and not IsLoading:
                 if IsDoOp:
-                    await ctx.send("```Some player/s still oped, waiting for them```")
+                    await send_msg(ctx, "```Some player/s still oped, waiting for them```", IsReaction)
                     return
                 IsRestarting = True
                 print("Restarting server")
@@ -1240,36 +1194,25 @@ async def no(ctx):
 
 # Handling errors
 async def send_error(ctx, error, IsReaction=False):
-    if IsReaction:
-        author_mention = react_auth.mention
-        author = react_auth
-    else:
-        author_mention = ctx.author.mention
-        author = ctx.author
-    msg = ""
+    author, author_mention = get_author_and_mention(ctx, IsReaction)
     if isinstance(error, commands.MissingRequiredArgument):
         print(f'{author} не указал аргумент')
-        msg = f'{author_mention}, пожалуйста, введи все аргументы '
+        await send_msg(ctx, f'{author_mention}, пожалуйста, введи все аргументы', IsReaction)
     if isinstance(error, commands.MissingPermissions):
         print(f'У {author} мало прав для команды')
-        msg = f'{author_mention}, у вас недостаточно прав для выполнения этой команды'
+        await send_msg(ctx, f'{author_mention}, у вас недостаточно прав для выполнения этой команды', IsReaction)
     if isinstance(error, commands.MissingRole):
         print(f'У {author} нет роли "{error.missing_role}" для команды')
-        msg = f'{author_mention}, у вас нет роли "{error.missing_role}" для выполнения этой команды'
+        await send_msg(ctx, f'{author_mention}, у вас нет роли "{error.missing_role}" для выполнения этой команды', IsReaction)
     if isinstance(error, commands.CommandNotFound):
         print(f'{author} ввёл несуществующую команду')
-        msg = f'{author_mention}, вы ввели несуществующую команду'
+        await send_msg(ctx, f'{author_mention}, вы ввели несуществующую команду', IsReaction)
     if isinstance(error, commands.UserInputError):
         print(f'{author} неправильно ввёл аргумент(ы) команды')
-        msg = f'{author_mention}, вы неправильно ввели агрумент(ы) команды'
+        await send_msg(ctx, f'{author_mention}, вы неправильно ввели агрумент(ы) команды', IsReaction)
     if isinstance(error, commands.DisabledCommand):
         print(f'{author} ввёл отключённую команду')
-        msg = f'{author_mention}, вы ввели отлючённую команду'
-    if msg:
-        if IsReaction:
-            await ctx.send(content=msg, delete_after=await_time_before_message_deletion)
-        else:
-            await ctx.send(msg)
+        await send_msg(ctx, f'{author_mention}, вы ввели отлючённую команду', IsReaction)
 
 
 @bot.event
