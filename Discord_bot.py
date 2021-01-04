@@ -11,6 +11,7 @@ from datetime import datetime
 from discord.ext import commands
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r
+from poll import Poll
 
 if platform == "win32":
     from os import startfile
@@ -41,9 +42,7 @@ Minecraft_dirs_list = []  # List of available to run servers
 Mine_dir_numb = 0  # Selected server's number
 current_bot_path = path.abspath(getcwd())
 await_time_before_message_deletion = 10
-poll = [0, 0]
-poll_voted_uniq = []
-await_date = datetime.now()
+# await_date = datetime.now()
 Server_Start_Stop = [[], []]  # List 1-st start pos, 2-nd stop pos
 Progress_bar_time = 0
 
@@ -354,6 +353,9 @@ print("Server properties read!")
 bot = commands.Bot(command_prefix='%', description="Server bot")
 bot.remove_command('help')
 
+# Classes
+IndPoll = Poll(bot)
+
 
 # Additional commands
 async def send_status(ctx, IsReaction=False):
@@ -458,6 +460,7 @@ async def stop_server(ctx, How_many_sec=10, IsRestart=False, IsReaction=False):
     except BaseException:
         print("Exeption: Couldn't connect to server, check its connection")
         await send_msg(ctx, "Couldn't connect to server to shut it down!", IsReaction)
+        IsStopping = False
         return
     while True:
         await asleep(await_sleep)
@@ -579,7 +582,7 @@ async def on_ready():
     print('------')
     print('Logged in discord as')
     print(bot.user.name)
-    print("Discord version ", discord.__version__)
+    print("Discord version", discord.__version__)
     print('------')
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="nsfw"))
     print("Bot is ready!")
@@ -660,7 +663,7 @@ async def start(ctx, IsReaction=False):
 
 
 @bot.command(pass_context=True)
-@commands.has_role(Command_role)  # TODO: add poll when there's more than 0 player on server
+@commands.has_role(Command_role)  # TODO: add poll when there's more than 0 player on server, add yes - no in reactions! Do this to make approval
 async def stop(ctx, command="10", IsReaction=False):
     """Stop server"""
     global IsServerOn, IsLoading, IsStopping, IsForceload, IsDoOp
@@ -1104,8 +1107,7 @@ async def on_raw_reaction_add(payload):
     if payload.message_id == int(menu_id) and payload.member.id != bot.user.id:
         channel = bot.get_channel(payload.channel_id)
         message = await channel.fetch_message(payload.message_id)
-        user = bot.get_user(payload.user_id)
-        await message.remove_reaction(payload.emoji, user)
+        await message.remove_reaction(payload.emoji, payload.member)
         if payload.emoji.name in ansii_com.values():
             react_auth = payload.member
             if payload.emoji.name == ansii_com.get("status"):
@@ -1116,7 +1118,7 @@ async def on_raw_reaction_add(payload):
                 await server_checkups(False)
                 return
             else:
-                if Command_role not in str(payload.member.roles):
+                if Command_role not in (e.name for e in payload.member.roles):
                     await send_error(channel, commands.MissingRole(Command_role), IsReaction=True)
                 else:
                     if payload.emoji.name == ansii_com.get("start"):
@@ -1128,68 +1130,32 @@ async def on_raw_reaction_add(payload):
 
 
 @bot.command(pass_context=True)
-# @commands.has_permissions(administrator=True) # TODO: if 50+ messages give poll!, remember id message when bot sends "@everyone", purge after this msg_id, and clear as usual after
+# @commands.has_permissions(administrator=True)
 async def clear(ctx, count=1):
-    global poll, await_date, IsVoting
+    global bot
+    message_created_time = ""
     try:
         int(str(count))
     except BaseException:
         await ctx.send("Ты дебик? Чё ты там написал? Как мне это понимать? А? '" + str(count) + "' Убейся там!")
     if count > 0:
-        await ctx.channel.purge(limit=int(count) + 1, bulk=False)
+        if len(await ctx.channel.history(limit=51).flatten()) <= 51:
+            await ctx.channel.purge(limit=count + 1, bulk=False)
+            return
+    elif count < 0:
+        message_created_time = (await ctx.channel.history(limit=-count, oldest_first=True).flatten())[-1].created_at
+        if len(await ctx.channel.history(limit=51, after=message_created_time, oldest_first=True).flatten()) != 51:
+            await ctx.channel.purge(limit=None, after=message_created_time, bulk=False)
+            return
     else:
-        if (datetime.now() - await_date).seconds > 30:
-            await ctx.send("@everyone, this man " + ctx.author.mention +
-                           " trying to delete whole history of this channel. Will you let that happen? Vote with `%yes` or `%no`. To win the poll need 2 votes! So keep it up! I'm waiting")
-            reset_poll()
-            IsVoting = True
-            while poll[0] < 2 and poll[1] < 2:
-                await asleep(1)
-            if poll[0] == 2 and poll[1] < 2:
-                message_created_time = (await ctx.channel.history(limit=-count, oldest_first=True).flatten())[
-                    -1].created_at
+        await ctx.send(content="Nothing's done!", delete_after=await_time_before_message_deletion)
+        return
+    if await IndPoll.timer(ctx, 5):
+        if await IndPoll.run(ctx=ctx, remove_logs_after=5):
+            if count < 0:
                 await ctx.channel.purge(limit=None, after=message_created_time, bulk=False)
             else:
-                await ctx.send("Well, you're save for now")
-            await_date = datetime.now()
-            IsVoting = False
-        else:
-            await ctx.send(
-                ctx.author.mention + ", what are you doing? Time hasn't passed yet. I have 30 secs timer! Waiting...")
-
-
-def reset_poll():
-    global poll, poll_voted_uniq
-    poll = [0, 0]
-    poll_voted_uniq.clear()
-
-
-@bot.command(pass_context=True)
-async def yes(ctx):
-    global poll, poll_voted_uniq
-    if not IsVoting:
-        await ctx.send("I don't see opened poll :japanese_goblin:")
-    else:
-        if ctx.author.id not in poll_voted_uniq:
-            poll_voted_uniq.append(ctx.author.id)
-            poll[0] += 1
-            await ctx.send("Current numbers: yes - " + str(poll[0]) + ", no - " + str(poll[1]))
-        else:
-            await ctx.send("You've already voted!")
-
-
-@bot.command(pass_context=True)
-async def no(ctx):
-    global poll, poll_voted_uniq
-    if not IsVoting:
-        await ctx.send("I don't see opened poll :japanese_goblin:")
-    else:
-        if ctx.author.id not in poll_voted_uniq:
-            poll_voted_uniq.append(ctx.author.id)
-            poll[1] += 1
-            await ctx.send("Current numbers: yes - " + str(poll[0]) + ", no - " + str(poll[1]))
-        else:
-            await ctx.send("You've already voted!")
+                await ctx.channel.purge(limit=count + 1, bulk=False)
 
 
 # Handling errors
@@ -1221,6 +1187,7 @@ async def on_command_error(ctx, error):
 
 
 try:
+    bot.add_cog(IndPoll)
     bot.run(token)
 except BaseException:
     print("Bot/Discord Error: Maybe you need to update discord.py or your token is wrong.")

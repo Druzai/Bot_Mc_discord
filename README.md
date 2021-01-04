@@ -15,6 +15,8 @@
 * `server {1}` - uses a list of servers stored in the bot, arguments {1} - `select`, `list`, `show`. With `select`, the server number from the `list` is also must be written
 * `%say` - return embed with random picture from VK
 * `%clear {1}` - If positive number it deletes {1} messages, if negative number - deletes n messages up to {1} from the beginging of the channel
+
+Note: for using almost all commands you have to have specified role that you can set in bot settings or at the bot first start up
 ### Requirements
 * [Python 3.5-3.8](https://www.python.org/downloads/)
 * [Java RE](https://www.java.com/en/download/)
@@ -39,7 +41,6 @@ pyinstaller -F --icon=bot.ico --distpath=./ Discord_bot.py
 ```
 Or using [make utility](https://www.gnu.org/software/make/) type "make" in root directory
 ### Run
-Note: for using almost all commands you have to have role "Майнкрафтер"
 * Windows
 
 
