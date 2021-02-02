@@ -386,7 +386,7 @@ async def start_server(ctx, shut_up=False, IsReaction=False):
     await asleep(5)
     check_time = datetime.now()
     while True:
-        if (datetime.now() - check_time).seconds > 600:
+        if (datetime.now() - check_time).seconds > 1000:
             await send_msg(ctx, "```Error while loading server```", IsReaction)
             IsLoading = False
             if IsRestarting:
@@ -395,7 +395,7 @@ async def start_server(ctx, shut_up=False, IsReaction=False):
         timedelta_secs = (datetime.now() - check_time).seconds
         if Progress_bar_time:
             percentage = round((timedelta_secs / Progress_bar_time) * 100)
-            output_bot = "Loading: " + (str(percentage) + "%") if percentage < 101 else "100%..."
+            output_bot = "Loading: " + ((str(percentage) + "%") if percentage < 101 else "100%...")
         else:
             output_bot = "Server, elapsed time: " + (
                 str(timedelta_secs // 60) + ":" + f"{(timedelta_secs % 60):02d}" if timedelta_secs // 60 != 0 else str(
@@ -572,9 +572,14 @@ def get_author_and_mention(ctx, IsReaction=False):
         author_mention = react_auth.mention
         author = react_auth
     else:
-        author_mention = ctx.author.mention
-        author = ctx.author
+        if hasattr(ctx, 'author'):
+            author_mention = ctx.author.mention
+            author = ctx.author
+        else:
+            author_mention = bot.user.mention
+            author = bot.user
     return author, author_mention
+
 
 @bot.event
 async def on_ready():
@@ -588,6 +593,13 @@ async def on_ready():
     print("Bot is ready!")
     print("Starting server check-ups.")
     await server_checkups()
+
+"""
+@bot.command(pass_context=True)
+async def debug(ctx):
+    await send_msg(ctx, "Constants:\nIsServerOn: " + str(IsServerOn) + "\nIsLoading: " + str(IsLoading)
+                   + "\nIsStopping: " + str(IsStopping) + "\nIsRestarting: " + str(IsRestarting))
+"""
 
 
 # COMMANDS
@@ -643,7 +655,8 @@ async def list(ctx, command="-u", IsReaction=False):
                     await send_msg(ctx, "```Игроков на сервере нет```", IsReaction)
                 else:
                     await send_msg(ctx, "```Игроков на сервере - {0}\nИгроки: {1}```".format(info.num_players,
-                                                                               ", ".join(info.players)), IsReaction)
+                                                                                             ", ".join(info.players)),
+                                   IsReaction)
         except BaseException:
             _, author_mention = get_author_and_mention(ctx, IsReaction)
             await send_msg(ctx, f"{author_mention}, сервер сейчас выключен", IsReaction)
@@ -663,7 +676,8 @@ async def start(ctx, IsReaction=False):
 
 
 @bot.command(pass_context=True)
-@commands.has_role(Command_role)  # TODO: add poll when there's more than 0 player on server, add yes - no in reactions! Do this to make approval
+@commands.has_role(
+    Command_role)  # TODO: add poll when there's more than 0 player on server, add yes - no in reactions! Do this to make approval
 async def stop(ctx, command="10", IsReaction=False):
     """Stop server"""
     global IsServerOn, IsLoading, IsStopping, IsForceload, IsDoOp
@@ -676,7 +690,8 @@ async def stop(ctx, command="10", IsReaction=False):
                 if IsForceload:
                     IsForceload = False
                     config["Forceload"] = IsForceload
-                    await ctx.send("```Forceload off```")
+                    await send_msg(ctx, "```Forceload off```", IsReaction)
+                    # await ctx.send("```Forceload off```")
                     with open(Path(current_bot_path + '/bot.json'), 'w') as f_:
                         json.dump(config, f_, indent=2)
                 await stop_server(ctx, int(command), IsReaction=IsReaction)
@@ -1003,7 +1018,7 @@ async def whitelist(ctx, *args):
 @bot.command(pass_context=True)
 @commands.has_role(Command_role)
 async def server(ctx, *args):
-    global Mine_dir_numb
+    global Mine_dir_numb, Progress_bar_time
     if len(args) and (args[0] == "list" or args[0] == "select" or args[0] == "show"):
         if args[0] == "list":
             send_ = "```List of servers"
@@ -1025,6 +1040,7 @@ async def server(ctx, *args):
                                        "\nPlease stop it, before trying again```")
                         return
                     Mine_dir_numb = int(args[1])
+                    Progress_bar_time = Minecraft_dirs_list[Mine_dir_numb][2]
                     read_server_properties()
                     server_start_stop_states()
                     await ctx.send("```Server properties read!```")
@@ -1115,7 +1131,7 @@ async def on_raw_reaction_add(payload):
             elif payload.emoji.name == ansii_com.get("list"):
                 await list(channel, IsReaction=True)
             elif payload.emoji.name == ansii_com.get("update"):
-                await server_checkups(False)
+                await server_checkups(False)  # TODO: rewrite this line, serv_checkups doesn't proceed after this command!
                 return
             else:
                 if Command_role not in (e.name for e in payload.member.roles):
@@ -1131,7 +1147,7 @@ async def on_raw_reaction_add(payload):
 
 @bot.command(pass_context=True)
 # @commands.has_permissions(administrator=True)
-async def clear(ctx, count=1):
+async def clear(ctx, count=1):  # TODO: add arg all to clear all msgs in channel
     global bot
     message_created_time = ""
     try:
@@ -1169,7 +1185,8 @@ async def send_error(ctx, error, IsReaction=False):
         await send_msg(ctx, f'{author_mention}, у вас недостаточно прав для выполнения этой команды', IsReaction)
     if isinstance(error, commands.MissingRole):
         print(f'У {author} нет роли "{error.missing_role}" для команды')
-        await send_msg(ctx, f'{author_mention}, у вас нет роли "{error.missing_role}" для выполнения этой команды', IsReaction)
+        await send_msg(ctx, f'{author_mention}, у вас нет роли "{error.missing_role}" для выполнения этой команды',
+                       IsReaction)
     if isinstance(error, commands.CommandNotFound):
         print(f'{author} ввёл несуществующую команду')
         await send_msg(ctx, f'{author_mention}, вы ввели несуществующую команду', IsReaction)
