@@ -413,7 +413,7 @@ async def start_server(ctx, shut_up=False, IsReaction=False):
     else:
         Progress_bar_time = (datetime.now() - check_time).seconds
     author, author_mention = get_author_and_mention(ctx, IsReaction)
-    if ctx:
+    if ctx and not shut_up:
         await send_msg(ctx, author_mention + "\n```Server's on now```", IsReaction)
         if randint(0, 8) == 0:
             await send_msg(ctx, "Kept you waiting, huh?", IsReaction)
@@ -526,9 +526,10 @@ async def server_checkups(always_=True):
                     for channel in guild.channels:
                         try:
                             await channel.fetch_message(menu_id)
-                            await channel.send(
-                                f'```Bot detected: Server\'s offline!\nTime: {datetime.now().strftime("%d/%m/%y, %H:%M:%S")}\nStarting up server again!```')
-                            await start_server(channel, True)
+                            await send_msg(ctx=channel,
+                                           msg=f'```Bot detected: Server\'s offline!\nTime: {datetime.now().strftime("%d/%m/%y, %H:%M:%S")}\nStarting up server again!```',
+                                           IsReaction=True)
+                            await start_server(ctx=channel, shut_up=True)
                             break
                         except BaseException:
                             pass
@@ -676,8 +677,7 @@ async def start(ctx, IsReaction=False):
 
 
 @bot.command(pass_context=True)
-@commands.has_role(
-    Command_role)  # TODO: add poll when there's more than 0 player on server, add yes - no in reactions! Do this to make approval
+@commands.has_role(Command_role)  # TODO: add poll when there's more than 0 player on server, add yes - no in reactions! Do this to make approval
 async def stop(ctx, command="10", IsReaction=False):
     """Stop server"""
     global IsServerOn, IsLoading, IsStopping, IsForceload, IsDoOp
