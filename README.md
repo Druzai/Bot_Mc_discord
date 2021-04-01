@@ -1,4 +1,11 @@
-# Bot_Mc_discord
+<p align="center">
+   <img src="bot.ico">
+</p>
+
+<h1 align="center">
+   Bot_Mc_discord
+</h1>
+
 ### Commands
 * `%help` - list all commands (currently in russian)
 * `%status` - return status of the server
