@@ -16,10 +16,11 @@ class Poll(commands.Cog):
         # Сделать временное голосование, по истечении голосование завершено неудачей, cancel работает так же,
         self.__bot = bot
 
-    async def run(self, ctx, needForVoting=2, neededRole=None, timeout=60*60, remove_logs_after=0): #TODO: Make it useable with stop command, give to command some strings!
+    # TODO: Make it useable with stop command, give to command some strings!
+    async def run(self, ctx, needForVoting=2, neededRole=None, timeout=60 * 60, remove_logs_after=0):
         start_msg = await ctx.send("@everyone, this man " + ctx.author.mention +
-                       " trying to delete some history of this channel. Will you let that happen?" +
-                       " To win the poll need " + str(needForVoting) + " votes! So keep it up! I'm waiting")
+                                   " trying to delete some history of this channel. Will you let that happen?" +
+                                   " To win the poll need " + str(needForVoting) + " votes! So keep it up! I'm waiting")
         poll_msg = await self.makeEmb(ctx)
         currentPoll = Poll.PollContent(ctx, needForVoting, neededRole, remove_logs_after)
         self.polls[poll_msg.id] = currentPoll
@@ -35,7 +36,9 @@ class Poll(commands.Cog):
         if currentPoll.state == Poll.States.CANCELED:
             await ctx.send("Poll result: canceled!", delete_after=remove_logs_after)
             return None
-        await ctx.send("Poll result: permission " + ("granted" if currentPoll.state == Poll.States.GRANTED else "refused") + "!", delete_after=remove_logs_after)
+        await ctx.send("Poll result: permission " +
+                       ("granted" if currentPoll.state == Poll.States.GRANTED else "refused") + "!",
+                       delete_after=remove_logs_after)
         return currentPoll.state == Poll.States.GRANTED
 
     async def makeEmb(self, ctx):
@@ -93,7 +96,8 @@ class Poll(commands.Cog):
                 await channel.send(user.mention + ", you've already voted!", delete_after=self.RLA)
                 return False
             if self.NR and self.NR not in (e.name for e in user.roles):
-                await channel.send(user.mention + ", you don't have needed '" + self.NR + "' role", delete_after=self.RLA)
+                await channel.send(user.mention + ", you don't have needed '" + self.NR + "' role",
+                                   delete_after=self.RLA)
                 return False
             self.poll_voted_uniq.add(user.id)
             if toLeft:
