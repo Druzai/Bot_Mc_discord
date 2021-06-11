@@ -282,3 +282,4 @@ bot.json
 key
 op_keys
 id-to-nicks.json
+*.json
