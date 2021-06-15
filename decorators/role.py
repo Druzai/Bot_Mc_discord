@@ -6,7 +6,7 @@ from discord.utils import get as utils_get
 from config.init_config import Config
 
 
-def has_role_if_given_in_config():
+def has_role_or_default():
     def predicate(ctx):
         config_role = Config.get_role()
         if config_role == "":

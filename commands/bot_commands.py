@@ -110,7 +110,7 @@ class Main_commands(commands.Cog):
             await send_error(ctx, self._bot, commands.UserInputError(), IsReaction=IsReaction)
 
     @commands.command(pass_context=True)
-    @role.has_role_if_given_in_config()
+    @role.has_role_or_default()
     async def start(self, ctx, IsReaction=False):
         """Start server"""
         if not Bot_variables.IsServerOn and not Bot_variables.IsStopping and not Bot_variables.IsLoading:
@@ -119,7 +119,7 @@ class Main_commands(commands.Cog):
             await send_status(ctx, IsReaction=IsReaction)
 
     @commands.command(pass_context=True)
-    @role.has_role_if_given_in_config()
+    @role.has_role_or_default()
     # TODO: add poll when there's more than 0 player on server, add yes - no in reactions! Do this to make approval
     async def stop(self, ctx, command="0", IsReaction=False):
         """Stop server"""
@@ -138,7 +138,7 @@ class Main_commands(commands.Cog):
             await send_error(ctx, self._bot, commands.UserInputError(), IsReaction=IsReaction)
 
     @commands.command(pass_context=True)
-    @role.has_role_if_given_in_config()
+    @role.has_role_or_default()
     async def restart(self, ctx, command="0", IsReaction=False):
         """Restart server"""
         try:
@@ -157,7 +157,7 @@ class Main_commands(commands.Cog):
             await send_error(ctx, self._bot, commands.UserInputError(), IsReaction=IsReaction)
 
     @commands.command(pass_context=True)
-    @role.has_role_if_given_in_config()
+    @role.has_role_or_default()
     async def op(self, ctx, arg1, arg2, *args):
         """Op command
         :arg1 - nick,
@@ -378,7 +378,7 @@ class Main_commands(commands.Cog):
             await ctx.send(embed=e)
 
     @commands.command(pass_context=True, aliases=["fl"])
-    @role.has_role_if_given_in_config()
+    @role.has_role_or_default()
     async def forceload(self, ctx, command=""):
         if command == "on" and not Config.get_forceload():
             Config.set_forceload(True)
@@ -395,7 +395,7 @@ class Main_commands(commands.Cog):
             raise commands.UserInputError()
 
     @commands.command(pass_context=True, aliases=["wl"])
-    @role.has_role_if_given_in_config()
+    @role.has_role_or_default()
     async def whitelist(self, ctx, *args):
         if len(args) and args[0] in ["add", "del", "list", "on", "off", "reload"]:
             try:
@@ -431,7 +431,7 @@ class Main_commands(commands.Cog):
             raise commands.UserInputError()
 
     @commands.command(pass_context=True, aliases=["servs"])
-    @role.has_role_if_given_in_config()
+    @role.has_role_or_default()
     async def servers(self, ctx, *args):
         if len(args) and (args[0] == "list" or args[0] == "select" or args[0] == "show"):
             minecraft_dirs = Config.get_minecraft_dirs_list()
@@ -501,7 +501,7 @@ class Main_commands(commands.Cog):
         await ctx.send(embed=emb)
 
     @commands.command(pass_context=True)
-    @role.has_role_if_given_in_config()
+    @role.has_role_or_default()
     async def menu(self, ctx):
         await ctx.channel.purge(limit=1)
         emb = discord.Embed(title='Список всех команд через реакции',
