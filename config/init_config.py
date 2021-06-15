@@ -281,14 +281,14 @@ class Config:
             Config._config_dict["Vk_pass"] = None
         if Config._config_dict.get("Vk_ask", True):
             if Config._ask_for_data(
-                    f"Would you like to {'change' if Config._vk_login is not None and Config._vk_pass is not None else 'enter'} vk account data? y/n",
+                    f"Would you like to {'change' if Config._vk_login is not None and Config._vk_pass is not None else 'enter'} vk account data? y/n\n",
                     "y"):
                 Config._vk_login = Config._ask_for_data("Enter vk login: ")
                 Config._vk_pass = Config._ask_for_data("Enter vk pass: ")
                 Config._config_dict["Vk_login"] = Crypt.get_crypt().encrypt(Config._vk_login.encode()).decode()
                 Config._config_dict["Vk_pass"] = Crypt.get_crypt().encrypt(Config._vk_pass.encode()).decode()
                 Config._need_to_rewrite = True
-            if Config._ask_for_data("Never ask about it again? y/n", "y"):
+            if Config._ask_for_data("Never ask about it again? y/n\n", "y"):
                 Config._config_dict["Vk_ask"] = False
                 Config._need_to_rewrite = True
                 if Config._vk_login is not None and Config._vk_pass is not None:
@@ -319,7 +319,7 @@ class Config:
     @staticmethod
     def _set_menu_id():
         if Config._config_dict.get("Menu_message_id", None) is None:
-            if Config._ask_for_data("Menu message id not found. Would you like to enter it? y/n", "y"):
+            if Config._ask_for_data("Menu message id not found. Would you like to enter it? y/n\n", "y"):
                 Config._need_to_rewrite = True
                 Config._config_dict["Menu_message_id"] = Config._ask_for_data("Enter menu message id: ")
             else:
@@ -347,7 +347,7 @@ class Config:
                 print("Current role doesn't stated")
         else:
             Config._need_to_rewrite = True
-            if Config._ask_for_data("Do you want to set role for some specific commands? y/n", "y"):
+            if Config._ask_for_data("Do you want to set role for some specific commands? y/n\n", "y"):
                 Config._config_dict["Command role for discord"] = \
                     Config._ask_for_data("Set discord role for some specific commands such as start, stop, etc.\n")
             else:
@@ -359,12 +359,12 @@ class Config:
             if Config._config_dict.get("Ask await time check-ups", False):
                 if Config._ask_for_data("Await time check-ups. Now it set to " +
                                         str(Config._config_dict.get("Await time check-ups")) +
-                                        " seconds. Would you like to change it? y/n", "y"):
+                                        " seconds. Would you like to change it? y/n\n", "y"):
                     Config._need_to_rewrite = True
                     Config._config_dict["Await time check-ups"] = \
                         Config._ask_for_data("Set await time between check-ups 'Server on/off' (in seconds, int): ",
                                              try_int=True)
-                if Config._ask_for_data("Never ask about it again? y/n", "y"):
+                if Config._ask_for_data("Never ask about it again? y/n\n", "y"):
                     Config._need_to_rewrite = True
                     Config._config_dict["Ask await time check-ups"] = False
                     print("Await time will be brought from config.")
