@@ -230,11 +230,9 @@ class Main_commands(commands.Cog):
                             await ctx.send("Ну что, " + ctx.author.mention +
                                            ", кончилось твоё время.. и не только твоё.... Как говорится \"Чики-брики и в дамки!\"")
                             Bot_variables.op_deop_list.clear()
-                            Bot_variables.IsDoOp = False
                         else:
                             await ctx.send(
                                 ctx.author.mention + ", у тебя нет ограничения по времени, но вы все обречены...")
-                            Bot_variables.IsDoOp = False
                 if temp_s:
                     Config.save_op_keys(keys_for_nicks)
                 else:
@@ -247,6 +245,7 @@ class Main_commands(commands.Cog):
                 await ctx.send(ctx.author.mention + ", код не найден. Не получилось, не фортануло, братан.")
             elif IsEmpty:
                 await ctx.send(ctx.author.mention + ", я вам op'ку не дам, потому что у вас рабочих кодов нету!")
+            Bot_variables.IsDoOp = False
         else:
             await send_status(ctx)
 
@@ -556,8 +555,9 @@ class Main_commands(commands.Cog):
             int(str(count))
         except BaseException:
             await ctx.send("Ты дебик? Чё ты там написал? Как мне это понимать? А? '" + str(count) + "' Убейся там!")
+            count = 0
         if count > 0:
-            if len(await ctx.channel.history(limit=51).flatten()) < 51:
+            if len(await ctx.channel.history(limit=count).flatten()) < 51:
                 await ctx.channel.purge(limit=count + 1, bulk=False)
                 return
         elif count < 0:
