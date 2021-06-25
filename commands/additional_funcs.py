@@ -261,21 +261,24 @@ async def send_error(ctx, bot, error, IsReaction=False):
     if isinstance(error, commands.MissingRequiredArgument):
         print(f'{author} не указал аргумент')
         await send_msg(ctx, f'{author_mention}, пожалуйста, введи все аргументы', IsReaction)
-    if isinstance(error, commands.MissingPermissions):
+    elif isinstance(error, commands.MissingPermissions):
         print(f'У {author} мало прав для команды')
         await send_msg(ctx, f'{author_mention}, у вас недостаточно прав для выполнения этой команды',
                        IsReaction)
-    if isinstance(error, commands.MissingRole):
+    elif isinstance(error, commands.MissingRole):
         print(f'У {author} нет роли "{error.missing_role}" для команды')
         await send_msg(ctx,
                        f'{author_mention}, у вас нет роли "{error.missing_role}" для выполнения этой команды',
                        IsReaction)
-    if isinstance(error, commands.CommandNotFound):
+    elif isinstance(error, commands.CommandNotFound):
         print(f'{author} ввёл несуществующую команду')
         await send_msg(ctx, f'{author_mention}, вы ввели несуществующую команду', IsReaction)
-    if isinstance(error, commands.UserInputError):
+    elif isinstance(error, commands.UserInputError):
         print(f'{author} неправильно ввёл аргумент(ы) команды')
         await send_msg(ctx, f'{author_mention}, вы неправильно ввели агрумент(ы) команды', IsReaction)
-    if isinstance(error, commands.DisabledCommand):
+    elif isinstance(error, commands.DisabledCommand):
         print(f'{author} ввёл отключённую команду')
         await send_msg(ctx, f'{author_mention}, вы ввели отлючённую команду', IsReaction)
+    else:
+        print(", ".join(error.args))
+        await send_msg(ctx, ", ".join(error.args), IsReaction)
