@@ -10,7 +10,11 @@ from config.init_config import Config
 
 
 # TODO: features
-#  Make rus/eng localization and get it from dict from file or so
+#  Make rus/eng localization and get it from dict from file or so and setup *.spec file!
+#  Continuously rewrite code in classes
+#  Add slash commands
+#  Replace/add buttons instead of reactions
+#  Check process status
 
 
 def main():
