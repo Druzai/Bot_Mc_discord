@@ -5,6 +5,7 @@ from discord.errors import LoginFailure
 from discord.ext import commands
 
 from commands.bot_commands import Main_commands
+from commands.chat_commands import Chat_commands
 from commands.poll import Poll
 from config.init_config import Config
 
@@ -15,13 +16,15 @@ from config.init_config import Config
 #  Add slash commands
 #  Replace/add buttons instead of reactions
 #  Check process status
+#  Remove opcodes, assoc already does that
+#  Доделать пересыльный чат: кастомные смайлики отделять название, обычные хз) + экранизацию посмотреть
 
 
 def main():
     Config.read_config()
     bot = commands.Bot(command_prefix='%', description="Server bot")
     bot.remove_command('help')
-    cog_list = [Main_commands, Poll]
+    cog_list = [Chat_commands, Main_commands, Poll]
     for i in cog_list:
         bot.add_cog(i(bot))
 

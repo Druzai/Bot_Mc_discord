@@ -1,0 +1,88 @@
+from os import SEEK_END, SEEK_CUR, stat
+from pathlib import Path
+from re import search, split
+from sys import exc_info
+from threading import Thread
+from time import sleep
+
+from discord import Webhook, RequestsWebhookAdapter
+
+from config.init_config import Config, Bot_variables
+
+
+class Watcher:
+    running = True
+    refresh_delay_secs = 0.5
+    thread = None
+
+    # Constructor
+    def __init__(self, watch_file, call_func_on_change=None, *args, **kwargs):
+        self._cached_stamp = None
+        self.filename = watch_file
+        self.call_func_on_change = call_func_on_change
+        self.args = args
+        self.kwargs = kwargs
+
+    # Look for changes
+    def look(self):
+        stamp = stat(self.filename).st_mtime
+        if stamp != self._cached_stamp:
+            temp = self._cached_stamp
+            self._cached_stamp = stamp
+            if self.call_func_on_change is not None and temp is not None:
+                self.call_func_on_change(*self.args, **self.kwargs)
+
+    # Keep watching in a loop
+    def watch(self):
+        while self.running:
+            try:
+                # Look for changes
+                sleep(self.refresh_delay_secs)
+                self.look()
+            except FileNotFoundError:
+                # Action on file not found
+                pass
+            except BaseException:
+                print('Unhandled error: %s' % exc_info()[0])
+
+    def start(self):
+        self.thread = Thread(target=self.watch)
+        self.thread.daemon = True
+        self.thread.start()
+
+    def stop(self):
+        self.running = False
+        self.thread.join()
+        self.thread = None
+        Bot_variables.webhook = None
+
+
+def create_watcher():
+    if Bot_variables.watcher_of_log_file is not None:
+        Bot_variables.watcher_of_log_file.stop()
+
+    Bot_variables.watcher_of_log_file = Watcher(Path(Config.get_selected_server_list()[0] + "/logs/latest.log"),
+                                                _check_log_file)
+
+    webhook_id, webhook_token = Config.get_webhook_info()
+    Bot_variables.webhook = Webhook.partial(int(webhook_id), webhook_token, adapter=RequestsWebhookAdapter())
+
+
+def _check_log_file():
+    if Config.get_discord_channel_id_for_crossplatform_chat() is None:
+        return
+
+    with open(file=Path(Config.get_selected_server_list()[0] + "/logs/latest.log"), mode="rb") as log_file:
+        log_file.seek(-2, SEEK_END)
+        while log_file.read(1) != b'\n':
+            log_file.seek(-2, SEEK_CUR)
+        last_line = log_file.readline().decode()
+
+    if not last_line:
+        return
+
+    if search(r"\[Server thread/INFO]", last_line) and search(r"<([^>]*)> (.*)", last_line) and ": <" in last_line:
+        player_nick, player_message = search(r"<([^>]*)>", last_line)[0], \
+                                      split(r"<([^>]*)>", last_line, maxsplit=1)[-1].strip()
+
+        Bot_variables.webhook.send(rf"**{player_nick}** {player_message}")  # , username='WEBHOOK_BOT'

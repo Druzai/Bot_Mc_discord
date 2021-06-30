@@ -16,7 +16,8 @@
 * `%op {1} {2} {3}` - give op to {1} player using {2} code {3} with reason comment, if needed, after setted time deop that player
 * `%assoc {1} {2} {3}` - Associates {1} mentioning a nickname in discord on {2} command (+=/-=) (add or remove) {3} with a nickname in minecraft **for admin**
 * `%codes {1}` - Sends dm with codes for {1} nickname in discord
-* `%menu` - create menu-panel (embed) for easy command management
+* `%menu` - creates menu-panel (embed) for easy command management
+* `%chat` - saves the channel from which the bot forwards messages to the minecraft chat
 * `%forceload/fl {on/off}` - by {`on` / `off`} constant loading of the server when it is shutted down, if no arguments - return status
 * `%whitelist/wl {1}` - uses whitelist from minecraft server, {1} arguments are `on`, `off`, `add`, `del`, `list`, `reload`. If you use `add` or `del`, the player's nickname is also must be written
 * `servers/servs {1}` - uses a list of servers stored in the bot, arguments {1} - `select`, `list`, `show`. With `select`, the server number from the `list` is also must be written
@@ -24,7 +25,9 @@
 * `%clear/cls {1}` - If positive number it deletes {1} messages, if negative number - deletes n messages up to {1} from the beginging of the channel
 
 Note: these commands will require custom role if you set it in bot configuration file:
-`start`, `stop`, `restart`, `menu`, `forceload`, `whitelist`, `servers`, `op`
+`start`, `stop`, `restart`, `menu`, `forceload`, `whitelist`, `servers`, `op`, `chat`
+<!---->
+Also to enable crossplatform chat you need to enter in bot setup channel id and webhook url!
 
 ### Requirements
 * [Python 3.5-3.8](https://www.python.org/downloads/)
@@ -68,6 +71,7 @@ SET java_parameters=-d64 -server -XX:+AggressiveOpts
 rem ... and so on :)
 chcp 65001
 cls
+title Minecraft Server Console (%ask_int%Gb RAM)
 echo java -Xmx%ask_int%G -Xms%ask_int%G %java_parameters% -jar %your_jar_file% nogui
 java -Xmx%ask_int%G -Xms%ask_int%G %java_parameters% -Dfile.encoding=UTF-8 -jar %your_jar_file% nogui
 exit /b

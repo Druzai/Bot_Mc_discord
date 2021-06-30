@@ -11,10 +11,12 @@ from discord.ext import commands
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r
 
-from decorators import role
-from commands.additional_funcs import server_checkups, send_error, send_msg, send_status, stop_server, start_server, get_author_and_mention
 from commands.poll import Poll
+from components.additional_funcs import server_checkups, send_error, send_msg, send_status, stop_server, start_server, \
+    get_author_and_mention
+from components.watcher_handle import create_watcher
 from config.init_config import Bot_variables, Config
+from decorators import role
 
 
 class Main_commands(commands.Cog):
@@ -454,9 +456,14 @@ class Main_commands(commands.Cog):
                             await ctx.send("```You can't change servers, while some instance(s) is/are still running" +
                                            "\nPlease stop it, before trying again```")
                             return
+
+                        Bot_variables.watcher_of_log_file.stop()
                         Config.set_selected_minecraft_server(int(args[1]))
                         Config.read_server_info()
                         await ctx.send("```Server properties read!```")
+                        if Config.get_discord_channel_id_for_crossplatform_chat() and Config.get_webhook_info():
+                            create_watcher()
+                            Bot_variables.watcher_of_log_file.start()
                     else:
                         await ctx.send("```Use server list, there's no such server on the list!```")
                 except BaseException:
@@ -488,6 +495,7 @@ class Main_commands(commands.Cog):
                       value='Ассоциирует {1} упоминание ника в дискорде по {2} команде (+=/-=) (добавить или удалить) {3} c ником в майнкрафте **для админа**')
         emb.add_field(name='codes {1}', value='Даёт коды на {1} ник в лс')
         emb.add_field(name='menu', value='Создаёт меню-пульт для удобного управления командами')
+        emb.add_field(name='chat', value='Сохраняет канал откуда бот переправляет сообщения в майн')
         emb.add_field(name='forceload/fl {on/off}',
                       value='По {on/off} постоянная загрузка сервера, когда он отключен, без аргументов - статус')
         emb.add_field(name='whitelist/wl {1}',
@@ -534,7 +542,8 @@ class Main_commands(commands.Cog):
                 elif payload.emoji.name == self._ansii_com.get("list"):
                     await self.list(channel, IsReaction=True)
                 elif payload.emoji.name == self._ansii_com.get("update"):
-                    await server_checkups(bot=self._bot, always_=False)  # TODO: rewrite this line, serv_checkups doesn't proceed after this command!
+                    await server_checkups(bot=self._bot, always_=True)
+                    # TODO: rewrite this line, serv_checkups doesn't proceed after this command! For now set to True...
                     return
                 else:
                     if Config.get_role() not in (e.name for e in payload.member.roles):

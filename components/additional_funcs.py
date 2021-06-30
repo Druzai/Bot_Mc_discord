@@ -11,6 +11,7 @@ from discord.ext import commands
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r
 
+from components.watcher_handle import create_watcher
 from config.init_config import Config, Bot_variables
 
 if platform == "win32":
@@ -95,6 +96,9 @@ async def start_server(ctx, bot, shut_up=False, IsReaction=False):
             break
         except BaseException:
             pass
+    if Config.get_discord_channel_id_for_crossplatform_chat() and Config.get_webhook_info():
+        create_watcher()
+        Bot_variables.watcher_of_log_file.start()
     if Bot_variables.progress_bar_time:
         Bot_variables.progress_bar_time = (Bot_variables.progress_bar_time + (datetime.now() - check_time).seconds) // 2
     else:
@@ -102,6 +106,7 @@ async def start_server(ctx, bot, shut_up=False, IsReaction=False):
     author, author_mention = get_author_and_mention(ctx, bot, IsReaction)
     if ctx and not shut_up:
         await send_msg(ctx, author_mention + "\n```Server's on now```", IsReaction)
+        print("Server on!")
         if randint(0, 8) == 0:
             await send_msg(ctx, "Kept you waiting, huh?", IsReaction)
     Bot_variables.IsLoading = False
@@ -149,6 +154,7 @@ async def stop_server(ctx, bot, How_many_sec=10, IsRestart=False, IsReaction=Fal
         await send_msg(ctx, "Couldn't connect to server to shut it down!", IsReaction)
         Bot_variables.IsStopping = False
         return
+    Bot_variables.watcher_of_log_file.stop()
     while True:
         await asleep(Config.get_await_time_to_sleep())
         try:
@@ -164,7 +170,6 @@ async def stop_server(ctx, bot, How_many_sec=10, IsRestart=False, IsReaction=Fal
     server_dates = Config.read_server_dates()
     server_dates[1] = [datetime.now().strftime("%d/%m/%y, %H:%M:%S"), str(author)]
     Config.save_server_dates(server_dates)
-    # server_start_stop_states(True)
     await bot.change_presence(activity=Activity(type=ActivityType.listening, name="Server"))
 
 
@@ -189,13 +194,11 @@ async def server_checkups(bot, always_=True):
                     orig_op.update(nicks_n_keys_add)
                     Config.save_op_keys(orig_op)
                     orig_op.clear()
-                    # orig = json.loads(crypt.decrypt(open(Path(current_bot_path + '/op_keys'), 'rb').read()))
-                    # orig.update(nicks_n_keys_add)
-                    # keys_for_nicks_nicks = orig.keys()
-                    # open(Path(current_bot_path + '/op_keys'), 'wb').write(crypt.encrypt(json.dumps(orig).encode()))
-                    # orig.clear()
             if not Bot_variables.IsServerOn:
                 Bot_variables.IsServerOn = True
+            if Config.get_discord_channel_id_for_crossplatform_chat() and Config.get_webhook_info():
+                create_watcher()
+                Bot_variables.watcher_of_log_file.start()
             try:
                 if int(bot.guilds[0].get_member(bot.user.id).activities[0].name.split(", ")[1].split(" ")[
                            0]) != 0 or info.num_players != 0:

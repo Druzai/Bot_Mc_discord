@@ -20,6 +20,8 @@ class Bot_variables:
     port_rcon = None
     rcon_pass = None
     progress_bar_time = 0
+    watcher_of_log_file = None
+    webhook = None
 
 
 class Config:
@@ -85,6 +87,23 @@ class Config:
     def set_menu_id(menu_id: str):
         Config._config_dict["Menu_message_id"] = menu_id
         Config.save_config()
+
+    @staticmethod
+    def get_discord_channel_id_for_crossplatform_chat():
+        return Config._config_dict.get("Channel_id_for_crossplatform_chat", None)
+
+    @staticmethod
+    def set_discord_channel_id_for_crossplatform_chat(channel_id: str):
+        Config._config_dict["Channel_id_for_crossplatform_chat"] = channel_id
+        Config.save_config()
+
+    @staticmethod
+    def get_webhook_info():
+        if Config._config_dict.get("Webhook_url", None) is not None:
+            webhook = Config._config_dict.get("Webhook_url", None)
+            return webhook.split("/")[-2], webhook.split("/")[-1]
+        else:
+            return None, None
 
     @staticmethod
     def get_filename():
@@ -249,6 +268,8 @@ class Config:
         Config._set_menu_id()
         Config._set_role()
         Config._set_filename()
+        Config._set_discord_channel_id_for_crossplatform_chat()
+        Config._set_webhook_info()
         Config._set_await_time_op()
         Config._set_await_time_check_ups()
         Config._set_await_time_to_sleep()
@@ -479,3 +500,21 @@ class Config:
             print("Await time to delete set below zero. Change this option")
             Config._config_dict["Await time delete"] = \
                 Config._ask_for_data("Set await time to delete (in seconds, int): ", try_int=True)
+
+    @staticmethod
+    def _set_discord_channel_id_for_crossplatform_chat():
+        if Config._config_dict.get("Channel_id_for_crossplatform_chat", None) is None:
+            if Config._ask_for_data("Channel id not found. Would you like to enter it? y/n\n", "y"):
+                Config._need_to_rewrite = True
+                Config._config_dict["Channel_id_for_crossplatform_chat"] = Config._ask_for_data("Enter channel id: ")
+            else:
+                print("Crossplatform chat wouldn't work. To make it work type '%chat <id>' to create link.")
+
+    @staticmethod
+    def _set_webhook_info():
+        if Config._config_dict.get("Webhook_url", None) is None:
+            if Config._ask_for_data("Webhook url not found. Would you like to enter it? y/n\n", "y"):
+                Config._need_to_rewrite = True
+                Config._config_dict["Webhook_url"] = Config._ask_for_data("Enter webhook url: ")
+            else:
+                print("Crossplatform chat wouldn't work. Create webhook and enter it to bot config!")
