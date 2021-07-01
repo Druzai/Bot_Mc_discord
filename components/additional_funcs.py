@@ -161,7 +161,8 @@ async def stop_server(ctx, bot, How_many_sec=10, IsRestart=False, IsReaction=Fal
         await send_msg(ctx, "Couldn't connect to server to shut it down!", IsReaction)
         Bot_variables.IsStopping = False
         return
-    Bot_variables.watcher_of_log_file.stop()
+    if Bot_variables.watcher_of_log_file.isrunning():
+            Bot_variables.watcher_of_log_file.stop()
     while True:
         await asleep(Config.get_await_time_to_sleep())
         try:
@@ -222,6 +223,8 @@ async def server_checkups(bot, always_=True):
         except BaseException:
             if Bot_variables.IsServerOn:
                 Bot_variables.IsServerOn = False
+            if Bot_variables.watcher_of_log_file is not None and Bot_variables.watcher_of_log_file.isrunning():
+                Bot_variables.watcher_of_log_file.stop()
             if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 2:
                 await bot.change_presence(activity=Activity(type=ActivityType.listening, name="Server"))
             if always_ and Config.get_forceload() and not Bot_variables.IsStopping \

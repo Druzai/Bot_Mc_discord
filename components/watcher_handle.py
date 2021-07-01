@@ -54,11 +54,13 @@ class Watcher:
         self.running = False
         self.thread.join()
         self.thread = None
-        Bot_variables.webhook = None
+
+    def isrunning(self):
+        return self.running
 
 
 def create_watcher():
-    if Bot_variables.watcher_of_log_file is not None:
+    if Bot_variables.watcher_of_log_file is not None and Bot_variables.watcher_of_log_file.isrunning():
         Bot_variables.watcher_of_log_file.stop()
 
     Bot_variables.watcher_of_log_file = Watcher(Path(Config.get_selected_server_list()[0] + "/logs/latest.log"),
