@@ -17,8 +17,8 @@ from config.init_config import Config
 #  Replace/add buttons instead of reactions
 #  Check process status
 #  Remove opcodes, assoc already does that
-#  Доделать пересыльный чат: кастомные смайлики отделять название, обычные хз) + экранизацию посмотреть
-#  Мб добавить вывод игрок подкл, откл и причина
+#  Доделать пересыльный чат: экранизацию посмотреть
+#  Мб добавить вывод игрок подкл, откл и причина. Надо!!!
 # [23:53:40] [Server thread/INFO]: jokobaba lost connection: Timed out
 # [23:53:40] [Server thread/INFO]: jokobaba left the game
 # [23:53:55] [Server thread/INFO]: jokobaba joined the game

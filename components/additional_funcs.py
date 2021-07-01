@@ -3,6 +3,7 @@ from datetime import datetime
 from os import chdir, system
 from pathlib import Path
 from random import choice, randint
+from re import search, split, findall
 from string import ascii_letters, digits
 from sys import platform
 
@@ -291,3 +292,116 @@ async def send_error(ctx, bot, error, IsReaction=False):
     else:
         print(", ".join(error.args))
         await send_msg(ctx, ", ".join(error.args), IsReaction)
+
+
+async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, on_edit=False, before_message=None):
+    if message.author == bot.user or message.content.startswith(Config.get_prefix()) or str(
+            message.author.discriminator) == "0000" or len(message.content) == 0 or \
+            message.channel.id != int(Config.get_discord_channel_id_for_crossplatform_chat()):
+        return
+
+    _, author_mention = get_author_and_mention(message, bot, False)
+    delete_user_message = True
+
+    if not Config.get_discord_channel_id_for_crossplatform_chat() or not Config.get_webhook_info():
+        await send_msg(message.channel, f"{author_mention}, this chat can't work! Crossplatform chat disabled!",
+                       True)
+    elif not Bot_variables.IsServerOn:
+        await send_msg(message.channel, f"{author_mention}, server offline!", True)
+    elif Bot_variables.IsRestarting:
+        await send_msg(message.channel, f"{author_mention}, server is restarting!", True)
+    elif Bot_variables.IsStopping and Bot_variables.watcher_of_log_file is None:
+        await send_msg(message.channel, f"{author_mention}, server is stopping!", True)
+    elif Bot_variables.IsLoading:
+        await send_msg(message.channel, f"{author_mention}, server is loading!", True)
+    else:
+        result_msg = _handle_custom_emojis(message)
+        result_msg = await _handle_reply_in_message(message, result_msg)
+        result_msg = await _handle_mentions_in_message(message, result_msg)
+
+        # Building object for tellraw
+        res_obj = ["", {"text": "<"}, {"text": message.author.display_name, "color": "dark_gray"},
+                   {"text": "> "}]
+        if result_msg.get("reply", None) is not None:
+            if isinstance(result_msg.get("reply"), list):
+                res_obj.extend([{"text": result_msg.get("reply")[0], "color": "gray"},
+                                {"text": result_msg.get("reply")[1], "color": "dark_gray"},
+                                {"text": result_msg.get("reply")[2], "color": "gray"}])
+            else:
+                res_obj.append({"text": result_msg.get("reply"), "color": "gray"})
+        if on_edit:
+            result_before = _handle_custom_emojis(before_message)
+            result_before = await _handle_mentions_in_message(before_message, result_before)
+            with Client_q(Config.get_local_address(), Bot_variables.port_query, timeout=1) as cl_r:
+                version = cl_r.full_stats.version
+            if float(version) >= 1.16:
+                res_obj.append({"text": "*", "color": "gold",
+                                "hoverEvent": {"action": "show_text", "contents": result_before.get("content")}})
+            else:
+                res_obj.append({"text": "*", "color": "gold",
+                                "hoverEvent": {"action": "show_text", "value": result_before.get("content")}})
+        res_obj.append({"text": result_msg.get("content")})
+
+        with Client_r(Config.get_local_address(), Bot_variables.port_rcon, timeout=1) as cl_r:
+            cl_r.login(Bot_variables.rcon_pass)
+            answ = cl_r.tellraw("@a", res_obj)
+
+        if answ == '':
+            delete_user_message = False
+        else:
+            await send_msg(message.channel, f"{author_mention}, {answ.lower()}!", True)
+
+    if delete_user_message and need_to_delete_on_error:
+        await delete_after_by_msg_id(message, message.id)
+
+
+def _handle_custom_emojis(message):
+    result_msg = {}
+    if search(r"<:\w+:\d+>", message.content.strip()):
+        temp_split = split(r"<:\w+:\d+>", message.content.strip())
+        temp_arr = list(findall(r"<:\w+:\d+>", message.content.strip()))
+        i = 1
+        for emoji in temp_arr:
+            temp_split.insert(i, findall(r"\w+", emoji)[0])
+            i += 2
+        result_msg["content"] = "".join(temp_split)
+    else:
+        result_msg["content"] = message.content.strip()
+    return result_msg
+
+
+async def _handle_reply_in_message(message, result_msg):
+    if message.reference is not None:
+        reply_msg = message.reference.resolved
+        if reply_msg.author.discriminator == "0000":
+            # reply to minecraft player
+            cnt = reply_msg.content.strip()
+            cnt = cnt.replace("**<", "<").replace(">**", ">")
+            result_msg["reply"] = f"\n -> {cnt}\n"
+        else:
+            # Reply to discord user
+            nick = (await message.guild.fetch_member(reply_msg.author.id)).display_name
+            result_msg["reply"] = ["\n -> <", nick, f"> {reply_msg.content.strip()}\n"]
+    return result_msg
+
+
+async def _handle_mentions_in_message(message, result_msg):
+    for key, ms in result_msg.items():
+        if isinstance(ms, list):
+            msg = ms.copy()
+            msg = msg[-1]
+        else:
+            msg = ms
+        if search(r"<@!\d+>", msg):
+            temp_split = split(r"<@!\d+>", msg)
+            temp_arr = list(findall(r"<@!\d+>", msg))
+            i = 1
+            for mention in temp_arr:
+                ins = "@" + (await message.guild.fetch_member(int(findall(r"\d+", mention)[0]))).display_name
+                temp_split.insert(i, ins)
+                i += 2
+            if isinstance(ms, list):
+                result_msg[key] = [ms[0], ms[1], "".join(temp_split)]
+            else:
+                result_msg[key] = "".join(temp_split)
+    return result_msg
