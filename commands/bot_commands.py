@@ -481,7 +481,7 @@ class Main_commands(commands.Cog):
     @commands.command(pass_context=True)
     async def help(self, ctx):
         await ctx.channel.purge(limit=1)
-        emb = discord.Embed(title='Список всех команд (через %)',
+        emb = discord.Embed(title=f'Список всех команд (через {Config.get_prefix()})',
                             color=discord.Color.gold())
         emb.add_field(name='status', value='Возвращает статус сервера')
         emb.add_field(name='list/ls',
@@ -495,7 +495,7 @@ class Main_commands(commands.Cog):
                       value='Ассоциирует {1} упоминание ника в дискорде по {2} команде (+=/-=) (добавить или удалить) {3} c ником в майнкрафте **для админа**')
         emb.add_field(name='codes {1}', value='Даёт коды на {1} ник в лс')
         emb.add_field(name='menu', value='Создаёт меню-пульт для удобного управления командами')
-        emb.add_field(name='chat', value='Сохраняет канал откуда бот переправляет сообщения в майн')
+        emb.add_field(name='chat {1}', value='Сохраняет текущий канал (если без аргументов) или выбранный канал с первого аргумента откуда бот переправляет сообщения в майн')
         emb.add_field(name='forceload/fl {on/off}',
                       value='По {on/off} постоянная загрузка сервера, когда он отключен, без аргументов - статус')
         emb.add_field(name='whitelist/wl {1}',

@@ -44,7 +44,7 @@ class Chat_commands(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if message.author == self._bot.user or message.content.startswith("%") or str(
+        if message.author == self._bot.user or message.content.startswith(Config.get_prefix()) or str(
                 message.author.discriminator) == "0000" or len(message.content) == 0 or \
                 message.channel.id != int(Config.get_discord_channel_id_for_crossplatform_chat()):
             return
