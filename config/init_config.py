@@ -63,6 +63,12 @@ class Config:
         return Config._token
 
     @staticmethod
+    def get_prefix():
+        if Config._config_dict.get("Prefix", None) is None:
+            Config.read_config()
+        return Config._config_dict["Prefix"]
+
+    @staticmethod
     def get_vk_credentials():
         if Config._config_dict.get("Vk_login", "None") == "None" or \
                 Config._config_dict.get("Vk_pass", "None") == "None":
@@ -263,6 +269,7 @@ class Config:
             print(f"Файл '{Config._config_name}' найден!")
 
         Config._set_token()
+        Config._set_prefix()
         Config._set_ip_address()
         Config._set_local_address()
         Config._set_menu_id()
@@ -291,6 +298,13 @@ class Config:
             Config._config_dict["Token"] = Crypt.get_crypt().encrypt(Config._token.encode()).decode()
         else:
             Config._token = Crypt.get_crypt().decrypt(Config._config_dict["Token"].encode()).decode()
+
+    @staticmethod
+    def _set_prefix():
+        if Config._config_dict.get("Prefix", None) is None:
+            Config._need_to_rewrite = True
+            Config._config_dict["Prefix"] = Config._ask_for_data("Enter bot prefix: ")
+        print(f"Bot prefix set to '{Config._config_dict.get('Prefix', None)}'")
 
     @staticmethod
     def _set_vk_credentials():

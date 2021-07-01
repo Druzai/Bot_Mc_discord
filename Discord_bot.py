@@ -18,11 +18,16 @@ from config.init_config import Config
 #  Check process status
 #  Remove opcodes, assoc already does that
 #  Доделать пересыльный чат: кастомные смайлики отделять название, обычные хз) + экранизацию посмотреть
+#  Мб добавить вывод игрок подкл, откл и причина
+# [23:53:40] [Server thread/INFO]: jokobaba lost connection: Timed out
+# [23:53:40] [Server thread/INFO]: jokobaba left the game
+# [23:53:55] [Server thread/INFO]: jokobaba joined the game
+# [23:55:07] [Server thread/INFO]: Dedicated407 has completed the challenge [Cover Me in Debris]
 
 
 def main():
     Config.read_config()
-    bot = commands.Bot(command_prefix='%', description="Server bot")
+    bot = commands.Bot(command_prefix=Config.get_prefix(), description="Server bot")
     bot.remove_command('help')
     cog_list = [Chat_commands, Main_commands, Poll]
     for i in cog_list:
