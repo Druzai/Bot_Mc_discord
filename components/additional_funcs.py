@@ -25,6 +25,12 @@ async def send_msg(ctx, msg, IsReaction=False):
         await ctx.send(msg)
 
 
+async def delete_after_by_msg_id(ctx, message_id):
+    await asleep(Config.get_await_time_before_message_deletion())
+    msg = await ctx.channel.fetch_message(message_id)
+    await msg.delete()
+
+
 def get_author_and_mention(ctx, bot, IsReaction=False):
     if IsReaction:
         author_mention = Bot_variables.react_auth.mention

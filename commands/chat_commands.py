@@ -1,8 +1,8 @@
 from discord.ext import commands
-from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r
+from re import split, search, findall
 
-from components.additional_funcs import get_author_and_mention, send_msg
+from components.additional_funcs import get_author_and_mention, send_msg, delete_after_by_msg_id
 from components.watcher_handle import create_watcher
 from config.init_config import Bot_variables, Config
 from decorators import role
@@ -50,7 +50,7 @@ class Chat_commands(commands.Cog):
             return
 
         _, author_mention = get_author_and_mention(message, self._bot, False)
-        # delete_user_message = True
+        delete_user_message = True
 
         if not Config.get_discord_channel_id_for_crossplatform_chat() or not Config.get_webhook_info():
             await send_msg(message.channel, f"{author_mention}, this chat couldn't work! Crossplatform chat disabled!",
@@ -64,22 +64,27 @@ class Chat_commands(commands.Cog):
         elif Bot_variables.IsLoading:
             await send_msg(message.channel, f"{author_mention}, server is loading!", True)
         else:
-            try:
-                with Client_q(Config.get_local_address(), Bot_variables.port_query, timeout=1) as cl_q:
-                    info = cl_q.full_stats
-                    if info.num_players == 0:
-                        await send_msg(message.channel, f"{author_mention}, server is empty!", True)
-                        return
-            except BaseException:
-                pass
+            # handle custom emojis
+            if search(r"<:\w+:\d+>", message.content.strip()):
+                temp_split = split(r"<:\w+:\d+>", message.content.strip())
+                temp_arr = list(findall(r"<:\w+:\d+>", message.content.strip()))
+                i = 1
+                for emoji in temp_arr:
+                    temp_split.insert(i, findall(r"\w+", emoji)[0])
+                    i += 2
+                result_msg = "".join(temp_split)
+            else:
+                result_msg = message.content.strip()
 
             with Client_r(Config.get_local_address(), Bot_variables.port_rcon, timeout=1) as cl_r:
                 cl_r.login(Bot_variables.rcon_pass)
-                cl_r.tellraw("@a",
-                             ["", {"text": "<"}, {"text": message.author.display_name, "color": "dark_gray"},
-                              {"text": f"> {message.content.strip()}"}])
-            # delete_user_message = False
+                answ = cl_r.tellraw("@a",
+                                    ["", {"text": "<"}, {"text": message.author.display_name, "color": "dark_gray"},
+                                     {"text": f"> {result_msg}"}])
+            if answ == '':
+                delete_user_message = False
+            else:
+                await send_msg(message.channel, f"{author_mention}, {answ.lower()}!", True)
 
-        # if delete_user_message:
-        #     await message.delete()
-            # await message.channel.delete(delay=Config.get_await_time_before_message_deletion())
+        if delete_user_message:
+            await delete_after_by_msg_id(message, message.id)
