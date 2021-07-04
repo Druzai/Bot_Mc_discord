@@ -12,7 +12,7 @@ from config.init_config import Config, Bot_variables
 
 class Watcher:
     running = True
-    refresh_delay_secs = 0.5
+    refresh_delay_secs = Config.get_watcher_refresh_delay()
     thread = None
 
     # Constructor
@@ -40,8 +40,7 @@ class Watcher:
                 sleep(self.refresh_delay_secs)
                 self.look()
             except FileNotFoundError:
-                # Action on file not found
-                pass
+                print(f"File {self.filename} wasn't found!")
             except BaseException:
                 print('Unhandled error: %s' % exc_info()[0])
 
@@ -65,9 +64,9 @@ def create_watcher():
 
     Bot_variables.watcher_of_log_file = Watcher(Path(Config.get_selected_server_list()[0] + "/logs/latest.log"),
                                                 _check_log_file)
-
-    webhook_id, webhook_token = Config.get_webhook_info()
-    Bot_variables.webhook = Webhook.partial(int(webhook_id), webhook_token, adapter=RequestsWebhookAdapter())
+    if Bot_variables.webhook is None:
+        webhook_id, webhook_token = Config.get_webhook_info()
+        Bot_variables.webhook = Webhook.partial(int(webhook_id), webhook_token, adapter=RequestsWebhookAdapter())
 
 
 def _check_log_file():

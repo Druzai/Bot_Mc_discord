@@ -103,7 +103,8 @@ async def start_server(ctx, bot, shut_up=False, IsReaction=False):
             break
         except BaseException:
             pass
-    if Config.get_discord_channel_id_for_crossplatform_chat() and Config.get_webhook_info():
+    if Config.get_crossplatform_chat() and Config.get_discord_channel_id_for_crossplatform_chat() and \
+            Config.get_webhook_info():
         create_watcher()
         Bot_variables.watcher_of_log_file.start()
     if Bot_variables.progress_bar_time:
@@ -162,7 +163,7 @@ async def stop_server(ctx, bot, How_many_sec=10, IsRestart=False, IsReaction=Fal
         Bot_variables.IsStopping = False
         return
     if Bot_variables.watcher_of_log_file.isrunning():
-            Bot_variables.watcher_of_log_file.stop()
+        Bot_variables.watcher_of_log_file.stop()
     while True:
         await asleep(Config.get_await_time_to_sleep())
         try:
@@ -204,7 +205,8 @@ async def server_checkups(bot, always_=True):
                     orig_op.clear()
             if not Bot_variables.IsServerOn:
                 Bot_variables.IsServerOn = True
-            if Config.get_discord_channel_id_for_crossplatform_chat() and Config.get_webhook_info():
+            if Config.get_crossplatform_chat() and Config.get_discord_channel_id_for_crossplatform_chat() and \
+                    Config.get_webhook_info():
                 create_watcher()
                 Bot_variables.watcher_of_log_file.start()
             try:
@@ -236,7 +238,7 @@ async def server_checkups(bot, always_=True):
                             await send_msg(ctx=channel,
                                            msg=f'```Bot detected: Server\'s offline!\nTime: {datetime.now().strftime("%d/%m/%y, %H:%M:%S")}\nStarting up server again!```',
                                            IsReaction=True)
-                            await start_server(ctx=channel, shut_up=True)
+                            await start_server(ctx=channel, bot=bot, shut_up=True)
                             break
                         except BaseException:
                             pass
@@ -348,6 +350,7 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
         with Client_r(Config.get_local_address(), Bot_variables.port_rcon, timeout=1) as cl_r:
             cl_r.login(Bot_variables.rcon_pass)
             answ = cl_r.tellraw("@a", res_obj)
+            # TODO: Replace with checking via query num of players for localization!
 
         if answ == '':
             delete_user_message = False

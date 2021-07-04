@@ -13,6 +13,10 @@ class Chat_commands(commands.Cog):
     @commands.command(pass_context=True)
     @role.has_role_or_default()
     async def chat(self, ctx, channel_id=None):
+        if not Config.get_crossplatform_chat():
+            await ctx.channel.send("Crossplatform chat is disabled in bot config!")
+            return
+
         channel_setted = False
         if channel_id is None:
             Config.set_discord_channel_id_for_crossplatform_chat(str(ctx.channel.id))
@@ -42,8 +46,14 @@ class Chat_commands(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        if not Config.get_crossplatform_chat():
+            return
+
         await handle_message_for_chat(message, self._bot, True)
 
     @commands.Cog.listener()
     async def on_message_edit(self, before, after):
+        if not Config.get_crossplatform_chat():
+            return
+
         await handle_message_for_chat(after, self._bot, False, on_edit=True, before_message=before)

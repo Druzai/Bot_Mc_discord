@@ -15,10 +15,13 @@ from config.init_config import Config
 #  Continuously rewrite code in classes
 #  Add slash commands
 #  Replace/add buttons instead of reactions
-#  Check process status
+#  Check process status when bot starts and instantly checking process? maybe checking latest.log would help
 #  Remove opcodes, assoc already does that
+#  Скачать изображение ошибки вк и вставить в exe-шник бота!
+#  Перенести комманды с каналами диса в chat_commands.py
 #  Доделать пересыльный чат: экранизацию посмотреть
-#  Мб добавить вывод игрок подкл, откл и причина. Надо!!!
+#  Сделать отправку об выключении/перезагрузке через tellraw тоже
+#  Мб добавить вывод игрок подкл, откл и причина
 # [23:53:40] [Server thread/INFO]: jokobaba lost connection: Timed out
 # [23:53:40] [Server thread/INFO]: jokobaba left the game
 # [23:53:55] [Server thread/INFO]: jokobaba joined the game

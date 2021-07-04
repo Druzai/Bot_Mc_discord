@@ -95,6 +95,10 @@ class Config:
         Config.save_config()
 
     @staticmethod
+    def get_crossplatform_chat():
+        return Config._config_dict.get("Crossplatform_chat", False)
+
+    @staticmethod
     def get_discord_channel_id_for_crossplatform_chat():
         return Config._config_dict.get("Channel_id_for_crossplatform_chat", None)
 
@@ -110,6 +114,10 @@ class Config:
             return webhook.split("/")[-2], webhook.split("/")[-1]
         else:
             return None, None
+
+    @staticmethod
+    def get_watcher_refresh_delay():
+        return Config._config_dict.get("Watcher_refresh_delay", 1)
 
     @staticmethod
     def get_filename():
@@ -215,7 +223,10 @@ class Config:
     @staticmethod
     def read_server_info():
         Bot_variables.progress_bar_time = Config.get_selected_server_list()[2]
-        with open(Path(Config.get_selected_server_list()[0] + "/server.properties"), "r") as f:
+        filepath = Path(Config.get_selected_server_list()[0] + "/server.properties")
+        if not filepath.exists():
+            raise RuntimeError(f"File '{filepath.as_posix()}' doesn't exist!")
+        with open(filepath, "r") as f:
             for i in f.readlines():
                 if i.find("enable-query") >= 0:
                     enable_query = literal_eval(i.split("=")[1].capitalize())
@@ -228,7 +239,7 @@ class Config:
                 if i.find("rcon.password") >= 0:
                     Bot_variables.rcon_pass = i.split("=")[1].strip()
         if not enable_query or not enable_rcon:
-            raise RuntimeError("In server.properties doesn't enabled: " +
+            raise RuntimeError(f"In '{filepath.as_posix()}' doesn't enable: " +
                                ('enable-query' if not enable_query else '') +
                                (', ' if not enable_query and not enable_rcon else '') +
                                ('enable-rcon' if not enable_rcon else ''))
@@ -246,7 +257,8 @@ class Config:
         open(Path(Config.get_bot_config_path() + f'/{Config._op_log_name}'), 'a', encoding='utf-8').write(message)
 
     @staticmethod
-    def _ask_for_data(message: str, match_str=None, try_int=False, int_high_than=None):
+    def _ask_for_data(message: str, match_str=None,
+                      try_int=False, int_high_than=None, try_float=False, float_hight_than=None):
         while True:
             answer = str(input(message))
             if answer != "":
@@ -259,14 +271,21 @@ class Config:
                         return int(answer)
                     except ValueError:
                         continue
+                if try_float or float_hight_than is not None:
+                    try:
+                        if float_hight_than is not None and float(answer) < float_hight_than:
+                            continue
+                        return float(answer)
+                    except ValueError:
+                        continue
                 return answer
 
     @staticmethod
     def _set_up_config(file_exists=False):
         if not file_exists:
-            print(f"Файл '{Config._config_name}' не найден! Настраиваем новый!")
+            print(f"File '{Config._config_name}' wasn't found! Setting up a new one!")
         else:
-            print(f"Файл '{Config._config_name}' найден!")
+            print(f"File '{Config._config_name}' was found!")
 
         Config._set_token()
         Config._set_prefix()
@@ -275,8 +294,7 @@ class Config:
         Config._set_menu_id()
         Config._set_role()
         Config._set_filename()
-        Config._set_discord_channel_id_for_crossplatform_chat()
-        Config._set_webhook_info()
+        Config._set_crossplatform_chat()
         Config._set_await_time_op()
         Config._set_await_time_check_ups()
         Config._set_await_time_to_sleep()
@@ -377,9 +395,9 @@ class Config:
                 Config._config_dict.get("Command role for discord", None) is not None:
             Command_role = Config._config_dict.get("Command role for discord")
             if Command_role:
-                print("Current role for some commands is '" + Command_role + "'")
+                print("Current role for some commands is '" + Command_role + "'.")
             else:
-                print("Current role doesn't stated")
+                print("Current role doesn't stated.")
         else:
             Config._need_to_rewrite = True
             if Config._ask_for_data("Do you want to set role for some specific commands? y/n\n", "y"):
@@ -404,12 +422,12 @@ class Config:
                     Config._config_dict["Ask await time check-ups"] = False
                     print("Await time will be brought from config.")
             else:
-                print(f"Await time check-ups set to {str(Config._config_dict.get('Await time check-ups'))} seconds.")
+                print(f"Await time check-ups set to {str(Config._config_dict.get('Await time check-ups'))} sec.")
         else:
             Config._need_to_rewrite = True
             print("Await time check-ups set below zero. Change this option")
             print("Note: If your machine has processor with frequency 2-2.5 GHz, "
-                  "you have to set this option at least to '1' second for the bot to work properly")
+                  "you have to set this option at least to '1' second for the bot to work properly.")
             Config._config_dict["Await time check-ups"] = \
                 Config._ask_for_data("Set await time between check-ups 'Server on/off' (in seconds, int): ",
                                      try_int=True, int_high_than=0)
@@ -417,7 +435,7 @@ class Config:
     @staticmethod
     def _set_await_time_op():
         if Config._config_dict.get("Await time op") >= 0:
-            print("Await time op set to " + str(Config._config_dict.get("Await time op")) + " seconds.")
+            print("Await time op set to " + str(Config._config_dict.get("Await time op")) + " sec.")
             if Config._config_dict.get("Await time op") == 0:
                 print("Limitation doesn't exist, padawan.")
         else:
@@ -430,9 +448,9 @@ class Config:
     def _set_await_time_to_sleep():
         if Config._config_dict.get("Await sleep", -1) >= 0:
             print(
-                f"Await time to sleep while bot pinging server for info set to {str(Config._config_dict.get('Await sleep'))} sec")
+                f"Await time to sleep while bot pinging server for info set to {str(Config._config_dict.get('Await sleep'))} sec.")
             if Config._config_dict.get("Await sleep") == 0:
-                print("I'm fast as f*ck, boi")
+                print("I'm fast as f*ck, boi.")
         else:
             Config._need_to_rewrite = True
             print("Await time to sleep set below zero. Change this option")
@@ -508,12 +526,26 @@ class Config:
     @staticmethod
     def _set_await_time_before_message_deletion():
         if Config._config_dict.get("Await time delete", -1) >= 0:
-            print(f"Await time to sleep set to {str(Config._config_dict.get('Await time delete'))} sec")
+            print(f"Await time to sleep set to {str(Config._config_dict.get('Await time delete'))} sec.")
         else:
             Config._need_to_rewrite = True
             print("Await time to delete set below zero. Change this option")
             Config._config_dict["Await time delete"] = \
                 Config._ask_for_data("Set await time to delete (in seconds, int): ", try_int=True)
+
+    @staticmethod
+    def _set_crossplatform_chat():
+        if Config._config_dict.get("Crossplatform_chat", None) is None:
+            if Config._ask_for_data("Would you like to enter data for crossplatform chat? y/n\n", "y"):
+                Config._need_to_rewrite = True
+                Config._config_dict["Crossplatform_chat"] = True
+
+                Config._set_discord_channel_id_for_crossplatform_chat()
+                Config._set_webhook_info()
+                Config._set_watcher_refresh_delay()
+            else:
+                Config._config_dict["Crossplatform_chat"] = False
+                print("Crossplatform chat wouldn't work.")
 
     @staticmethod
     def _set_discord_channel_id_for_crossplatform_chat():
@@ -532,3 +564,15 @@ class Config:
                 Config._config_dict["Webhook_url"] = Config._ask_for_data("Enter webhook url: ")
             else:
                 print("Crossplatform chat wouldn't work. Create webhook and enter it to bot config!")
+
+    @staticmethod
+    def _set_watcher_refresh_delay():
+        if Config._config_dict.get("Watcher_refresh_delay", None) is None:
+            print("Watcher's delay to refresh doesn't set.")
+            print("Note: If your machine has processor with frequency 2-2.5 GHz, "
+                  "you have to set this option from '0.7' to '0.9' second for the bot to work properly.")
+            Config._need_to_rewrite = True
+            Config._config_dict["Watcher_refresh_delay"] = \
+                Config._ask_for_data("Set delay to refresh (in seconds, int): ", try_float=True)
+        else:
+            print(f"Watcher's delay to refresh set to {Config.get_watcher_refresh_delay()} sec.")

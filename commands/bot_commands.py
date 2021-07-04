@@ -21,7 +21,7 @@ from decorators import role
 
 class Main_commands(commands.Cog):
     _ansii_com = {"status": "🗨", "list": "📋", "start": "♿", "stop": "⏹", "restart": "🔄",
-                 "update": "📶"}  # Symbols for menu
+                  "update": "📶"}  # Symbols for menu
 
     def __init__(self, bot):
         self._bot = bot
@@ -83,7 +83,8 @@ class Main_commands(commands.Cog):
                                "\nSelected server: " + Config.get_selected_server_list()[1] + states + "```",
                                IsReaction)
             except BaseException:
-                await send_msg(ctx, "```Server online\nServer adress: " + Config.get_ip_address() + "\nSelected server: " +
+                await send_msg(ctx,
+                               "```Server online\nServer adress: " + Config.get_ip_address() + "\nSelected server: " +
                                Config.get_selected_server_list()[1] + states + "```", IsReaction)
                 print("Serv's down via rcon")
             """rcon check daytime cycle"""
@@ -215,7 +216,8 @@ class Main_commands(commands.Cog):
                             while True:
                                 await asleep(Config.get_await_time_to_sleep())
                                 try:
-                                    with Client_r(Config.get_local_address(), Bot_variables.port_rcon, timeout=1) as cl_r:
+                                    with Client_r(Config.get_local_address(), Bot_variables.port_rcon,
+                                                  timeout=1) as cl_r:
                                         cl_r.login(Bot_variables.rcon_pass)
                                         cl_r.say(arg1 + ' you all will be deoped now.')
                                         for _ in to_delete_ops:
@@ -226,8 +228,10 @@ class Main_commands(commands.Cog):
                                     break
                                 except BaseException:
                                     pass
-                            Config.append_to_op_log(datetime.now().strftime("%d/%m/%Y, %H:%M:%S") + " || Deopped all " + (
-                                    str("|| Note: " + str(len(Bot_variables.op_deop_list)) + " people deoped in belated list") if len(
+                            Config.append_to_op_log(
+                                datetime.now().strftime("%d/%m/%Y, %H:%M:%S") + " || Deopped all " + (
+                                    str("|| Note: " + str(
+                                        len(Bot_variables.op_deop_list)) + " people deoped in belated list") if len(
                                         Bot_variables.op_deop_list) > 1 else "") + "\n")
                             await ctx.send("Ну что, " + ctx.author.mention +
                                            ", кончилось твоё время.. и не только твоё.... Как говорится \"Чики-брики и в дамки!\"")
@@ -308,7 +312,8 @@ class Main_commands(commands.Cog):
             if Path(Config.get_bot_config_path() + '/Gendalf_Top').is_dir():
                 gifs_list = listdir(Path(Config.get_bot_config_path() + '/Gendalf_Top'))
                 await member.send('You shall not PASS! Ты не владеешь данным ником :ambulance:',
-                                  file=discord.File(Path(Config.get_bot_config_path() + '/Gendalf_Top/' + choice(gifs_list))))
+                                  file=discord.File(
+                                      Path(Config.get_bot_config_path() + '/Gendalf_Top/' + choice(gifs_list))))
             else:
                 print("Folder 'Gendalf_Top' hasn't been found in that path '" + Config.get_bot_config_path() +
                       "'. Maybe you want to create it and fill it with images related to Gendalf :)")
@@ -317,7 +322,7 @@ class Main_commands(commands.Cog):
     @commands.command(pass_context=True)
     async def say(self, ctx):
         """Петросян"""
-        vk_login, vk_pass  = Config.get_vk_credentials()
+        vk_login, vk_pass = Config.get_vk_credentials()
         if vk_login is not None and vk_pass is not None:
             if bool(randint(0, 3)):
                 _300_answers = [
@@ -434,7 +439,7 @@ class Main_commands(commands.Cog):
     @commands.command(pass_context=True, aliases=["servs"])
     @role.has_role_or_default()
     async def servers(self, ctx, *args):
-        if len(args) and (args[0] == "list" or args[0] == "select" or args[0] == "show"):
+        if len(args) and args[0] in ["list", "select", "show"]:
             minecraft_dirs = Config.get_minecraft_dirs_list()
             if args[0] == "list":
                 send_ = "```List of servers"
@@ -461,12 +466,13 @@ class Main_commands(commands.Cog):
                         Config.set_selected_minecraft_server(int(args[1]))
                         Config.read_server_info()
                         await ctx.send("```Server properties read!```")
-                        if Config.get_discord_channel_id_for_crossplatform_chat() and Config.get_webhook_info():
+                        if Config.get_crossplatform_chat() and Config.get_discord_channel_id_for_crossplatform_chat() \
+                                and Config.get_webhook_info():
                             create_watcher()
                             Bot_variables.watcher_of_log_file.start()
                     else:
                         await ctx.send("```Use server list, there's no such server on the list!```")
-                except BaseException:
+                except ValueError:
                     await ctx.send("```Argument for 'select' must be a number!```")
             elif args[0] == "show":
                 await ctx.send(
@@ -487,15 +493,18 @@ class Main_commands(commands.Cog):
         emb.add_field(name='list/ls',
                       value='Возвращает список игроков')
         emb.add_field(name='start', value='Запускает сервер')
-        emb.add_field(name='stop {10}', value='Останавливает сервер, {} (сек) сколько идёт отсчёт, без аргументов - убирает таймер')
-        emb.add_field(name='restart {10}', value='Перезапускает сервер, {} (сек) сколько идёт отсчёт, без аргументов - убирает таймер')
+        emb.add_field(name='stop {10}',
+                      value='Останавливает сервер, {} (сек) сколько идёт отсчёт, без аргументов - убирает таймер')
+        emb.add_field(name='restart {10}',
+                      value='Перезапускает сервер, {} (сек) сколько идёт отсчёт, без аргументов - убирает таймер')
         emb.add_field(name='op {1} {2} {3}',
                       value='Даёт op\'ку на {1} ник по {2} коду {3} c комментарием причины, если надо')
         emb.add_field(name='assoc {1} {2} {3}',
                       value='Ассоциирует {1} упоминание ника в дискорде по {2} команде (+=/-=) (добавить или удалить) {3} c ником в майнкрафте **для админа**')
         emb.add_field(name='codes {1}', value='Даёт коды на {1} ник в лс')
         emb.add_field(name='menu', value='Создаёт меню-пульт для удобного управления командами')
-        emb.add_field(name='chat {1}', value='Сохраняет текущий канал (если без аргументов) или выбранный канал с первого аргумента откуда бот переправляет сообщения в майн')
+        emb.add_field(name='chat {1}',
+                      value='Сохраняет текущий канал (если без аргументов) или выбранный канал с первого аргумента откуда бот переправляет сообщения в майн')
         emb.add_field(name='forceload/fl {on/off}',
                       value='По {on/off} постоянная загрузка сервера, когда он отключен, без аргументов - статус')
         emb.add_field(name='whitelist/wl {1}',
@@ -562,7 +571,7 @@ class Main_commands(commands.Cog):
         message_created_time = ""
         try:
             int(str(count))
-        except BaseException:
+        except ValueError:
             await ctx.send("Ты дебик? Чё ты там написал? Как мне это понимать? А? '" + str(count) + "' Убейся там!")
             count = 0
         if count > 0:
