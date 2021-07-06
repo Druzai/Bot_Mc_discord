@@ -462,14 +462,11 @@ class Main_commands(commands.Cog):
                                            "\nPlease stop it, before trying again```")
                             return
 
-                        Bot_variables.watcher_of_log_file.stop()
+                        if Bot_variables.watcher_of_log_file is not None:
+                            Bot_variables.watcher_of_log_file.stop()
                         Config.set_selected_minecraft_server(int(args[1]))
                         Config.read_server_info()
                         await ctx.send("```Server properties read!```")
-                        if Config.get_crossplatform_chat() and Config.get_discord_channel_id_for_crossplatform_chat() \
-                                and Config.get_webhook_info():
-                            create_watcher()
-                            Bot_variables.watcher_of_log_file.start()
                     else:
                         await ctx.send("```Use server list, there's no such server on the list!```")
                 except ValueError:

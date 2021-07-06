@@ -391,7 +391,7 @@ class Config:
 
     @staticmethod
     def _set_role():
-        if Config._config_dict.get("Command role for discord", None) != "" or \
+        if Config._config_dict.get("Command role for discord", None) != "" and \
                 Config._config_dict.get("Command role for discord", None) is not None:
             Command_role = Config._config_dict.get("Command role for discord")
             if Command_role:
@@ -572,7 +572,7 @@ class Config:
 
     @staticmethod
     def _set_watcher_refresh_delay():
-        if Config._config_dict.get("Watcher_refresh_delay", -1) >= 0:
+        if Config._config_dict.get("Watcher_refresh_delay", -1) <= 0:
             print("Watcher's delay to refresh doesn't set.")
             print("Note: If your machine has processor with frequency 2-2.5 GHz, "
                   "you have to set this option from '0.7' to '0.9' second for the bot to work properly.")
