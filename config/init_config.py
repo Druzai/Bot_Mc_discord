@@ -52,7 +52,7 @@ class Config:
         try:
             with open(Path(Config._current_bot_path + '/' + Config._config_name), mode="w",
                       encoding="utf-8") as conf_file:
-                dump(Config._config_dict, conf_file, indent=2)
+                dump(Config._config_dict, conf_file, indent=2, ensure_ascii=False)
         except FileNotFoundError:
             Config.save_config()
 
@@ -322,7 +322,7 @@ class Config:
         if Config._config_dict.get("Prefix", None) is None:
             Config._need_to_rewrite = True
             Config._config_dict["Prefix"] = Config._ask_for_data("Enter bot prefix: ")
-        print(f"Bot prefix set to '{Config._config_dict.get('Prefix', None)}'")
+        print(f"Bot prefix set to '{Config._config_dict.get('Prefix', None)}'.")
 
     @staticmethod
     def _set_vk_credentials():
