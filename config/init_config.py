@@ -434,7 +434,7 @@ class Config:
 
     @staticmethod
     def _set_await_time_op():
-        if Config._config_dict.get("Await time op") >= 0:
+        if Config._config_dict.get("Await time op", -1) >= 0:
             print("Await time op set to " + str(Config._config_dict.get("Await time op")) + " sec.")
             if Config._config_dict.get("Await time op") == 0:
                 print("Limitation doesn't exist, padawan.")
@@ -467,8 +467,13 @@ class Config:
         if Config._config_dict.get("Main_minecraft_dirs", None):
             Minecraft_dirs_list = Config._config_dict.get("Main_minecraft_dirs")
 
+        if len(Minecraft_dirs_list) == 0:
+            Minecraft_dirs_number = Config._ask_for_data("How much servers you intend to keep?\n", try_int=True)
+        else:
+            Minecraft_dirs_number = len(Minecraft_dirs_list)
+
         if Config._config_dict.get("Minecaft_dirs_ask") or Config._config_dict.get("Main_minecraft_dirs", None) is None:
-            Minecraft_dirs_list = Config._change_list_mine(Minecraft_dirs_list, len(Minecraft_dirs_list))
+            Minecraft_dirs_list = Config._change_list_mine(Minecraft_dirs_list, Minecraft_dirs_number)
             Config._config_dict["Main_minecraft_dirs"] = Minecraft_dirs_list
             if Config._ask_for_data("Never ask about it again? y/n\n", "y"):
                 Config._config_dict["Minecaft_dirs_ask"] = False
@@ -509,7 +514,7 @@ class Config:
                                 t = ""
                                 if "y" == input():
                                     t = input(
-                                        "Enter comment about this path (IMPORTANT on Linux comment WITHOUT spaces): ")
+                                        "Enter comment about this path: ")
                                 l[i][1] = t
                                 i += 1
                                 break
@@ -567,12 +572,12 @@ class Config:
 
     @staticmethod
     def _set_watcher_refresh_delay():
-        if Config._config_dict.get("Watcher_refresh_delay", None) is None:
+        if Config._config_dict.get("Watcher_refresh_delay", -1) >= 0:
             print("Watcher's delay to refresh doesn't set.")
             print("Note: If your machine has processor with frequency 2-2.5 GHz, "
                   "you have to set this option from '0.7' to '0.9' second for the bot to work properly.")
             Config._need_to_rewrite = True
             Config._config_dict["Watcher_refresh_delay"] = \
-                Config._ask_for_data("Set delay to refresh (in seconds, int): ", try_float=True)
+                Config._ask_for_data("Set delay to refresh (in seconds, float): ", try_float=True)
         else:
             print(f"Watcher's delay to refresh set to {Config.get_watcher_refresh_delay()} sec.")
