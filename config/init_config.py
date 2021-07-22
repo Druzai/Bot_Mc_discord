@@ -26,6 +26,7 @@ class Bot_variables:
     watcher_of_log_file = None
     webhook_chat = None
     webhook_rss = None
+    bot_for_webhooks = None
 
 
 class Config:

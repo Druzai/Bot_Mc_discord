@@ -259,7 +259,8 @@ async def server_checkups(bot, always_=True):
                     Bot_variables.watcher_of_log_file.stop()
             if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 2:
                 await bot.change_presence(activity=Activity(type=ActivityType.listening,
-                                                            name="Server" + (" thinking..." if len(get_list_of_processes()) != 0 else "")))
+                                                            name="Server" + (" thinking..." if len(
+                                                                get_list_of_processes()) != 0 else "")))
             if always_ and Config.get_forceload() and not Bot_variables.IsStopping \
                     and not Bot_variables.IsLoading and not Bot_variables.IsRestarting:
                 for guild in bot.guilds:

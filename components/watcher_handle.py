@@ -1,6 +1,6 @@
 from os import SEEK_END, SEEK_CUR, stat
 from pathlib import Path
-from re import search, split
+from re import search, split, findall
 from sys import exc_info
 from threading import Thread
 from time import sleep
@@ -84,5 +84,19 @@ def _check_log_file():
     if search(r"\[Server thread/INFO]", last_line) and search(r"<([^>]*)> (.*)", last_line) and ": <" in last_line:
         player_nick, player_message = search(r"<([^>]*)>", last_line)[0], \
                                       split(r"<([^>]*)>", last_line, maxsplit=1)[-1].strip()
+        if search(r"@.+", player_message):
+            split_arr = split(r"@.+", player_message)
+            members = {i[1:]: None for i in findall(r"@.+", player_message)}
+            for guild in Bot_variables.bot_for_webhooks.guilds:
+                for member in guild.members:
+                    if member.name in members.keys():
+                        members[member.name] = member
+                    elif member.display_name in members.keys():
+                        members[member.display_name] = member
+            i = 1
+            for name, member in members.items():
+                split_arr.insert(i, member.mention if member is not None else f"@{name}")
+                i += 2
+            player_message = "".join(split_arr)
 
         Bot_variables.webhook_chat.send(rf"**{player_nick}** {player_message}")  # , username='WEBHOOK_BOT'

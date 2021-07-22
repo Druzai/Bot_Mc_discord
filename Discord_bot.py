@@ -1,6 +1,7 @@
 from os import system
 from sys import platform
 
+from discord import Intents
 from discord.errors import LoginFailure
 from discord.ext import commands
 
@@ -8,7 +9,7 @@ from commands.bot_commands import Main_commands
 from commands.chat_commands import Chat_commands
 from commands.poll import Poll
 from components.rss_feed_handle import create_feed_webhook, check_on_rss_feed
-from config.init_config import Config
+from config.init_config import Config, Bot_variables
 
 
 # TODO: features
@@ -34,7 +35,9 @@ from config.init_config import Config
 
 def main():
     Config.read_config()
-    bot = commands.Bot(command_prefix=Config.get_prefix(), description="Server bot")
+    intents = Intents.default()
+    intents.members = True
+    bot = commands.Bot(command_prefix=Config.get_prefix(), description="Server bot", intents=intents)
     bot.remove_command('help')
     cog_list = [Chat_commands, Main_commands, Poll]
     for i in cog_list:
@@ -42,6 +45,9 @@ def main():
 
     create_feed_webhook()
     bot.loop.create_task(check_on_rss_feed())
+
+    if Config.get_webhook_chat() or Config.get_webhook_rss():
+        Bot_variables.bot_for_webhooks = bot
 
     try:
         bot.run(Config.get_token())
