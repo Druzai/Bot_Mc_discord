@@ -24,7 +24,7 @@ from config.init_config import Config, Bot_variables
 #  Доделать пересыльный чат: экранизацию посмотреть
 #  Сделать отправку об выключении/перезагрузке через tellraw тоже
 #  Посмотреть работу с кнопками вместо реакций
-#  Поработать над упоминаниями на майн и из майна, Regex @\.+
+#  Поработать над упоминаниями на майн и из майна, Regex @\.+ | в процессе + id-to-nicks.json
 #  Переработать конфиг в классы и сделать сохранение в yaml
 #  Мб добавить вывод игрок подкл, откл и причина
 # [23:53:40] [Server thread/INFO]: jokobaba lost connection: Timed out
@@ -43,10 +43,11 @@ def main():
     for i in cog_list:
         bot.add_cog(i(bot))
 
-    create_feed_webhook()
-    bot.loop.create_task(check_on_rss_feed())
+    if Config.get_webhook_rss():
+        create_feed_webhook()
+        bot.loop.create_task(check_on_rss_feed())
 
-    if Config.get_webhook_chat() or Config.get_webhook_rss():
+    if Config.get_webhook_chat():
         Bot_variables.bot_for_webhooks = bot
 
     try:
