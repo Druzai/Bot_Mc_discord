@@ -14,7 +14,6 @@ from mcipc.rcon import Client as Client_r
 from commands.poll import Poll
 from components.additional_funcs import server_checkups, send_error, send_msg, send_status, stop_server, start_server, \
     get_author_and_mention
-from components.watcher_handle import create_watcher
 from config.init_config import Bot_variables, Config
 from decorators import role
 
@@ -78,14 +77,16 @@ class Main_commands(commands.Cog):
                     message += "Night, "
                 else:
                     message += "Sunrise, "
-                await send_msg(ctx, "```Server online\n" + message + str((6 + time_ticks // 1000) % 24) + ":"
-                               + f"{((time_ticks % 1000) * 60 // 1000):02d}" + "\nServer adress: " + Config.get_ip_address() +
-                               "\nSelected server: " + Config.get_selected_server_list()[1] + states + "```",
+                await send_msg(ctx, "```Server online\n" + "Server adress: " + Config.get_ip_address() + "\n"
+                               + message + str((6 + time_ticks // 1000) % 24) + ":"
+                               + f"{((time_ticks % 1000) * 60 // 1000):02d}" + "\nSelected server: " +
+                               Config.get_selected_server_list()[1] + states + "```",
                                IsReaction)
             except BaseException:
                 await send_msg(ctx,
-                               "```Server online\nServer adress: " + Config.get_ip_address() + "\nSelected server: " +
-                               Config.get_selected_server_list()[1] + states + "```", IsReaction)
+                               "```Server online\nServer adress: " + Config.get_ip_address() +
+                               "\nServer thinking...\nSelected server: " + Config.get_selected_server_list()[1] +
+                               states + "```", IsReaction)
                 print("Serv's down via rcon")
             """rcon check daytime cycle"""
         else:

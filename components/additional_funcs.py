@@ -11,6 +11,7 @@ from discord import Activity, ActivityType
 from discord.ext import commands
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r
+from psutil import process_iter, NoSuchProcess
 
 from components.watcher_handle import create_watcher
 from config.init_config import Config, Bot_variables
@@ -70,6 +71,7 @@ async def start_server(ctx, bot, shut_up=False, IsReaction=False):
                    " ./" + Config.get_filename() + ".sh")
         elif platform == "win32":
             startfile(Config.get_filename() + ".bat")
+        Bot_variables.server_start_time = int(datetime.now().timestamp())
     except BaseException:
         print("Couldn't open script! Check naming!")
         await send_msg(ctx, "```Couldn't open script because of naming! Retreating...```", IsReaction)
@@ -158,9 +160,10 @@ async def stop_server(ctx, bot, How_many_sec=10, IsRestart=False, IsReaction=Fal
                     await asleep(w)
             cl_r.run("stop")
     except BaseException:
-        print("Exeption: Couldn't connect to server, check its connection")
-        await send_msg(ctx, "Couldn't connect to server to shut it down!", IsReaction)
+        print("Exception: Couldn't connect to server, so killing it now...")
+        await send_msg(ctx, "Couldn't connect to server to shut it down! Killing it now...", IsReaction)
         Bot_variables.IsStopping = False
+        kill_server()
         return
     if Bot_variables.watcher_of_log_file.isrunning():
         Bot_variables.watcher_of_log_file.stop()
@@ -171,6 +174,7 @@ async def stop_server(ctx, bot, How_many_sec=10, IsRestart=False, IsReaction=Fal
                 _ = cl_q.basic_stats
         except BaseException:
             break
+    kill_server()
     Bot_variables.IsStopping = False
     Bot_variables.IsServerOn = False
     author, author_mention = get_author_and_mention(ctx, bot, IsReaction)
@@ -180,6 +184,31 @@ async def stop_server(ctx, bot, How_many_sec=10, IsRestart=False, IsReaction=Fal
     server_dates[1] = [datetime.now().strftime("%d/%m/%y, %H:%M:%S"), str(author)]
     Config.save_server_dates(server_dates)
     await bot.change_presence(activity=Activity(type=ActivityType.listening, name="Server"))
+
+
+def get_list_of_processes() -> list:
+    process_name = "java"
+    list_proc = []
+
+    for proc in process_iter():
+        parents_name_list = [i.name() for i in proc.parents()]
+        if process_name in proc.name() and ("screen" in parents_name_list or
+                                            "Discord_bot.exe" in parents_name_list or
+                                            "python.exe" in parents_name_list) \
+                and abs(int(proc.create_time()) - Bot_variables.server_start_time) < 5:
+            list_proc.append(proc)
+    return list_proc
+
+
+def kill_server():
+    list_proc = get_list_of_processes()
+    if len(list_proc) != 0:
+        for p in list_proc:
+            try:
+                p.kill()
+            except NoSuchProcess:
+                pass
+    Bot_variables.server_start_time = None
 
 
 async def server_checkups(bot, always_=True):
@@ -223,12 +252,14 @@ async def server_checkups(bot, always_=True):
                                           name="Minecraft Server, " + str(
                                               info.num_players) + " player(s) online"))
         except BaseException:
-            if Bot_variables.IsServerOn:
-                Bot_variables.IsServerOn = False
-            if Bot_variables.watcher_of_log_file is not None and Bot_variables.watcher_of_log_file.isrunning():
-                Bot_variables.watcher_of_log_file.stop()
+            if len(get_list_of_processes()) == 0:
+                if Bot_variables.IsServerOn:
+                    Bot_variables.IsServerOn = False
+                if Bot_variables.watcher_of_log_file is not None and Bot_variables.watcher_of_log_file.isrunning():
+                    Bot_variables.watcher_of_log_file.stop()
             if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 2:
-                await bot.change_presence(activity=Activity(type=ActivityType.listening, name="Server"))
+                await bot.change_presence(activity=Activity(type=ActivityType.listening,
+                                                            name="Server" + (" thinking..." if len(get_list_of_processes()) != 0 else "")))
             if always_ and Config.get_forceload() and not Bot_variables.IsStopping \
                     and not Bot_variables.IsLoading and not Bot_variables.IsRestarting:
                 for guild in bot.guilds:

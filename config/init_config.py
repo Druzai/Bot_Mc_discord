@@ -1,6 +1,6 @@
 from json import dump, load, dumps, loads
 from os import path, listdir, getcwd
-from os.path import isfile
+from os.path import isfile, abspath
 from pathlib import Path
 from ast import literal_eval
 
@@ -9,6 +9,7 @@ from config.bot_crypt import Crypt
 
 class Bot_variables:
     react_auth = ""  # Variable for situation when command calls via reactions, represents author that added reaction
+    server_start_time = None
     IsServerOn = False
     IsLoading = False
     IsStopping = False
@@ -25,7 +26,7 @@ class Bot_variables:
 
 
 class Config:
-    _current_bot_path = path.abspath(getcwd())
+    _current_bot_path = abspath(getcwd())
     _config_dict = {}
     _config_name = "bot.json"
     _need_to_rewrite = False
