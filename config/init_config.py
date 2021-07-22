@@ -1,8 +1,10 @@
+import datetime as dt
+from ast import literal_eval
+from datetime import datetime
 from json import dump, load, dumps, loads
 from os import path, listdir, getcwd
 from os.path import isfile, abspath
 from pathlib import Path
-from ast import literal_eval
 
 from config.bot_crypt import Crypt
 
@@ -23,6 +25,7 @@ class Bot_variables:
     progress_bar_time = 0
     watcher_of_log_file = None
     webhook_chat = None
+    webhook_rss = None
 
 
 class Config:
@@ -115,6 +118,23 @@ class Config:
     @staticmethod
     def get_watcher_refresh_delay():
         return Config._config_dict.get("Watcher_refresh_delay", 1)
+
+    @staticmethod
+    def get_webhook_rss():
+        return Config._config_dict.get("Webhook_rss_url", None)
+
+    @staticmethod
+    def get_rss_url():
+        return Config._config_dict.get("Rss_url", None)
+
+    @staticmethod
+    def set_rss_last_date(datetime: str):
+        Config._config_dict["Rss_last_date"] = datetime
+
+    @staticmethod
+    def get_rss_last_date():
+        return Config._config_dict.get("Rss_last_date",
+                                       datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat())
 
     @staticmethod
     def get_filename():
@@ -292,6 +312,7 @@ class Config:
         Config._set_role()
         Config._set_filename()
         Config._set_crossplatform_chat()
+        Config._set_rss_feed()
         Config._set_await_time_op()
         Config._set_await_time_check_ups()
         Config._set_await_time_to_sleep()
@@ -561,7 +582,8 @@ class Config:
     @staticmethod
     def _set_webhook_chat():
         if Config._config_dict.get("Webhook_chat_url", None) is None:
-            if Config._ask_for_data("Webhook url for crossplatform chat not found. Would you like to enter it? y/n\n", "y"):
+            if Config._ask_for_data("Webhook url for crossplatform chat not found. Would you like to enter it? y/n\n",
+                                    "y"):
                 Config._need_to_rewrite = True
                 Config._config_dict["Webhook_chat_url"] = Config._ask_for_data("Enter webhook url: ")
             else:
@@ -578,3 +600,38 @@ class Config:
                 Config._ask_for_data("Set delay to refresh (in seconds, float): ", try_float=True)
         else:
             print(f"Watcher's delay to refresh set to {Config.get_watcher_refresh_delay()} sec.")
+
+    @staticmethod
+    def _set_rss_feed():
+        if Config._config_dict.get("Rss_feed", None) is None:
+            if Config._ask_for_data("Would you like to enter data for rss feed? y/n\n", "y"):
+                Config._need_to_rewrite = True
+                Config._config_dict["Rss_feed"] = True
+
+                Config._set_webhook_rss()
+                Config._set_rss_url()
+                Config.set_rss_last_date(datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat())
+            else:
+                Config._config_dict["Rss_feed"] = False
+                print("Rss feed wouldn't work.")
+
+
+    @staticmethod
+    def _set_webhook_rss():
+        if Config._config_dict.get("Webhook_rss_url", None) is None:
+            if Config._ask_for_data("Webhook rss url not found. Would you like to enter it? y/n\n",
+                                    "y"):
+                Config._need_to_rewrite = True
+                Config._config_dict["Webhook_rss_url"] = Config._ask_for_data("Enter webhook rss url: ")
+            else:
+                print("Rss wouldn't work. Create webhook and enter it to bot config!")
+
+    @staticmethod
+    def _set_rss_url():
+        if Config._config_dict.get("Rss_url", None) is None:
+            if Config._ask_for_data("Rss url not found. Would you like to enter it? y/n\n",
+                                    "y"):
+                Config._need_to_rewrite = True
+                Config._config_dict["Rss_url"] = Config._ask_for_data("Enter rss url: ")
+            else:
+                print("Rss wouldn't work. Enter url of feed to bot config!")

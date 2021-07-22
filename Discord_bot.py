@@ -7,6 +7,7 @@ from discord.ext import commands
 from commands.bot_commands import Main_commands
 from commands.chat_commands import Chat_commands
 from commands.poll import Poll
+from components.rss_feed_handle import create_feed_webhook, check_on_rss_feed
 from config.init_config import Config
 
 
@@ -38,6 +39,9 @@ def main():
     cog_list = [Chat_commands, Main_commands, Poll]
     for i in cog_list:
         bot.add_cog(i(bot))
+
+    create_feed_webhook()
+    bot.loop.create_task(check_on_rss_feed())
 
     try:
         bot.run(Config.get_token())
