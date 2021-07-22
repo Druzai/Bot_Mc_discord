@@ -106,7 +106,7 @@ async def start_server(ctx, bot, shut_up=False, IsReaction=False):
         except BaseException:
             pass
     if Config.get_crossplatform_chat() and Config.get_discord_channel_id_for_crossplatform_chat() and \
-            Config.get_webhook_info():
+            Config.get_webhook_chat():
         create_watcher()
         Bot_variables.watcher_of_log_file.start()
     if Bot_variables.progress_bar_time:
@@ -235,7 +235,7 @@ async def server_checkups(bot, always_=True):
             if not Bot_variables.IsServerOn:
                 Bot_variables.IsServerOn = True
             if Config.get_crossplatform_chat() and Config.get_discord_channel_id_for_crossplatform_chat() and \
-                    Config.get_webhook_info():
+                    Config.get_webhook_chat():
                 create_watcher()
                 Bot_variables.watcher_of_log_file.start()
             try:
@@ -339,7 +339,7 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
     _, author_mention = get_author_and_mention(message, bot, False)
     delete_user_message = True
 
-    if not Config.get_discord_channel_id_for_crossplatform_chat() or not Config.get_webhook_info():
+    if not Config.get_discord_channel_id_for_crossplatform_chat() or not Config.get_webhook_chat():
         await send_msg(message.channel, f"{author_mention}, this chat can't work! Crossplatform chat disabled!",
                        True)
     elif not Bot_variables.IsServerOn:

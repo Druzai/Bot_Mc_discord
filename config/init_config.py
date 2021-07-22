@@ -22,7 +22,7 @@ class Bot_variables:
     rcon_pass = None
     progress_bar_time = 0
     watcher_of_log_file = None
-    webhook = None
+    webhook_chat = None
 
 
 class Config:
@@ -109,12 +109,8 @@ class Config:
         Config.save_config()
 
     @staticmethod
-    def get_webhook_info():
-        if Config._config_dict.get("Webhook_url", None) is not None:
-            webhook = Config._config_dict.get("Webhook_url", None)
-            return webhook.split("/")[-2], webhook.split("/")[-1]
-        else:
-            return None, None
+    def get_webhook_chat():
+        return Config._config_dict.get("Webhook_chat_url", None)
 
     @staticmethod
     def get_watcher_refresh_delay():
@@ -547,7 +543,7 @@ class Config:
                 Config._config_dict["Crossplatform_chat"] = True
 
                 Config._set_discord_channel_id_for_crossplatform_chat()
-                Config._set_webhook_info()
+                Config._set_webhook_chat()
                 Config._set_watcher_refresh_delay()
             else:
                 Config._config_dict["Crossplatform_chat"] = False
@@ -563,11 +559,11 @@ class Config:
                 print("Crossplatform chat wouldn't work. To make it work type '%chat <id>' to create link.")
 
     @staticmethod
-    def _set_webhook_info():
-        if Config._config_dict.get("Webhook_url", None) is None:
-            if Config._ask_for_data("Webhook url not found. Would you like to enter it? y/n\n", "y"):
+    def _set_webhook_chat():
+        if Config._config_dict.get("Webhook_chat_url", None) is None:
+            if Config._ask_for_data("Webhook url for crossplatform chat not found. Would you like to enter it? y/n\n", "y"):
                 Config._need_to_rewrite = True
-                Config._config_dict["Webhook_url"] = Config._ask_for_data("Enter webhook url: ")
+                Config._config_dict["Webhook_chat_url"] = Config._ask_for_data("Enter webhook url: ")
             else:
                 print("Crossplatform chat wouldn't work. Create webhook and enter it to bot config!")
 

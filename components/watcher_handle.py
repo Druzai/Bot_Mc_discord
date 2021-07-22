@@ -64,9 +64,8 @@ def create_watcher():
 
     Bot_variables.watcher_of_log_file = Watcher(Path(Config.get_selected_server_list()[0] + "/logs/latest.log"),
                                                 _check_log_file)
-    if Bot_variables.webhook is None:
-        webhook_id, webhook_token = Config.get_webhook_info()
-        Bot_variables.webhook = Webhook.partial(int(webhook_id), webhook_token, adapter=RequestsWebhookAdapter())
+    if Bot_variables.webhook_chat is None:
+        Bot_variables.webhook_chat = Webhook.from_url(url=Config.get_webhook_chat(), adapter=RequestsWebhookAdapter())
 
 
 def _check_log_file():
@@ -86,4 +85,4 @@ def _check_log_file():
         player_nick, player_message = search(r"<([^>]*)>", last_line)[0], \
                                       split(r"<([^>]*)>", last_line, maxsplit=1)[-1].strip()
 
-        Bot_variables.webhook.send(rf"**{player_nick}** {player_message}")  # , username='WEBHOOK_BOT'
+        Bot_variables.webhook_chat.send(rf"**{player_nick}** {player_message}")  # , username='WEBHOOK_BOT'
