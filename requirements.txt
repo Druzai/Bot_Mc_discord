@@ -1,7 +1,7 @@
 cryptography==3.3.2
-discord.py==1.7.2
+discord.py==1.7.3
 mcipc==1.4.0
 pyinstaller==4.0
-vk-api==11.9.0
+vk-api==11.9.4
 psutil==5.8.0
 feedparser==6.0.8
