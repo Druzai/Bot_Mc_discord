@@ -85,14 +85,14 @@ def _check_log_file():
         player_nick, player_message = search(r"<([^>]*)>", last_line)[0], \
                                       split(r"<([^>]*)>", last_line, maxsplit=1)[-1].strip()
         if search(r"@.+", player_message):
-            split_arr = split(r"@.+", player_message)
-            members = {i[1:]: None for i in findall(r"@.+", player_message)}
+            split_arr = split(r"@[^\s]+", player_message)
+            members = {i[1:].lower(): None for i in findall(r"@[^\s]+", player_message)}
             for guild in Bot_variables.bot_for_webhooks.guilds:
                 for member in guild.members:
-                    if member.name in members.keys():
-                        members[member.name] = member
-                    elif member.display_name in members.keys():
-                        members[member.display_name] = member
+                    if member.name.lower() in members.keys():
+                        members[member.name.lower()] = member
+                    elif member.display_name.lower() in members.keys():
+                        members[member.display_name.lower()] = member
             i = 1
             for name, member in members.items():
                 split_arr.insert(i, member.mention if member is not None else f"@{name}")
