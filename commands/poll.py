@@ -1,9 +1,9 @@
 from asyncio import sleep as asleep
-from discord import Embed
-from discord import Color
 from datetime import datetime
-from discord.ext import commands
 from enum import Enum, auto
+
+from discord import Color, Embed
+from discord.ext import commands
 
 
 class Poll(commands.Cog):

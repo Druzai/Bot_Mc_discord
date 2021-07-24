@@ -1,4 +1,5 @@
 import datetime as dt
+import sys
 from ast import literal_eval
 from datetime import datetime
 from json import dump, load, dumps, loads
@@ -41,6 +42,22 @@ class Config:
     _op_keys_name = "op_keys"
     _op_log_name = "op_log.txt"
     _id_to_nicks_name = "id-to-nicks.json"
+
+    @staticmethod
+    def get_inside_path():
+        """
+        Get bot current path for accessing files that added via pyinstaller --add-data
+
+        Return
+        ----------
+        bot_path: str
+            bot pyinstaller path if there is one
+        """
+        if getattr(sys, 'frozen', False):
+            return sys._MEIPASS
+        elif __file__:
+            return Config._current_bot_path
+
 
     @staticmethod
     def read_config():
