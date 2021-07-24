@@ -41,6 +41,8 @@ ____________
 * [cryptography](https://github.com/pyca/cryptography) - lib for encrypting necessary data to config file
 * [mcipc](https://github.com/conqp/mcipc) - lib for easy using query and rcon to connect to minecraft server
 * [pyinstaller](https://github.com/pyinstaller/pyinstaller) - lib to build project to executable file, you can use another one if you can't for some reason, but my makefile works only with this library
+* [psutil](https://github.com/giampaolo/psutil) - lib to check maincraft process and stop it if needed
+* [feedparser](https://github.com/kurtmckee/feedparser) - lib to parse RSS feed files
 ### Installation
 Type in command prompt, you must have [requirements.txt](requirements.txt) in root folder of the project.
 ```
