@@ -1,5 +1,6 @@
 from os import system
 from sys import platform
+from traceback import print_exc
 
 from discord import Intents
 from discord.errors import LoginFailure
@@ -21,7 +22,6 @@ from config.init_config import Config, Bot_variables
 #  Сделать отправку об выключении/перезагрузке через tellraw тоже
 #  Поработать над упоминаниями на майн и из майна, Regex @\.+ | в процессе + id-to-nicks.json
 #  Переработать конфиг в классы и сделать сохранение в yaml
-#  ! Перекинуть bot.ico в images !
 #  Мб добавить вывод игрок подкл, откл и причина
 # [23:53:40] [Server thread/INFO]: jokobaba lost connection: Timed out
 # [23:53:40] [Server thread/INFO]: jokobaba left the game
@@ -63,11 +63,13 @@ def main():
         print("Bot/Discord Error: Your token is wrong.")
     except BaseException:
         print("Bot/Discord Error: Something wrong :)")
+        print_exc()
+    finally:
+        if platform == "linux" or platform == "linux2":
+            system("read")
+        elif platform == "win32":
+            system("pause")
 
 
 if __name__ == '__main__':
     main()
-    if platform == "linux" or platform == "linux2":
-        system("read")
-    elif platform == "win32":
-        system("pause")
