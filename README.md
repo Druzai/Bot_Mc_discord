@@ -1,5 +1,5 @@
 <p align="center">
-   <img src="bot.ico">
+   <img src="images/bot.ico">
 </p>
 
 <h1 align="center">
