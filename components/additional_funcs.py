@@ -1,4 +1,5 @@
 from asyncio import sleep as asleep
+from contextlib import contextmanager
 from datetime import datetime
 from os import chdir, system
 from pathlib import Path
@@ -369,9 +370,7 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
         if on_edit:
             result_before = _handle_custom_emojis(before_message)
             result_before = await _handle_mentions_in_message(before_message, result_before)
-            with Client_q(Config.get_local_address(), Bot_variables.port_query, timeout=1) as cl_r:
-                version = cl_r.full_stats.version
-            if float(version) >= 1.16:
+            if float(get_server_version()) >= 1.16:
                 res_obj.append({"text": "*", "color": "gold",
                                 "hoverEvent": {"action": "show_text", "contents": result_before.get("content")}})
             else:
@@ -386,6 +385,18 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
 
         if answ == '':
             delete_user_message = False
+            nicks = _search_mentions_in_message(result_msg.get("content"))
+            if len(nicks) > 0:
+                try:
+                    with Client_r(Config.get_local_address(), Bot_variables.port_rcon, timeout=1) as cl_r:
+                        cl_r.login(Bot_variables.rcon_pass)
+                        with times(500, 2500, 1500, cl_r):
+                            for nick in nicks:
+                                announce(nick,
+                                         f"@{message.author.display_name} -> @{nick if nick != '@a' else 'everyone'}",
+                                         cl_r)
+                except BaseException:
+                    pass
         else:
             await send_msg(message.channel, f"{author_mention}, {answ.lower()}!", True)
 
@@ -443,3 +454,57 @@ async def _handle_mentions_in_message(message, result_msg):
             else:
                 result_msg[key] = "".join(temp_split)
     return result_msg
+
+
+def _search_mentions_in_message(result_msg) -> list:
+    players_nicks_minecraft = get_server_players()
+    players_nicks_from_discord = [i[1:] for i in findall(r"@.+", result_msg)]
+    nicks = []
+    for nick in players_nicks_from_discord:
+        if nick in players_nicks_minecraft:
+            nicks.append(nick)
+        elif nick == "everyone":
+            nicks.clear()
+            nicks.append("@a")
+            break
+    return nicks
+
+
+def get_server_version() -> str:
+    with Client_q(Config.get_local_address(), Bot_variables.port_query, timeout=1) as cl_r:
+        version = cl_r.full_stats.version
+    return version
+
+
+def get_server_players() -> list:
+    with Client_q(Config.get_local_address(), Bot_variables.port_query, timeout=1) as cl_r:
+        players = cl_r.full_stats.players
+    return players
+
+
+@contextmanager
+def times(fade_in, duration, fade_out, rcon_client):
+    rcon_client.run(f"title @a times {fade_in} {duration} {fade_out}")
+    yield
+    rcon_client.run("title @a reset")
+
+
+def announce(player, message, rcon_client):
+    if float(get_server_version()) >= 1.11:
+        rcon_client.run(f'title {player} actionbar ' + '{' + f'"text":"{message}"' + ',"bold":true,"color":"gold"}')
+    else:
+        rcon_client.run(f'title {player} title ' + '{"text":" "}')
+        rcon_client.run(f'title {player} subtitle ' + '{' + f'"text":"{message}"' + ',"color":"gold"}')
+    rcon_client.run(playsound(player, "minecraft:entity.arrow.hit_player", "player", 1, 0.75))
+
+
+def playsound(name, sound, category="master", volume=1, pitch=1):
+    return f"/execute as {name} at @s run playsound {sound} {category} @s ~ ~ ~ {volume} {pitch} 1"
+
+
+def playmusic(name, sound):
+    return playsound(name, sound, "music", 99999999999999999999999999999999999999)
+
+
+def stopmusic(sound, name="@a"):
+    return f"/stopsound {name} music {sound}"
