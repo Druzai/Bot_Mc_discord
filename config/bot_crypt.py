@@ -6,16 +6,17 @@ from cryptography.fernet import Fernet
 class Crypt:
     _key = None
 
-    @staticmethod
-    def init():
+    @classmethod
+    def _init(cls):
         if not path.isfile('key'):
             key = Fernet.generate_key()
             with open("key", "wb") as key_file:
                 key_file.write(key)
-        Crypt._key = open("key", "rb").read()  # Key to decrypt
+        with open("key", "rb") as key:
+            cls._key = key.read()  # Key to decrypt
 
-    @staticmethod
-    def get_crypt():
-        if Crypt._key is None:
-            Crypt.init()
-        return Fernet(Crypt._key)  # Initialized crypt module with key
+    @classmethod
+    def get_crypt(cls):
+        if cls._key is None:
+            cls._init()
+        return Fernet(cls._key)  # Initialized crypt module with key
