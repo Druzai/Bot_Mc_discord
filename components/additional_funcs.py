@@ -460,9 +460,9 @@ def _handle_urls_in_message(result_msg, only_replace_links=False):
             i = 1
             for link in temp_arr:
                 if only_replace_links:
-                    temp_split.insert(i, "☞✉" if len(link) > 45 else link)
+                    temp_split.insert(i, shorten_url(link, 30))
                 else:
-                    temp_split.insert(i, ("☞✉" if len(link) > 45 else link, link))
+                    temp_split.insert(i, (shorten_url(link, 30), link))
                 i += 2
             if isinstance(ms, list):
                 result_msg[key] = [ms[0], ms[1], "".join(temp_split) if only_replace_links else temp_split]
@@ -515,6 +515,13 @@ def get_server_players() -> list:
     with Client_q(Config.get_local_address(), Bot_variables.port_query, timeout=1) as cl_r:
         players = cl_r.full_stats.players
     return players
+
+
+def shorten_url(url: str, max_length: int):
+    if len(url) > max_length:
+        return url[:max_length] + "..."
+    else:
+        return url
 
 
 @contextmanager
