@@ -29,8 +29,7 @@ class Chat_commands(commands.Cog):
         await self._bot.change_presence(activity=Activity(type=ActivityType.watching, name="nsfw"))
         print("Bot is ready!")
         print("Starting server check-ups")
-        # self._bot.loop.create_task(server_checkups(bot=self._bot))
-        await server_checkups(bot=self._bot)
+        Bot_variables.server_checkups_task = self._bot.loop.create_task(server_checkups(self._bot))
 
     """
     @commands.command(pass_context=True)

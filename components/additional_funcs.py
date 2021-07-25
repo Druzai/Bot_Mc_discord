@@ -212,7 +212,7 @@ def kill_server():
     Bot_variables.server_start_time = None
 
 
-async def server_checkups(bot, always_=True):
+async def server_checkups(bot, always=True):
     while True:
         try:
             with Client_q(Config.get_local_address(), Bot_variables.port_query, timeout=1) as cl_q:
@@ -262,7 +262,7 @@ async def server_checkups(bot, always_=True):
                 await bot.change_presence(activity=Activity(type=ActivityType.listening,
                                                             name="Server" + (" thinking..." if len(
                                                                 get_list_of_processes()) != 0 else "")))
-            if always_ and Config.get_forceload() and not Bot_variables.IsStopping \
+            if always and Config.get_forceload() and not Bot_variables.IsStopping \
                     and not Bot_variables.IsLoading and not Bot_variables.IsRestarting:
                 for guild in bot.guilds:
                     for channel in guild.channels:
@@ -275,9 +275,9 @@ async def server_checkups(bot, always_=True):
                             break
                         except BaseException:
                             pass
-        if Config.get_await_time_check_ups() > 0 and always_:
+        if Config.get_await_time_check_ups() > 0 and always:
             await asleep(Config.get_await_time_check_ups())
-        if not always_:
+        if not always:
             break
 
 

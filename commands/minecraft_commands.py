@@ -1,4 +1,5 @@
-from asyncio import sleep as asleep
+from asyncio import sleep as asleep, CancelledError
+from contextlib import suppress
 from datetime import datetime
 from os import listdir
 from pathlib import Path
@@ -425,8 +426,11 @@ class Minecraft_commands(commands.Cog):
                 elif payload.emoji.name == self._ansii_com.get("list"):
                     await self.list(channel, IsReaction=True)
                 elif payload.emoji.name == self._ansii_com.get("update"):
-                    await server_checkups(bot=self._bot, always_=True)
-                    # TODO: rewrite this line, serv_checkups doesn't proceed after this command! For now set to True...
+                    if Bot_variables.server_checkups_task is not None:
+                        Bot_variables.server_checkups_task.cancel()
+                        with suppress(CancelledError):
+                            await Bot_variables.server_checkups_task  # await for task cancellation
+                    Bot_variables.server_checkups_task = self._bot.loop.create_task(server_checkups(self._bot))
                     return
                 else:
                     if Config.get_role() not in (e.name for e in payload.member.roles):

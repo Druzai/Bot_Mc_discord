@@ -12,6 +12,7 @@ from config.bot_crypt import Crypt
 
 class Bot_variables:
     react_auth = ""  # Variable for situation when command calls via reactions, represents author that added reaction
+    server_checkups_task = None
     server_start_time = None
     IsServerOn = False
     IsLoading = False
@@ -57,7 +58,6 @@ class Config:
             return sys._MEIPASS
         elif __file__:
             return Config._current_bot_path
-
 
     @staticmethod
     def read_config():
@@ -632,7 +632,6 @@ class Config:
             else:
                 Config._config_dict["Rss_feed"] = False
                 print("Rss feed wouldn't work.")
-
 
     @staticmethod
     def _set_webhook_rss():
