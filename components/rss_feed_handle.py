@@ -1,8 +1,8 @@
+from asyncio import sleep as asleep
 from datetime import datetime
 
-from feedparser import parse
-from asyncio import sleep as asleep
 from discord import Webhook, RequestsWebhookAdapter
+from feedparser import parse
 
 from config.init_config import Config, Bot_variables
 

@@ -1,5 +1,5 @@
 from os import system
-from sys import platform
+from sys import platform, exit
 from traceback import print_exc
 
 from discord import Intents
@@ -20,6 +20,8 @@ from config.init_config import Config, Bot_variables
 #  Remove opcodes, assoc already does that, replace with counters, save it in StartStopStates.json
 #  Доделать пересыльный чат: экранизацию посмотреть
 #  Сделать отправку об выключении/перезагрузке через tellraw тоже
+#  https://github.com/MyTheValentinus/minecraftTellrawGenerator
+#  Сделать ограничения на использование комманд в дме и на серве
 #  Поработать над упоминаниями на майн и из майна, Regex @\.+ | в процессе + id-to-nicks.json
 #  Переработать конфиг в классы и сделать сохранение в yaml
 #  Мб добавить вывод игрок подкл, откл и причина
@@ -32,6 +34,7 @@ from config.init_config import Config, Bot_variables
 #  to rewrite webhooks
 #  + add webhook creating/modifying (channel_id in https://discord.com/developers/docs/resources/webhook#modify-webhook)
 #  replace reactions with buttons in menu and poll
+#  https://github.com/Rapptz/discord.py/blob/master/examples/views/persistent.py
 #  maybe add slash commands via separate `Slash` Cog
 
 
@@ -69,6 +72,7 @@ def main():
             system("read")
         elif platform == "win32":
             system("pause")
+        exit(0)
 
 
 if __name__ == '__main__':
