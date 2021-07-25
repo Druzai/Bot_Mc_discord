@@ -84,8 +84,9 @@ async def start_server(ctx, bot, shut_up=False, IsReaction=False):
     await asleep(5)
     check_time = datetime.now()
     while True:
-        if (datetime.now() - check_time).seconds > 1000:
+        if len(get_list_of_processes()) == 0:
             await send_msg(ctx, "```Error while loading server```", IsReaction)
+            await bot.change_presence(activity=Activity(type=ActivityType.listening, name="Server"))
             Bot_variables.IsLoading = False
             if Bot_variables.IsRestarting:
                 Bot_variables.IsRestarting = False
@@ -137,8 +138,7 @@ async def start_server(ctx, bot, shut_up=False, IsReaction=False):
 async def stop_server(ctx, bot, How_many_sec=10, IsRestart=False, IsReaction=False):
     Bot_variables.IsStopping = True
     print("Stopping server")
-    await send_msg(ctx, "```Stopping server.......\nPlease wait " + str(How_many_sec) + " sec.```",
-                   IsReaction)
+    await send_msg(ctx, "```Stopping server.......\nPlease wait " + str(How_many_sec) + " sec.```", IsReaction)
     try:
         with Client_r(Config.get_local_address(), Bot_variables.port_rcon, timeout=1) as cl_r:
             cl_r.login(Bot_variables.rcon_pass)
@@ -161,10 +161,15 @@ async def stop_server(ctx, bot, How_many_sec=10, IsRestart=False, IsReaction=Fal
                     await asleep(w)
             cl_r.run("stop")
     except BaseException:
-        print("Exception: Couldn't connect to server, so killing it now...")
-        await send_msg(ctx, "Couldn't connect to server to shut it down! Killing it now...", IsReaction)
-        Bot_variables.IsStopping = False
-        kill_server()
+        if len(get_list_of_processes()) == 0:
+            print("Exception: Couldn't connect to server, because it's stopped")
+            await send_msg(ctx, "Couldn't connect to server to shut it down! Server stopped...", IsReaction)
+            Bot_variables.IsStopping = False
+        else:
+            print("Exception: Couldn't connect to server, so killing it now...")
+            await send_msg(ctx, "Couldn't connect to server to shut it down! Killing it now...", IsReaction)
+            Bot_variables.IsStopping = False
+            kill_server()
         return
     if Bot_variables.watcher_of_log_file.isrunning():
         Bot_variables.watcher_of_log_file.stop()
@@ -334,8 +339,8 @@ async def send_error(ctx, bot, error, IsReaction=False):
 
 async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, on_edit=False, before_message=None):
     if message.author == bot.user or message.content.startswith(Config.get_prefix()) or str(
-            message.author.discriminator) == "0000" or len(message.content) == 0 or \
-            message.channel.id != int(Config.get_discord_channel_id_for_crossplatform_chat()):
+            message.author.discriminator) == "0000" or (len(message.content) == 0 and len(message.attachments) == 0) \
+            or message.channel.id != int(Config.get_discord_channel_id_for_crossplatform_chat()):
         return
 
     _, author_mention = get_author_and_mention(message, bot, False)
@@ -353,9 +358,14 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
     elif Bot_variables.IsLoading:
         await send_msg(message.channel, f"{author_mention}, server is loading!", True)
     else:
+        if len(message.attachments) != 0:
+            for attachment in message.attachments:
+                if len(message.content) != 0:
+                    message.content += " "
+                message.content += attachment.url
         result_msg = _handle_custom_emojis(message)
         result_msg = await _handle_reply_in_message(message, result_msg)
-        result_msg = await _handle_mentions_in_message(message, result_msg)
+        result_msg = _handle_urls_in_message(result_msg)
 
         # Building object for tellraw
         res_obj = ["", {"text": "<"}, {"text": message.author.display_name, "color": "dark_gray"},
@@ -363,20 +373,20 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
         if result_msg.get("reply", None) is not None:
             if isinstance(result_msg.get("reply"), list):
                 res_obj.extend([{"text": result_msg.get("reply")[0], "color": "gray"},
-                                {"text": result_msg.get("reply")[1], "color": "dark_gray"},
-                                {"text": result_msg.get("reply")[2], "color": "gray"}])
+                                {"text": result_msg.get("reply")[1], "color": "dark_gray"}])
+                _build_if_urls_in_message(res_obj, result_msg.get("reply")[2], "gray")
             else:
-                res_obj.append({"text": result_msg.get("reply"), "color": "gray"})
+                _build_if_urls_in_message(res_obj, result_msg.get("reply"), "gray")
         if on_edit:
             result_before = _handle_custom_emojis(before_message)
-            result_before = await _handle_mentions_in_message(before_message, result_before)
+            result_before = _handle_urls_in_message(result_before, True)
             if float(get_server_version()) >= 1.16:
                 res_obj.append({"text": "*", "color": "gold",
                                 "hoverEvent": {"action": "show_text", "contents": result_before.get("content")}})
             else:
                 res_obj.append({"text": "*", "color": "gold",
                                 "hoverEvent": {"action": "show_text", "value": result_before.get("content")}})
-        res_obj.append({"text": result_msg.get("content")})
+        _build_if_urls_in_message(res_obj, result_msg.get("content"), None)
 
         with Client_r(Config.get_local_address(), Bot_variables.port_rcon, timeout=1) as cl_r:
             cl_r.login(Bot_variables.rcon_pass)
@@ -385,7 +395,7 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
 
         if answ == '':
             delete_user_message = False
-            nicks = _search_mentions_in_message(result_msg.get("content"))
+            nicks = _search_mentions_in_message(message)
             if len(nicks) > 0:
                 try:
                     with Client_r(Config.get_local_address(), Bot_variables.port_rcon, timeout=1) as cl_r:
@@ -406,67 +416,92 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
 
 def _handle_custom_emojis(message):
     result_msg = {}
-    if search(r"<:\w+:\d+>", message.content.strip()):
-        temp_split = split(r"<:\w+:\d+>", message.content.strip())
-        temp_arr = list(findall(r"<:\w+:\d+>", message.content.strip()))
+    content = message.clean_content
+    if search(r"<:\w+:\d+>", content.replace("​", "").strip()):
+        temp_split = split(r"<:\w+:\d+>", content.replace("​", "").strip())
+        temp_arr = list(findall(r"<:\w+:\d+>", content.replace("​", "").strip()))
         i = 1
         for emoji in temp_arr:
             temp_split.insert(i, findall(r"\w+", emoji)[0])
             i += 2
         result_msg["content"] = "".join(temp_split)
     else:
-        result_msg["content"] = message.content.strip()
+        result_msg["content"] = content.replace("​", "").strip()
     return result_msg
 
 
 async def _handle_reply_in_message(message, result_msg):
     if message.reference is not None:
         reply_msg = message.reference.resolved
+        cnt = reply_msg.clean_content.strip()
+        cnt = cnt.replace("​", "")
         if reply_msg.author.discriminator == "0000":
             # reply to minecraft player
-            cnt = reply_msg.content.strip()
             cnt = cnt.replace("**<", "<").replace(">**", ">")
             result_msg["reply"] = f"\n -> {cnt}\n"
         else:
             # Reply to discord user
             nick = (await message.guild.fetch_member(reply_msg.author.id)).display_name
-            result_msg["reply"] = ["\n -> <", nick, f"> {reply_msg.content.strip()}\n"]
+            result_msg["reply"] = ["\n -> <", nick, f"> {cnt}\n"]
     return result_msg
 
 
-async def _handle_mentions_in_message(message, result_msg):
+def _handle_urls_in_message(result_msg, only_replace_links=False):
     for key, ms in result_msg.items():
         if isinstance(ms, list):
             msg = ms.copy()
             msg = msg[-1]
         else:
             msg = ms
-        if search(r"<@!\d+>", msg):
-            temp_split = split(r"<@!\d+>", msg)
-            temp_arr = list(findall(r"<@!\d+>", msg))
+        url_regex = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|%[0-9a-fA-F][0-9a-fA-F])+'
+        if search(url_regex, msg):
+            temp_split = split(url_regex, msg)
+            temp_arr = list(findall(url_regex, msg))
             i = 1
-            for mention in temp_arr:
-                ins = "@" + (await message.guild.fetch_member(int(findall(r"\d+", mention)[0]))).display_name
-                temp_split.insert(i, ins)
+            for link in temp_arr:
+                if only_replace_links:
+                    temp_split.insert(i, "☞✉" if len(link) > 45 else link)
+                else:
+                    temp_split.insert(i, ("☞✉" if len(link) > 45 else link, link))
                 i += 2
             if isinstance(ms, list):
-                result_msg[key] = [ms[0], ms[1], "".join(temp_split)]
+                result_msg[key] = [ms[0], ms[1], "".join(temp_split) if only_replace_links else temp_split]
             else:
-                result_msg[key] = "".join(temp_split)
+                result_msg[key] = "".join(temp_split) if only_replace_links else temp_split
     return result_msg
 
 
-def _search_mentions_in_message(result_msg) -> list:
+def _build_if_urls_in_message(res_obj, obj, default_text_color):
+    if isinstance(obj, list):
+        for elem in obj:
+            if isinstance(elem, tuple):
+                res_obj.append({"text": elem[0], "underlined": True, "color": "blue",
+                                "clickEvent": {"action": "open_url", "value": elem[1]}})
+            elif isinstance(elem, str):
+                if default_text_color is not None:
+                    res_obj.append({"text": elem, "color": default_text_color})
+                else:
+                    res_obj.append({"text": elem})
+    else:
+        if default_text_color is not None:
+            res_obj.append({"text": obj, "color": default_text_color})
+        else:
+            res_obj.append({"text": obj})
+
+
+def _search_mentions_in_message(message) -> list:
+    if len(message.mentions):
+        return []
+
     players_nicks_minecraft = get_server_players()
-    players_nicks_from_discord = [i[1:] for i in findall(r"@.+", result_msg)]
+    players_nicks_from_discord = [i.display_name if i.display_name else i.name for i in message.mentions]
     nicks = []
-    for nick in players_nicks_from_discord:
-        if nick in players_nicks_minecraft:
-            nicks.append(nick)
-        elif nick == "everyone":
-            nicks.clear()
-            nicks.append("@a")
-            break
+    if message.mention_everyone:
+        nicks.append("@a")
+    else:
+        for nick in players_nicks_from_discord:
+            if nick in players_nicks_minecraft:
+                nicks.append(nick)
     return nicks
 
 
