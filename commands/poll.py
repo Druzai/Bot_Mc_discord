@@ -17,7 +17,7 @@ class Poll(commands.Cog):
         self.__bot = bot
 
     # TODO: Make it useable with stop command, give to command some strings!
-    async def run(self, ctx, needForVoting=2, neededRole=None, timeout=60 * 60, remove_logs_after=0):
+    async def run(self, ctx, needForVoting=2, neededRole=None, timeout=60 * 60, remove_logs_after=None):
         start_msg = await ctx.send("@everyone, this man " + ctx.author.mention +
                                    " trying to delete some history of this channel. Will you let that happen?" +
                                    " To win the poll need " + str(needForVoting) + " votes! So keep it up! I'm waiting")

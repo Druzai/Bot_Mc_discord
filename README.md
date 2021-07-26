@@ -34,6 +34,8 @@ Also to enable crossplatform chat you need to enter in bot setup channel id (or 
 * For Linux required [screen](https://linuxize.com/post/how-to-use-linux-screen/) command
 * Minecraft server not lower than version 1.0.0
 * You must enable query and rcon, its ports & rcon password in server.properties!
+#### Required Bot Permissions
+* Enable the `Server Members Intent` in section `Privileged Gateway Intents` on the Bot tab of your bot's page on the Discord developer's portal.
 ____________
 > Libraries for Python: 
 * [discord](https://github.com/Rapptz/discord.py) - main lib to run bot
