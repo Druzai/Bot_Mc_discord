@@ -39,6 +39,8 @@ class Chat_commands(commands.Cog):
     """
 
     @commands.command(pass_context=True)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
     @role.has_role_or_default()
     async def chat(self, ctx, channel_id=None):
         if not Config.get_crossplatform_chat():
@@ -87,6 +89,7 @@ class Chat_commands(commands.Cog):
         await handle_message_for_chat(after, self._bot, False, on_edit=True, before_message=before)
 
     @commands.command(pass_context=True)
+    @commands.bot_has_permissions(send_messages=True, embed_links=True, view_channel=True)
     async def say(self, ctx):
         """Петросян"""
         vk_login, vk_pass = Config.get_vk_credentials()
@@ -152,6 +155,8 @@ class Chat_commands(commands.Cog):
             await ctx.send(embed=e, file=file)
 
     @commands.command(pass_context=True)
+    @commands.bot_has_permissions(manage_messages=True, send_messages=True, embed_links=True, view_channel=True)
+    @commands.guild_only()
     async def help(self, ctx):
         await ctx.channel.purge(limit=1)
         emb = discord.Embed(title=f'Список всех команд (через {Config.get_prefix()})',
@@ -184,7 +189,9 @@ class Chat_commands(commands.Cog):
         await ctx.send(embed=emb)
 
     @commands.command(pass_context=True, aliases=["cls"])
-    # @commands.has_permissions(administrator=True)
+    @commands.bot_has_permissions(manage_messages=True, send_messages=True, mention_everyone=True,
+                                  embed_links=True, read_message_history=True, view_channel=True)
+    @commands.guild_only()
     async def clear(self, ctx, count=1):  # TODO: add arg all to clear all msgs in channel
         message_created_time = ""
         try:

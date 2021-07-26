@@ -333,6 +333,9 @@ async def send_error(ctx, bot, error, IsReaction=False):
     elif isinstance(error, commands.DisabledCommand):
         print(f'{author} ввёл отключённую команду')
         await send_msg(ctx, f'{author_mention}, вы ввели отлючённую команду', IsReaction)
+    elif isinstance(error, commands.NoPrivateMessage):
+        print(f'{author} ввёл комманду, работающую только в гильдии')
+        await send_msg(ctx, f'{author_mention}, введённая команда работает только на сервере', IsReaction)
     else:
         print(", ".join(error.args))
         await send_msg(ctx, ", ".join(error.args), IsReaction)

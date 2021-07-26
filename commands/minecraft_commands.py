@@ -24,6 +24,7 @@ class Minecraft_commands(commands.Cog):
         self._bot = bot
 
     @commands.command(pass_context=True)
+    @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
     async def status(self, ctx, IsReaction=False):
         """Shows server status"""
         states = "\n"
@@ -69,6 +70,7 @@ class Minecraft_commands(commands.Cog):
                            Config.get_selected_server_list()[1] + states + "```", IsReaction)
 
     @commands.command(pass_context=True, aliases=["ls"])
+    @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
     async def list(self, ctx, command="-u", IsReaction=False):
         """Shows list of players"""
         if command == "-u":
@@ -88,6 +90,8 @@ class Minecraft_commands(commands.Cog):
             await send_error(ctx, self._bot, commands.UserInputError(), IsReaction=IsReaction)
 
     @commands.command(pass_context=True)
+    @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
+    @commands.guild_only()
     @role.has_role_or_default()
     async def start(self, ctx, IsReaction=False):
         """Start server"""
@@ -97,6 +101,8 @@ class Minecraft_commands(commands.Cog):
             await send_status(ctx, IsReaction=IsReaction)
 
     @commands.command(pass_context=True)
+    @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
+    @commands.guild_only()
     @role.has_role_or_default()
     # TODO: add poll when there's more than 0 player on server, add yes - no in reactions! Do this to make approval
     async def stop(self, ctx, command="0", IsReaction=False):
@@ -116,6 +122,8 @@ class Minecraft_commands(commands.Cog):
             await send_error(ctx, self._bot, commands.UserInputError(), IsReaction=IsReaction)
 
     @commands.command(pass_context=True)
+    @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
+    @commands.guild_only()
     @role.has_role_or_default()
     async def restart(self, ctx, command="0", IsReaction=False):
         """Restart server"""
@@ -135,6 +143,8 @@ class Minecraft_commands(commands.Cog):
             await send_error(ctx, self._bot, commands.UserInputError(), IsReaction=IsReaction)
 
     @commands.command(pass_context=True)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
     @role.has_role_or_default()
     async def op(self, ctx, arg1, arg2, *args):
         """Op command
@@ -231,7 +241,8 @@ class Minecraft_commands(commands.Cog):
             await send_status(ctx)
 
     @commands.command(pass_context=True)
-    # @role.has_role_if_given_in_config()
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
     @commands.has_permissions(administrator=True)
     async def assoc(self, ctx, arg1: str, arg2, arg3):
         """
@@ -266,7 +277,7 @@ class Minecraft_commands(commands.Cog):
             await ctx.send("Wrong 1-st argument! You can mention ONLY members")
 
     @commands.command(pass_context=True)
-    # @role.has_role_if_given_in_config()
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
     async def codes(self, ctx, arg1):
         member = ctx.author
         id = str(member.id)
@@ -295,6 +306,8 @@ class Minecraft_commands(commands.Cog):
                 await member.send('You shall not PASS! Ты не владеешь данным ником :ambulance:')
 
     @commands.command(pass_context=True, aliases=["fl"])
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
     @role.has_role_or_default()
     async def forceload(self, ctx, command=""):
         if command == "on" and not Config.get_forceload():
@@ -312,6 +325,8 @@ class Minecraft_commands(commands.Cog):
             raise commands.UserInputError()
 
     @commands.command(pass_context=True, aliases=["wl"])
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
     @role.has_role_or_default()
     async def whitelist(self, ctx, *args):
         if len(args) and args[0] in ["add", "del", "list", "on", "off", "reload"]:
@@ -348,6 +363,8 @@ class Minecraft_commands(commands.Cog):
             raise commands.UserInputError()
 
     @commands.command(pass_context=True, aliases=["servs"])
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
     @role.has_role_or_default()
     async def servers(self, ctx, *args):
         if len(args) and args[0] in ["list", "select", "show"]:
@@ -393,6 +410,9 @@ class Minecraft_commands(commands.Cog):
             raise commands.UserInputError()
 
     @commands.command(pass_context=True)
+    @commands.bot_has_permissions(manage_messages=True, send_messages=True,
+                                  embed_links=True, add_reactions=True, view_channel=True)
+    @commands.guild_only()
     @role.has_role_or_default()
     async def menu(self, ctx):
         await ctx.channel.purge(limit=1)
