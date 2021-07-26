@@ -13,6 +13,7 @@ from discord.ext import commands
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r
 from psutil import process_iter, NoSuchProcess
+from requests import post as req_post
 
 from components.watcher_handle import create_watcher
 from config.init_config import Config, Bot_variables
@@ -358,14 +359,9 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
     elif Bot_variables.IsLoading:
         await send_msg(message.channel, f"{author_mention}, server is loading!", True)
     else:
-        if len(message.attachments) != 0:
-            for attachment in message.attachments:
-                if len(message.content) != 0:
-                    message.content += " "
-                message.content += attachment.url
         result_msg = _handle_custom_emojis(message)
         result_msg = await _handle_reply_in_message(message, result_msg)
-        result_msg = _handle_urls_in_message(result_msg)
+        result_msg = _handle_urls_and_attachments_in_message(result_msg, message)
 
         # Building object for tellraw
         res_obj = ["", {"text": "<"}, {"text": message.author.display_name, "color": "dark_gray"},
@@ -379,7 +375,7 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
                 _build_if_urls_in_message(res_obj, result_msg.get("reply"), "gray")
         if on_edit:
             result_before = _handle_custom_emojis(before_message)
-            result_before = _handle_urls_in_message(result_before, True)
+            result_before = _handle_urls_and_attachments_in_message(result_before, before_message, True)
             if float(get_server_version()) >= 1.16:
                 res_obj.append({"text": "*", "color": "gold",
                                 "hoverEvent": {"action": "show_text", "contents": result_before.get("content")}})
@@ -438,21 +434,24 @@ async def _handle_reply_in_message(message, result_msg):
         if reply_msg.author.discriminator == "0000":
             # reply to minecraft player
             cnt = cnt.replace("**<", "<").replace(">**", ">")
-            result_msg["reply"] = f"\n -> {cnt}\n"
+            result_msg["reply"] = f"\n -> {cnt}"
         else:
             # Reply to discord user
             nick = (await message.guild.fetch_member(reply_msg.author.id)).display_name
-            result_msg["reply"] = ["\n -> <", nick, f"> {cnt}\n"]
+            result_msg["reply"] = ["\n -> <", nick, f"> {cnt}"]
     return result_msg
 
 
-def _handle_urls_in_message(result_msg, only_replace_links=False):
+def _handle_urls_and_attachments_in_message(result_msg, message, only_replace_links=False):
+    attachments = _handle_attachments_in_message(message)
     for key, ms in result_msg.items():
         if isinstance(ms, list):
             msg = ms.copy()
             msg = msg[-1]
         else:
             msg = ms
+
+        temp_split = []
         url_regex = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|%[0-9a-fA-F][0-9a-fA-F])+'
         if search(url_regex, msg):
             temp_split = split(url_regex, msg)
@@ -460,15 +459,65 @@ def _handle_urls_in_message(result_msg, only_replace_links=False):
             i = 1
             for link in temp_arr:
                 if only_replace_links:
-                    temp_split.insert(i, shorten_url(link, 30))
+                    temp_split.insert(i,
+                                      shorten_url(link, 30) if "tenor" not in link and "view" not in link else "[gif]")
                 else:
-                    temp_split.insert(i, (shorten_url(link, 30), link))
+                    temp_split.insert(i,
+                                      (shorten_url(link, 30) if "tenor" not in link and "view" not in link else "[gif]",
+                                       link if len(link) < 257 else get_clck_ru_url(link)))
                 i += 2
-            if isinstance(ms, list):
-                result_msg[key] = [ms[0], ms[1], "".join(temp_split) if only_replace_links else temp_split]
-            else:
-                result_msg[key] = "".join(temp_split) if only_replace_links else temp_split
+        else:
+            temp_split.append(msg)
+
+        if attachments.get(key, None) is not None and len(attachments[key]) > 0:
+            for i in attachments[key]:
+                if (key == "content" and len("".join(temp_split)) != 0) or \
+                        (key == "reply" and "".join(temp_split) != "> "):
+                    temp_split.append(" ")
+                if only_replace_links:
+                    temp_split.append(i[0])
+                else:
+                    temp_split.append(i)
+
+        if key == "reply":
+            temp_split.append("\n")
+
+        if isinstance(ms, list):
+            result_msg[key] = [ms[0], ms[1], "".join(temp_split) if only_replace_links else temp_split]
+        else:
+            result_msg[key] = "".join(temp_split) if only_replace_links else temp_split
     return result_msg
+
+
+def _handle_attachments_in_message(message):
+    attachments = {}
+    messages = [message]
+    if message.reference is not None:
+        messages.append(message.reference.resolved)
+    for i in range(len(messages)):
+        if len(messages[i].attachments) != 0:
+            if i == 0:
+                attachments["content"] = []
+                iattach = attachments["content"]
+            else:
+                attachments["reply"] = []
+                iattach = attachments["reply"]
+            for attachment in messages[i].attachments:
+                if attachment.content_type is None:
+                    a_type = "[file]"
+                else:
+                    if "image" in attachment.content_type:
+                        if "image/gif" in attachment.content_type:
+                            a_type = "[gif]"
+                        else:
+                            a_type = "[img]"
+                    elif "video" in attachment.content_type or "audio" in attachment.content_type:
+                        a_type = f"[{attachment.content_type.split('/')[-1]}]"
+                    else:
+                        a_type = "[file]"
+                iattach.append((a_type,
+                                attachment.url if len(attachment.url) < 257 else get_clck_ru_url(attachment.url)))
+    return attachments
 
 
 def _build_if_urls_in_message(res_obj, obj, default_text_color):
@@ -522,6 +571,10 @@ def shorten_url(url: str, max_length: int):
         return url[:max_length] + "..."
     else:
         return url
+
+
+def get_clck_ru_url(url: str):
+    return req_post("https://clck.ru/--", params={"url": url}).text
 
 
 @contextmanager
