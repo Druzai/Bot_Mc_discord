@@ -52,8 +52,15 @@ pip install -r requirements.txt
 ```
 ### Build
 Type in command prompt in root directory of the project to build it.
+
+* Windows
 ```
-pyinstaller -F --icon=bot.ico --distpath=./ Discord_bot.py
+pyinstaller -F --icon=images/bot.ico --add-data "images\sad_dog.jpg;images" --distpath=./ Discord_bot.py
+```
+
+* Linux
+```
+pyinstaller -F --add-data "images/sad_dog.jpg:images" --distpath=./ Discord_bot.py
 ```
 Or using [make utility](https://www.gnu.org/software/make/) type "make" in root directory.
 ### Run
