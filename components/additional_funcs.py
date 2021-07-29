@@ -198,12 +198,15 @@ def get_list_of_processes() -> list:
     list_proc = []
 
     for proc in process_iter():
-        parents_name_list = [i.name() for i in proc.parents()]
-        if process_name in proc.name() and ("screen" in parents_name_list or
-                                            "Discord_bot.exe" in parents_name_list or
-                                            "python.exe" in parents_name_list) \
-                and abs(int(proc.create_time()) - Bot_variables.server_start_time) < 5:
-            list_proc.append(proc)
+        try:
+            parents_name_list = [i.name() for i in proc.parents()]
+            if process_name in proc.name() and ("screen" in parents_name_list or
+                                                "Discord_bot.exe" in parents_name_list or
+                                                "python.exe" in parents_name_list) \
+                    and abs(int(proc.create_time()) - Bot_variables.server_start_time) < 5:
+                list_proc.append(proc)
+        except NoSuchProcess:
+            pass
     return list_proc
 
 
