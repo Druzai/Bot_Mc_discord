@@ -141,6 +141,7 @@ async def start_server(ctx, bot, shut_up=False, IsReaction=False):
 
 async def stop_server(ctx, bot, How_many_sec=10, IsRestart=False, IsReaction=False):
     Bot_variables.IsStopping = True
+    NoConnection = False
     print("Stopping server")
     await send_msg(ctx, "```Stopping server.......\nPlease wait " + str(How_many_sec) + " sec.```", IsReaction)
     try:
@@ -169,21 +170,23 @@ async def stop_server(ctx, bot, How_many_sec=10, IsRestart=False, IsReaction=Fal
             print("Exception: Couldn't connect to server, because it's stopped")
             await send_msg(ctx, "Couldn't connect to server to shut it down! Server stopped...", IsReaction)
             Bot_variables.IsStopping = False
-        else:
-            print("Exception: Couldn't connect to server, so killing it now...")
-            await send_msg(ctx, "Couldn't connect to server to shut it down! Killing it now...", IsReaction)
-            Bot_variables.IsStopping = False
-            kill_server()
-        return
-    if Bot_variables.watcher_of_log_file.isrunning():
-        Bot_variables.watcher_of_log_file.stop()
-    while True:
-        await asleep(Config.get_await_time_to_sleep())
-        try:
-            with Client_q(Config.get_local_address(), Bot_variables.port_query, timeout=0.5) as cl_q:
-                _ = cl_q.basic_stats
-        except BaseException:
-            break
+            Bot_variables.IsServerOn = False
+            return
+        NoConnection = True
+
+    if not NoConnection:
+        if Bot_variables.watcher_of_log_file.isrunning():
+            Bot_variables.watcher_of_log_file.stop()
+        while True:
+            await asleep(Config.get_await_time_to_sleep())
+            try:
+                with Client_q(Config.get_local_address(), Bot_variables.port_query, timeout=0.5) as cl_q:
+                    _ = cl_q.basic_stats
+            except BaseException:
+                break
+    else:
+        print("Exception: Couldn't connect to server, so killing it now...")
+        await send_msg(ctx, "Couldn't connect to server to shut it down! Killing it now...", IsReaction)
     kill_server()
     Bot_variables.IsStopping = False
     Bot_variables.IsServerOn = False
