@@ -1,12 +1,15 @@
+from ast import literal_eval
 from asyncio import sleep as asleep
 from contextlib import contextmanager
 from datetime import datetime
+from hashlib import md5
 from os import chdir, system
 from pathlib import Path
 from random import choice, randint
 from re import search, split, findall
 from string import ascii_letters, digits
 from sys import platform
+from json import load, dump, JSONDecodeError
 
 from discord import Activity, ActivityType
 from discord.ext import commands
@@ -310,6 +313,44 @@ def generate_access_code(length=16, sep='-', sep_interval=4) -> str:
             candidat_symb = choice(alphabit)
         code += candidat_symb
     return code
+
+
+def get_offline_uuid(username):
+    data = bytearray(md5(("OfflinePlayer:" + username).encode()).digest())
+    data[6] &= 0x0f  # clear version
+    data[6] |= 0x30  # set to version 3
+    data[8] &= 0x3f  # clear variant
+    data[8] |= 0x80  # set to IETF variant
+    uuid = data.hex()
+    return '-'.join((uuid[:8], uuid[8:12], uuid[12:16], uuid[16:20], uuid[20:]))
+
+
+def get_whitelist_entry(username):
+    return dict(name=username, uuid=get_offline_uuid(username))
+
+
+def save_to_whitelist_json(entry: dict):
+    whitelist = [entry]
+    filepath = Path(Config.get_selected_server_list()[0] + "/whitelist.json")
+    if filepath.is_file():
+        try:
+            with open(filepath, "r", encoding="utf8") as file:
+                whitelist = load(file)
+                whitelist.append(entry)
+        except JSONDecodeError:
+            pass
+    with open(filepath, "w", encoding="utf8") as file:
+        dump(whitelist, file)
+
+
+def get_server_online_mode():
+    filepath = Path(Config.get_selected_server_list()[0] + "/server.properties")
+    if not filepath.exists():
+        raise RuntimeError(f"File '{filepath.as_posix()}' doesn't exist!")
+    with open(filepath, "r") as f:
+        for i in f.readlines():
+            if i.find("online-mode") >= 0:
+                return literal_eval(i.split("=")[1].capitalize())
 
 
 # Handling errors

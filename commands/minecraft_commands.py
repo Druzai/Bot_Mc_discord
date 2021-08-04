@@ -11,7 +11,7 @@ from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r
 
 from components.additional_funcs import server_checkups, send_error, send_msg, send_status, stop_server, start_server, \
-    get_author_and_mention
+    get_author_and_mention, save_to_whitelist_json, get_whitelist_entry, get_server_online_mode
 from config.init_config import Bot_variables, Config
 from decorators import role
 
@@ -340,8 +340,13 @@ class Minecraft_commands(commands.Cog):
                         white_list = cl_r.run("whitelist off")
                         await ctx.send("```" + white_list + "```")
                     elif args[0] == "add":
-                        white_list = cl_r.run("whitelist add", args[1])
-                        await ctx.send("```" + white_list + "```")
+                        if get_server_online_mode():
+                            white_list = cl_r.run("whitelist add", args[1])
+                            await ctx.send("```" + white_list + "```")
+                        else:
+                            save_to_whitelist_json(get_whitelist_entry(args[1]))
+                            _ = cl_r.run("whitelist reload")
+                            await ctx.send(f"```Added {args[1]} to the whitelist```")
                     elif args[0] == "del":
                         white_list = cl_r.run("whitelist remove", args[1])
                         await ctx.send("```" + white_list + "```")
@@ -359,8 +364,7 @@ class Minecraft_commands(commands.Cog):
                 await ctx.send("```Couldn't connect to server, try again(```")
                 pass
         else:
-            await ctx.send("```Commands: on, off, add, del, list```")
-            raise commands.UserInputError()
+            raise commands.UserInputError("```Commands: on, off, add, del, list, reload```")
 
     @commands.command(pass_context=True, aliases=["servs"])
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
