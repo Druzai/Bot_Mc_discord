@@ -261,7 +261,7 @@ class Config:
         filepath = Path(Config.get_selected_server_list()[0] + "/server.properties")
         if not filepath.exists():
             raise RuntimeError(f"File '{filepath.as_posix()}' doesn't exist!")
-        with open(filepath, "r") as f:
+        with open(filepath, "r", encoding="utf8") as f:
             for i in f.readlines():
                 if i.find("enable-query") >= 0:
                     enable_query = literal_eval(i.split("=")[1].capitalize())
@@ -274,10 +274,17 @@ class Config:
                 if i.find("rcon.password") >= 0:
                     Bot_variables.rcon_pass = i.split("=")[1].strip()
         if not enable_query or not enable_rcon:
-            raise RuntimeError(f"In '{filepath.as_posix()}' you didn't enable: " +
-                               ('enable-query' if not enable_query else '') +
-                               (', ' if not enable_query and not enable_rcon else '') +
-                               ('enable-rcon' if not enable_rcon else ''))
+            with open(filepath, "r", encoding="utf8") as f:
+                properties_file = f.readlines()
+            for i in range(len(properties_file)):
+                if "enable-query" in properties_file[i] or "enable-rcon" in properties_file[i]:
+                    properties_file[i] = f"{properties_file[i].split('=')[0]}=true\n"
+            with open(filepath, "w", encoding="utf8") as f:
+                f.writelines(properties_file)
+            print(f"Note: in '{filepath.as_posix()}' bot enabled these parameters:\n" +
+                  ('enable-query' if not enable_query else '') +
+                  (', ' if not enable_query and not enable_rcon else '') +
+                  ('enable-rcon' if not enable_rcon else ''))
 
     @staticmethod
     def get_selected_server_list():
