@@ -8,7 +8,8 @@ from pathlib import Path
 from random import choice, randint
 from re import search, split, findall
 from string import ascii_letters, digits
-from sys import platform
+from sys import platform, argv
+from os.path import basename
 from json import load, dump, JSONDecodeError
 
 from discord import Activity, ActivityType
@@ -200,6 +201,7 @@ async def stop_server(ctx, bot, How_many_sec=10, IsRestart=False, IsReaction=Fal
 
 
 def get_list_of_processes() -> list:
+    basename_of_executable = basename(argv[0])
     process_name = "java"
     list_proc = []
 
@@ -207,7 +209,7 @@ def get_list_of_processes() -> list:
         try:
             parents_name_list = [i.name() for i in proc.parents()]
             if process_name in proc.name() and ("screen" in parents_name_list or
-                                                "Discord_bot.exe" in parents_name_list or
+                                                basename_of_executable in parents_name_list or
                                                 "python.exe" in parents_name_list) \
                     and abs(int(proc.create_time()) - Bot_variables.server_start_time) < 5:
                 list_proc.append(proc)

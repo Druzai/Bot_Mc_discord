@@ -3,11 +3,11 @@ import sys
 from ast import literal_eval
 from datetime import datetime
 from json import dump, load, dumps, loads
-from os import path, listdir, getcwd
-from os.path import isfile, abspath
+from os import listdir
+from os.path import isfile
 from pathlib import Path
 
-from config.bot_crypt import Crypt
+from config.crypt_wrapper import *
 
 
 class Bot_variables:
@@ -32,7 +32,7 @@ class Bot_variables:
 
 
 class Config:
-    _current_bot_path = abspath(getcwd())
+    _current_bot_path = path.dirname(sys.argv[0])
     _config_dict = {}
     _config_name = "bot.json"
     _need_to_rewrite = False
@@ -219,13 +219,12 @@ class Config:
             Config.save_op_keys(dict())
             return dict()
         else:
-            return loads(Crypt.get_crypt().decrypt(
-                open(Path(Config._current_bot_path + '/' + Config._op_keys_name), "rb").read()).decode())
+            return loads(decrypt_string(open(Path(Config._current_bot_path + '/' + Config._op_keys_name), "r").read()))
 
     @staticmethod
     def save_op_keys(op_keys: dict):
-        open(Path(Config._current_bot_path + '/' + Config._op_keys_name), 'wb') \
-            .write(Crypt.get_crypt().encrypt(dumps(op_keys).encode()))
+        open(Path(Config._current_bot_path + '/' + Config._op_keys_name), 'w') \
+            .write(encrypt_string(dumps(op_keys)))
 
     @staticmethod
     def read_id_to_nicks():
@@ -356,9 +355,9 @@ class Config:
         if Config._config_dict.get("Token", None) is None:
             Config._need_to_rewrite = True
             Config._token = Config._ask_for_data("Token not founded. Enter token: ")
-            Config._config_dict["Token"] = Crypt.get_crypt().encrypt(Config._token.encode()).decode()
+            Config._config_dict["Token"] = encrypt_string(Config._token)
         else:
-            Config._token = Crypt.get_crypt().decrypt(Config._config_dict["Token"].encode()).decode()
+            Config._token = decrypt_string(Config._config_dict["Token"])
 
     @staticmethod
     def _set_prefix():
@@ -370,8 +369,8 @@ class Config:
     @staticmethod
     def _set_vk_credentials():
         if Config._config_dict.get("Vk_login", None) and Config._config_dict.get("Vk_pass", None):
-            Config._vk_login = Crypt.get_crypt().decrypt(Config._config_dict["Vk_login"].encode()).decode()
-            Config._vk_pass = Crypt.get_crypt().decrypt(Config._config_dict["Vk_pass"].encode()).decode()
+            Config._vk_login = decrypt_string(Config._config_dict["Vk_login"])
+            Config._vk_pass = decrypt_string(Config._config_dict["Vk_pass"])
         else:
             Config._config_dict["Vk_login"] = None
             Config._config_dict["Vk_pass"] = None
@@ -381,8 +380,8 @@ class Config:
                     "y"):
                 Config._vk_login = Config._ask_for_data("Enter vk login: ")
                 Config._vk_pass = Config._ask_for_data("Enter vk pass: ")
-                Config._config_dict["Vk_login"] = Crypt.get_crypt().encrypt(Config._vk_login.encode()).decode()
-                Config._config_dict["Vk_pass"] = Crypt.get_crypt().encrypt(Config._vk_pass.encode()).decode()
+                Config._config_dict["Vk_login"] = encrypt_string(Config._vk_login)
+                Config._config_dict["Vk_pass"] = encrypt_string(Config._vk_pass)
                 Config._need_to_rewrite = True
             if Config._ask_for_data("Never ask about it again? y/n\n", "y"):
                 Config._config_dict["Vk_ask"] = False
