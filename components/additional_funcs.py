@@ -3,14 +3,14 @@ from asyncio import sleep as asleep
 from contextlib import contextmanager
 from datetime import datetime
 from hashlib import md5
+from json import load, dump, JSONDecodeError
 from os import chdir, system
+from os.path import basename
 from pathlib import Path
 from random import choice, randint
 from re import search, split, findall
 from string import ascii_letters, digits
 from sys import platform, argv
-from os.path import basename
-from json import load, dump, JSONDecodeError
 
 from discord import Activity, ActivityType
 from discord.ext import commands
@@ -28,13 +28,14 @@ if platform == "win32":
 
 async def send_msg(ctx, msg, IsReaction=False):
     if IsReaction:
-        await ctx.send(content=msg, delete_after=Config.get_await_time_before_message_deletion())
+        await ctx.send(content=msg,
+                       delete_after=Config.get_awaiting_times_settings().await_seconds_before_message_deletion)
     else:
         await ctx.send(msg)
 
 
 async def delete_after_by_msg_id(ctx, message_id):
-    await asleep(Config.get_await_time_before_message_deletion())
+    await asleep(Config.get_awaiting_times_settings().await_seconds_before_message_deletion)
     msg = await ctx.channel.fetch_message(message_id)
     await msg.delete()
 
@@ -70,16 +71,20 @@ async def start_server(ctx, bot, shut_up=False, IsReaction=False):
     print("Loading server")
     if ctx and not shut_up:
         await send_msg(ctx, "```Loading server.......\nPlease wait)```", IsReaction)
-    chdir(Path(Config.get_selected_server_list()[0]))
+    chdir(Config.get_selected_server_from_list().working_directory)
     try:
         if platform == "linux" or platform == "linux2":
-            system("screen -dmS " + Config.get_selected_server_list()[1].replace(" ", "_") +
-                   " ./" + Config.get_filename() + ".sh")
+            if ".sh" not in Config.get_selected_server_from_list().start_file_name:
+                raise NameError()
+            system("screen -dmS " + Config.get_selected_server_from_list().server_name.replace(" ", "_") +
+                   " ./" + Config.get_selected_server_from_list().start_file_name)
         elif platform == "win32":
-            startfile(Config.get_filename() + ".bat")
+            if ".bat" not in Config.get_selected_server_from_list().start_file_name:
+                raise NameError()
+            startfile(Config.get_selected_server_from_list().start_file_name)
         Bot_variables.server_start_time = int(datetime.now().timestamp())
     except BaseException:
-        print("Couldn't open script! Check naming!")
+        print("Couldn't open script! Check naming and extension of the script!")
         await send_msg(ctx, "```Couldn't open script because of naming! Retreating...```", IsReaction)
         Bot_variables.IsLoading = False
         if Bot_variables.IsRestarting:
@@ -91,7 +96,8 @@ async def start_server(ctx, bot, shut_up=False, IsReaction=False):
     while True:
         if len(get_list_of_processes()) == 0:
             await send_msg(ctx, "```Error while loading server```", IsReaction)
-            await bot.change_presence(activity=Activity(type=ActivityType.listening, name="Server"))
+            await bot.change_presence(activity=Activity(type=ActivityType.listening,
+                                                        name=Config.get_settings().bot_settings.idle_status))
             Bot_variables.IsLoading = False
             if Bot_variables.IsRestarting:
                 Bot_variables.IsRestarting = False
@@ -105,15 +111,17 @@ async def start_server(ctx, bot, shut_up=False, IsReaction=False):
                 str(timedelta_secs // 60) + ":" + f"{(timedelta_secs % 60):02d}" if timedelta_secs // 60 != 0 else str(
                     timedelta_secs % 60) + " sec")
         await bot.change_presence(activity=Activity(type=ActivityType.listening, name=output_bot))
-        await asleep(Config.get_await_time_to_sleep())
+        await asleep(Config.get_awaiting_times_settings().await_seconds_when_connecting_via_rcon)
         try:
-            with Client_q(Config.get_local_address(), Bot_variables.port_query, timeout=0.5) as cl_q:
+            with Client_q(Config.get_settings().bot_settings.local_address,
+                          Bot_variables.port_query, timeout=0.5) as cl_q:
                 _ = cl_q.basic_stats
             break
         except BaseException:
             pass
-    if Config.get_crossplatform_chat() and Config.get_discord_channel_id_for_crossplatform_chat() and \
-            Config.get_webhook_chat():
+    if Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
+            Config.get_cross_platform_chat_settings().channel_id and \
+            Config.get_cross_platform_chat_settings().webhook_url:
         create_watcher()
         Bot_variables.watcher_of_log_file.start()
     if Bot_variables.progress_bar_time:
@@ -130,14 +138,14 @@ async def start_server(ctx, bot, shut_up=False, IsReaction=False):
     Bot_variables.IsServerOn = True
     if Bot_variables.IsRestarting:
         Bot_variables.IsRestarting = False
-    if Config.get_selected_server_list()[2] != Bot_variables.progress_bar_time:
-        mine_dir_list = Config.get_minecraft_dirs_list()
-        mine_dir_list[Config.get_selected_minecraft_server_number()][2] = Bot_variables.progress_bar_time
-        Config.set_minecraft_dirs_list(mine_dir_list)
+    if Config.get_selected_server_from_list().server_loading_time != Bot_variables.progress_bar_time:
+        Config.get_selected_server_from_list().server_loading_time = Bot_variables.progress_bar_time
+        Config.save_config()
     server_dates = Config.read_server_dates()
     server_dates[0] = [datetime.now().strftime("%d/%m/%y, %H:%M:%S"), str(author)]
     Config.save_server_dates(server_dates)
-    await bot.change_presence(activity=Activity(type=ActivityType.playing, name="Minecraft Server"))
+    await bot.change_presence(activity=Activity(type=ActivityType.playing,
+                                                name=Config.get_settings().bot_settings.gaming_status))
 
 
 async def stop_server(ctx, bot, How_many_sec=10, IsRestart=False, IsReaction=False):
@@ -146,7 +154,7 @@ async def stop_server(ctx, bot, How_many_sec=10, IsRestart=False, IsReaction=Fal
     print("Stopping server")
     await send_msg(ctx, "```Stopping server.......\nPlease wait " + str(How_many_sec) + " sec.```", IsReaction)
     try:
-        with Client_r(Config.get_local_address(), Bot_variables.port_rcon, timeout=1) as cl_r:
+        with Client_r(Config.get_settings().bot_settings.local_address, Bot_variables.port_rcon, timeout=1) as cl_r:
             cl_r.login(Bot_variables.rcon_pass)
             if How_many_sec != 0:
                 w = 1
@@ -176,12 +184,13 @@ async def stop_server(ctx, bot, How_many_sec=10, IsRestart=False, IsReaction=Fal
         NoConnection = True
 
     if not NoConnection:
-        if Bot_variables.watcher_of_log_file.isrunning():
+        if Bot_variables.watcher_of_log_file.is_running():
             Bot_variables.watcher_of_log_file.stop()
         while True:
-            await asleep(Config.get_await_time_to_sleep())
+            await asleep(Config.get_awaiting_times_settings().await_seconds_when_connecting_via_rcon)
             try:
-                with Client_q(Config.get_local_address(), Bot_variables.port_query, timeout=0.5) as cl_q:
+                with Client_q(Config.get_settings().bot_settings.local_address,
+                              Bot_variables.port_query, timeout=0.5) as cl_q:
                     _ = cl_q.basic_stats
             except BaseException:
                 break
@@ -197,7 +206,8 @@ async def stop_server(ctx, bot, How_many_sec=10, IsRestart=False, IsReaction=Fal
     server_dates = Config.read_server_dates()
     server_dates[1] = [datetime.now().strftime("%d/%m/%y, %H:%M:%S"), str(author)]
     Config.save_server_dates(server_dates)
-    await bot.change_presence(activity=Activity(type=ActivityType.listening, name="Server"))
+    await bot.change_presence(activity=Activity(type=ActivityType.listening,
+                                                name=Config.get_settings().bot_settings.idle_status))
 
 
 def get_list_of_processes() -> list:
@@ -232,7 +242,8 @@ def kill_server():
 async def server_checkups(bot, always=True):
     while True:
         try:
-            with Client_q(Config.get_local_address(), Bot_variables.port_query, timeout=1) as cl_q:
+            with Client_q(Config.get_settings().bot_settings.local_address,
+                          Bot_variables.port_query, timeout=1) as cl_q:
                 info = cl_q.full_stats
             if info.num_players != 0:
                 nicks_n_keys_add = {}
@@ -252,48 +263,56 @@ async def server_checkups(bot, always=True):
                     orig_op.clear()
             if not Bot_variables.IsServerOn:
                 Bot_variables.IsServerOn = True
-            if Config.get_crossplatform_chat() and Config.get_discord_channel_id_for_crossplatform_chat() and \
-                    Config.get_webhook_chat():
+            if Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
+                    Config.get_cross_platform_chat_settings().channel_id and \
+                    Config.get_cross_platform_chat_settings().webhook_url:
                 create_watcher()
                 Bot_variables.watcher_of_log_file.start()
-            try:
-                if int(bot.guilds[0].get_member(bot.user.id).activities[0].name.split(", ")[1].split(" ")[
-                           0]) != 0 or info.num_players != 0:
+            try:  # TODO: Rewrite in ONE if :)
+                if int(bot.guilds[0].get_member(bot.user.id).activities[0].name.split(", ")[1].split(" ")[0]) != 0 or \
+                        info.num_players != 0:
                     await bot.change_presence(
                         activity=Activity(type=ActivityType.playing,
-                                          name="Minecraft Server, " + str(
-                                              info.num_players) + " player(s) online"))
+                                          name=Config.get_settings().bot_settings.gaming_status + ", " +
+                                               str(info.num_players) + " player(s) online"))
             except BaseException:
                 if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 0 or info.num_players != 0:
                     await bot.change_presence(
                         activity=Activity(type=ActivityType.playing,
-                                          name="Minecraft Server, " + str(
-                                              info.num_players) + " player(s) online"))
+                                          name=Config.get_settings().bot_settings.gaming_status + ", " +
+                                               str(info.num_players) + " player(s) online"))
         except BaseException:
             if len(get_list_of_processes()) == 0:
                 if Bot_variables.IsServerOn:
                     Bot_variables.IsServerOn = False
-                if Bot_variables.watcher_of_log_file is not None and Bot_variables.watcher_of_log_file.isrunning():
+                if Bot_variables.watcher_of_log_file is not None and Bot_variables.watcher_of_log_file.is_running():
                     Bot_variables.watcher_of_log_file.stop()
             if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 2:
                 await bot.change_presence(activity=Activity(type=ActivityType.listening,
-                                                            name="Server" + (" thinking..." if len(
-                                                                get_list_of_processes()) != 0 else "")))
-            if always and Config.get_forceload() and not Bot_variables.IsStopping \
+                                                            name=Config.get_settings().bot_settings.idle_status +
+                                                                 (" thinking..." if len(
+                                                                     get_list_of_processes()) != 0 else "")))
+            if always and Config.get_settings().bot_settings.forceload and not Bot_variables.IsStopping \
                     and not Bot_variables.IsLoading and not Bot_variables.IsRestarting:
+                sent = False
                 for guild in bot.guilds:
+                    if sent:
+                        break
                     for channel in guild.channels:
                         try:
-                            await channel.fetch_message(Config.get_menu_id())
+                            await channel.fetch_message(Config.get_settings().bot_settings.menu_id)
                             await send_msg(ctx=channel,
-                                           msg=f'```Bot detected: Server\'s offline!\nTime: {datetime.now().strftime("%d/%m/%y, %H:%M:%S")}\nStarting up server again!```',
+                                           msg='```Bot detected: Server\'s offline!\n'
+                                               f'Time: {datetime.now().strftime("%d/%m/%y, %H:%M:%S")}\n'
+                                               'Starting up server again!```',
                                            IsReaction=True)
                             await start_server(ctx=channel, bot=bot, shut_up=True)
+                            sent = True
                             break
                         except BaseException:
                             pass
-        if Config.get_await_time_check_ups() > 0 and always:
-            await asleep(Config.get_await_time_check_ups())
+        if Config.get_awaiting_times_settings().await_seconds_in_check_ups > 0 and always:
+            await asleep(Config.get_awaiting_times_settings().await_seconds_in_check_ups)
         if not always:
             break
 
@@ -336,7 +355,7 @@ def get_whitelist_entry(username):
 
 def save_to_whitelist_json(entry: dict):
     whitelist = [entry]
-    filepath = Path(Config.get_selected_server_list()[0] + "/whitelist.json")
+    filepath = Path(Config.get_selected_server_from_list().working_directory + "/whitelist.json")
     if filepath.is_file():
         try:
             with open(filepath, "r", encoding="utf8") as file:
@@ -349,7 +368,7 @@ def save_to_whitelist_json(entry: dict):
 
 
 def get_server_online_mode():
-    filepath = Path(Config.get_selected_server_list()[0] + "/server.properties")
+    filepath = Path(Config.get_selected_server_from_list().working_directory + "/server.properties")
     if not filepath.exists():
         raise RuntimeError(f"File '{filepath.as_posix()}' doesn't exist!")
     with open(filepath, "r") as f:
@@ -391,17 +410,17 @@ async def send_error(ctx, bot, error, IsReaction=False):
 
 
 async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, on_edit=False, before_message=None):
-    if message.author == bot.user or message.content.startswith(Config.get_prefix()) or str(
+    if message.author == bot.user or message.content.startswith(Config.get_settings().bot_settings.prefix) or str(
             message.author.discriminator) == "0000" or (len(message.content) == 0 and len(message.attachments) == 0) \
-            or message.channel.id != int(Config.get_discord_channel_id_for_crossplatform_chat()):
+            or message.channel.id != int(Config.get_cross_platform_chat_settings().channel_id):
         return
 
     _, author_mention = get_author_and_mention(message, bot, False)
     delete_user_message = True
 
-    if not Config.get_discord_channel_id_for_crossplatform_chat() or not Config.get_webhook_chat():
-        await send_msg(message.channel, f"{author_mention}, this chat can't work! Crossplatform chat disabled!",
-                       True)
+    if not Config.get_cross_platform_chat_settings().channel_id or \
+            not Config.get_cross_platform_chat_settings().webhook_url:
+        await send_msg(message.channel, f"{author_mention}, this chat can't work! Cross platform chat disabled!", True)
     elif not Bot_variables.IsServerOn:
         await send_msg(message.channel, f"{author_mention}, server offline!", True)
     elif Bot_variables.IsRestarting:
@@ -436,7 +455,7 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
                                 "hoverEvent": {"action": "show_text", "value": result_before.get("content")}})
         _build_if_urls_in_message(res_obj, result_msg.get("content"), None)
 
-        with Client_r(Config.get_local_address(), Bot_variables.port_rcon, timeout=1) as cl_r:
+        with Client_r(Config.get_settings().bot_settings.local_address, Bot_variables.port_rcon, timeout=1) as cl_r:
             cl_r.login(Bot_variables.rcon_pass)
             answ = cl_r.tellraw("@a", res_obj)
             # TODO: Replace with checking via query num of players for localization!
@@ -446,7 +465,8 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
             nicks = _search_mentions_in_message(message)
             if len(nicks) > 0:
                 try:
-                    with Client_r(Config.get_local_address(), Bot_variables.port_rcon, timeout=1) as cl_r:
+                    with Client_r(Config.get_settings().bot_settings.local_address,
+                                  Bot_variables.port_rcon, timeout=1) as cl_r:
                         cl_r.login(Bot_variables.rcon_pass)
                         with times(500, 2500, 1500, cl_r):
                             for nick in nicks:
@@ -607,13 +627,13 @@ def _search_mentions_in_message(message) -> list:
 
 
 def get_server_version() -> str:
-    with Client_q(Config.get_local_address(), Bot_variables.port_query, timeout=1) as cl_r:
+    with Client_q(Config.get_settings().bot_settings.local_address, Bot_variables.port_query, timeout=1) as cl_r:
         version = cl_r.full_stats.version
     return version
 
 
 def get_server_players() -> list:
-    with Client_q(Config.get_local_address(), Bot_variables.port_query, timeout=1) as cl_r:
+    with Client_q(Config.get_settings().bot_settings.local_address, Bot_variables.port_query, timeout=1) as cl_r:
         players = cl_r.full_stats.players
     return players
 

@@ -12,7 +12,6 @@ from config.init_config import Config, Bot_variables
 
 class Watcher:
     running = True
-    refresh_delay_secs = Config.get_watcher_refresh_delay()
     thread = None
 
     # Constructor
@@ -20,6 +19,7 @@ class Watcher:
         self._cached_stamp = None
         self.filename = watch_file
         self.call_func_on_change = call_func_on_change
+        self.refresh_delay_secs = Config.get_cross_platform_chat_settings().refresh_delay_of_console_log
         self.args = args
         self.kwargs = kwargs
 
@@ -30,7 +30,7 @@ class Watcher:
             temp = self._cached_stamp
             self._cached_stamp = stamp
             if self.call_func_on_change is not None and temp is not None:
-                self.call_func_on_change(*self.args, **self.kwargs)
+                self.call_func_on_change(file=self.filename, *self.args, **self.kwargs)
 
     # Keep watching in a loop
     def watch(self):
@@ -54,25 +54,28 @@ class Watcher:
         self.thread.join()
         self.thread = None
 
-    def isrunning(self):
+    def is_running(self):
         return self.running
 
 
 def create_watcher():
-    if Bot_variables.watcher_of_log_file is not None and Bot_variables.watcher_of_log_file.isrunning():
+    if Bot_variables.watcher_of_log_file is not None and Bot_variables.watcher_of_log_file.is_running():
         Bot_variables.watcher_of_log_file.stop()
 
-    Bot_variables.watcher_of_log_file = Watcher(Path(Config.get_selected_server_list()[0] + "/logs/latest.log"),
-                                                _check_log_file)
+    Bot_variables.watcher_of_log_file = Watcher(watch_file=Path(Config.get_selected_server_from_list().working_directory
+                                                                + "/logs/latest.log"),
+                                                call_func_on_change=_check_log_file)
     if Bot_variables.webhook_chat is None:
-        Bot_variables.webhook_chat = Webhook.from_url(url=Config.get_webhook_chat(), adapter=RequestsWebhookAdapter())
+        Bot_variables.webhook_chat = \
+            Webhook.from_url(url=Config.get_cross_platform_chat_settings().webhook_url,
+                             adapter=RequestsWebhookAdapter())
 
 
-def _check_log_file():
-    if Config.get_discord_channel_id_for_crossplatform_chat() is None:
+def _check_log_file(file: Path):
+    if Config.get_cross_platform_chat_settings().channel_id is None:
         return
 
-    with open(file=Path(Config.get_selected_server_list()[0] + "/logs/latest.log"), mode="rb") as log_file:
+    with open(file=file, mode="rb") as log_file:
         log_file.seek(-2, SEEK_END)
         while log_file.read(1) != b'\n':
             log_file.seek(-2, SEEK_CUR)

@@ -8,7 +8,7 @@ from config.init_config import Config
 
 def has_role_or_default():
     def predicate(ctx):
-        config_role = Config.get_role()
+        config_role = Config.get_settings().bot_settings.role
         if config_role == "":
             return True
         if not isinstance(ctx.channel, GuildChannel):

@@ -9,20 +9,22 @@ from config.init_config import Config, Bot_variables
 
 async def check_on_rss_feed():
     while True:
-        datetime_from = datetime.fromisoformat(Config.get_rss_last_date())
+        datetime_from = datetime.fromisoformat(Config.get_rss_feed_settings().rss_last_date)
         send = False
-        entries = parse(Config.get_rss_url()).entries
+        entries = parse(Config.get_rss_feed_settings().rss_url).entries
         entries.reverse()
         for entry in entries:
             if datetime.fromisoformat(entry.published) > datetime_from:
                 send = True
                 Bot_variables.webhook_rss.send(entry.link)
         if send:
-            Config.set_rss_last_date(entries[-1].published)
+            Config.get_rss_feed_settings().rss_last_date = entries[-1].published
             Config.save_config()
-        await asleep(3600)
+        await asleep(Config.get_rss_feed_settings().rss_download_delay)
 
 
 def create_feed_webhook():
-    if Bot_variables.webhook_rss is None and Config.get_rss_url() and Config.get_webhook_rss():
-        Bot_variables.webhook_rss = Webhook.from_url(url=Config.get_webhook_rss(), adapter=RequestsWebhookAdapter())
+    if Bot_variables.webhook_rss is None and Config.get_rss_feed_settings().rss_url and \
+            Config.get_rss_feed_settings().webhook_url:
+        Bot_variables.webhook_rss = Webhook.from_url(url=Config.get_rss_feed_settings().webhook_url,
+                                                     adapter=RequestsWebhookAdapter())

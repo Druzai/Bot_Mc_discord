@@ -44,6 +44,8 @@ ____________
 * [pyinstaller](https://github.com/pyinstaller/pyinstaller) - lib to build project to executable file, you can use another one if you can't for some reason, but my makefile works only with this library
 * [psutil](https://github.com/giampaolo/psutil) - lib to check minecraft process and stop it if needed
 * [feedparser](https://github.com/kurtmckee/feedparser) - lib to parse RSS feed files
+* [jsons](https://github.com/ramonhagenaars/jsons) - lib to serialize class from dictionary
+* [omegaconf](https://github.com/omry/omegaconf) - lib to deserialize and serialize class to yaml file 
 ### Installation
 Type in command prompt, you must have [requirements.txt](requirements.txt) in root folder of the project.
 ```
@@ -69,7 +71,7 @@ You have to start bot file from folder located in your root minecraft server dir
 ```
 %your_minecraft_server_dir%\%bot_folder%\bot_executable_file
 ```
-And for the bot to properly work you have to have ***.bat (in bot setting you can set name for this script) in your root minecraft server directory! Example of file:
+And for the bot to properly work you have to have `***.bat` (in bot setting you can set name for this script) in your root minecraft server directory! Example of file:
 ```batch
 rem ask_int - consists how many GB you're allocating for server on start up
 rem your_jar_file - jar file that starts up your server. It can be for vanilla: standart server.jar or for modded server: spigot.jar, forge.jar
@@ -92,7 +94,7 @@ You have to execute bot file using terminal from folder located in your root min
 ```
 screen -dmS %your_session_name% %your_minecraft_server_dir%\%bot_folder%\bot_executable_file
 ```
-And for the bot to properly work you have to have ***.sh (in bot setting you can set name for this script) in your root minecraft server directory! Example of file:
+And for the bot to properly work you have to have `***.sh` (in bot setting you can set name for this script) in your root minecraft server directory! Example of file:
 ```shell
 # ask_int - consists how many GB you're allocating for server on start up
 # your_jar_file - jar file that starts up your server. It can be for vanilla: standart server.jar or for modded server: spigot.jar, forge.jar

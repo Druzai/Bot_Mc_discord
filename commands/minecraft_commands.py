@@ -41,7 +41,8 @@ class Minecraft_commands(commands.Cog):
                 states += "\n"
         if Bot_variables.IsServerOn:
             try:
-                with Client_r(Config.get_local_address(), Bot_variables.port_rcon, timeout=1) as cl_r:
+                with Client_r(Config.get_settings().bot_settings.local_address,
+                              Bot_variables.port_rcon, timeout=1) as cl_r:
                     cl_r.login(Bot_variables.rcon_pass)
                     time_ticks = int(cl_r.run("time query daytime").split(" ")[-1])
                 message = "Time in minecraft: "
@@ -53,21 +54,23 @@ class Minecraft_commands(commands.Cog):
                     message += "Night, "
                 else:
                     message += "Sunrise, "
-                await send_msg(ctx, "```Server online\n" + "Server adress: " + Config.get_ip_address() + "\n"
+                await send_msg(ctx, "```Server online\n" + "Server address: " +
+                               Config.get_settings().bot_settings.ip_address + "\n"
                                + message + str((6 + time_ticks // 1000) % 24) + ":"
                                + f"{((time_ticks % 1000) * 60 // 1000):02d}" + "\nSelected server: " +
-                               Config.get_selected_server_list()[1] + states + "```",
+                               Config.get_selected_server_from_list().server_name + states + "```",
                                IsReaction)
             except BaseException:
                 await send_msg(ctx,
-                               "```Server online\nServer adress: " + Config.get_ip_address() +
-                               "\nServer thinking...\nSelected server: " + Config.get_selected_server_list()[1] +
-                               states + "```", IsReaction)
-                print("Serv's down via rcon")
+                               "```Server online\nServer address: " + Config.get_settings().bot_settings.ip_address +
+                               "\nServer thinking...\nSelected server: " +
+                               Config.get_selected_server_from_list().server_name + states + "```", IsReaction)
+                print("Server's down via rcon")
             """rcon check daytime cycle"""
         else:
-            await send_msg(ctx, "```Server offline\nServer adress: " + Config.get_ip_address() + "\nSelected server: " +
-                           Config.get_selected_server_list()[1] + states + "```", IsReaction)
+            await send_msg(ctx, "```Server offline\nServer address: " + Config.get_settings().bot_settings.ip_address +
+                           "\nSelected server: " + Config.get_selected_server_from_list().server_name + states + "```",
+                           IsReaction)
 
     @commands.command(pass_context=True, aliases=["ls"])
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
@@ -75,7 +78,8 @@ class Minecraft_commands(commands.Cog):
         """Shows list of players"""
         if command == "-u":
             try:
-                with Client_q(Config.get_local_address(), Bot_variables.port_query, timeout=1) as cl_q:
+                with Client_q(Config.get_settings().bot_settings.local_address, Bot_variables.port_query,
+                              timeout=1) as cl_q:
                     info = cl_q.full_stats
                 if info.num_players == 0:
                     await send_msg(ctx, "```Игроков на сервере нет```", IsReaction)
@@ -113,8 +117,9 @@ class Minecraft_commands(commands.Cog):
                     if Bot_variables.IsDoOp:
                         await send_msg(ctx, "```Some player/s still oped, waiting for them```", IsReaction)
                         return
-                    if Config.get_forceload():
-                        Config.set_forceload(False)
+                    if Config.get_settings().bot_settings.forceload:
+                        Config.get_settings().bot_settings.forceload = False
+                        Config.save_config()
                     await stop_server(ctx, self._bot, int(command), IsReaction=IsReaction)
                 else:
                     await send_status(ctx, IsReaction=IsReaction)
@@ -156,7 +161,8 @@ class Minecraft_commands(commands.Cog):
         Bot_variables.IsDoOp = True
         temp_s = []
         # List of player(s) who used this command, it needed to determinate should bot rewrite 'op_keys' or not
-        if Bot_variables.IsServerOn and not Bot_variables.IsStopping and not Bot_variables.IsLoading and not Bot_variables.IsRestarting:
+        if Bot_variables.IsServerOn and not Bot_variables.IsStopping and \
+                not Bot_variables.IsLoading and not Bot_variables.IsRestarting:
             keys_for_nicks = Config.read_op_keys()
             arg1 = arg1.lower()
             if arg1 in keys_for_nicks.keys():
@@ -168,9 +174,10 @@ class Minecraft_commands(commands.Cog):
                         open(Path(Config.get_bot_config_path() + '/op_log.txt'), 'a', encoding='utf-8').write(
                             datetime.now().strftime("%d/%m/%Y, %H:%M:%S") + " || Opped " + arg1 + " || Reason: " + (
                                 ' '.join(args) if args else "None") + "\n")
-                        await_time_op = Config.get_await_time_op()
+                        await_time_op = Config.get_awaiting_times_settings().await_seconds_when_opped
                         try:
-                            with Client_r(Config.get_local_address(), Bot_variables.port_rcon, timeout=1) as cl_r:
+                            with Client_r(Config.get_settings().bot_settings.local_address,
+                                          Bot_variables.port_rcon, timeout=1) as cl_r:
                                 cl_r.login(Bot_variables.rcon_pass)
                                 cl_r.say(arg1 + ' you\'ve opped for' + (
                                     "" if await_time_op // 60 == 0 else " " + str(await_time_op // 60) + ' min') + (
@@ -178,8 +185,8 @@ class Minecraft_commands(commands.Cog):
                                                  await_time_op % 60) + ' sec.'))
                                 cl_r.mkop(arg1)
                         except BaseException:
-                            await ctx.send(
-                                ctx.author.mention + ", а сервак-то не работает (по крайней мере я пытался), попробуй-ка позже.")
+                            await ctx.send(ctx.author.mention +
+                                           ", а сервак-то не работает (по крайней мере я пытался), попробуй-ка позже.")
                             return
                         keys_for_nicks.get(arg1).remove(arg2)
                         await ctx.send("```Code activated```")
@@ -199,10 +206,11 @@ class Minecraft_commands(commands.Cog):
                                     if k == "name":
                                         to_delete_ops.append(v)
                             while True:
-                                await asleep(Config.get_await_time_to_sleep())
+                                await asleep(
+                                    Config.get_awaiting_times_settings().await_seconds_when_connecting_via_rcon)
                                 try:
-                                    with Client_r(Config.get_local_address(), Bot_variables.port_rcon,
-                                                  timeout=1) as cl_r:
+                                    with Client_r(Config.get_settings().bot_settings.local_address,
+                                                  Bot_variables.port_rcon, timeout=1) as cl_r:
                                         cl_r.login(Bot_variables.rcon_pass)
                                         cl_r.say(arg1 + ' you all will be deoped now.')
                                         for _ in to_delete_ops:
@@ -310,14 +318,16 @@ class Minecraft_commands(commands.Cog):
     @commands.guild_only()
     @role.has_role_or_default()
     async def forceload(self, ctx, command=""):
-        if command == "on" and not Config.get_forceload():
-            Config.set_forceload(True)
+        if command == "on" and not Config.get_settings().bot_settings.forceload:
+            Config.get_settings().bot_settings.forceload = True
+            Config.save_config()
             await ctx.send("```Forceload on```")
-        elif command == "off" and Config.get_forceload():
-            Config.set_forceload(False)
+        elif command == "off" and Config.get_settings().bot_settings.forceload:
+            Config.get_settings().bot_settings.forceload = False
+            Config.save_config()
             await ctx.send("```Forceload off```")
         elif command == "":
-            if Config.get_forceload():
+            if Config.get_settings().bot_settings.forceload:
                 await ctx.send("```Forceload on```")
             else:
                 await ctx.send("```Forceload off```")
@@ -331,7 +341,8 @@ class Minecraft_commands(commands.Cog):
     async def whitelist(self, ctx, *args):
         if len(args) and args[0] in ["add", "del", "list", "on", "off", "reload"]:
             try:
-                with Client_r(Config.get_local_address(), Bot_variables.port_rcon, timeout=1) as cl_r:
+                with Client_r(Config.get_settings().bot_settings.local_address,
+                              Bot_variables.port_rcon, timeout=1) as cl_r:
                     cl_r.login(Bot_variables.rcon_pass)
                     if args[0] == "on":
                         white_list = cl_r.run("whitelist on")
@@ -372,11 +383,10 @@ class Minecraft_commands(commands.Cog):
     @role.has_role_or_default()
     async def servers(self, ctx, *args):
         if len(args) and args[0] in ["list", "select", "show"]:
-            minecraft_dirs = Config.get_minecraft_dirs_list()
             if args[0] == "list":
                 send_ = "```List of servers"
-                for i in range(len(minecraft_dirs)):
-                    send_ += "\n" + str(i) + ". " + minecraft_dirs[i][1]
+                for i in range(len(Config.get_settings().servers_list)):
+                    send_ += "\n" + str(i) + ". " + Config.get_settings().servers_list[i].server_name
                 send_ += "```"
                 await ctx.send(send_)
             elif args[0] == "select":
@@ -384,8 +394,8 @@ class Minecraft_commands(commands.Cog):
                     await ctx.send("Э, " + ctx.author.mention + ", где число?")
                     return
                 try:
-                    if int(args[1]) <= len(minecraft_dirs):
-                        if int(args[1]) == Config.get_selected_minecraft_server_number():
+                    if int(args[1]) <= len(Config.get_settings().servers_list):
+                        if int(args[1]) == Config.get_settings().selected_server_number:
                             await ctx.send(
                                 "```My, you have chosen selected server, insane?)\n ...Pasan ramsi poputal```")
                             return
@@ -396,7 +406,8 @@ class Minecraft_commands(commands.Cog):
 
                         if Bot_variables.watcher_of_log_file is not None:
                             Bot_variables.watcher_of_log_file.stop()
-                        Config.set_selected_minecraft_server(int(args[1]))
+                        Config.get_settings().selected_server_number = int(args[1])
+                        Config.save_config()
                         Config.read_server_info()
                         await ctx.send("```Server properties read!```")
                     else:
@@ -405,8 +416,8 @@ class Minecraft_commands(commands.Cog):
                     await ctx.send("```Argument for 'select' must be a number!```")
             elif args[0] == "show":
                 await ctx.send(
-                    "```Selected server #" + str(Config.get_selected_minecraft_server_number()) +
-                    ". " + Config.get_selected_server_list()[1] + "```")
+                    "```Selected server #" + str(Config.get_settings().selected_server_number) +
+                    ". " + Config.get_selected_server_from_list().server_name + "```")
             else:
                 await ctx.send("```Wrong command!\nCommands: select, list```")
         else:
@@ -429,17 +440,14 @@ class Minecraft_commands(commands.Cog):
         emb.add_field(name='restart 10', value=':arrows_counterclockwise:')
         emb.add_field(name='update', value=':signal_strength:')
         add_reactions_to = await ctx.send(embed=emb)
-        Config.set_menu_id(str(add_reactions_to.id))
-        await add_reactions_to.add_reaction(self._ansii_com.get("status"))
-        await add_reactions_to.add_reaction(self._ansii_com.get("list"))
-        await add_reactions_to.add_reaction(self._ansii_com.get("start"))
-        await add_reactions_to.add_reaction(self._ansii_com.get("stop"))
-        await add_reactions_to.add_reaction(self._ansii_com.get("restart"))
-        await add_reactions_to.add_reaction(self._ansii_com.get("update"))
+        Config.get_settings().bot_settings.menu_id = add_reactions_to.id
+        Config.save_config()
+        for emote in self._ansii_com.values():
+            await add_reactions_to.add_reaction(emote)
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
-        if payload.message_id == int(Config.get_menu_id()) and payload.member.id != self._bot.user.id:
+        if payload.message_id == Config.get_settings().bot_settings.menu_id and payload.member.id != self._bot.user.id:
             channel = self._bot.get_channel(payload.channel_id)
             message = await channel.fetch_message(payload.message_id)
             await message.remove_reaction(payload.emoji, payload.member)
@@ -457,12 +465,14 @@ class Minecraft_commands(commands.Cog):
                     Bot_variables.server_checkups_task = self._bot.loop.create_task(server_checkups(self._bot))
                     return
                 else:
-                    if Config.get_role() not in (e.name for e in payload.member.roles):
-                        await send_error(channel, self._bot, commands.MissingRole(Config.get_role()), IsReaction=True)
-                    else:
+                    if Config.get_settings().bot_settings.role == "" or \
+                            Config.get_settings().bot_settings.role in (e.name for e in payload.member.roles):
                         if payload.emoji.name == self._ansii_com.get("start"):
                             await self.start(channel, IsReaction=True)
                         elif payload.emoji.name == self._ansii_com.get("stop"):
                             await self.stop(channel, command="10", IsReaction=True)
                         elif payload.emoji.name == self._ansii_com.get("restart"):
                             await self.restart(channel, command="10", IsReaction=True)
+                    else:
+                        await send_error(channel, self._bot,
+                                         commands.MissingRole(Config.get_settings().bot_settings.role), IsReaction=True)

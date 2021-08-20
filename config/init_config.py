@@ -1,51 +1,155 @@
 import datetime as dt
 import sys
 from ast import literal_eval
+from dataclasses import dataclass, field
 from datetime import datetime
+from glob import glob
 from json import dump, load, dumps, loads
-from os import listdir
-from os.path import isfile
+from os.path import isfile, isdir
 from pathlib import Path
+from typing import List, Optional
+
+from discord import Webhook, Member
+from discord.ext.commands import Bot
+from jsons import load as sload, DeserializationError
+from omegaconf import OmegaConf as conf
 
 from config.crypt_wrapper import *
 
 
 class Bot_variables:
-    react_auth = ""  # Variable for situation when command calls via reactions, represents author that added reaction
+    react_auth: Member = None  # Variable for situation when command calls via reactions, represents author that added reaction
     server_checkups_task = None
-    server_start_time = None
-    IsServerOn = False
-    IsLoading = False
-    IsStopping = False
-    IsRestarting = False
-    IsDoOp = False
-    IsVoting = False
-    op_deop_list = []  # List of nicks of players to op and then to deop
-    port_query = None
-    port_rcon = None
-    rcon_pass = None
-    progress_bar_time = 0
+    server_start_time: int = None
+    IsServerOn: bool = False
+    IsLoading: bool = False
+    IsStopping: bool = False
+    IsRestarting: bool = False
+    IsDoOp: bool = False
+    IsVoting: bool = False
+    op_deop_list: List = []  # List of nicks of players to op and then to deop
+    port_query: int = None
+    port_rcon: int = None
+    rcon_pass: str = None
+    progress_bar_time: int = 0
     watcher_of_log_file = None
-    webhook_chat = None
-    webhook_rss = None
-    bot_for_webhooks = None
+    webhook_chat: Webhook = None
+    webhook_rss: Webhook = None
+    bot_for_webhooks: Bot = None
+
+
+@dataclass
+class Cross_platform_chat:
+    enable_cross_platform_chat: Optional[bool] = None
+    channel_id: Optional[int] = None
+    webhook_url: Optional[str] = None
+    refresh_delay_of_console_log: float = -1.0
+
+
+@dataclass
+class Rss_feed:
+    enable_rss_feed: Optional[bool] = None
+    webhook_url: Optional[str] = None
+    rss_url: Optional[str] = None
+    rss_download_delay: int = -1
+    rss_last_date: Optional[str] = None
+
+
+@dataclass
+class Awating_times:
+    await_seconds_when_connecting_via_rcon: int = -1
+    await_seconds_in_check_ups: int = -1
+    await_seconds_when_opped: int = -1
+    await_seconds_before_message_deletion: int = -1
+
+
+@dataclass
+class Bot_settings:
+    _token = None
+    token_encrypted: Optional[str] = None
+
+    @property
+    def token(self):
+        return self._token
+
+    @token.setter
+    def token(self, token_decrypted):
+        self._token = token_decrypted
+        self.token_encrypted = encrypt_string(token_decrypted)
+
+    prefix: str = ""
+    gaming_status: str = ""
+    idle_status: str = ""
+    role: Optional[str] = None
+    ip_address: str = ""
+    local_address: str = ""
+    menu_id: Optional[int] = None
+    forceload: bool = False
+    vk_ask_credentials: bool = True
+    vk_login: Optional[str] = None
+    _vk_password = None
+    vk_password_encrypted: Optional[str] = None
+
+    @property
+    def vk_password(self):
+        return self._vk_password
+
+    @vk_password.setter
+    def vk_password(self, vk_password_decrypted):
+        self._vk_password = vk_password_decrypted
+        self.vk_password_encrypted = None if vk_password_decrypted is None else encrypt_string(vk_password_decrypted)
+
+    cross_platform_chat: Cross_platform_chat = Cross_platform_chat()
+    rss_feed: Rss_feed = Rss_feed()
+    awating_times: Awating_times = Awating_times()
+
+    def __post_init__(self):
+        if self.token_encrypted:
+            self._token = decrypt_string(self.token_encrypted)
+        if self.vk_password_encrypted:
+            self._vk_password = decrypt_string(self.vk_password_encrypted)
+
+
+@dataclass
+class Server_settings:
+    server_name: str = ""
+    working_directory: str = ""
+    start_file_name: str = ""
+    server_loading_time: Optional[int] = None
+
+
+@dataclass
+class Settings:
+    bot_settings: Bot_settings = Bot_settings()
+    ask_to_change_servers_list: bool = True
+    selected_server_number: int = 0
+    servers_list: List[Server_settings] = field(default_factory=list)
 
 
 class Config:
-    _current_bot_path = path.dirname(sys.argv[0])
-    _config_dict = {}
-    _config_name = "bot.json"
-    _need_to_rewrite = False
-    _token = None
-    _vk_login = None
-    _vk_pass = None
+    _current_bot_path: str = path.dirname(sys.argv[0])
+    _config_name = "Bot_config.yaml"
+    _settings_instance: Settings = Settings()
     _server_dates_name = "StartStopStates.json"
     _op_keys_name = "op_keys"
     _op_log_name = "op_log.txt"
     _id_to_nicks_name = "id-to-nicks.json"
+    _need_to_rewrite = False
 
-    @staticmethod
-    def get_inside_path():
+    @classmethod
+    def read_config(cls):
+        file_exists = False
+        if isfile(cls._config_name):
+            cls._settings_instance = cls._load_from_yaml(Path(cls._current_bot_path + "/" + cls._config_name), Settings)
+            file_exists = True
+        cls._setup_config(file_exists)
+
+    @classmethod
+    def save_config(cls):
+        cls._save_to_yaml(cls._settings_instance, Path(cls._current_bot_path + "/" + cls._config_name))
+
+    @classmethod
+    def get_inside_path(cls):
         """
         Get bot current path for accessing files that added via pyinstaller --add-data
 
@@ -57,207 +161,80 @@ class Config:
         if getattr(sys, 'frozen', False):
             return sys._MEIPASS
         elif __file__:
-            return Config._current_bot_path
+            return cls._current_bot_path
 
-    @staticmethod
-    def read_config():
-        file_exists = False
-        if isfile(Config._config_name):
-            with open(Path(Config._current_bot_path + '/' + Config._config_name), mode="r",
-                      encoding="utf-8") as conf_file:
-                Config._config_dict = load(conf_file)
-            file_exists = True
-        Config._set_up_config(file_exists)
+    @classmethod
+    def get_bot_config_path(cls) -> str:
+        return cls._current_bot_path
 
-    @staticmethod
-    def save_config():
-        try:
-            with open(Path(Config._current_bot_path + '/' + Config._config_name), mode="w",
-                      encoding="utf-8") as conf_file:
-                dump(Config._config_dict, conf_file, indent=2, ensure_ascii=False)
-        except FileNotFoundError:
-            Config.save_config()
+    @classmethod
+    def get_settings(cls) -> Settings:
+        return cls._settings_instance
 
-    @staticmethod
-    def get_token():
-        if Config._token is None:
-            Config.read_config()
-        return Config._token
+    @classmethod
+    def get_cross_platform_chat_settings(cls) -> Cross_platform_chat:
+        return cls._settings_instance.bot_settings.cross_platform_chat
 
-    @staticmethod
-    def get_prefix():
-        if Config._config_dict.get("Prefix", None) is None:
-            Config.read_config()
-        return Config._config_dict["Prefix"]
+    @classmethod
+    def get_rss_feed_settings(cls) -> Rss_feed:
+        return cls._settings_instance.bot_settings.rss_feed
 
-    @staticmethod
-    def get_vk_credentials():
-        if Config._config_dict.get("Vk_login", "None") == "None" or \
-                Config._config_dict.get("Vk_pass", "None") == "None":
-            Config.read_config()
-        return Config._vk_login, Config._vk_pass
+    @classmethod
+    def get_awaiting_times_settings(cls) -> Awating_times:
+        return cls._settings_instance.bot_settings.awating_times
 
-    @staticmethod
-    def get_ip_address():
-        if Config._config_dict.get("IP-address", None) is None:
-            raise ConnectionError("IP-address value is not set!")
-        return Config._config_dict.get("IP-address")
+    @classmethod
+    def get_selected_server_from_list(cls) -> Server_settings:
+        return cls._settings_instance.servers_list[cls._settings_instance.selected_server_number]
 
-    @staticmethod
-    def get_local_address():
-        return Config._config_dict.get("Address_local", None)
-
-    @staticmethod
-    def get_menu_id():
-        return Config._config_dict.get("Menu_message_id", None)
-
-    @staticmethod
-    def set_menu_id(menu_id: str):
-        Config._config_dict["Menu_message_id"] = menu_id
-        Config.save_config()
-
-    @staticmethod
-    def get_crossplatform_chat():
-        return Config._config_dict.get("Crossplatform_chat", False)
-
-    @staticmethod
-    def get_discord_channel_id_for_crossplatform_chat():
-        return Config._config_dict.get("Channel_id_for_crossplatform_chat", None)
-
-    @staticmethod
-    def set_discord_channel_id_for_crossplatform_chat(channel_id: str):
-        Config._config_dict["Channel_id_for_crossplatform_chat"] = channel_id
-        Config.save_config()
-
-    @staticmethod
-    def get_webhook_chat():
-        return Config._config_dict.get("Webhook_chat_url", None)
-
-    @staticmethod
-    def get_watcher_refresh_delay():
-        return Config._config_dict.get("Watcher_refresh_delay", 1)
-
-    @staticmethod
-    def get_webhook_rss():
-        return Config._config_dict.get("Webhook_rss_url", None)
-
-    @staticmethod
-    def get_rss_url():
-        return Config._config_dict.get("Rss_url", None)
-
-    @staticmethod
-    def set_rss_last_date(datetime: str):
-        Config._config_dict["Rss_last_date"] = datetime
-
-    @staticmethod
-    def get_rss_last_date():
-        return Config._config_dict.get("Rss_last_date",
-                                       datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat())
-
-    @staticmethod
-    def get_filename():
-        if Config._config_dict.get("Name of *.bat or *.sh file", None) is None:
-            raise FileNotFoundError("Name of start script is not stated!")
-        return Config._config_dict.get("Name of *.bat or *.sh file")
-
-    @staticmethod
-    def get_role():
-        return Config._config_dict.get("Command role for discord", "")
-
-    @staticmethod
-    def get_await_time_check_ups():
-        return Config._config_dict.get("Await time check-ups", 1)
-
-    @staticmethod
-    def get_await_time_op():
-        return Config._config_dict.get("Await time op", 0)
-
-    @staticmethod
-    def get_await_time_to_sleep():
-        return Config._config_dict.get("Await sleep", 0)
-
-    @staticmethod
-    def get_forceload():
-        return Config._config_dict.get("Forceload", False)
-
-    @staticmethod
-    def set_forceload(enabled: bool):
-        Config._config_dict["Forceload"] = enabled
-        Config.save_config()
-
-    @staticmethod
-    def get_selected_minecraft_server_number():
-        return Config._config_dict.get("Preferred_minecraft_dir", 0)
-
-    @staticmethod
-    def set_selected_minecraft_server(number: int):
-        Config._config_dict["Preferred_minecraft_dir"] = number
-        Config.save_config()
-
-    @staticmethod
-    def get_minecraft_dirs_list():
-        if Config._config_dict.get("Main_minecraft_dirs", None) is None:
-            raise RuntimeError("List of minecraft servers directories is empty!")
-        return Config._config_dict.get("Main_minecraft_dirs")
-
-    @staticmethod
-    def set_minecraft_dirs_list(mine_list: list):
-        Config._config_dict["Main_minecraft_dirs"] = mine_list
-        Config.save_config()
-
-    @staticmethod
-    def get_await_time_before_message_deletion():
-        return Config._config_dict.get("Await time delete", 10)
-
-    @staticmethod
-    def get_bot_config_path():
-        return Config._current_bot_path
-
-    @staticmethod
-    def read_op_keys():
-        if not path.isfile(Path(Config._current_bot_path + '/' + Config._op_keys_name)):
-            Config.save_op_keys(dict())
+    @classmethod
+    def read_op_keys(cls):
+        if not path.isfile(Path(cls._current_bot_path + '/' + cls._op_keys_name)):
+            cls.save_op_keys(dict())
             return dict()
         else:
-            return loads(decrypt_string(open(Path(Config._current_bot_path + '/' + Config._op_keys_name), "r").read()))
+            return loads(decrypt_string(open(Path(cls._current_bot_path + '/' + cls._op_keys_name), "r").read()))
 
-    @staticmethod
-    def save_op_keys(op_keys: dict):
-        open(Path(Config._current_bot_path + '/' + Config._op_keys_name), 'w') \
+    @classmethod
+    def save_op_keys(cls, op_keys: dict):
+        open(Path(cls._current_bot_path + '/' + cls._op_keys_name), 'w') \
             .write(encrypt_string(dumps(op_keys)))
 
-    @staticmethod
-    def read_id_to_nicks():
-        if not path.isfile(Path(Config._current_bot_path + '/' + Config._id_to_nicks_name)):
-            Config.save_id_to_nicks(dict())
+    @classmethod
+    def read_id_to_nicks(cls):
+        if not path.isfile(Path(cls._current_bot_path + '/' + cls._id_to_nicks_name)):
+            cls.save_id_to_nicks(dict())
             return dict()
         else:
-            return loads(open(Path(Config._current_bot_path + '/' + Config._id_to_nicks_name), 'r').read())
+            return loads(open(Path(cls._current_bot_path + '/' + cls._id_to_nicks_name), 'r').read())
 
-    @staticmethod
-    def save_id_to_nicks(id_to_nicks: dict):
-        open(Path(Config._current_bot_path + '/' + Config._id_to_nicks_name), 'w').write(dumps(id_to_nicks))
+    @classmethod
+    def save_id_to_nicks(cls, id_to_nicks: dict):
+        open(Path(cls._current_bot_path + '/' + cls._id_to_nicks_name), 'w').write(dumps(id_to_nicks))
 
-    @staticmethod
-    def read_server_dates():
-        if not path.isfile(Path(Config.get_selected_server_list()[0] + '/' + Config._server_dates_name)):
+    @classmethod
+    def read_server_dates(cls):
+        if not path.isfile(Path(cls.get_selected_server_from_list().working_directory + '/' + cls._server_dates_name)):
             server_dates = [[], []]
-            with open(Path(Config.get_selected_server_list()[0] + '/' + Config._server_dates_name), "w") as f_:
+            with open(Path(cls.get_selected_server_from_list().working_directory + '/' + cls._server_dates_name),
+                      "w") as f_:
                 dump(server_dates, f_, indent=2)
         else:
-            with open(Path(Config.get_selected_server_list()[0] + '/' + Config._server_dates_name), "r") as f_:
+            with open(Path(cls.get_selected_server_from_list().working_directory + '/' + cls._server_dates_name),
+                      "r") as f_:
                 server_dates = load(f_)
         return server_dates
 
-    @staticmethod
-    def save_server_dates(server_dates: list):
-        with open(Path(Config.get_selected_server_list()[0] + '/' + Config._server_dates_name), "w") as f_:
+    @classmethod
+    def save_server_dates(cls, server_dates: list):
+        with open(Path(cls.get_selected_server_from_list().working_directory + '/' + cls._server_dates_name),
+                  "w") as f_:
             dump(server_dates, f_, indent=2)
 
-    @staticmethod
-    def read_server_info():
-        Bot_variables.progress_bar_time = Config.get_selected_server_list()[2]
-        filepath = Path(Config.get_selected_server_list()[0] + "/server.properties")
+    @classmethod
+    def read_server_info(cls):
+        Bot_variables.progress_bar_time = cls.get_selected_server_from_list().server_loading_time
+        filepath = Path(cls.get_selected_server_from_list().working_directory + "/server.properties")
         if not filepath.exists():
             raise RuntimeError(f"File '{filepath.as_posix()}' doesn't exist!")
         with open(filepath, "r", encoding="utf8") as f:
@@ -285,17 +262,24 @@ class Config:
                   (', ' if not enable_query and not enable_rcon else '') +
                   ('enable-rcon' if not enable_rcon else ''))
 
-    @staticmethod
-    def get_selected_server_list():
-        return Config.get_minecraft_dirs_list()[Config.get_selected_minecraft_server_number()]
+    @classmethod
+    def get_ops_json(cls):
+        return load(open(Path(cls.get_selected_server_from_list().working_directory + '/ops.json'), 'r'))
 
-    @staticmethod
-    def get_ops_json():
-        return load(open(Path(Config.get_selected_server_list()[0] + '/ops.json'), 'r'))
+    @classmethod
+    def append_to_op_log(cls, message: str):
+        open(Path(cls.get_bot_config_path() + f'/{cls._op_log_name}'), 'a', encoding='utf-8').write(message)
 
-    @staticmethod
-    def append_to_op_log(message: str):
-        open(Path(Config.get_bot_config_path() + f'/{Config._op_log_name}'), 'a', encoding='utf-8').write(message)
+    @classmethod
+    def _load_from_yaml(cls, filepath: Path, baseclass) -> object:
+        try:
+            return sload(json_obj=conf.to_object(conf.load(filepath)), cls=baseclass)
+        except DeserializationError:
+            return baseclass()
+
+    @classmethod
+    def _save_to_yaml(cls, class_instance, filepath: Path):
+        conf.save(config=conf.structured(class_instance), f=filepath)
 
     @staticmethod
     def _ask_for_data(message: str, match_str=None,
@@ -308,353 +292,352 @@ class Config:
                 if try_int or int_high_than is not None:
                     try:
                         if int_high_than is not None and int(answer) < int_high_than:
+                            print(f"Your number lower than {int_high_than}!")
                             continue
                         return int(answer)
                     except ValueError:
+                        print("Your string doesn't contain an integer!")
                         continue
                 if try_float or float_hight_than is not None:
                     try:
                         if float_hight_than is not None and float(answer) < float_hight_than:
+                            print(f"Your number lower than {float_hight_than}!")
                             continue
                         return float(answer)
                     except ValueError:
+                        print("Your string doesn't contain a fractional number !")
                         continue
                 return answer
 
-    @staticmethod
-    def _set_up_config(file_exists=False):
+    @classmethod
+    def _setup_config(cls, file_exists=False):
         if not file_exists:
-            print(f"File '{Config._config_name}' wasn't found! Setting up a new one!")
+            print(f"File '{cls._config_name}' wasn't found! Setting up a new one!")
         else:
-            print(f"File '{Config._config_name}' was found!")
+            print(f"File '{cls._config_name}' was found!")
 
-        Config._set_token()
-        Config._set_prefix()
-        Config._set_ip_address()
-        Config._set_local_address()
-        Config._set_menu_id()
-        Config._set_role()
-        Config._set_filename()
-        Config._set_crossplatform_chat()
-        Config._set_rss_feed()
-        Config._set_await_time_op()
-        Config._set_await_time_check_ups()
-        Config._set_await_time_to_sleep()
-        Config._set_await_time_before_message_deletion()
-        Config.set_forceload(False)
-        Config._set_vk_credentials()
-        Config._set_servers()
+        cls._setup_token()
+        cls._setup_prefix()
+        cls._setup_role()
+        cls._setup_bot_statuses()
+        cls._setup_ip_address()
+        cls._setup_local_address()
+        cls._setup_menu_id()
+        cls._setup_vk_credentials()
+        cls._setup_cross_platform_chat()
+        cls._setup_rss_feed()
+        cls._setup_awaiting_times()
+        cls._setup_servers()
 
-        if Config._need_to_rewrite:
-            Config.save_config()
+        if cls._need_to_rewrite:
+            cls._need_to_rewrite = False
+            cls.save_config()
             print("Config saved!")
         print("Config read!")
 
-    @staticmethod
-    def _set_token():
-        if Config._config_dict.get("Token", None) is None:
-            Config._need_to_rewrite = True
-            Config._token = Config._ask_for_data("Token not founded. Enter token: ")
-            Config._config_dict["Token"] = encrypt_string(Config._token)
-        else:
-            Config._token = decrypt_string(Config._config_dict["Token"])
+    @classmethod
+    def _setup_token(cls):
+        if cls._settings_instance.bot_settings.token is None:
+            cls._need_to_rewrite = True
+            cls._settings_instance.bot_settings.token = cls._ask_for_data("Token not founded. Enter token: ")
 
-    @staticmethod
-    def _set_prefix():
-        if Config._config_dict.get("Prefix", None) is None:
-            Config._need_to_rewrite = True
-            Config._config_dict["Prefix"] = Config._ask_for_data("Enter bot prefix: ")
-        print(f"Bot prefix set to '{Config._config_dict.get('Prefix', None)}'.")
+    @classmethod
+    def _setup_prefix(cls):
+        if cls._settings_instance.bot_settings.prefix == "":
+            cls._need_to_rewrite = True
+            cls._settings_instance.bot_settings.prefix = cls._ask_for_data("Enter bot prefix: ")
+        print(f"Bot prefix set to '{cls._settings_instance.bot_settings.prefix}'.")
 
-    @staticmethod
-    def _set_vk_credentials():
-        if Config._config_dict.get("Vk_login", None) and Config._config_dict.get("Vk_pass", None):
-            Config._vk_login = decrypt_string(Config._config_dict["Vk_login"])
-            Config._vk_pass = decrypt_string(Config._config_dict["Vk_pass"])
-        else:
-            Config._config_dict["Vk_login"] = None
-            Config._config_dict["Vk_pass"] = None
-        if Config._config_dict.get("Vk_ask", True):
-            if Config._ask_for_data(
-                    f"Would you like to {'change' if Config._vk_login is not None and Config._vk_pass is not None else 'enter'} vk account data? y/n\n",
-                    "y"):
-                Config._vk_login = Config._ask_for_data("Enter vk login: ")
-                Config._vk_pass = Config._ask_for_data("Enter vk pass: ")
-                Config._config_dict["Vk_login"] = encrypt_string(Config._vk_login)
-                Config._config_dict["Vk_pass"] = encrypt_string(Config._vk_pass)
-                Config._need_to_rewrite = True
-            if Config._ask_for_data("Never ask about it again? y/n\n", "y"):
-                Config._config_dict["Vk_ask"] = False
-                Config._need_to_rewrite = True
-                if Config._vk_login is not None and Config._vk_pass is not None:
-                    print("I'll never ask you about it again.")
-                else:
-                    print("Vk account data not received.\n"
-                          "I'll never ask you about it again.\nNote: command %say won't work.")
-            else:
-                print("Vk account data received. Why man?")
-        else:
-            if Config._vk_login is not None and Config._vk_pass is not None:
-                print("Vk account data received.")
-            else:
-                print("Vk account data not received.\nNote: command %say won't work.")
-
-    @staticmethod
-    def _set_ip_address():
-        if Config._config_dict.get("IP-address", None) is None:
-            Config._need_to_rewrite = True
-            Config._config_dict["IP-address"] = Config._ask_for_data("Enter server's real IP-address or DNS-name: ")
-
-    @staticmethod
-    def _set_local_address():
-        if Config._config_dict.get("Address_local", None) is None:
-            Config._need_to_rewrite = True
-            Config._config_dict["Address_local"] = Config._ask_for_data("Enter server's local address: ")
-
-    @staticmethod
-    def _set_menu_id():
-        if Config._config_dict.get("Menu_message_id", None) is None:
-            if Config._ask_for_data("Menu message id not found. Would you like to enter it? y/n\n", "y"):
-                Config._need_to_rewrite = True
-                Config._config_dict["Menu_message_id"] = Config._ask_for_data("Enter menu message id: ")
-            else:
-                print("Menu via reactions wouldn't work. To make it work type '%menu' to create new menu and its id.")
-
-    @staticmethod
-    def _set_filename():
-        if Config._config_dict.get("Name of *.bat or *.sh file", None):
-            script_name = Config._config_dict.get("Name of *.bat or *.sh file")
-            print("Bot will search for file '" + script_name +
-                  ".bat' or '" + script_name + ".sh' in main minecraft directory to start the server!")
-        else:
-            Config._need_to_rewrite = True
-            Config._config_dict["Name of *.bat or *.sh file"] = \
-                Config._ask_for_data("Set name of file-script for bot to start the server with it\n")
-
-    @staticmethod
-    def _set_role():
-        if Config._config_dict.get("Command role for discord", None) != "" and \
-                Config._config_dict.get("Command role for discord", None) is not None:
-            Command_role = Config._config_dict.get("Command role for discord")
+    @classmethod
+    def _setup_role(cls):
+        if cls._settings_instance.bot_settings.role is not None:
+            Command_role = cls._settings_instance.bot_settings.role
             if Command_role:
-                print("Current role for some commands is '" + Command_role + "'.")
+                print(f"Current role for some commands is '{Command_role}'.")
             else:
                 print("Current role doesn't stated.")
         else:
-            Config._need_to_rewrite = True
-            if Config._ask_for_data("Do you want to set role for some specific commands? y/n\n", "y"):
-                Config._config_dict["Command role for discord"] = \
-                    Config._ask_for_data("Set discord role for some specific commands such as start, stop, etc.\n")
+            cls._need_to_rewrite = True
+            if cls._ask_for_data("Do you want to set role for some specific commands? Y/n\n", "y"):
+                cls._settings_instance.bot_settings.role = \
+                    cls._ask_for_data("Set discord role for some specific commands such as start, stop, etc.\n")
             else:
-                Config._config_dict["Command role for discord"] = ""
+                cls._settings_instance.bot_settings.role = ""
 
-    @staticmethod
-    def _set_await_time_check_ups():
-        if Config._config_dict.get("Await time check-ups", -1) > 0:
-            if Config._config_dict.get("Ask await time check-ups", False):
-                if Config._ask_for_data("Await time check-ups. Now it set to " +
-                                        str(Config._config_dict.get("Await time check-ups")) +
-                                        " seconds. Would you like to change it? y/n\n", "y"):
-                    Config._need_to_rewrite = True
-                    Config._config_dict["Await time check-ups"] = \
-                        Config._ask_for_data("Set await time between check-ups 'Server on/off' (in seconds, int): ",
-                                             try_int=True)
-                if Config._ask_for_data("Never ask about it again? y/n\n", "y"):
-                    Config._need_to_rewrite = True
-                    Config._config_dict["Ask await time check-ups"] = False
-                    print("Await time will be brought from config.")
+    @classmethod
+    def _setup_vk_credentials(cls):
+        if not cls._settings_instance.bot_settings.vk_login or not cls._settings_instance.bot_settings.vk_password:
+            cls._settings_instance.bot_settings.vk_login = None
+            cls._settings_instance.bot_settings.vk_password = None
+        if cls._settings_instance.bot_settings.vk_ask_credentials:
+            if cls._ask_for_data("Would you like to " +
+                                 ('change' if cls._settings_instance.bot_settings.vk_login is not None else 'enter') +
+                                 " vk account data? Y/n\n", "y"):
+                cls._settings_instance.bot_settings.vk_login = cls._ask_for_data("Enter vk login: ")
+                cls._settings_instance.bot_settings.vk_password = cls._ask_for_data("Enter vk password: ")
+                cls._need_to_rewrite = True
+            if cls._ask_for_data("Never ask about it again? Y/n\n", "y"):
+                cls._settings_instance.bot_settings.vk_ask_credentials = False
+                cls._need_to_rewrite = True
+                if cls._settings_instance.bot_settings.vk_login is not None and \
+                        cls._settings_instance.bot_settings.vk_password is not None:
+                    print("I'll never ask you about it again.")
+                else:
+                    print("Vk account data not received.\n"
+                          "I'll never ask you about it again.\n"
+                          f"Note: command {cls._settings_instance.bot_settings.prefix}say won't work.")
             else:
-                print(f"Await time check-ups set to {str(Config._config_dict.get('Await time check-ups'))} sec.")
+                print("Vk account data received. Why man?")
         else:
-            Config._need_to_rewrite = True
-            print("Await time check-ups set below zero. Change this option")
+            if cls._settings_instance.bot_settings.vk_login is not None and \
+                    cls._settings_instance.bot_settings.vk_password is not None:
+                print("Vk account data received.")
+            else:
+                print("Vk account data not received.\n"
+                      f"Note: command {cls._settings_instance.bot_settings.prefix}say won't work.")
+
+    @classmethod
+    def _setup_ip_address(cls):
+        if cls._settings_instance.bot_settings.ip_address == "":
+            cls._need_to_rewrite = True
+            cls._settings_instance.bot_settings.ip_address = \
+                cls._ask_for_data("Enter server's real IP-address or DNS-name: ")
+        print(f"Server's real IP-address or DNS-name is '{cls._settings_instance.bot_settings.ip_address}'")
+
+    @classmethod
+    def _setup_local_address(cls):
+        if cls._settings_instance.bot_settings.local_address == "":
+            cls._need_to_rewrite = True
+            cls._settings_instance.bot_settings.local_address = \
+                cls._ask_for_data("Enter server's local address (default - 'localhost'): ")
+
+    @classmethod
+    def _setup_menu_id(cls):
+        if cls._settings_instance.bot_settings.menu_id is None:
+            if cls._ask_for_data("Menu message id not found. Would you like to enter it? Y/n\n", "y"):
+                cls._need_to_rewrite = True
+                cls._settings_instance.bot_settings.menu_id = cls._ask_for_data("Enter menu message id: ",
+                                                                                try_int=True, int_high_than=0)
+            else:
+                print("Menu via reactions wouldn't work. To make it work type "
+                      f"'{cls._settings_instance.bot_settings.prefix}menu' to create new menu and its id.")
+
+    @classmethod
+    def _setup_bot_statuses(cls):
+        # Gaming status
+        if cls._settings_instance.bot_settings.gaming_status == "":
+            cls._settings_instance.bot_settings.gaming_status = cls._ask_for_data("Set gaming status: ")
+        # Idle status
+        if cls._settings_instance.bot_settings.idle_status == "":
+            cls._settings_instance.bot_settings.idle_status = cls._ask_for_data("Set idle status: ")
+
+    @classmethod
+    def _setup_awaiting_times(cls):
+        # Await time check-ups func
+        if cls._settings_instance.bot_settings.awating_times.await_seconds_in_check_ups < 1:
+            cls._need_to_rewrite = True
+            print("Await time check-ups set below 1. Change this option")
             print("Note: If your machine has processor with frequency 2-2.5 GHz, "
-                  "you have to set this option at least to '1' second for the bot to work properly.")
-            Config._config_dict["Await time check-ups"] = \
-                Config._ask_for_data("Set await time between check-ups 'Server on/off' (in seconds, int): ",
-                                     try_int=True, int_high_than=0)
+                  "you have to set this option at least to '2' seconds or higher for the bot to work properly.")
+            cls._settings_instance.bot_settings.awating_times.await_seconds_in_check_ups = \
+                cls._ask_for_data("Set await time between check-ups 'Server on/off' (in seconds, int): ",
+                                  try_int=True, int_high_than=1)
+        print("Await time check-ups set to " +
+              str(cls._settings_instance.bot_settings.awating_times.await_seconds_in_check_ups) + " sec.")
 
-    @staticmethod
-    def _set_await_time_op():
-        if Config._config_dict.get("Await time op", -1) >= 0:
-            print("Await time op set to " + str(Config._config_dict.get("Await time op")) + " sec.")
-            if Config._config_dict.get("Await time op") == 0:
-                print("Limitation doesn't exist, padawan.")
-        else:
-            Config._need_to_rewrite = True
+        # Await time op
+        if cls._settings_instance.bot_settings.awating_times.await_seconds_when_opped < 0:
+            cls._need_to_rewrite = True
             print("Await time op set below zero. Change this option")
-            Config._config_dict["Await time op"] = \
-                Config._ask_for_data("Set await time for op (in seconds, int): ", try_int=True, int_high_than=-1)
+            cls._settings_instance.bot_settings.awating_times.await_seconds_when_opped = \
+                cls._ask_for_data("Set await time for op (in seconds, int): ", try_int=True, int_high_than=-1)
+        print("Await time op set to " +
+              str(cls._settings_instance.bot_settings.awating_times.await_seconds_when_opped) + " sec.")
+        if cls._settings_instance.bot_settings.awating_times.await_seconds_when_opped == 0:
+            print("Limitation doesn't exist, padawan.")
 
-    @staticmethod
-    def _set_await_time_to_sleep():
-        if Config._config_dict.get("Await sleep", -1) >= 0:
-            print(
-                f"Await time to sleep while bot pinging server for info set to {str(Config._config_dict.get('Await sleep'))} sec.")
-            if Config._config_dict.get("Await sleep") == 0:
-                print("I'm fast as f*ck, boi.")
-        else:
-            Config._need_to_rewrite = True
+        # Await time to sleep while bot pinging server for info
+        if cls._settings_instance.bot_settings.awating_times.await_seconds_when_connecting_via_rcon < 0:
+            cls._need_to_rewrite = True
             print("Await time to sleep set below zero. Change this option")
-            Config._config_dict["Await sleep"] = \
-                Config._ask_for_data("Set await time to sleep while bot pinging server for info (in seconds, int): ",
-                                     try_int=True, int_high_than=-1)
+            cls._settings_instance.bot_settings.awating_times.await_seconds_when_connecting_via_rcon = \
+                cls._ask_for_data("Set await time to sleep while bot pinging server for info (in seconds, int): ",
+                                  try_int=True, int_high_than=-1)
+        print("Await time to sleep while bot pinging server for info set to " +
+              str(cls._settings_instance.bot_settings.awating_times.await_seconds_when_connecting_via_rcon) + " sec.")
+        if cls._settings_instance.bot_settings.awating_times.await_seconds_when_connecting_via_rcon == 0:
+            print("I'm fast as f*ck, boi!")
 
-    @staticmethod
-    def _set_servers():
-        Minecraft_dirs_list = []  # List of available to run servers
-        if Config._config_dict.get("Preferred_minecraft_dir", None) is None:
-            Config._config_dict["Preferred_minecraft_dir"] = 0
-        Mine_dir_numb = Config._config_dict.get("Preferred_minecraft_dir")
-        if Config._config_dict.get("Main_minecraft_dirs", None):
-            Minecraft_dirs_list = Config._config_dict.get("Main_minecraft_dirs")
+        # Await time before_message_deletion
+        if cls._settings_instance.bot_settings.awating_times.await_seconds_before_message_deletion < 1:
+            cls._need_to_rewrite = True
+            print("Await time to delete before message deletion set below one. Change this option")
+            cls._settings_instance.bot_settings.awating_times.await_seconds_before_message_deletion = \
+                cls._ask_for_data("Set await time to delete (in seconds, int): ", try_int=True, int_high_than=0)
+        print("Await time to sleep set to " +
+              str(cls._settings_instance.bot_settings.awating_times.await_seconds_before_message_deletion) + " sec.")
 
-        if len(Minecraft_dirs_list) == 0:
-            Minecraft_dirs_number = Config._ask_for_data("How much servers you intend to keep?\n", try_int=True)
+    @classmethod
+    def _setup_servers(cls):
+        if not cls._settings_instance.ask_to_change_servers_list:
+            print("Selected minecraft server dir set to path '" + cls.get_selected_server_from_list().working_directory
+                  + "' also known as '" + cls.get_selected_server_from_list().server_name + "'")
+            return
+
+        cls._need_to_rewrite = True
+        new_servers_number = cls._ask_for_data("How much servers you intend to keep?\n", try_int=True, int_high_than=0)
+        if new_servers_number >= len(cls._settings_instance.servers_list):
+            for i in range(len(cls._settings_instance.servers_list)):
+                cls._settings_instance.servers_list[i] = \
+                    cls._change_server_settings(cls._settings_instance.servers_list[i])
+            for _ in range(new_servers_number - len(cls._settings_instance.servers_list)):
+                cls._settings_instance.servers_list.append(cls._change_server_settings())
         else:
-            Minecraft_dirs_number = len(Minecraft_dirs_list)
+            for server in cls._settings_instance.servers_list.copy():
+                changed_server = cls._change_server_settings(server)
+                if changed_server is not None:
+                    old_server_pos = [s for s in range(len(cls._settings_instance.servers_list))
+                                      if cls._settings_instance.servers_list[s] == server][0]
+                    cls._settings_instance.servers_list[old_server_pos] = changed_server
+                elif cls._ask_for_data(f"Would you like to delete this server '{server.server_name}'? Y/n\n", "y"):
+                    cls._settings_instance.servers_list.remove(server)
 
-        if Config._config_dict.get("Minecaft_dirs_ask") or Config._config_dict.get("Main_minecraft_dirs", None) is None:
-            Minecraft_dirs_list = Config._change_list_mine(Minecraft_dirs_list, Minecraft_dirs_number)
-            Config._config_dict["Main_minecraft_dirs"] = Minecraft_dirs_list
-            if Config._ask_for_data("Never ask about it again? y/n\n", "y"):
-                Config._config_dict["Minecaft_dirs_ask"] = False
-                print("Minecraft dirs will be brought from config.")
-            Config._need_to_rewrite = True
+        cls._settings_instance.ask_to_change_servers_list = False
+        print("Selected minecraft server dir set to path '" + cls.get_selected_server_from_list().working_directory
+              + "' also known as '" + cls.get_selected_server_from_list().server_name + "'")
+
+    @classmethod
+    def _change_server_settings(cls, server: Server_settings = None):
+        changing_settings = False
+        if server is not None:
+            if not cls._ask_for_data(f"Would you like to change this server '{server.server_name}'? Y/n\n", "y"):
+                return
+            changing_settings = True
         else:
-            print("Minecraft dir set to path '" + Minecraft_dirs_list[Mine_dir_numb][0] + "' also known as " +
-                  (Minecraft_dirs_list[Mine_dir_numb][1] if Minecraft_dirs_list[Mine_dir_numb][1] else "-None-"))
+            print("Configuring new server settings...")
 
-    @staticmethod
-    def _change_list_mine(l_ist, o):  # Function to add or delete servers paths in list 'Minecraft_dirs_list'
-        force_to_write = False
-        l = [["", "", 0] for _ in range(0, o)]  # Temporal list, it returns in the end
-        for j in range(o):
-            if len(l_ist) > 0:
-                l[j] = l_ist[j]
-                l_ist.pop(0)
-        i = 0
-        while i < o:
-            print("This is " + str(i + 1) + " path")
-            if l[i][0]:
-                print(
-                    "Current editable minecraft path: " + l[i][
-                        0] + "\nWould you like to change path AND its comment? y/n")
+        if not changing_settings:
+            server = Server_settings()
+            server.server_name = cls._ask_for_data(f"Enter server name: ")
+            server.working_directory = cls._get_server_working_directory()
+            server.start_file_name = cls._get_server_start_file_name(server.working_directory)
+        else:
+            if cls._ask_for_data(f"Change server name '{server.server_name}'? Y/n\n", "y"):
+                server.server_name = cls._ask_for_data(f"Enter server name: ")
+            if cls._ask_for_data(f"Change server working directory '{server.working_directory}'? Y/n\n", "y"):
+                server.working_directory = cls._get_server_working_directory()
+            if cls._ask_for_data(f"Change server start file name '{server.start_file_name}'? Y/n\n", "y"):
+                server.start_file_name = cls._get_server_start_file_name(server.working_directory)
+        return server
+
+    @classmethod
+    def _get_server_working_directory(cls):
+        while True:
+            working_directory = cls._ask_for_data(f"Enter server working directory (full path): ")
+            if isdir(working_directory):
+                if len(glob(Path(working_directory + "/*.jar").as_posix())) > 0:
+                    return working_directory
+                else:
+                    print("There are no '*.jar' files in this working directory ")
             else:
-                print("There is no right path")
-                force_to_write = True
-            if force_to_write or input() == "y":
-                force_to_write = False
-                l[i][0] = input("Enter right path: ")
-                try:
-                    x = listdir(l[i][0])
-                    if len(x) > 0:
-                        for _ in x:
-                            if path.isfile(Path(l[i][0] + '/' + _)) and _ == "server.properties":
-                                print("Current comment about this path: '" + (
-                                    l[i][1] if l[i][1] else "-None-") + "'\nChange it? y/n")
-                                t = ""
-                                if "y" == input():
-                                    t = input(
-                                        "Enter comment about this path: ")
-                                l[i][1] = t
-                                i += 1
-                                break
+                print("This working directory is wrong.")
+
+    @classmethod
+    def _get_server_start_file_name(cls, working_directory: str):
+        file_extension = None
+        BOLD = '\033[1m'
+        END = '\033[0m'
+        if sys.platform == "linux" or sys.platform == "linux2":
+            file_extension = ".sh"
+            print("Bot detected your operating system is linux.\n"
+                  "Bot will search for ***.sh file.\n"
+                  f"You need to enter file name {BOLD}without{END} file extension!")
+        elif sys.platform == "win32":
+            file_extension = ".bat"
+            print("Bot detected your operating system is windows.\n"
+                  "Bot will search for ***.bat file.\n"
+                  f"You need to enter file name {BOLD}without{END} file extension!")
+        else:
+            print("Bot couldn't detect your operating system.\n"
+                  f"You need to enter file name {BOLD}with{END} file extension!")
+        while True:
+            start_file_name = cls._ask_for_data(f"Enter server start file name: ") + \
+                              (file_extension if file_extension is not None else '')
+            if isfile(Path(working_directory + "/" + start_file_name)):
+                return start_file_name
+            else:
+                print("This start file doesn't exist.")
+
+    @classmethod
+    def _setup_cross_platform_chat(cls):
+        if cls._settings_instance.bot_settings.cross_platform_chat.enable_cross_platform_chat is None:
+            cls._need_to_rewrite = True
+            if cls._ask_for_data("Would you like to enable cross platform chat? Y/n\n", "y"):
+                cls._settings_instance.bot_settings.cross_platform_chat.enable_cross_platform_chat = True
+
+                if cls._settings_instance.bot_settings.cross_platform_chat.channel_id is None:
+                    if cls._ask_for_data("Channel id not found. Would you like to enter it? Y/n\n", "y"):
+                        cls._settings_instance.bot_settings.cross_platform_chat.channel_id = \
+                            cls._ask_for_data("Enter channel id: ")
                     else:
-                        print("This path doesn't contain file server.properties. Try again")
-                except BaseException:
-                    l[i][0] = ""
-                    print("This path written wrong, try again")
-            else:
-                print("Path won't change!")
-                i += 1
-        return l
+                        print("Cross platform chat wouldn't work. To make it work type '%chat <id>' to create link.")
 
-    @staticmethod
-    def _set_await_time_before_message_deletion():
-        if Config._config_dict.get("Await time delete", -1) >= 0:
-            print(f"Await time to sleep set to {str(Config._config_dict.get('Await time delete'))} sec.")
+                if cls._settings_instance.bot_settings.cross_platform_chat.webhook_url is None:
+                    if cls._ask_for_data("Webhook url for cross platform chat not found. "
+                                         "Would you like to enter it? Y/n\n", "y"):
+                        cls._settings_instance.bot_settings.cross_platform_chat.webhook_url = \
+                            cls._ask_for_data("Enter webhook url: ")
+                    else:
+                        print("Cross platform chat wouldn't work. Create webhook and enter it to bot config!")
+
+                if cls._settings_instance.bot_settings.cross_platform_chat.refresh_delay_of_console_log <= 0.05:
+                    print("Watcher's delay to refresh doesn't set.")
+                    print("Note: If your machine has processor with frequency 2-2.5 GHz, "
+                          "you have to set this option from '0.5' to '0.9' second for the bot to work properly.")
+                    cls._settings_instance.bot_settings.cross_platform_chat.refresh_delay_of_console_log = \
+                        cls._ask_for_data("Set delay to refresh (in seconds, float): ",
+                                          try_float=True, float_hight_than=0.05)
+            else:
+                cls._settings_instance.bot_settings.cross_platform_chat.enable_cross_platform_chat = False
+                print("Cross platform chat wouldn't work.")
         else:
-            Config._need_to_rewrite = True
-            print("Await time to delete set below zero. Change this option")
-            Config._config_dict["Await time delete"] = \
-                Config._ask_for_data("Set await time to delete (in seconds, int): ", try_int=True)
-
-    @staticmethod
-    def _set_crossplatform_chat():
-        if Config._config_dict.get("Crossplatform_chat", None) is None:
-            if Config._ask_for_data("Would you like to enter data for crossplatform chat? y/n\n", "y"):
-                Config._need_to_rewrite = True
-                Config._config_dict["Crossplatform_chat"] = True
-
-                Config._set_discord_channel_id_for_crossplatform_chat()
-                Config._set_webhook_chat()
-                Config._set_watcher_refresh_delay()
+            if cls._settings_instance.bot_settings.cross_platform_chat.enable_cross_platform_chat:
+                print("Cross platform chat enabled.")
             else:
-                Config._config_dict["Crossplatform_chat"] = False
-                print("Crossplatform chat wouldn't work.")
+                print("Cross platform chat disabled.")
 
-    @staticmethod
-    def _set_discord_channel_id_for_crossplatform_chat():
-        if Config._config_dict.get("Channel_id_for_crossplatform_chat", None) is None:
-            if Config._ask_for_data("Channel id not found. Would you like to enter it? y/n\n", "y"):
-                Config._need_to_rewrite = True
-                Config._config_dict["Channel_id_for_crossplatform_chat"] = Config._ask_for_data("Enter channel id: ")
+    @classmethod
+    def _setup_rss_feed(cls):
+        if cls._settings_instance.bot_settings.rss_feed.enable_rss_feed is None:
+            cls._need_to_rewrite = True
+            if cls._ask_for_data("Would you like to enable rss feed? Y/n\n", "y"):
+                cls._settings_instance.bot_settings.rss_feed.enable_rss_feed = True
+
+                if cls._settings_instance.bot_settings.rss_feed.webhook_url is None:
+                    if cls._ask_for_data("Webhook rss url not found. Would you like to enter it? Y/n\n", "y"):
+                        cls._settings_instance.bot_settings.rss_feed.webhook_url = \
+                            cls._ask_for_data("Enter webhook rss url: ")
+                    else:
+                        print("Rss wouldn't work. Create webhook and enter it to bot config!")
+
+                if cls._settings_instance.bot_settings.rss_feed.rss_url is None:
+                    if cls._ask_for_data("Rss url not found. Would you like to enter it? Y/n\n", "y"):
+                        cls._settings_instance.bot_settings.rss_feed.rss_url = cls._ask_for_data("Enter rss url: ")
+                    else:
+                        print("Rss wouldn't work. Enter url of rss feed to bot config!")
+
+                if cls._settings_instance.bot_settings.rss_feed.rss_download_delay < 1:
+                    print("Rss download delay doesn't set")
+                    cls._settings_instance.bot_settings.rss_feed.rss_download_delay = \
+                        cls._ask_for_data("Enter rss download delay (in seconds, int): ", try_int=True, int_high_than=0)
+
+                cls._settings_instance.bot_settings.rss_feed.rss_last_date = \
+                    datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
             else:
-                print("Crossplatform chat wouldn't work. To make it work type '%chat <id>' to create link.")
-
-    @staticmethod
-    def _set_webhook_chat():
-        if Config._config_dict.get("Webhook_chat_url", None) is None:
-            if Config._ask_for_data("Webhook url for crossplatform chat not found. Would you like to enter it? y/n\n",
-                                    "y"):
-                Config._need_to_rewrite = True
-                Config._config_dict["Webhook_chat_url"] = Config._ask_for_data("Enter webhook url: ")
-            else:
-                print("Crossplatform chat wouldn't work. Create webhook and enter it to bot config!")
-
-    @staticmethod
-    def _set_watcher_refresh_delay():
-        if Config._config_dict.get("Watcher_refresh_delay", -1) <= 0:
-            print("Watcher's delay to refresh doesn't set.")
-            print("Note: If your machine has processor with frequency 2-2.5 GHz, "
-                  "you have to set this option from '0.7' to '0.9' second for the bot to work properly.")
-            Config._need_to_rewrite = True
-            Config._config_dict["Watcher_refresh_delay"] = \
-                Config._ask_for_data("Set delay to refresh (in seconds, float): ", try_float=True)
-        else:
-            print(f"Watcher's delay to refresh set to {Config.get_watcher_refresh_delay()} sec.")
-
-    @staticmethod
-    def _set_rss_feed():
-        if Config._config_dict.get("Rss_feed", None) is None:
-            if Config._ask_for_data("Would you like to enter data for rss feed? y/n\n", "y"):
-                Config._need_to_rewrite = True
-                Config._config_dict["Rss_feed"] = True
-
-                Config._set_webhook_rss()
-                Config._set_rss_url()
-                Config.set_rss_last_date(datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat())
-            else:
-                Config._config_dict["Rss_feed"] = False
+                cls._settings_instance.bot_settings.rss_feed.enable_rss_feed = False
                 print("Rss feed wouldn't work.")
-
-    @staticmethod
-    def _set_webhook_rss():
-        if Config._config_dict.get("Webhook_rss_url", None) is None:
-            if Config._ask_for_data("Webhook rss url not found. Would you like to enter it? y/n\n",
-                                    "y"):
-                Config._need_to_rewrite = True
-                Config._config_dict["Webhook_rss_url"] = Config._ask_for_data("Enter webhook rss url: ")
+        else:
+            if cls._settings_instance.bot_settings.rss_feed.enable_rss_feed:
+                print("Rss feed enabled.")
             else:
-                print("Rss wouldn't work. Create webhook and enter it to bot config!")
-
-    @staticmethod
-    def _set_rss_url():
-        if Config._config_dict.get("Rss_url", None) is None:
-            if Config._ask_for_data("Rss url not found. Would you like to enter it? y/n\n",
-                                    "y"):
-                Config._need_to_rewrite = True
-                Config._config_dict["Rss_url"] = Config._ask_for_data("Enter rss url: ")
-            else:
-                print("Rss wouldn't work. Enter url of feed to bot config!")
+                print("Rss feed disabled.")

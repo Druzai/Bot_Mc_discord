@@ -43,31 +43,34 @@ class Chat_commands(commands.Cog):
     @commands.guild_only()
     @role.has_role_or_default()
     async def chat(self, ctx, channel_id=None):
-        if not Config.get_crossplatform_chat():
-            await ctx.channel.send("Crossplatform chat is disabled in bot config!")
+        if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
+            await ctx.channel.send("Cross platform chat is disabled in bot config!")
             return
 
-        channel_setted = False
+        channel_set = False
         if channel_id is None:
-            Config.set_discord_channel_id_for_crossplatform_chat(str(ctx.channel.id))
-            channel_setted = True
+            Config.get_cross_platform_chat_settings().channel_id = ctx.channel.id
+            channel_set = True
         else:
             if channel_id.startswith("<#"):
                 try:
-                    Config.set_discord_channel_id_for_crossplatform_chat(str(int(channel_id.strip("<#>"))))
-                    channel_setted = True
+                    Config.get_cross_platform_chat_settings().channel_id = int(channel_id.strip("<#>"))
+                    channel_set = True
                 except ValueError:
                     pass
             else:
                 try:
-                    Config.set_discord_channel_id_for_crossplatform_chat(str(int(channel_id)))
-                    channel_setted = True
+                    Config.get_cross_platform_chat_settings().channel_id = int(channel_id)
+                    channel_set = True
                 except ValueError:
                     pass
 
-        if channel_setted:
+        if channel_set:
+            Config.save_config()
             await ctx.channel.send(
-                f"Channel `{(await self._bot.fetch_channel(Config.get_discord_channel_id_for_crossplatform_chat())).name}` set to minecraft crossplatform chat!")
+                "Channel `" +
+                (await self._bot.fetch_channel(Config.get_cross_platform_chat_settings().channel_id)).name +
+                "` set to minecraft cross platform chat!")
             if Bot_variables.watcher_of_log_file is None:
                 Bot_variables.watcher_of_log_file = create_watcher()
                 Bot_variables.watcher_of_log_file.start()
@@ -76,14 +79,14 @@ class Chat_commands(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if not Config.get_crossplatform_chat():
+        if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
             return
 
         await handle_message_for_chat(message, self._bot, True)
 
     @commands.Cog.listener()
     async def on_message_edit(self, before, after):
-        if not Config.get_crossplatform_chat():
+        if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
             return
 
         await handle_message_for_chat(after, self._bot, False, on_edit=True, before_message=before)
@@ -92,7 +95,7 @@ class Chat_commands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, embed_links=True, view_channel=True)
     async def say(self, ctx):
         """Петросян"""
-        vk_login, vk_pass = Config.get_vk_credentials()
+        vk_login, vk_pass = Config.get_settings().bot_settings.vk_login, Config.get_settings().bot_settings.vk_password
         if vk_login is not None and vk_pass is not None:
             if bool(randint(0, 3)):
                 _300_answers = [
@@ -159,7 +162,7 @@ class Chat_commands(commands.Cog):
     @commands.guild_only()
     async def help(self, ctx):
         await ctx.channel.purge(limit=1)
-        emb = discord.Embed(title=f'Список всех команд (через {Config.get_prefix()})',
+        emb = discord.Embed(title=f'Список всех команд (через {Config.get_settings().bot_settings.prefix})',
                             color=discord.Color.gold())
         emb.add_field(name='status', value='Возвращает статус сервера')
         emb.add_field(name='list/ls',
