@@ -141,9 +141,9 @@ async def start_server(ctx, bot, shut_up=False, IsReaction=False):
     if Config.get_selected_server_from_list().server_loading_time != Bot_variables.progress_bar_time:
         Config.get_selected_server_from_list().server_loading_time = Bot_variables.progress_bar_time
         Config.save_config()
-    server_dates = Config.read_server_dates()
-    server_dates[0] = [datetime.now().strftime("%d/%m/%y, %H:%M:%S"), str(author)]
-    Config.save_server_dates(server_dates)
+    Config.get_server_config().states.started_info.date = datetime.now().strftime("%d/%m/%y, %H:%M:%S")
+    Config.get_server_config().states.started_info.user = str(author)
+    Config.save_server_config()
     await bot.change_presence(activity=Activity(type=ActivityType.playing,
                                                 name=Config.get_settings().bot_settings.gaming_status))
 
@@ -203,9 +203,9 @@ async def stop_server(ctx, bot, How_many_sec=10, IsRestart=False, IsReaction=Fal
     author, author_mention = get_author_and_mention(ctx, bot, IsReaction)
     print("Server's off now")
     await send_msg(ctx, author_mention + "\n```Server's off now```", IsReaction)
-    server_dates = Config.read_server_dates()
-    server_dates[1] = [datetime.now().strftime("%d/%m/%y, %H:%M:%S"), str(author)]
-    Config.save_server_dates(server_dates)
+    Config.get_server_config().states.stopped_info.date = datetime.now().strftime("%d/%m/%y, %H:%M:%S")
+    Config.get_server_config().states.stopped_info.user = str(author)
+    Config.save_server_config()
     await bot.change_presence(activity=Activity(type=ActivityType.listening,
                                                 name=Config.get_settings().bot_settings.idle_status))
 

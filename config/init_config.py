@@ -57,7 +57,7 @@ class Rss_feed:
 
 @dataclass
 class Awating_times:
-    await_seconds_when_connecting_via_rcon: int = -1
+    await_seconds_when_connecting_via_rcon: float = -1.0
     await_seconds_in_check_ups: int = -1
     await_seconds_when_opped: int = -1
     await_seconds_before_message_deletion: int = -1
@@ -126,11 +126,29 @@ class Settings:
     servers_list: List[Server_settings] = field(default_factory=list)
 
 
+@dataclass
+class State_info:
+    user: Optional[str] = None
+    date: Optional[str] = None
+
+
+@dataclass
+class States:
+    started_info: State_info = State_info()
+    stopped_info: State_info = State_info()
+
+
+@dataclass
+class Server_config:
+    states: States = States()
+
+
 class Config:
     _current_bot_path: str = path.dirname(sys.argv[0])
-    _config_name = "Bot_config.yaml"
+    _config_name = "bot_config.yaml"
     _settings_instance: Settings = Settings()
-    _server_dates_name = "StartStopStates.json"
+    _server_config_name = "server_config.yaml"
+    _server_config_instance: Server_config = Server_config()
     _op_keys_name = "op_keys"
     _op_log_name = "op_log.txt"
     _id_to_nicks_name = "id-to-nicks.json"
@@ -213,26 +231,25 @@ class Config:
         open(Path(cls._current_bot_path + '/' + cls._id_to_nicks_name), 'w').write(dumps(id_to_nicks))
 
     @classmethod
-    def read_server_dates(cls):
-        if not path.isfile(Path(cls.get_selected_server_from_list().working_directory + '/' + cls._server_dates_name)):
-            server_dates = [[], []]
-            with open(Path(cls.get_selected_server_from_list().working_directory + '/' + cls._server_dates_name),
-                      "w") as f_:
-                dump(server_dates, f_, indent=2)
+    def read_server_config(cls):
+        if path.isfile(Path(cls.get_selected_server_from_list().working_directory + '/' + cls._server_config_name)):
+            cls._server_config_instance = cls._load_from_yaml(Path(cls.get_selected_server_from_list().working_directory
+                                                                   + '/' + cls._server_config_name), Server_config)
         else:
-            with open(Path(cls.get_selected_server_from_list().working_directory + '/' + cls._server_dates_name),
-                      "r") as f_:
-                server_dates = load(f_)
-        return server_dates
+            cls._server_config_instance = Server_config()
 
     @classmethod
-    def save_server_dates(cls, server_dates: list):
-        with open(Path(cls.get_selected_server_from_list().working_directory + '/' + cls._server_dates_name),
-                  "w") as f_:
-            dump(server_dates, f_, indent=2)
+    def save_server_config(cls):
+        cls._save_to_yaml(cls._server_config_instance,
+                          Path(cls.get_selected_server_from_list().working_directory + '/' + cls._server_config_name))
+
+    @classmethod
+    def get_server_config(cls):
+        return cls._server_config_instance
 
     @classmethod
     def read_server_info(cls):
+        cls.read_server_config()
         Bot_variables.progress_bar_time = cls.get_selected_server_from_list().server_loading_time
         filepath = Path(cls.get_selected_server_from_list().working_directory + "/server.properties")
         if not filepath.exists():
@@ -402,7 +419,7 @@ class Config:
             cls._need_to_rewrite = True
             cls._settings_instance.bot_settings.ip_address = \
                 cls._ask_for_data("Enter server's real IP-address or DNS-name: ")
-        print(f"Server's real IP-address or DNS-name is '{cls._settings_instance.bot_settings.ip_address}'")
+        print(f"Server's real IP-address or DNS-name is '{cls._settings_instance.bot_settings.ip_address}'.")
 
     @classmethod
     def _setup_local_address(cls):
@@ -457,12 +474,12 @@ class Config:
             print("Limitation doesn't exist, padawan.")
 
         # Await time to sleep while bot pinging server for info
-        if cls._settings_instance.bot_settings.awating_times.await_seconds_when_connecting_via_rcon < 0:
+        if cls._settings_instance.bot_settings.awating_times.await_seconds_when_connecting_via_rcon < 0.05:
             cls._need_to_rewrite = True
             print("Await time to sleep set below zero. Change this option")
             cls._settings_instance.bot_settings.awating_times.await_seconds_when_connecting_via_rcon = \
-                cls._ask_for_data("Set await time to sleep while bot pinging server for info (in seconds, int): ",
-                                  try_int=True, int_high_than=-1)
+                cls._ask_for_data("Set await time to sleep while bot pinging server for info (in seconds, float): ",
+                                  try_float=True, float_hight_than=0.05)
         print("Await time to sleep while bot pinging server for info set to " +
               str(cls._settings_instance.bot_settings.awating_times.await_seconds_when_connecting_via_rcon) + " sec.")
         if cls._settings_instance.bot_settings.awating_times.await_seconds_when_connecting_via_rcon == 0:
@@ -481,7 +498,7 @@ class Config:
     def _setup_servers(cls):
         if not cls._settings_instance.ask_to_change_servers_list:
             print("Selected minecraft server dir set to path '" + cls.get_selected_server_from_list().working_directory
-                  + "' also known as '" + cls.get_selected_server_from_list().server_name + "'")
+                  + "' also known as '" + cls.get_selected_server_from_list().server_name + "'.")
             return
 
         cls._need_to_rewrite = True
@@ -504,7 +521,7 @@ class Config:
 
         cls._settings_instance.ask_to_change_servers_list = False
         print("Selected minecraft server dir set to path '" + cls.get_selected_server_from_list().working_directory
-              + "' also known as '" + cls.get_selected_server_from_list().server_name + "'")
+              + "' also known as '" + cls.get_selected_server_from_list().server_name + "'.")
 
     @classmethod
     def _change_server_settings(cls, server: Server_settings = None):
@@ -538,7 +555,7 @@ class Config:
                 if len(glob(Path(working_directory + "/*.jar").as_posix())) > 0:
                     return working_directory
                 else:
-                    print("There are no '*.jar' files in this working directory ")
+                    print("There are no '*.jar' files in this working directory.")
             else:
                 print("This working directory is wrong.")
 
@@ -549,12 +566,12 @@ class Config:
         END = '\033[0m'
         if sys.platform == "linux" or sys.platform == "linux2":
             file_extension = ".sh"
-            print("Bot detected your operating system is linux.\n"
+            print("Bot detected your operating system is Linux.\n"
                   "Bot will search for ***.sh file.\n"
                   f"You need to enter file name {BOLD}without{END} file extension!")
         elif sys.platform == "win32":
             file_extension = ".bat"
-            print("Bot detected your operating system is windows.\n"
+            print("Bot detected your operating system is Windows.\n"
                   "Bot will search for ***.bat file.\n"
                   f"You need to enter file name {BOLD}without{END} file extension!")
         else:

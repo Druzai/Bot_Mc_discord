@@ -27,18 +27,15 @@ class Minecraft_commands(commands.Cog):
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
     async def status(self, ctx, IsReaction=False):
         """Shows server status"""
-        states = "\n"
-        server_dates = Config.read_server_dates()
-        for i in range(len(server_dates)):
-            if len(server_dates[i]) == 0:
-                continue
-            if i == 0:
-                states += "Server has been started at "
-            else:
-                states += "Server has been stopped at "
-            states += server_dates[i][0] + ", by " + server_dates[i][1]
-            if i != len(server_dates):
-                states += "\n"
+        states = ""
+        states_info = Config.get_server_config().states
+        if states_info.started_info.date is not None and states_info.started_info.user is not None:
+            states += f"Server has been started at {states_info.started_info.date}," \
+                      f" by {states_info.started_info.user}\n"
+        if states_info.stopped_info.date is not None and states_info.stopped_info.user is not None:
+            states += f"Server has been stopped at {states_info.stopped_info.date}," \
+                      f" by {states_info.stopped_info.user}\n"
+        states = states.strip("\n")
         if Bot_variables.IsServerOn:
             try:
                 with Client_r(Config.get_settings().bot_settings.local_address,
@@ -58,18 +55,19 @@ class Minecraft_commands(commands.Cog):
                                Config.get_settings().bot_settings.ip_address + "\n"
                                + message + str((6 + time_ticks // 1000) % 24) + ":"
                                + f"{((time_ticks % 1000) * 60 // 1000):02d}" + "\nSelected server: " +
-                               Config.get_selected_server_from_list().server_name + states + "```",
+                               Config.get_selected_server_from_list().server_name + "\n" + states + "```",
                                IsReaction)
             except BaseException:
                 await send_msg(ctx,
                                "```Server online\nServer address: " + Config.get_settings().bot_settings.ip_address +
                                "\nServer thinking...\nSelected server: " +
-                               Config.get_selected_server_from_list().server_name + states + "```", IsReaction)
+                               Config.get_selected_server_from_list().server_name + "\n" + states + "```", IsReaction)
                 print("Server's down via rcon")
             """rcon check daytime cycle"""
         else:
             await send_msg(ctx, "```Server offline\nServer address: " + Config.get_settings().bot_settings.ip_address +
-                           "\nSelected server: " + Config.get_selected_server_from_list().server_name + states + "```",
+                           "\nSelected server: " + Config.get_selected_server_from_list().server_name +
+                           "\n" + states + "```",
                            IsReaction)
 
     @commands.command(pass_context=True, aliases=["ls"])
@@ -408,6 +406,8 @@ class Minecraft_commands(commands.Cog):
                             Bot_variables.watcher_of_log_file.stop()
                         Config.get_settings().selected_server_number = int(args[1])
                         Config.save_config()
+                        await ctx.send("```Selected server #" + str(Config.get_settings().selected_server_number) +
+                                       ". " + Config.get_selected_server_from_list().server_name + "```")
                         Config.read_server_info()
                         await ctx.send("```Server properties read!```")
                     else:
@@ -415,9 +415,8 @@ class Minecraft_commands(commands.Cog):
                 except ValueError:
                     await ctx.send("```Argument for 'select' must be a number!```")
             elif args[0] == "show":
-                await ctx.send(
-                    "```Selected server #" + str(Config.get_settings().selected_server_number) +
-                    ". " + Config.get_selected_server_from_list().server_name + "```")
+                await ctx.send("```Selected server #" + str(Config.get_settings().selected_server_number) +
+                               ". " + Config.get_selected_server_from_list().server_name + "```")
             else:
                 await ctx.send("```Wrong command!\nCommands: select, list```")
         else:
