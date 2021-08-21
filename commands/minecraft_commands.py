@@ -250,53 +250,59 @@ class Minecraft_commands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @commands.has_permissions(administrator=True)
-    async def assoc(self, ctx, arg1: str, arg2, arg3):
+    async def assoc(self, ctx, discord_mention: str, assoc_command, minecraft_nick):
         """
         syntax: Nick_Discord +=/-= Nick_minecraft
         """
-        id_to_nicks = Config.read_id_to_nicks()
+        # id_to_nicks = Config.read_id_to_nicks()
         comm_operators = ["+=", "-="]
-        if arg1.startswith("<@!"):
+        if discord_mention.startswith("<@!"):
+            need_to_save = False
             try:
-                id = arg1[3:-1]
-                int(id)
+                discord_id = int(discord_mention[3:-1])
             except BaseException:
                 await ctx.send("Wrong 1-st argument used!")
                 return
-            arg3 = arg3.lower()
-            if arg2 == comm_operators[0]:
-                if arg3 not in id_to_nicks.keys():
-                    id_to_nicks[arg3] = id
-                    await ctx.send("Now " + arg1 + " associates with nick in minecraft " + arg3)
+            minecraft_nick = minecraft_nick.lower()
+            if assoc_command == comm_operators[0]:
+                if minecraft_nick not in [u.user_minecraft_nick for u in Config.get_known_users_list()] and \
+                        discord_id not in [u.user_discord_id for u in Config.get_known_users_list()]:
+                    need_to_save = True
+                    Config.add_to_known_users_list(minecraft_nick, discord_id)
+                    await ctx.send("Now " + discord_mention + " associates with nick in minecraft " + minecraft_nick)
                 else:
                     await ctx.send("Existing `mention to nick` link!")
-            elif arg2 == comm_operators[1]:
-                if arg3 in id_to_nicks.keys():
-                    del id_to_nicks[arg3]
-                    await ctx.send("Now link " + arg1 + " -> " + arg3 + " do not exist!")
+            elif assoc_command == comm_operators[1]:
+                if minecraft_nick in [u.user_minecraft_nick for u in Config.get_known_users_list()] and \
+                        discord_id in [u.user_discord_id for u in Config.get_known_users_list()]:
+                    need_to_save = True
+                    Config.remove_from_known_users_list(minecraft_nick, discord_id)
+                    await ctx.send("Now link " + discord_mention + " -> " + minecraft_nick + " do not exist!")
                 else:
                     await ctx.send("Doesn't have `mention to nick` link already!")
             else:
-                await ctx.send("Wrong command syntax! Right example: `%assoc @me += My_nick`")
-            Config.save_id_to_nicks(id_to_nicks)
+                await ctx.send("Wrong command syntax! Right example: "
+                               f"`{Config.get_settings().bot_settings.prefix}assoc @me +=/-= My_nick`")
+            if need_to_save:
+                Config.save_config()
         else:
             await ctx.send("Wrong 1-st argument! You can mention ONLY members")
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    async def codes(self, ctx, arg1):
+    async def codes(self, ctx, minecraft_nick):
         member = ctx.author
-        id = str(member.id)
-        arg1 = arg1.lower()
-        id_to_nicks = Config.read_id_to_nicks()
-        if arg1 != "" and arg1 in id_to_nicks.keys() and id_to_nicks.get(arg1) == id:
+        minecraft_nick = minecraft_nick.lower()
+        if minecraft_nick in [u.user_minecraft_nick for u in Config.get_known_users_list()] and \
+                member.id in [u.user_discord_id for u in Config.get_known_users_list()
+                              if u.user_minecraft_nick == minecraft_nick]:
             keys_for_nicks = Config.read_op_keys()
-            if arg1 not in keys_for_nicks.keys():
+            if minecraft_nick not in keys_for_nicks.keys():
                 await ctx.send("Don't have such nickname logged in minecraft")
                 return
-            message = "For player with nickname " + arg1 + " generated " + str(
-                len(keys_for_nicks.get(arg1))) + " codes:\n"
-            for value in keys_for_nicks.get(arg1):
+            message = "For player with nickname " + minecraft_nick + " generated " + str(
+                len(keys_for_nicks.get(minecraft_nick))) + " codes:\n"
+            for value in keys_for_nicks.get(minecraft_nick):
                 message += "`" + value + "`\n"
             await member.send(message)
         else:

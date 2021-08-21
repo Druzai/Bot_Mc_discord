@@ -4,9 +4,11 @@ from ast import literal_eval
 from dataclasses import dataclass, field
 from datetime import datetime
 from glob import glob
-from json import dump, load, dumps, loads
+from json import load, dumps, loads
 from os.path import isfile, isdir
 from pathlib import Path
+from secrets import choice as sec_choice
+from string import ascii_letters, digits
 from typing import List, Optional
 
 from discord import Webhook, Member
@@ -119,11 +121,18 @@ class Server_settings:
 
 
 @dataclass
+class User:
+    user_minecraft_nick: str = ""
+    user_discord_id: int = -1
+
+
+@dataclass
 class Settings:
     bot_settings: Bot_settings = Bot_settings()
     ask_to_change_servers_list: bool = True
     selected_server_number: int = 0
     servers_list: List[Server_settings] = field(default_factory=list)
+    known_users: List[User] = field(default_factory=list)
 
 
 @dataclass
@@ -151,7 +160,6 @@ class Config:
     _server_config_instance: Server_config = Server_config()
     _op_keys_name = "op_keys"
     _op_log_name = "op_log.txt"
-    _id_to_nicks_name = "id-to-nicks.json"
     _need_to_rewrite = False
 
     @classmethod
@@ -206,6 +214,18 @@ class Config:
         return cls._settings_instance.servers_list[cls._settings_instance.selected_server_number]
 
     @classmethod
+    def get_known_users_list(cls) -> List[User]:
+        return cls._settings_instance.known_users
+
+    @classmethod
+    def add_to_known_users_list(cls, user_minecraft_nick: str, user_discord_id: int):
+        cls._settings_instance.known_users.append(User(user_minecraft_nick, user_discord_id))
+
+    @classmethod
+    def remove_from_known_users_list(cls, user_minecraft_nick: str, user_discord_id: int):
+        cls._settings_instance.known_users.remove(User(user_minecraft_nick, user_discord_id))
+
+    @classmethod
     def read_op_keys(cls):
         if not path.isfile(Path(cls._current_bot_path + '/' + cls._op_keys_name)):
             cls.save_op_keys(dict())
@@ -217,18 +237,6 @@ class Config:
     def save_op_keys(cls, op_keys: dict):
         open(Path(cls._current_bot_path + '/' + cls._op_keys_name), 'w') \
             .write(encrypt_string(dumps(op_keys)))
-
-    @classmethod
-    def read_id_to_nicks(cls):
-        if not path.isfile(Path(cls._current_bot_path + '/' + cls._id_to_nicks_name)):
-            cls.save_id_to_nicks(dict())
-            return dict()
-        else:
-            return loads(open(Path(cls._current_bot_path + '/' + cls._id_to_nicks_name), 'r').read())
-
-    @classmethod
-    def save_id_to_nicks(cls, id_to_nicks: dict):
-        open(Path(cls._current_bot_path + '/' + cls._id_to_nicks_name), 'w').write(dumps(id_to_nicks))
 
     @classmethod
     def read_server_config(cls):
@@ -253,9 +261,14 @@ class Config:
         Bot_variables.progress_bar_time = cls.get_selected_server_from_list().server_loading_time
         filepath = Path(cls.get_selected_server_from_list().working_directory + "/server.properties")
         if not filepath.exists():
-            raise RuntimeError(f"File '{filepath.as_posix()}' doesn't exist!")
+            raise RuntimeError(f"File '{filepath.as_posix()}' doesn't exist! "
+                               "Run minecraft server manually to create one and accept eula!")
         with open(filepath, "r", encoding="utf8") as f:
-            for i in f.readlines():
+            lines = f.readlines()
+            if len(lines) < 3:
+                raise RuntimeError(f"File '{filepath.as_posix()}' doesn't have any parameters! "
+                                   "Accept eula and run minecraft server manually to fill it with parameters!")
+            for i in lines:
                 if i.find("enable-query") >= 0:
                     enable_query = literal_eval(i.split("=")[1].capitalize())
                 if i.find("enable-rcon") >= 0:
@@ -266,18 +279,39 @@ class Config:
                     Bot_variables.port_rcon = int(i.split("=")[1])
                 if i.find("rcon.password") >= 0:
                     Bot_variables.rcon_pass = i.split("=")[1].strip()
-        if not enable_query or not enable_rcon:
+        if not enable_query or not enable_rcon or not Bot_variables.rcon_pass:
+            changed_parameters = []
+            rewritten_rcon_pass = False
+            if not enable_query:
+                changed_parameters.append("enable-query=true")
+            if not enable_rcon:
+                changed_parameters.append("enable-rcon=true")
+            if not Bot_variables.rcon_pass:
+                Bot_variables.rcon_pass = "".join(sec_choice(ascii_letters + digits) for _ in range(20))
+                changed_parameters.append(f"rcon.password={Bot_variables.rcon_pass}\nReminder: for better security "
+                                          "you have to change this password for a more secure one.")
             with open(filepath, "r", encoding="utf8") as f:
                 properties_file = f.readlines()
             for i in range(len(properties_file)):
                 if "enable-query" in properties_file[i] or "enable-rcon" in properties_file[i]:
                     properties_file[i] = f"{properties_file[i].split('=')[0]}=true\n"
+                if "rcon.password" in properties_file[i]:
+                    rewritten_rcon_pass = True
+                    properties_file[i] = f"rcon.password={Bot_variables.rcon_pass}\n"
+            if Bot_variables.port_query is None:
+                Bot_variables.port_query = 25565
+                properties_file.append(f"query.port={str(Bot_variables.port_query)}\n")
+                changed_parameters.append(f"query.port={str(Bot_variables.port_query)}")
+            if Bot_variables.port_rcon is None:
+                Bot_variables.port_rcon = 25575
+                properties_file.append(f"rcon.port={str(Bot_variables.port_rcon)}\n")
+                changed_parameters.append(f"rcon.port={str(Bot_variables.port_rcon)}")
+            if not rewritten_rcon_pass:
+                properties_file.append(f"rcon.password={Bot_variables.rcon_pass}\n")
             with open(filepath, "w", encoding="utf8") as f:
                 f.writelines(properties_file)
-            print(f"Note: in '{filepath.as_posix()}' bot enabled these parameters:\n" +
-                  ('enable-query' if not enable_query else '') +
-                  (', ' if not enable_query and not enable_rcon else '') +
-                  ('enable-rcon' if not enable_rcon else ''))
+            print(f"\nNote: in '{filepath.as_posix()}' bot set these parameters:\n" +
+                  "\n".join(changed_parameters) + "\n")
 
     @classmethod
     def get_ops_json(cls):
@@ -288,7 +322,7 @@ class Config:
         open(Path(cls.get_bot_config_path() + f'/{cls._op_log_name}'), 'a', encoding='utf-8').write(message)
 
     @classmethod
-    def _load_from_yaml(cls, filepath: Path, baseclass) -> object:
+    def _load_from_yaml(cls, filepath: Path, baseclass):
         try:
             return sload(json_obj=conf.to_object(conf.load(filepath)), cls=baseclass)
         except DeserializationError:
@@ -528,7 +562,7 @@ class Config:
         changing_settings = False
         if server is not None:
             if not cls._ask_for_data(f"Would you like to change this server '{server.server_name}'? Y/n\n", "y"):
-                return
+                return server
             changing_settings = True
         else:
             print("Configuring new server settings...")

@@ -406,7 +406,7 @@ async def send_error(ctx, bot, error, IsReaction=False):
         await send_msg(ctx, f'{author_mention}, введённая команда работает только на сервере', IsReaction)
     else:
         print(", ".join(error.args))
-        await send_msg(ctx, ", ".join(error.args), IsReaction)
+        await send_msg(ctx, ", ".join(error.original.args), IsReaction)
 
 
 async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, on_edit=False, before_message=None):
