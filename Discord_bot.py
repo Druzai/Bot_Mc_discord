@@ -6,11 +6,11 @@ from discord import Intents
 from discord.errors import LoginFailure
 from discord.ext import commands
 
-from commands.chat_commands import Chat_commands
-from commands.minecraft_commands import Minecraft_commands
+from commands.chat_commands import ChatCommands
+from commands.minecraft_commands import MinecraftCommands
 from commands.poll import Poll
 from components.rss_feed_handle import create_feed_webhook, check_on_rss_feed
-from config.init_config import Config, Bot_variables
+from config.init_config import Config, BotVars
 
 
 # TODO: features
@@ -42,7 +42,7 @@ def main():
                        description="Server bot",
                        intents=intents)
     bot.remove_command('help')
-    cog_list = [Chat_commands, Minecraft_commands, Poll]
+    cog_list = [ChatCommands, MinecraftCommands, Poll]
     for i in cog_list:
         bot.add_cog(i(bot))
 
@@ -54,7 +54,7 @@ def main():
         bot.loop.create_task(check_on_rss_feed())
 
     if Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
-        Bot_variables.bot_for_webhooks = bot
+        BotVars.bot_for_webhooks = bot
 
     try:
         bot.run(Config.get_settings().bot_settings.token)

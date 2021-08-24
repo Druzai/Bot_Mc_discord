@@ -3,18 +3,18 @@ from pathlib import Path
 from random import choice, randint
 
 import discord
-import vk_api
 from discord import Activity, ActivityType
 from discord.ext import commands
+from vk_api import VkApi
 
 from commands.poll import Poll
 from components.additional_funcs import handle_message_for_chat, server_checkups, send_error, send_msg
 from components.watcher_handle import create_watcher
-from config.init_config import Bot_variables, Config
+from config.init_config import BotVars, Config
 from decorators import role
 
 
-class Chat_commands(commands.Cog):
+class ChatCommands(commands.Cog):
     def __init__(self, bot):
         self._bot = bot
         self._IndPoll = Poll(bot)
@@ -29,7 +29,7 @@ class Chat_commands(commands.Cog):
         await self._bot.change_presence(activity=Activity(type=ActivityType.watching, name="nsfw"))
         print("Bot is ready!")
         print("Starting server check-ups")
-        Bot_variables.server_checkups_task = self._bot.loop.create_task(server_checkups(self._bot))
+        BotVars.server_checkups_task = self._bot.loop.create_task(server_checkups(self._bot))
 
     """
     @commands.command(pass_context=True)
@@ -71,9 +71,9 @@ class Chat_commands(commands.Cog):
                 "Channel `" +
                 (await self._bot.fetch_channel(Config.get_cross_platform_chat_settings().channel_id)).name +
                 "` set to minecraft cross platform chat!")
-            if Bot_variables.watcher_of_log_file is None:
-                Bot_variables.watcher_of_log_file = create_watcher()
-                Bot_variables.watcher_of_log_file.start()
+            if BotVars.watcher_of_log_file is None:
+                BotVars.watcher_of_log_file = create_watcher()
+                BotVars.watcher_of_log_file.start()
         else:
             await ctx.channel.send("You entered wrong argument!")
 
@@ -121,7 +121,7 @@ class Chat_commands(commands.Cog):
                 chdir(Config.get_bot_config_path())
                 try:
                     # Тырим с вк фотки)
-                    vk_session = vk_api.VkApi(vk_login, vk_pass)
+                    vk_session = VkApi(vk_login, vk_pass)
                     vk_session.auth()
                     vk = vk_session.get_api()
                     photos_count = vk.photos.get(owner_id=own_id, album_id="wall", count=1).get('count')

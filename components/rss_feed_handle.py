@@ -4,7 +4,7 @@ from datetime import datetime
 from discord import Webhook, RequestsWebhookAdapter
 from feedparser import parse
 
-from config.init_config import Config, Bot_variables
+from config.init_config import Config, BotVars
 
 
 async def check_on_rss_feed():
@@ -16,7 +16,7 @@ async def check_on_rss_feed():
         for entry in entries:
             if datetime.fromisoformat(entry.published) > datetime_from:
                 send = True
-                Bot_variables.webhook_rss.send(entry.link)
+                BotVars.webhook_rss.send(entry.link)
         if send:
             Config.get_rss_feed_settings().rss_last_date = entries[-1].published
             Config.save_config()
@@ -24,7 +24,7 @@ async def check_on_rss_feed():
 
 
 def create_feed_webhook():
-    if Bot_variables.webhook_rss is None and Config.get_rss_feed_settings().rss_url and \
+    if BotVars.webhook_rss is None and Config.get_rss_feed_settings().rss_url and \
             Config.get_rss_feed_settings().webhook_url:
-        Bot_variables.webhook_rss = Webhook.from_url(url=Config.get_rss_feed_settings().webhook_url,
-                                                     adapter=RequestsWebhookAdapter())
+        BotVars.webhook_rss = Webhook.from_url(url=Config.get_rss_feed_settings().webhook_url,
+                                               adapter=RequestsWebhookAdapter())

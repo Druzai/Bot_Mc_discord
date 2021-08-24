@@ -7,64 +7,65 @@ from discord.ext import commands
 
 
 class Poll(commands.Cog):
-    polls = {}
-    symbols = {"yes": "☑", "no": "❎"}
-    await_date = datetime.now()
+    _polls = {}
+    _emoji_symbols = {"yes": "☑", "no": "❎"}
+    _await_date = datetime.now()
 
     def __init__(self, bot):
         # Для работы с сообщениями, сообщения, которые выводить при опросе, минимальное кол-во проголосовавших за или против
         # Сделать временное голосование, по истечении голосование завершено неудачей, cancel работает так же,
-        self.__bot = bot
+        self._bot = bot
 
-    # TODO: Make it useable with stop command, give to command some strings!
-    async def run(self, ctx, needForVoting=2, neededRole=None, timeout=60 * 60, remove_logs_after=None):
+    # TODO: Make it usable with stop command, give to command some strings!
+    async def run(self, ctx, need_for_voting=2, needed_role=None, timeout=60 * 60, remove_logs_after=None):
         start_msg = await ctx.send("@everyone, this man " + ctx.author.mention +
                                    " trying to delete some history of this channel. Will you let that happen?" +
-                                   " To win the poll need " + str(needForVoting) + " votes! So keep it up! I'm waiting")
-        poll_msg = await self.makeEmb(ctx)
-        currentPoll = Poll.PollContent(ctx, needForVoting, neededRole, remove_logs_after)
-        self.polls[poll_msg.id] = currentPoll
+                                   f" To win the poll need {str(need_for_voting)} votes! So keep it up! I'm waiting")
+        poll_msg = await self.make_embed(ctx)
+        current_poll = Poll.PollContent(ctx, need_for_voting, needed_role, remove_logs_after)
+        self._polls[poll_msg.id] = current_poll
         seconds = 0
-        while currentPoll.state == Poll.States.NONE:
+        while current_poll.state == Poll.States.NONE:
             await asleep(1)
             seconds += 1
             if timeout <= seconds:
-                currentPoll.cancel()
+                current_poll.cancel()
         await start_msg.delete()
         await poll_msg.delete()
-        del self.polls[poll_msg.id]
-        if currentPoll.state == Poll.States.CANCELED:
+        del self._polls[poll_msg.id]
+        if current_poll.state == Poll.States.CANCELED:
             await ctx.send("Poll result: canceled!", delete_after=remove_logs_after)
             return None
         await ctx.send("Poll result: permission " +
-                       ("granted" if currentPoll.state == Poll.States.GRANTED else "refused") + "!",
+                       ("granted" if current_poll.state == Poll.States.GRANTED else "refused") + "!",
                        delete_after=remove_logs_after)
-        return currentPoll.state == Poll.States.GRANTED
+        return current_poll.state == Poll.States.GRANTED
 
-    async def makeEmb(self, ctx):
+    async def make_embed(self, ctx):
         emb = Embed(title='Опрос. ГолосовалОЧКА!',
                     color=Color.orange())
         emb.add_field(name='yes', value=':ballot_box_with_check:')
         emb.add_field(name='no', value=':negative_squared_cross_mark:')
         add_reactions_to = await ctx.send(embed=emb)
-        await add_reactions_to.add_reaction(self.symbols["yes"])
-        await add_reactions_to.add_reaction(self.symbols["no"])
+        for emote in self._emoji_symbols.values():
+            await add_reactions_to.add_reaction(emote)
         return add_reactions_to
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
-        if payload.message_id not in self.polls or payload.member.id == self.__bot.user.id:
+        if payload.message_id not in self._polls or payload.member.id == self._bot.user.id:
             return
-        channel = self.__bot.get_channel(payload.channel_id)
-        currentPoll = self.polls[payload.message_id]
-        if payload.emoji.name not in self.symbols.values() \
-                or not await currentPoll.count_voice(channel, payload.member, payload.emoji.name == self.symbols["yes"]):
+        channel = self._bot.get_channel(payload.channel_id)
+        current_poll = self._polls[payload.message_id]
+        if payload.emoji.name not in self._emoji_symbols.values() \
+                or not await current_poll.count_voice(channel, payload.member,
+                                                      payload.emoji.name == self._emoji_symbols["yes"]):
             message = await channel.fetch_message(payload.message_id)
             await message.remove_reaction(payload.emoji, payload.member)
 
     async def timer(self, ctx, seconds: int):
-        if (datetime.now() - self.await_date).seconds > seconds:  # Starting a poll
-            self.await_date = datetime.now()
+        if (datetime.now() - self._await_date).seconds > seconds:  # Starting a poll
+            self._await_date = datetime.now()
             return True
         else:
             await ctx.send(ctx.author.mention + ", what are you doing? Time hasn't passed yet. I have " + str(seconds) +
@@ -78,17 +79,17 @@ class Poll(commands.Cog):
         CANCELED = auto()
 
     class PollContent:
-        def __init__(self, ctx, needForVoting=2, neededRole=None, remove_logs_after=0):
+        def __init__(self, ctx, need_for_voting=2, needed_role=None, remove_logs_after=0):
             self.poll_yes = 0
             self.poll_no = 0
             self.poll_voted_uniq = set()
             self.ctx = ctx
-            self.NFW = needForVoting
-            self.NR = neededRole
+            self.NFW = need_for_voting
+            self.NR = needed_role
             self.RLA = remove_logs_after
             self.state = Poll.States.NONE
 
-        async def count_voice(self, channel, user, toLeft):
+        async def count_voice(self, channel, user, to_left):
             if self.state is not Poll.States.NONE:
                 await channel.send(user.mention + ", poll've already finished!", delete_after=self.RLA)
                 return False
@@ -100,7 +101,7 @@ class Poll(commands.Cog):
                                    delete_after=self.RLA)
                 return False
             self.poll_voted_uniq.add(user.id)
-            if toLeft:
+            if to_left:
                 self.poll_yes += 1
             else:
                 self.poll_no += 1

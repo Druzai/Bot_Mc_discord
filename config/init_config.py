@@ -14,26 +14,25 @@ from typing import List, Optional
 from discord import Webhook, Member
 from discord.ext.commands import Bot
 from jsons import load as sload, DeserializationError
-from omegaconf import OmegaConf as conf
+from omegaconf import OmegaConf as Conf
 
 from config.crypt_wrapper import *
 
 
-class Bot_variables:
+class BotVars:
     react_auth: Member = None  # Variable for situation when command calls via reactions, represents author that added reaction
     server_checkups_task = None
     server_start_time: int = None
-    IsServerOn: bool = False
-    IsLoading: bool = False
-    IsStopping: bool = False
-    IsRestarting: bool = False
-    IsDoOp: bool = False
-    IsVoting: bool = False
+    is_server_on: bool = False
+    is_loading: bool = False
+    is_stopping: bool = False
+    is_restarting: bool = False
+    is_doing_op: bool = False
+    is_voting: bool = False
     op_deop_list: List = []  # List of nicks of players to op and then to deop
     port_query: int = None
     port_rcon: int = None
     rcon_pass: str = None
-    progress_bar_time: int = 0
     watcher_of_log_file = None
     webhook_chat: Webhook = None
     webhook_rss: Webhook = None
@@ -258,7 +257,6 @@ class Config:
     @classmethod
     def read_server_info(cls):
         cls.read_server_config()
-        Bot_variables.progress_bar_time = cls.get_selected_server_from_list().server_loading_time
         filepath = Path(cls.get_selected_server_from_list().working_directory + "/server.properties")
         if not filepath.exists():
             raise RuntimeError(f"File '{filepath.as_posix()}' doesn't exist! "
@@ -274,21 +272,21 @@ class Config:
                 if i.find("enable-rcon") >= 0:
                     enable_rcon = literal_eval(i.split("=")[1].capitalize())
                 if i.find("query.port") >= 0:
-                    Bot_variables.port_query = int(i.split("=")[1])
+                    BotVars.port_query = int(i.split("=")[1])
                 if i.find("rcon.port") >= 0:
-                    Bot_variables.port_rcon = int(i.split("=")[1])
+                    BotVars.port_rcon = int(i.split("=")[1])
                 if i.find("rcon.password") >= 0:
-                    Bot_variables.rcon_pass = i.split("=")[1].strip()
-        if not enable_query or not enable_rcon or not Bot_variables.rcon_pass:
+                    BotVars.rcon_pass = i.split("=")[1].strip()
+        if not enable_query or not enable_rcon or not BotVars.rcon_pass:
             changed_parameters = []
             rewritten_rcon_pass = False
             if not enable_query:
                 changed_parameters.append("enable-query=true")
             if not enable_rcon:
                 changed_parameters.append("enable-rcon=true")
-            if not Bot_variables.rcon_pass:
-                Bot_variables.rcon_pass = "".join(sec_choice(ascii_letters + digits) for _ in range(20))
-                changed_parameters.append(f"rcon.password={Bot_variables.rcon_pass}\nReminder: for better security "
+            if not BotVars.rcon_pass:
+                BotVars.rcon_pass = "".join(sec_choice(ascii_letters + digits) for _ in range(20))
+                changed_parameters.append(f"rcon.password={BotVars.rcon_pass}\nReminder: for better security "
                                           "you have to change this password for a more secure one.")
             with open(filepath, "r", encoding="utf8") as f:
                 properties_file = f.readlines()
@@ -297,17 +295,17 @@ class Config:
                     properties_file[i] = f"{properties_file[i].split('=')[0]}=true\n"
                 if "rcon.password" in properties_file[i]:
                     rewritten_rcon_pass = True
-                    properties_file[i] = f"rcon.password={Bot_variables.rcon_pass}\n"
-            if Bot_variables.port_query is None:
-                Bot_variables.port_query = 25565
-                properties_file.append(f"query.port={str(Bot_variables.port_query)}\n")
-                changed_parameters.append(f"query.port={str(Bot_variables.port_query)}")
-            if Bot_variables.port_rcon is None:
-                Bot_variables.port_rcon = 25575
-                properties_file.append(f"rcon.port={str(Bot_variables.port_rcon)}\n")
-                changed_parameters.append(f"rcon.port={str(Bot_variables.port_rcon)}")
+                    properties_file[i] = f"rcon.password={BotVars.rcon_pass}\n"
+            if BotVars.port_query is None:
+                BotVars.port_query = 25565
+                properties_file.append(f"query.port={str(BotVars.port_query)}\n")
+                changed_parameters.append(f"query.port={str(BotVars.port_query)}")
+            if BotVars.port_rcon is None:
+                BotVars.port_rcon = 25575
+                properties_file.append(f"rcon.port={str(BotVars.port_rcon)}\n")
+                changed_parameters.append(f"rcon.port={str(BotVars.port_rcon)}")
             if not rewritten_rcon_pass:
-                properties_file.append(f"rcon.password={Bot_variables.rcon_pass}\n")
+                properties_file.append(f"rcon.password={BotVars.rcon_pass}\n")
             with open(filepath, "w", encoding="utf8") as f:
                 f.writelines(properties_file)
             print(f"\nNote: in '{filepath.as_posix()}' bot set these parameters:\n" +
@@ -324,13 +322,13 @@ class Config:
     @classmethod
     def _load_from_yaml(cls, filepath: Path, baseclass):
         try:
-            return sload(json_obj=conf.to_object(conf.load(filepath)), cls=baseclass)
+            return sload(json_obj=Conf.to_object(Conf.load(filepath)), cls=baseclass)
         except DeserializationError:
             return baseclass()
 
     @classmethod
     def _save_to_yaml(cls, class_instance, filepath: Path):
-        conf.save(config=conf.structured(class_instance), f=filepath)
+        Conf.save(config=Conf.structured(class_instance), f=filepath)
 
     @staticmethod
     def _ask_for_data(message: str, match_str=None,
@@ -402,9 +400,9 @@ class Config:
     @classmethod
     def _setup_role(cls):
         if cls._settings_instance.bot_settings.role is not None:
-            Command_role = cls._settings_instance.bot_settings.role
-            if Command_role:
-                print(f"Current role for some commands is '{Command_role}'.")
+            command_role = cls._settings_instance.bot_settings.role
+            if command_role:
+                print(f"Current role for some commands is '{command_role}'.")
             else:
                 print("Current role doesn't stated.")
         else:

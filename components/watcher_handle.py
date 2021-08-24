@@ -7,66 +7,66 @@ from time import sleep
 
 from discord import Webhook, RequestsWebhookAdapter
 
-from config.init_config import Config, Bot_variables
+from config.init_config import Config, BotVars
 
 
 class Watcher:
-    running = True
-    thread = None
+    _running = True
+    _thread = None
 
     # Constructor
     def __init__(self, watch_file, call_func_on_change=None, *args, **kwargs):
         self._cached_stamp = None
-        self.filename = watch_file
-        self.call_func_on_change = call_func_on_change
-        self.refresh_delay_secs = Config.get_cross_platform_chat_settings().refresh_delay_of_console_log
-        self.args = args
-        self.kwargs = kwargs
+        self._filename = watch_file
+        self._call_func_on_change = call_func_on_change
+        self._refresh_delay_secs = Config.get_cross_platform_chat_settings().refresh_delay_of_console_log
+        self._args = args
+        self._kwargs = kwargs
 
     # Look for changes
     def look(self):
-        stamp = stat(self.filename).st_mtime
+        stamp = stat(self._filename).st_mtime
         if stamp != self._cached_stamp:
             temp = self._cached_stamp
             self._cached_stamp = stamp
-            if self.call_func_on_change is not None and temp is not None:
-                self.call_func_on_change(file=self.filename, *self.args, **self.kwargs)
+            if self._call_func_on_change is not None and temp is not None:
+                self._call_func_on_change(file=self._filename, *self._args, **self._kwargs)
 
     # Keep watching in a loop
     def watch(self):
-        while self.running:
+        while self._running:
             try:
                 # Look for changes
-                sleep(self.refresh_delay_secs)
+                sleep(self._refresh_delay_secs)
                 self.look()
             except FileNotFoundError:
-                print(f"File {self.filename} wasn't found!")
+                print(f"File {self._filename} wasn't found!")
             except BaseException:
                 print('Unhandled error: %s' % exc_info()[0])
 
     def start(self):
-        self.thread = Thread(target=self.watch)
-        self.thread.daemon = True
-        self.thread.start()
+        self._thread = Thread(target=self.watch)
+        self._thread.daemon = True
+        self._thread.start()
 
     def stop(self):
-        self.running = False
-        self.thread.join()
-        self.thread = None
+        self._running = False
+        self._thread.join()
+        self._thread = None
 
     def is_running(self):
-        return self.running
+        return self._running
 
 
 def create_watcher():
-    if Bot_variables.watcher_of_log_file is not None and Bot_variables.watcher_of_log_file.is_running():
-        Bot_variables.watcher_of_log_file.stop()
+    if BotVars.watcher_of_log_file is not None and BotVars.watcher_of_log_file.is_running():
+        BotVars.watcher_of_log_file.stop()
 
-    Bot_variables.watcher_of_log_file = Watcher(watch_file=Path(Config.get_selected_server_from_list().working_directory
-                                                                + "/logs/latest.log"),
-                                                call_func_on_change=_check_log_file)
-    if Bot_variables.webhook_chat is None:
-        Bot_variables.webhook_chat = \
+    BotVars.watcher_of_log_file = Watcher(watch_file=Path(Config.get_selected_server_from_list().working_directory
+                                                          + "/logs/latest.log"),
+                                          call_func_on_change=_check_log_file)
+    if BotVars.webhook_chat is None:
+        BotVars.webhook_chat = \
             Webhook.from_url(url=Config.get_cross_platform_chat_settings().webhook_url,
                              adapter=RequestsWebhookAdapter())
 
@@ -90,7 +90,7 @@ def _check_log_file(file: Path):
         if search(r"@.+", player_message):
             split_arr = split(r"@[^\s]+", player_message)
             members = {i[1:].lower(): None for i in findall(r"@[^\s]+", player_message)}
-            for guild in Bot_variables.bot_for_webhooks.guilds:
+            for guild in BotVars.bot_for_webhooks.guilds:
                 for member in guild.members:
                     if member.name.lower() in members.keys():
                         members[member.name.lower()] = member
@@ -102,4 +102,4 @@ def _check_log_file(file: Path):
                 i += 2
             player_message = "".join(split_arr)
 
-        Bot_variables.webhook_chat.send(rf"**{player_nick}** {player_message}")  # , username='WEBHOOK_BOT'
+        BotVars.webhook_chat.send(rf"**{player_nick}** {player_message}")
