@@ -9,7 +9,7 @@ from os.path import isfile, isdir
 from pathlib import Path
 from secrets import choice as sec_choice
 from string import ascii_letters, digits
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 
 from discord import Webhook, Member
 from discord.ext.commands import Bot
@@ -17,6 +17,9 @@ from jsons import load as sload, DeserializationError
 from omegaconf import OmegaConf as Conf
 
 from config.crypt_wrapper import *
+
+if TYPE_CHECKING:
+    from components.watcher_handle import Watcher
 
 
 class BotVars:
@@ -33,7 +36,7 @@ class BotVars:
     port_query: int = None
     port_rcon: int = None
     rcon_pass: str = None
-    watcher_of_log_file = None
+    watcher_of_log_file: 'Watcher' = None
     watcher_last_line: str = None
     webhook_chat: Webhook = None
     webhook_rss: Webhook = None
