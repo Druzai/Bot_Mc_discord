@@ -34,6 +34,7 @@ class BotVars:
     port_rcon: int = None
     rcon_pass: str = None
     watcher_of_log_file = None
+    watcher_last_line: str = None
     webhook_chat: Webhook = None
     webhook_rss: Webhook = None
     bot_for_webhooks: Bot = None
@@ -45,6 +46,7 @@ class Cross_platform_chat:
     channel_id: Optional[int] = None
     webhook_url: Optional[str] = None
     refresh_delay_of_console_log: float = -1.0
+    number_of_lines_to_check_in_console_log: int = 0
 
 
 @dataclass
@@ -646,14 +648,19 @@ class Config:
                     cls._settings_instance.bot_settings.cross_platform_chat.refresh_delay_of_console_log = \
                         cls._ask_for_data("Set delay to refresh (in seconds, float): ",
                                           try_float=True, float_hight_than=0.05)
+
+                if cls._settings_instance.bot_settings.cross_platform_chat.number_of_lines_to_check_in_console_log < 1:
+                    print("Watcher's number of lines to check in server log doesn't set.")
+                    cls._settings_instance.bot_settings.cross_platform_chat.number_of_lines_to_check_in_console_log = \
+                        cls._ask_for_data("Set number of lines to check:", try_int=True, int_high_than=0)
             else:
                 cls._settings_instance.bot_settings.cross_platform_chat.enable_cross_platform_chat = False
                 print("Cross platform chat wouldn't work.")
+
+        if cls._settings_instance.bot_settings.cross_platform_chat.enable_cross_platform_chat:
+            print("Cross platform chat enabled.")
         else:
-            if cls._settings_instance.bot_settings.cross_platform_chat.enable_cross_platform_chat:
-                print("Cross platform chat enabled.")
-            else:
-                print("Cross platform chat disabled.")
+            print("Cross platform chat disabled.")
 
     @classmethod
     def _setup_rss_feed(cls):
