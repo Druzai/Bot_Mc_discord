@@ -18,8 +18,8 @@ class MinecraftCommands(commands.Cog):
     _emoji_symbols = {"status": "🗨", "list": "📋", "start": "♿",
                       "stop": "⏹", "restart": "🔄", "update": "📶"}  # Symbols for menu
 
-    def __init__(self, bot):
-        self._bot = bot
+    def __init__(self, bot: commands.Bot):
+        self._bot: commands.Bot = bot
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)

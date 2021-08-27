@@ -11,10 +11,10 @@ class Poll(commands.Cog):
     _emoji_symbols = {"yes": "☑", "no": "❎"}
     _await_date = datetime.now()
 
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         # Для работы с сообщениями, сообщения, которые выводить при опросе, минимальное кол-во проголосовавших за или против
         # Сделать временное голосование, по истечении голосование завершено неудачей, cancel работает так же,
-        self._bot = bot
+        self._bot: commands.Bot = bot
 
     # TODO: Make it usable with stop command, give to command some strings!
     async def run(self, ctx, need_for_voting=2, needed_role=None, timeout=60 * 60, remove_logs_after=None):

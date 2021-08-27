@@ -273,7 +273,7 @@ async def server_checkups(bot, always=True):
             if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 2:
                 await bot.change_presence(activity=Activity(type=ActivityType.listening,
                                                             name=Config.get_settings().bot_settings.idle_status +
-                                                                 (" thinking..." if len(
+                                                                 (" 🤔" if len(
                                                                      get_list_of_processes()) != 0 else "")))
             if always and Config.get_settings().bot_settings.forceload and not BotVars.is_stopping \
                     and not BotVars.is_loading and not BotVars.is_restarting:
@@ -346,7 +346,8 @@ async def send_error(ctx, bot, error, is_reaction=False):
         await send_msg(ctx, f'{author_mention}, пожалуйста, введи все аргументы', is_reaction)
     elif isinstance(error, commands.MissingPermissions):
         print(f'У {author} мало прав для команды')
-        await send_msg(ctx, f'{author_mention}, у вас недостаточно прав для выполнения этой команды',
+        missing_perms = [perm.replace('_', ' ').replace('guild', 'server').title() for perm in error.missing_perms]
+        await send_msg(ctx, f'{author_mention}, для выполнения этой команды у вас нет прав: {", ".join(missing_perms)}',
                        is_reaction)
     elif isinstance(error, commands.MissingRole):
         print(f'У {author} нет роли "{error.missing_role}" для команды')

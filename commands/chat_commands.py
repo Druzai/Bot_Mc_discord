@@ -15,9 +15,9 @@ from decorators import role
 
 
 class ChatCommands(commands.Cog):
-    def __init__(self, bot):
-        self._bot = bot
-        self._IndPoll = Poll(bot)
+    def __init__(self, bot: commands.Bot):
+        self._bot: commands.Bot = bot
+        self._IndPoll: Poll = Poll(bot)
 
     @commands.Cog.listener()
     async def on_ready(self):
