@@ -1,6 +1,7 @@
 from os import SEEK_END, stat, linesep
 from pathlib import Path
 from re import search, split, findall
+from sys import exc_info
 from threading import Thread
 from time import sleep
 from traceback import print_exc
@@ -15,9 +16,9 @@ class Watcher:
     _thread = None
 
     # Constructor
-    def __init__(self, watch_file, call_func_on_change=None, *args, **kwargs):
+    def __init__(self, watch_file: Path, call_func_on_change=None, *args, **kwargs):
         self._cached_stamp = None
-        self._filename = watch_file
+        self._filename: Path = watch_file
         self._call_func_on_change = call_func_on_change
         self._refresh_delay_secs = Config.get_cross_platform_chat_settings().refresh_delay_of_console_log
         self._args = args
@@ -43,19 +44,24 @@ class Watcher:
                 self.look()
             except FileNotFoundError:
                 print(f"Watcher Error: File {self._filename} wasn't found!")
+            except UnicodeDecodeError:
+                print(f"Watcher Error: Can't decode strings from file '{self._filename.as_posix()}'"
+                      ", check that minecraft server saves it in utf-8 encoding!\n"
+                      "(Ensure you have '-Dfile.encoding=UTF-8' as one of the arguments "
+                      "to start the server in start script)")
             except BaseException:
-                print("Watcher Error: Something went wrong :)")
+                print(f"Watcher Unhandled Error: {exc_info()[0]}")
                 print_exc()
 
     def start(self):
-        self._thread = Thread(target=self.watch)
-        self._thread.daemon = True
+        self._thread = Thread(target=self.watch, daemon=True)
         self._thread.start()
 
     def stop(self):
         self._running = False
-        self._thread.join()
-        self._thread = None
+        if self._thread is not None:
+            self._thread.join()
+            self._thread = None
 
     def is_running(self):
         return self._running
@@ -84,27 +90,29 @@ def _check_log_file(file: Path, last_line: str = None):
     if len(last_lines) == 0:
         return last_line
 
-    if last_line is not None:
-        for line in last_lines:
-            if search(r"\[Server thread/INFO]", line) and search(r"<([^>]*)> (.*)", line) and ": <" in line:
-                player_nick, player_message = search(r"<([^>]*)>", line)[0], \
-                                              split(r"<([^>]*)>", line, maxsplit=1)[-1].strip()
-                if search(r"@.+", player_message):
-                    split_arr = split(r"@[^\s]+", player_message)
-                    members = {i[1:].lower(): None for i in findall(r"@[^\s]+", player_message)}
-                    for guild in BotVars.bot_for_webhooks.guilds:
-                        for member in guild.members:
-                            if member.name.lower() in members.keys():
-                                members[member.name.lower()] = member
-                            elif member.display_name.lower() in members.keys():
-                                members[member.display_name.lower()] = member
-                    i = 1
-                    for name, member in members.items():
-                        split_arr.insert(i, member.mention if member is not None else f"@{name}")
-                        i += 2
-                    player_message = "".join(split_arr)
+    if last_line is None:
+        last_lines = last_lines[-1]
 
-                BotVars.webhook_chat.send(rf"**{player_nick}** {player_message}")
+    for line in last_lines:
+        if search(r"\[Server thread/INFO]", line) and search(r"<([^>]*)> (.*)", line) and ": <" in line:
+            player_nick, player_message = search(r"<([^>]*)>", line)[0], \
+                                          split(r"<([^>]*)>", line, maxsplit=1)[-1].strip()
+            if search(r"@.+", player_message):
+                split_arr = split(r"@[^\s]+", player_message)
+                members = {i[1:].lower(): None for i in findall(r"@[^\s]+", player_message)}
+                for guild in BotVars.bot_for_webhooks.guilds:
+                    for member in guild.members:
+                        if member.name.lower() in members.keys():
+                            members[member.name.lower()] = member
+                        elif member.display_name.lower() in members.keys():
+                            members[member.display_name.lower()] = member
+                i = 1
+                for name, member in members.items():
+                    split_arr.insert(i, member.mention if member is not None else f"@{name}")
+                    i += 2
+                player_message = "".join(split_arr)
+
+            BotVars.webhook_chat.send(rf"**{player_nick}** {player_message}")
 
     return last_lines[-1]
 

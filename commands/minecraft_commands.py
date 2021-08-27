@@ -443,6 +443,7 @@ class MinecraftCommands(commands.Cog):
 
                         if BotVars.watcher_of_log_file is not None:
                             BotVars.watcher_of_log_file.stop()
+                            BotVars.watcher_of_log_file = None
                         Config.get_settings().selected_server_number = int(args[1])
                         Config.save_config()
                         await ctx.send("```Selected server № " + str(Config.get_settings().selected_server_number) +

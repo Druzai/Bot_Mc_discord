@@ -253,10 +253,12 @@ async def server_checkups(bot, always=True):
                     Config.save_server_config()
             if not BotVars.is_server_on:
                 BotVars.is_server_on = True
-            if Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
+            if (BotVars.watcher_of_log_file is None or not BotVars.watcher_of_log_file.is_running()) and \
+                    Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
                     Config.get_cross_platform_chat_settings().channel_id and \
                     Config.get_cross_platform_chat_settings().webhook_url:
-                create_watcher()
+                if BotVars.watcher_of_log_file is None:
+                    create_watcher()
                 BotVars.watcher_of_log_file.start()
             number_match = findall(r", \d+", bot.guilds[0].get_member(bot.user.id).activities[0].name)
             if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 0 or info.num_players != 0 or \
