@@ -626,7 +626,7 @@ class Config:
     def _setup_cross_platform_chat(cls):
         if cls._settings_instance.bot_settings.cross_platform_chat.enable_cross_platform_chat is None:
             cls._need_to_rewrite = True
-            if cls._ask_for_data("Would you like to enable cross platform chat? Y/n\n", "y"):
+            if cls._ask_for_data("Would you like to enable cross-platform chat? Y/n\n", "y"):
                 cls._settings_instance.bot_settings.cross_platform_chat.enable_cross_platform_chat = True
 
                 if cls._settings_instance.bot_settings.cross_platform_chat.channel_id is None:
@@ -634,15 +634,15 @@ class Config:
                         cls._settings_instance.bot_settings.cross_platform_chat.channel_id = \
                             cls._ask_for_data("Enter channel id: ")
                     else:
-                        print("Cross platform chat wouldn't work. To make it work type '%chat <id>' to create link.")
+                        print("Cross-platform chat wouldn't work. To make it work type '%chat <id>' to create link.")
 
                 if cls._settings_instance.bot_settings.cross_platform_chat.webhook_url is None:
-                    if cls._ask_for_data("Webhook url for cross platform chat not found. "
+                    if cls._ask_for_data("Webhook url for cross-platform chat not found. "
                                          "Would you like to enter it? Y/n\n", "y"):
                         cls._settings_instance.bot_settings.cross_platform_chat.webhook_url = \
                             cls._ask_for_data("Enter webhook url: ")
                     else:
-                        print("Cross platform chat wouldn't work. Create webhook and enter it to bot config!")
+                        print("Cross-platform chat wouldn't work. Create webhook and enter it to bot config!")
 
                 if cls._settings_instance.bot_settings.cross_platform_chat.refresh_delay_of_console_log <= 0.05:
                     print("Watcher's delay to refresh doesn't set.")
@@ -658,12 +658,12 @@ class Config:
                         cls._ask_for_data("Set number of lines to check:", try_int=True, int_high_than=0)
             else:
                 cls._settings_instance.bot_settings.cross_platform_chat.enable_cross_platform_chat = False
-                print("Cross platform chat wouldn't work.")
+                print("Cross-platform chat wouldn't work.")
 
         if cls._settings_instance.bot_settings.cross_platform_chat.enable_cross_platform_chat:
-            print("Cross platform chat enabled.")
+            print("Cross-platform chat enabled.")
         else:
-            print("Cross platform chat disabled.")
+            print("Cross-platform chat disabled.")
 
     @classmethod
     def _setup_rss_feed(cls):

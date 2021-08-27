@@ -1,9 +1,9 @@
-from os import SEEK_END, stat
+from os import SEEK_END, stat, linesep
 from pathlib import Path
 from re import search, split, findall
-from sys import exc_info
 from threading import Thread
 from time import sleep
+from traceback import print_exc
 
 from discord import Webhook, RequestsWebhookAdapter
 
@@ -42,9 +42,10 @@ class Watcher:
                 sleep(self._refresh_delay_secs)
                 self.look()
             except FileNotFoundError:
-                print(f"File {self._filename} wasn't found!")
+                print(f"Watcher Error: File {self._filename} wasn't found!")
             except BaseException:
-                print('Unhandled error: %s' % exc_info()[0])
+                print("Watcher Error: Something went wrong :)")
+                print_exc()
 
     def start(self):
         self._thread = Thread(target=self.watch)
@@ -111,7 +112,7 @@ def _check_log_file(file: Path, last_line: str = None):
 def _get_last_n_lines(file, number_of_lines, last_line):
     list_of_lines = []
     with open(file, 'rb') as read_obj:
-        read_obj.seek(-2, SEEK_END)
+        read_obj.seek(-len(linesep), SEEK_END)
         buffer = bytearray()
         pointer_location = read_obj.tell()
         while pointer_location >= 0:
@@ -119,14 +120,15 @@ def _get_last_n_lines(file, number_of_lines, last_line):
             pointer_location = pointer_location - 1
             new_byte = read_obj.read(1)
             if new_byte == b'\n':
-                if buffer.decode()[::-1] == last_line:
+                decoded_line = buffer[::-1].decode().strip()
+                if decoded_line == last_line:
                     return list(reversed(list_of_lines))
-                list_of_lines.append(buffer.decode()[::-1])
+                list_of_lines.append(decoded_line)
                 if len(list_of_lines) == number_of_lines:
                     return list(reversed(list_of_lines))
                 buffer = bytearray()
             else:
                 buffer.extend(new_byte)
         if len(buffer) > 0:
-            list_of_lines.append(buffer.decode()[::-1])
+            list_of_lines.append(buffer[::-1].decode().strip())
     return list(reversed(list_of_lines))

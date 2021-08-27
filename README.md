@@ -27,8 +27,10 @@
 Note: these commands will require custom role if you set it in bot configuration file:
 `start`, `stop`, `restart`, `menu`, `forceload`, `whitelist`, `servers`, `op`, `chat`.
 <!---->
-Also, to enable crossplatform chat you need to enter in bot setup channel id (or use `chat` command) and webhook url!
+Also, to enable cross-platform chat you need to enter in bot setup channel id (or use `chat` command) and webhook url!
 [How to create webhook and get url](https://github.com/Akizo96/de.isekaidev.discord.wbbBridge/wiki/How-to-get-Webhook-ID-&-Token).
+<!---->
+For cross-platform chat to work properly you have to have argument `-Dfile.encoding=UTF-8` when you're executing `***.bat` or `***.sh` script.
 ### Requirements
 * [Python 3.5-3.8](https://www.python.org/downloads/)
 * For Linux required [screen](https://linuxize.com/post/how-to-use-linux-screen/) command
