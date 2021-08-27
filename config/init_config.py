@@ -145,6 +145,9 @@ class State_info:
     user: Optional[str] = None
     date: Optional[str] = None
 
+    def set_state_info(self, user: str, date: str):
+        self.user, self.date = user, date
+
 
 @dataclass
 class States:

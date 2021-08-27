@@ -139,8 +139,8 @@ async def start_server(ctx, bot, shut_up=False, is_reaction=False):
     BotVars.is_server_on = True
     if BotVars.is_restarting:
         BotVars.is_restarting = False
-    Config.get_server_config().states.started_info.date = datetime.now().strftime("%d/%m/%y, %H:%M:%S")
-    Config.get_server_config().states.started_info.user = str(author)
+    Config.get_server_config().states.started_info.set_state_info(str(author),
+                                                                  datetime.now().strftime("%d/%m/%y, %H:%M:%S"))
     Config.save_server_config()
     await bot.change_presence(activity=Activity(type=ActivityType.playing,
                                                 name=Config.get_settings().bot_settings.gaming_status))
@@ -201,8 +201,8 @@ async def stop_server(ctx, bot, how_many_sec=10, is_restart=False, is_reaction=F
     author, author_mention = get_author_and_mention(ctx, bot, is_reaction)
     print("Server's off now")
     await send_msg(ctx, author_mention + "\n```Server's off now```", is_reaction)
-    Config.get_server_config().states.stopped_info.date = datetime.now().strftime("%d/%m/%y, %H:%M:%S")
-    Config.get_server_config().states.stopped_info.user = str(author)
+    Config.get_server_config().states.stopped_info.set_state_info(str(author),
+                                                                  datetime.now().strftime("%d/%m/%y, %H:%M:%S"))
     Config.save_server_config()
     await bot.change_presence(activity=Activity(type=ActivityType.listening,
                                                 name=Config.get_settings().bot_settings.idle_status))
