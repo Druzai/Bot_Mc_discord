@@ -4,7 +4,7 @@ from ast import literal_eval
 from dataclasses import dataclass, field
 from datetime import datetime
 from glob import glob
-from json import load, dumps, loads
+from json import load
 from os.path import isfile, isdir
 from pathlib import Path
 from secrets import choice as sec_choice
@@ -91,6 +91,7 @@ class Bot_settings:
     local_address: str = ""
     menu_id: Optional[int] = None
     forceload: bool = False
+    default_number_of_times_to_op: int = -1
     vk_ask_credentials: bool = True
     vk_login: Optional[str] = None
     _vk_password = None
@@ -152,8 +153,15 @@ class States:
 
 
 @dataclass
+class Player:
+    player_minecraft_nick: str = ""
+    number_of_times_to_op: int = -1
+
+
+@dataclass
 class Server_config:
     states: States = States()
+    seen_players: List[Player] = field(default_factory=list)
 
 
 class Config:
@@ -162,8 +170,7 @@ class Config:
     _settings_instance: Settings = Settings()
     _server_config_name = "server_config.yaml"
     _server_config_instance: Server_config = Server_config()
-    _op_keys_name = "op_keys"
-    _op_log_name = "op_log.txt"
+    _op_log_name = "op.log"
     _need_to_rewrite = False
 
     @classmethod
@@ -230,17 +237,19 @@ class Config:
         cls._settings_instance.known_users.remove(User(user_minecraft_nick, user_discord_id))
 
     @classmethod
-    def read_op_keys(cls):
-        if not path.isfile(Path(cls._current_bot_path + '/' + cls._op_keys_name)):
-            cls.save_op_keys(dict())
-            return dict()
-        else:
-            return loads(decrypt_string(open(Path(cls._current_bot_path + '/' + cls._op_keys_name), "r").read()))
+    def get_seen_players_list(cls) -> List[Player]:
+        return cls._server_config_instance.seen_players
 
     @classmethod
-    def save_op_keys(cls, op_keys: dict):
-        open(Path(cls._current_bot_path + '/' + cls._op_keys_name), 'w') \
-            .write(encrypt_string(dumps(op_keys)))
+    def add_to_seen_players_list(cls, player_minecraft_nick: str):
+        cls._server_config_instance.seen_players.append(
+            Player(player_minecraft_nick, Config._settings_instance.bot_settings.default_number_of_times_to_op))
+
+    @classmethod
+    def decrease_number_to_op_for_player(cls, player_minecraft_nick: str):
+        for p in range(len(Config._server_config_instance.seen_players)):
+            if Config._server_config_instance.seen_players[p].player_minecraft_nick == player_minecraft_nick:
+                Config._server_config_instance.seen_players[p].number_of_times_to_op -= 1
 
     @classmethod
     def read_server_config(cls):
@@ -321,8 +330,9 @@ class Config:
         return load(open(Path(cls.get_selected_server_from_list().working_directory + '/ops.json'), 'r'))
 
     @classmethod
-    def append_to_op_log(cls, message: str):
-        open(Path(cls.get_bot_config_path() + f'/{cls._op_log_name}'), 'a', encoding='utf-8').write(message)
+    def append_to_op_log(cls, message_line: str):
+        with open(Path(cls.get_bot_config_path() + f'/{cls._op_log_name}'), 'a', encoding='utf8') as f:
+            f.write(f"{message_line}\n")
 
     @classmethod
     def _load_from_yaml(cls, filepath: Path, baseclass):
@@ -377,6 +387,7 @@ class Config:
         cls._setup_ip_address()
         cls._setup_local_address()
         cls._setup_menu_id()
+        cls._setup_default_number_of_times_to_op()
         cls._setup_vk_credentials()
         cls._setup_cross_platform_chat()
         cls._setup_rss_feed()
@@ -484,6 +495,12 @@ class Config:
         # Idle status
         if cls._settings_instance.bot_settings.idle_status == "":
             cls._settings_instance.bot_settings.idle_status = cls._ask_for_data("Set idle status: ")
+
+    @classmethod
+    def _setup_default_number_of_times_to_op(cls):
+        if cls._settings_instance.bot_settings.default_number_of_times_to_op < 1:
+            cls._settings_instance.bot_settings.default_number_of_times_to_op = \
+                cls._ask_for_data("Set default number of times to op for every player (int):\n")
 
     @classmethod
     def _setup_awaiting_times(cls):

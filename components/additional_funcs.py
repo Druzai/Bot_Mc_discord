@@ -7,9 +7,8 @@ from json import load, dump, JSONDecodeError
 from os import chdir, system
 from os.path import basename
 from pathlib import Path
-from random import choice, randint
+from random import randint
 from re import search, split, findall
-from string import ascii_letters, digits
 from sys import platform, argv
 
 from discord import Activity, ActivityType
@@ -245,21 +244,13 @@ async def server_checkups(bot, always=True):
                           BotVars.port_query, timeout=1) as cl_q:
                 info = cl_q.full_stats
             if info.num_players != 0:
-                nicks_n_keys_add = {}
-                for i in info.players:
-                    i = i.lower()
-                    if i not in Config.read_op_keys().keys():
-                        nicks_n_keys_add.update({i: [generate_access_code() for _ in range(25)]})
-                if nicks_n_keys_add:
-                    print("New codes generated")
-                    for k, v in nicks_n_keys_add.items():
-                        print("For player with nickname " + k + " generated these codes:")
-                        for c in v:
-                            print("\t" + c)
-                    orig_op = Config.read_op_keys()
-                    orig_op.update(nicks_n_keys_add)
-                    Config.save_op_keys(orig_op)
-                    orig_op.clear()
+                to_save = False
+                for player in info.players:
+                    if player not in [i.player_minecraft_nick for i in Config.get_server_config().seen_players]:
+                        Config.add_to_seen_players_list(player)
+                        to_save = True
+                if to_save:
+                    Config.save_server_config()
             if not BotVars.is_server_on:
                 BotVars.is_server_on = True
             if Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
@@ -307,28 +298,6 @@ async def server_checkups(bot, always=True):
             await asleep(Config.get_awaiting_times_settings().await_seconds_in_check_ups)
         if not always:
             break
-
-
-def generate_access_code(length=16, sep='-', sep_interval=4) -> str:
-    """Генератор кодов доступа
-    Частота повторений символов вариативная для кода
-    в пределах от 1 к 2, до 1 к 1000
-    :param length: Длинна кода в символах, без учёта разделителей
-    :param sep: Символ разделитель внутри кода, для читаемости
-    :param sep_interval: Шаг раздела, 0 для отключения разделения
-    :return: Код доступа
-    """
-    alphabet = digits + ascii_letters
-    code = ''
-    duplicate_chance = randint(1, 1000)
-    for i in range(length):
-        if i and sep_interval and not i % sep_interval:
-            code += sep
-        candidate_symbol = choice(alphabet)
-        while candidate_symbol in code and randint(0, duplicate_chance):
-            candidate_symbol = choice(alphabet)
-        code += candidate_symbol
-    return code
 
 
 def get_offline_uuid(username):

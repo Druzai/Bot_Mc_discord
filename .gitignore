@@ -278,7 +278,6 @@ dist
 .idea
 Support_files
 key
-op_keys
 *.json
 *.yaml
 *.yml

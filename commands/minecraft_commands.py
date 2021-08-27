@@ -1,9 +1,7 @@
 from asyncio import sleep as asleep, CancelledError
 from contextlib import suppress
 from datetime import datetime
-from os import listdir
-from pathlib import Path
-from random import choice, randint
+from random import randint
 
 import discord
 from discord.ext import commands
@@ -11,7 +9,7 @@ from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r
 
 from components.additional_funcs import server_checkups, send_error, send_msg, send_status, stop_server, start_server, \
-    get_author_and_mention, save_to_whitelist_json, get_whitelist_entry, get_server_online_mode
+    get_author_and_mention, save_to_whitelist_json, get_whitelist_entry, get_server_online_mode, get_server_players
 from config.init_config import BotVars, Config
 from decorators import role
 
@@ -149,100 +147,98 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @role.has_role_or_default()
-    async def op(self, ctx, arg1, arg2, *args):
-        """Op command
-        :arg1 - nick,
-        :arg2 - code,
-        :*args - comment"""
-        is_found = False
-        is_empty = False
+    async def op(self, ctx, minecraft_nick, *args):
+        """
+        Op command
+        :param args: comment"""
         BotVars.is_doing_op = True
-        temp_s = []
-        # List of player(s) who used this command, it needed to determinate should bot rewrite 'op_keys' or not
-        if BotVars.is_server_on and not BotVars.is_stopping and \
-                not BotVars.is_loading and not BotVars.is_restarting:
-            keys_for_nicks = Config.read_op_keys()
-            arg1 = arg1.lower()
-            if arg1 in keys_for_nicks.keys():
-                for _ in keys_for_nicks.get(arg1):
-                    temp_s = keys_for_nicks.get(arg1)
-                    if _ == arg2:
-                        is_found = True
-                        BotVars.op_deop_list.append(arg1)
-                        open(Path(Config.get_bot_config_path() + '/op_log.txt'), 'a', encoding='utf-8').write(
-                            datetime.now().strftime("%d/%m/%Y, %H:%M:%S") + " || Opped " + arg1 + " || Reason: " + (
-                                ' '.join(args) if args else "None") + "\n")
-                        await_time_op = Config.get_awaiting_times_settings().await_seconds_when_opped
-                        try:
-                            with Client_r(Config.get_settings().bot_settings.local_address,
-                                          BotVars.port_rcon, timeout=1) as cl_r:
-                                cl_r.login(BotVars.rcon_pass)
-                                cl_r.say(arg1 + ' you\'ve opped for' + (
-                                    "" if await_time_op // 60 == 0 else " " + str(await_time_op // 60) + ' min') + (
-                                             "." if await_time_op % 60 == 0 else " " + str(
-                                                 await_time_op % 60) + ' sec.'))
-                                cl_r.mkop(arg1)
-                        except BaseException:
-                            await ctx.send(ctx.author.mention +
-                                           ", а сервак-то не работает (по крайней мере я пытался), попробуй-ка позже.")
-                            return
-                        keys_for_nicks.get(arg1).remove(arg2)
-                        await ctx.send("```Code activated```")
-                        if await_time_op > 0:
-                            if randint(0, 2) == 1:
-                                await ctx.send(
-                                    "Короче, " + ctx.author.mention + ", я тебя op'нул и в благородство играть не буду: приду через "
-                                    + str(int(await_time_op / 60)) + " минут," +
-                                    " deop'ну всех - и мы в расчёте. Заодно постараюсь разузнать на кой ляд тебе эта op'ка нужна," +
-                                    " но я в чужие дела не лезу, если хочешь получить, значит есть за что...")
-                            await asleep(await_time_op)
-                            if arg1 != BotVars.op_deop_list[-1]:
-                                return
-                            to_delete_ops = []
-                            for i in Config.get_ops_json():
-                                for k, v in i.items():
-                                    if k == "name":
-                                        to_delete_ops.append(v)
-                            while True:
-                                await asleep(
-                                    Config.get_awaiting_times_settings().await_seconds_when_connecting_via_rcon)
-                                try:
-                                    with Client_r(Config.get_settings().bot_settings.local_address,
-                                                  BotVars.port_rcon, timeout=1) as cl_r:
-                                        cl_r.login(BotVars.rcon_pass)
-                                        cl_r.say(arg1 + ' you all will be deoped now.')
-                                        for _ in to_delete_ops:
-                                            cl_r.deop(_)
-                                        list = cl_r.run("list").split(":")[1].split(", ")
-                                        for _ in list:
-                                            cl_r.run("gamemode 0 " + _)
-                                    break
-                                except BaseException:
-                                    pass
-                            Config.append_to_op_log(
-                                datetime.now().strftime("%d/%m/%Y, %H:%M:%S") + " || Deopped all " + (
-                                    str("|| Note: " + str(
-                                        len(BotVars.op_deop_list)) + " people deoped in belated list") if len(
-                                        BotVars.op_deop_list) > 1 else "") + "\n")
-                            await ctx.send("Ну что, " + ctx.author.mention +
-                                           ", кончилось твоё время.. и не только твоё.... Как говорится \"Чики-брики и в дамки!\"")
-                            BotVars.op_deop_list.clear()
-                        else:
-                            await ctx.send(
-                                ctx.author.mention + ", у тебя нет ограничения по времени, но вы все обречены...")
-                if temp_s:
-                    Config.save_op_keys(keys_for_nicks)
-                else:
-                    is_empty = True
+        if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and not BotVars.is_restarting:
+            if minecraft_nick not in [p.player_minecraft_nick for p in Config.get_server_config().seen_players]:
+                await ctx.send(f"{ctx.author.mention}, не видел такого ника на сервере, сынок! "
+                               "Отметься на сервере перед опкой...")
+                return
+
+            if minecraft_nick not in [u.user_minecraft_nick for u in Config.get_known_users_list()] or \
+                    ctx.author.id not in [u.user_discord_id for u in Config.get_known_users_list()
+                                          if u.user_minecraft_nick == minecraft_nick]:
+                await ctx.send(f"{ctx.author.mention}, к тебе не привязан этот {minecraft_nick} ник, воспользуйся "
+                               f"{Config.get_settings().bot_settings.prefix}assoc...")
+                return
+
+            if minecraft_nick in [p.player_minecraft_nick for p in Config.get_server_config().seen_players] and \
+                    [p.number_of_times_to_op for p in Config.get_server_config().seen_players
+                     if p.player_minecraft_nick == minecraft_nick][0] == 0:
+                await ctx.send(f"{ctx.author.mention}, вы исчерпали кол-во попыток опнуться для данного "
+                               f"{minecraft_nick} аккаунта!")
+                return
+
+            if minecraft_nick not in get_server_players():
+                await ctx.send(f"{ctx.author.mention}, я не вижу в сети данный аккаунт `{minecraft_nick}`!")
+                return
+
+            BotVars.op_deop_list.append(minecraft_nick)
+            Config.append_to_op_log(datetime.now().strftime("%d/%m/%Y, %H:%M:%S") + " || Opped " +
+                                    minecraft_nick + " || Reason: " + (" ".join(args) if args else "None"))
+            await_time_op = Config.get_awaiting_times_settings().await_seconds_when_opped
+            try:
+                with Client_r(Config.get_settings().bot_settings.local_address,
+                              BotVars.port_rcon, timeout=1) as cl_r:
+                    cl_r.login(BotVars.rcon_pass)
+                    cl_r.say(minecraft_nick + ' you\'ve opped for' + (
+                        "" if await_time_op // 60 == 0 else " " + str(await_time_op // 60) + ' min') + (
+                                 "." if await_time_op % 60 == 0 else " " + str(
+                                     await_time_op % 60) + ' sec.'))
+                    cl_r.mkop(minecraft_nick)
+                Config.decrease_number_to_op_for_player(minecraft_nick)
+                Config.save_server_config()
+            except BaseException:
+                await ctx.send(ctx.author.mention +
+                               ", а сервак-то не работает (по крайней мере я пытался), попробуй-ка позже.")
+                return
+            await ctx.send("```Code activated```")
+            if await_time_op > 0:
+                if randint(0, 2) == 1:
+                    await ctx.send(
+                        f"Короче, {ctx.author.mention}, я тебя op'нул и в благородство играть не буду: приду через "
+                        + str(int(await_time_op / 60)) + " мин," +
+                        " deop'ну всех - и мы в расчёте. Заодно постараюсь разузнать на кой ляд тебе эта op'ка нужна," +
+                        " но я в чужие дела не лезу, если хочешь получить, значит есть за что...")
+                await asleep(await_time_op)
+                if minecraft_nick != BotVars.op_deop_list[-1]:
+                    return
+                to_delete_ops = []
+                for i in Config.get_ops_json():
+                    for k, v in i.items():
+                        if k == "name":
+                            to_delete_ops.append(v)
+                while True:
+                    await asleep(
+                        Config.get_awaiting_times_settings().await_seconds_when_connecting_via_rcon)
+                    try:  # TODO: replace with suppress(BaseException) !!!
+                        with Client_r(Config.get_settings().bot_settings.local_address,
+                                      BotVars.port_rcon, timeout=1) as cl_r:
+                            cl_r.login(BotVars.rcon_pass)
+                            cl_r.say(minecraft_nick + ' you all will be deoped now.')
+                            for player in to_delete_ops:
+                                cl_r.deop(player)
+                            list = cl_r.run("list").split(":")[1].split(", ")
+                            for player in list:
+                                cl_r.run(f"gamemode 0 {player}")
+                        break
+                    except BaseException:
+                        pass
+                Config.append_to_op_log(datetime.now().strftime("%d/%m/%Y, %H:%M:%S") + " || Deopped all " +
+                                        (str("|| Note: " + str(len(BotVars.op_deop_list)) +
+                                             " people deoped in belated list") if len(
+                                            BotVars.op_deop_list) > 1 else ""))
+                await ctx.send("Ну что, " + ctx.author.mention +
+                               ", кончилось твоё время.. и не только твоё.... Как говорится \"Чики-брики и в дамки!\"")
+                BotVars.op_deop_list.clear()
             else:
-                await ctx.send(
-                    "Эй, такого ника в моей базе нету. Давай по новой, " + ctx.author.mention + ", всё х\\*\\*ня.")
-                is_found = True
-            if not is_found and not is_empty:
-                await ctx.send(ctx.author.mention + ", код не найден. Не получилось, не фортануло, братан.")
-            elif is_empty:
-                await ctx.send(ctx.author.mention + ", я вам op'ку не дам, потому что у вас рабочих кодов нету!")
-            BotVars.is_doing_op = False
+                await ctx.send(f"{ctx.author.mention}, у тебя нет ограничения по времени, но вы все обречены...")
+
+            if len(BotVars.op_deop_list) == 0:
+                BotVars.is_doing_op = False
         else:
             await send_status(ctx)
 
@@ -262,15 +258,15 @@ class MinecraftCommands(commands.Cog):
             except BaseException:
                 await ctx.send("Wrong 1-st argument used!")
                 return
-            minecraft_nick = minecraft_nick.lower()
             if assoc_command == comm_operators[0]:
-                if minecraft_nick not in [u.user_minecraft_nick for u in Config.get_known_users_list()] and \
-                        discord_id not in [u.user_discord_id for u in Config.get_known_users_list()]:
+                if minecraft_nick in [u.user_minecraft_nick for u in Config.get_known_users_list()] and \
+                        discord_id in [u.user_discord_id for u in Config.get_known_users_list()
+                                       if u.user_minecraft_nick == minecraft_nick]:
+                    await ctx.send("Existing `mention to nick` link!")
+                else:
                     need_to_save = True
                     Config.add_to_known_users_list(minecraft_nick, discord_id)
                     await ctx.send("Now " + discord_mention + " associates with nick in minecraft " + minecraft_nick)
-                else:
-                    await ctx.send("Existing `mention to nick` link!")
             elif assoc_command == comm_operators[1]:
                 if minecraft_nick in [u.user_minecraft_nick for u in Config.get_known_users_list()] and \
                         discord_id in [u.user_discord_id for u in Config.get_known_users_list()]:
@@ -289,32 +285,71 @@ class MinecraftCommands(commands.Cog):
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    async def codes(self, ctx, minecraft_nick):
-        member = ctx.author
-        minecraft_nick = minecraft_nick.lower()
-        if minecraft_nick in [u.user_minecraft_nick for u in Config.get_known_users_list()] and \
-                member.id in [u.user_discord_id for u in Config.get_known_users_list()
-                              if u.user_minecraft_nick == minecraft_nick]:
-            keys_for_nicks = Config.read_op_keys()
-            if minecraft_nick not in keys_for_nicks.keys():
-                await ctx.send("Don't have such nickname logged in minecraft")
+    @commands.guild_only()
+    @role.has_role_or_default()
+    async def ops(self, ctx, for_who, missing=None):
+        """
+        Get info about ops
+        :param for_who: string, "me" or "all"
+        :param missing: None or "missing"
+        """
+        if for_who not in ["me", "all"] or missing not in [None, "missing"]:
+            await ctx.send(f"Syntax: `{Config.get_settings().bot_settings.prefix}ops ['me', 'all'] ('missing')`")
+            raise commands.UserInputError()
+
+        message = ""
+        if for_who == "me":
+            if ctx.author.id not in [u.user_discord_id for u in Config.get_known_users_list()]:
+                await ctx.send(f"{ctx.author.mention}, у вас нету привязанных ников!")
                 return
-            message = "For player with nickname " + minecraft_nick + " generated " + str(
-                len(keys_for_nicks.get(minecraft_nick))) + " codes:\n"
-            for value in keys_for_nicks.get(minecraft_nick):
-                message += "`" + value + "`\n"
-            await member.send(message)
-        else:
-            # Check if /Gendalf_Top exists! TODO: refactor this piece of code!!!
-            if Path(Config.get_bot_config_path() + '/Gendalf_Top').is_dir():
-                gifs_list = listdir(Path(Config.get_bot_config_path() + '/Gendalf_Top'))
-                await member.send('You shall not PASS! Ты не владеешь данным ником :ambulance:',
-                                  file=discord.File(
-                                      Path(Config.get_bot_config_path() + '/Gendalf_Top/' + choice(gifs_list))))
-            else:
-                print("Folder 'Gendalf_Top' hasn't been found in that path '" + Config.get_bot_config_path() +
-                      "'. Maybe you want to create it and fill it with images related to Gendalf :)")
-                await member.send('You shall not PASS! Ты не владеешь данным ником :ambulance:')
+
+            user_nicks = [u.user_minecraft_nick for u in Config.get_known_users_list()
+                          if u.user_discord_id == ctx.author.id]
+            user_players_data = {}
+
+            for m_nick in user_nicks:
+                for p in Config.get_seen_players_list():
+                    if p.player_minecraft_nick == m_nick:
+                        user_players_data.update({p.player_minecraft_nick: p.number_of_times_to_op})
+                        user_nicks.remove(m_nick)
+            if missing:
+                user_players_data.update({n: -1 for n in user_nicks})
+
+            message = f"{ctx.author.mention}, у вас есть такие данные по никам и кол-ву оставшихся использований:\n```"
+            for k, v in user_players_data.items():
+                message += f"{k}: {str(v) if v >= 0 else 'не замечен на сервере'}\n"
+        elif for_who == "all":
+            if not ctx.author.guild_permissions.administrator:
+                raise commands.MissingPermissions(['administrator'])
+
+            users_to_nicks = {}
+            for user in Config.get_known_users_list():
+                if users_to_nicks.get(user.user_discord_id, None) is None:
+                    users_to_nicks.update({user.user_discord_id: []})
+                users_to_nicks[user.user_discord_id].append(user.user_minecraft_nick)
+
+            for user_id in users_to_nicks.keys():
+                for p in Config.get_seen_players_list():
+                    if p.player_minecraft_nick in users_to_nicks[user_id]:
+                        users_to_nicks[user_id].remove(p.player_minecraft_nick)
+                        users_to_nicks[user_id].append({p.player_minecraft_nick: p.number_of_times_to_op})
+
+            message = f"{ctx.author.mention}, у бота есть такие данные по никам и кол-ву оставшихся использований:\n```"
+            for k, v in users_to_nicks.items():
+                if not len(v) or (not missing and all([isinstance(i, str) for i in v])):
+                    continue
+                member = await ctx.guild.fetch_member(k)
+                message += f"{member.display_name}#{member.discriminator}:\n"
+                for item in v:
+                    if missing and isinstance(item, str):
+                        message += f"\t{item}: не замечен на сервере\n"
+                    elif isinstance(item, dict):
+                        message += f"\t{list(item.items())[0][0]}: {str(list(item.items())[0][1])}\n"
+
+        if message[-3:] == "```":
+            message += "-----"
+        message += "```"
+        await ctx.send(message)
 
     @commands.command(pass_context=True, aliases=["fl"])
     @commands.bot_has_permissions(send_messages=True, view_channel=True)

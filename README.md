@@ -15,7 +15,7 @@
 * `restart {10}` - restart server, {} (sec) countdown, without args - remove timer
 * `op {1} {2} {3}` - give op to {1} player using {2} code {3} with reason comment, if needed, after set time deop that player
 * `assoc {1} {2} {3}` - Associates {1} mentioning a nickname in discord on {2} command (+=/-=) (add or remove) {3} with a nickname in minecraft **for admin**
-* `codes {1}` - Sends dm with codes for {1} nickname in discord
+* `ops {1} {2}` - Sends info about which accounts you have linked (if {1} set to `me`) or everyone has linked (if {1} set to `all` **for admin**) and how many times are left to op. Shows not appeared accounts on server if {2} set to `missing`
 * `menu` - creates menu-panel (embed) for easy command management
 * `chat {1}` - saves current channel (if no arguments are given) or selected channel from {1} argument from which the bot forwards messages to the minecraft chat
 * `forceload/fl {on/off}` - by {`on` / `off`} constant loading of the server when it is shut down, if no arguments - return status
@@ -25,7 +25,7 @@
 * `clear/cls {1}` - If positive number it deletes {1} messages, if negative number - deletes n messages up to {1} from the beginning of the channel
 
 Note: these commands will require custom role if you set it in bot configuration file:
-`start`, `stop`, `restart`, `menu`, `forceload`, `whitelist`, `servers`, `op`, `chat`.
+`start`, `stop`, `restart`, `menu`, `forceload`, `whitelist`, `servers`, `op`, `ops`, `chat`.
 <!---->
 Also, to enable cross-platform chat you need to enter in bot setup channel id (or use `chat` command) and webhook url!
 [How to create webhook and get url](https://github.com/Akizo96/de.isekaidev.discord.wbbBridge/wiki/How-to-get-Webhook-ID-&-Token).
