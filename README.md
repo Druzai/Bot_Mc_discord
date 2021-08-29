@@ -13,7 +13,7 @@
 * `start` - start server
 * `stop {10}` - stop server, {} (sec) countdown, without args - remove timer
 * `restart {10}` - restart server, {} (sec) countdown, without args - remove timer
-* `op {1} {2} {3}` - give op to {1} player using {2} code {3} with reason comment, if needed, after set time deop that player
+* `op {1} {3}` - give op to {1} player {3} with reason comment, if needed, after set time deop that player
 * `assoc {1} {2} {3}` - Associates {1} mentioning a nickname in discord on {2} command (+=/-=) (add or remove) {3} with a nickname in minecraft **for admin**
 * `ops {1} {2}` - Sends info about which accounts you have linked (if {1} set to `me`) or everyone has linked (if {1} set to `all` **for admin**) and how many times are left to op. Shows not appeared accounts on server if {2} set to `missing`
 * `menu` - creates menu-panel (embed) for easy command management
