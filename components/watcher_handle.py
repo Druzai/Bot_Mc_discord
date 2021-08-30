@@ -99,16 +99,21 @@ def _check_log_file(file: Path, last_line: str = None):
                                           split(r"<([^>]*)>", line, maxsplit=1)[-1].strip()
             if search(r"@.+", player_message):
                 split_arr = split(r"@[^\s]+", player_message)
-                members = {i[1:].lower(): None for i in findall(r"@[^\s]+", player_message)}
+                mentions = {i[1:].lower(): None for i in findall(r"@[^\s]+", player_message)}
                 for guild in BotVars.bot_for_webhooks.guilds:
+                    # Check mention on user mention
                     for member in guild.members:
-                        if member.name.lower() in members.keys():
-                            members[member.name.lower()] = member
-                        elif member.display_name.lower() in members.keys():
-                            members[member.display_name.lower()] = member
+                        if member.name.lower() in mentions.keys():
+                            mentions[member.name.lower()] = member
+                        elif member.display_name.lower() in mentions.keys():
+                            mentions[member.display_name.lower()] = member
+                    # Check mention on role mention
+                    for role in guild.roles:
+                        if role.name.lower() in mentions.keys():
+                            mentions[role.name.lower()] = role
                 i = 1
-                for name, member in members.items():
-                    split_arr.insert(i, member.mention if member is not None else f"@{name}")
+                for name, mention_obj in mentions.items():
+                    split_arr.insert(i, mention_obj.mention if mention_obj is not None else f"@{name}")
                     i += 2
                 player_message = "".join(split_arr)
 

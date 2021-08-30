@@ -3,6 +3,7 @@ from asyncio import sleep as asleep
 from contextlib import contextmanager
 from datetime import datetime
 from hashlib import md5
+from itertools import chain
 from json import load, dump, JSONDecodeError
 from os import chdir, system
 from os.path import basename
@@ -411,7 +412,7 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
         if on_edit:
             result_before = _handle_custom_emojis(before_message)
             result_before = _handle_urls_and_attachments_in_message(result_before, before_message, True)
-            if float(get_server_version()) >= 1.16:
+            if get_server_version() >= 1.16:
                 res_obj.append({"text": "*", "color": "gold",
                                 "hoverEvent": {"action": "show_text", "contents": result_before.get("content")}})
             else:
@@ -575,24 +576,41 @@ def _build_if_urls_in_message(res_obj, obj, default_text_color):
 
 
 def _search_mentions_in_message(message) -> list:
-    if len(message.mentions):
+    if len(message.mentions) == 0 and len(message.role_mentions) == 0 and not message.mention_everyone:
         return []
 
-    players_nicks_from_discord = [i.display_name if i.display_name else i.name for i in message.mentions]
     nicks = []
     if message.mention_everyone:
         nicks.append("@a")
     else:
+        # Check role and user mentions
+        members_from_roles = list(chain(*[i.members for i in message.role_mentions]))
+        members_from_roles.extend(message.mentions)
+        members_from_roles = set(members_from_roles)
+        for member in members_from_roles:
+            if member.id in [i.user_discord_id for i in Config.get_known_users_list()]:
+                nicks.extend([i.user_minecraft_nick for i in Config.get_known_users_list()
+                              if i.user_discord_id == member.id])
+
+        players_nicks_from_discord = [i.display_name if i.display_name else i.name for i in message.mentions]
+        server_players = get_server_players()
+        if len(members_from_roles) > 0:
+            nicks = [i for i in nicks if i in server_players]
+        # Check @'minecraft_nick' mentions
         for nick in players_nicks_from_discord:
-            if nick in get_server_players():
+            if nick in server_players:
                 nicks.append(nick)
-    return nicks
+    return set(nicks)
 
 
-def get_server_version() -> str:
+def get_server_version() -> float:
     with Client_q(Config.get_settings().bot_settings.local_address, BotVars.port_query, timeout=1) as cl_r:
         version = cl_r.full_stats.version
-    return version
+    if search(r"\d+\.\d+\.\d+", version):
+        matches = findall(r"\d+", version)
+        return float(f"{matches[0]}.{matches[1]}")
+    elif search(r"\d+\.\d+", version):
+        return float(version)
 
 
 def get_server_players() -> tuple:
@@ -620,7 +638,7 @@ def times(fade_in, duration, fade_out, rcon_client):
 
 
 def announce(player, message, rcon_client):
-    if float(get_server_version()) >= 1.11:
+    if get_server_version() >= 1.11:
         rcon_client.run(f'title {player} actionbar ' + '{' + f'"text":"{message}"' + ',"bold":true,"color":"gold"}')
     else:
         rcon_client.run(f'title {player} title ' + '{"text":" "}')
