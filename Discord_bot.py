@@ -16,17 +16,19 @@ from config.init_config import Config, BotVars
 # TODO: features
 #  Make rus/eng localization and get it from dict from file or so and setup *.spec file!
 #  Continuously rewrite code in classes
-#  Remove opcodes, assoc already does that, replace with counters, save it in StartStopStates.json
 #  Сделать отправку об выключении/перезагрузке через tellraw тоже
 #  https://github.com/MyTheValentinus/minecraftTellrawGenerator
 #  Поработать над упоминаниями на майн и из майна, Regex @\.+ | в процессе + id-to-nicks.json
+#  Мб добавить команду смены префикса команд...
+#  При обратном отсчёте использовать tellraw или title в stop_server
+#  Сделать список из гуи дискорда для %servs select и комманда для музыки из майнкрафта
 #  Мб добавить вывод игрок подкл, откл и причина
 # [23:53:40] [Server thread/INFO]: jokobaba lost connection: Timed out
 # [23:53:40] [Server thread/INFO]: jokobaba left the game
 # [23:53:55] [Server thread/INFO]: jokobaba joined the game
 # [23:55:07] [Server thread/INFO]: Dedicated407 has completed the challenge [Cover Me in Debris]
 
-# TODO: wait for discord.py 2.0.0, (move to python 3.9 or 3.10)
+# TODO: wait for discord.py 2.0.0 (archived), (move to python 3.9 or 3.10)
 #  to rewrite webhooks
 #  + add webhook creating/modifying (channel_id in https://discord.com/developers/docs/resources/webhook#modify-webhook)
 #  replace reactions with buttons in menu and poll
