@@ -31,6 +31,5 @@ clear_lin:
 	@echo Cleaned
 
 clear_win:
-	cmd /c "rd /s /q build __pycache__"
-	del *.spec
+	cmd /c "rd /s /q build __pycache__ && del *.spec"
 	@echo Cleaned
