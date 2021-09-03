@@ -8,18 +8,38 @@ on:
       - "*.*.*"
   pull_request: null
 
-env:
-  RELEASE_URL: None
-
 jobs:
-  build:
+  create_release:
+    name: Create release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Get commit tag
+        id: commit
+        run: |
+          echo ::set-output name=SOURCE_TAG::${GITHUB_REF#refs/tags/}
 
+      - name: Create release
+        if: ${{ env.RELEASE_URL }} == 'None'
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          tag_name: ${{ steps.commit.outputs.SOURCE_TAG }}
+          release_name: ${{ steps.commit.outputs.SOURCE_TAG }}
+          draft: false
+          prerelease: false
+
+  release_built_assets:
+    name: Release built assets
+    needs: create_release
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         python-version: [ 3.8 ]
         os: [ ubuntu-latest, windows-latest ]
-
     steps:
       - name: Clone repository
         uses: actions/checkout@v2
@@ -51,41 +71,24 @@ jobs:
         run: |
           make
 
-      - name: Create release
-        if: ${{ env.RELEASE_URL }} == 'None'
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          tag_name: ${{ steps.commit.outputs.SOURCE_TAG }}
-          release_name: ${{ steps.commit.outputs.SOURCE_TAG }}
-
-      - name: Ensure release url
-        if: ${{ env.RELEASE_URL }} == 'None'
-        env:
-          RELEASE_URL: steps.create_release.outputs.upload_url
-        run: |
-          echo ${{ env.RELEASE_URL }}
-
-      - name: Upload release asset with ubuntu
-        if: runner.os == 'Linux'
+      - name: Upload release asset with *nix
+        if: matrix.os != 'windows-latest'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          upload_url: ${{ env.RELEASE_URL }}
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
           asset_path: ./dist_build/Discord_bot
           asset_name: Discord_bot_linux_x64_py_${{ matrix.python-version }}_${{ steps.commit.outputs.SOURCE_TAG }}
           asset_content_type: application/x-executable
 
       - name: Upload release asset with windows
-        if: runner.os == 'Windows'
+        if: matrix.os == 'windows-latest'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          upload_url: ${{ env.RELEASE_URL }}
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
           asset_path: ./dist_build/Discord_bot.exe
           asset_name: Discord_bot_windows_x64_py_${{ matrix.python-version }}_${{ steps.commit.outputs.SOURCE_TAG }}.exe
           asset_content_type: application/vnd.microsoft.portable-executable
