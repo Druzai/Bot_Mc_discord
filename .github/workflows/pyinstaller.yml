@@ -6,6 +6,7 @@ on:
       - main
     tags:
       - "*.*.*"
+  pull_request: null
 
 env:
   RELEASE_URL: None
@@ -60,13 +61,15 @@ jobs:
           tag_name: ${{ env.SOURCE_TAG }}
           release_name: ${{ env.SOURCE_TAG }}
 
-      - name: Ensure release
+      - name: Ensure release url
         if: ${{ env.RELEASE_URL }} == None
         env:
           RELEASE_URL: steps.create_release.outputs.upload_url
+        run: |
+          echo ${{ env.RELEASE_URL }}
 
       - name: Upload release asset with ubuntu
-        if: ${{ matrix.os }} == "ubuntu-latest"
+        if: ${{ matrix.os }} == ubuntu-latest
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
         with:
@@ -76,7 +79,7 @@ jobs:
           asset_content_type: application/x-executable
 
       - name: Upload release asset with windows
-        if: ${{ matrix.os }} == "windows-latest"
+        if: ${{ matrix.os }} == windows-latest
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
         with:
