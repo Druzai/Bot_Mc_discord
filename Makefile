@@ -17,8 +17,12 @@ endif
 
 install: $(target) $(_clean)
 
-$(target):
-	pyinstaller -F --icon=bot.ico --distpath=./ Discord_bot.py
+Discord_bot.exe:
+	pyinstaller -F --icon=images/bot.ico --add-data "images\sad_dog.jpg;images" --distpath=./ Discord_bot.py
+	@echo Built
+
+Discord_bot:
+	pyinstaller -F --add-data "images/sad_dog.jpg:images" --distpath=./ Discord_bot.py
 	@echo Built
 
 clear_lin:

@@ -277,8 +277,7 @@ __pycache__
 dist
 .idea
 Support_files
-Discord_bot.spec
-bot.json
 key
-op_keys
-id-to-nicks.json
+*.json
+*.yaml
+*.yml
