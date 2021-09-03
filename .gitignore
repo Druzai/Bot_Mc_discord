@@ -274,6 +274,7 @@ $RECYCLE.BIN/
 # Others
 Support_files/
 key
+dist_build/
 *.json
 *.yaml
 *.yml
