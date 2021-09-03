@@ -272,12 +272,9 @@ $RECYCLE.BIN/
 *.lnk
 
 # Others
-build
-__pycache__
-dist
-.idea
-Support_files
+Support_files/
 key
 *.json
 *.yaml
 *.yml
+!.github/workflows/*
