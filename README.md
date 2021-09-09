@@ -7,9 +7,10 @@
 </h1>
 
 ### Commands
-* `help` - list all commands (currently in russian)
+* `help` - list all commands
 * `status` - return status of the server
 * `list/ls` - return list of the players on server
+* `language/lang` - to be implemented
 * `start` - start server
 * `stop {10}` - stop server, {} (sec) countdown, without args - remove timer
 * `restart {10}` - restart server, {} (sec) countdown, without args - remove timer

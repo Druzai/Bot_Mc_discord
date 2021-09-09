@@ -275,6 +275,7 @@ $RECYCLE.BIN/
 Support_files/
 key
 dist_build/
+_frozen_translations.py
 *.json
 *.yaml
 *.yml

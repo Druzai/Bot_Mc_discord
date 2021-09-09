@@ -5,11 +5,11 @@ else
 endif
 
 ifeq ($(uname_S), Windows)
-    target = Discord_bot.exe
+    target = dist_build/Discord_bot.exe
     _clean = clear_win
 endif
 ifeq ($(uname_S), Linux)
-    target = Discord_bot
+    target = dist_build/Discord_bot
     _clean = clear_lin
 endif
 
@@ -17,12 +17,16 @@ endif
 
 install: $(target) $(_clean)
 
-Discord_bot.exe:
-	pyinstaller -F --icon=images/bot.ico --add-data "images\sad_dog.jpg;images" --distpath=./dist_build Discord_bot.py
+dist_build/Discord_bot.exe:
+	py ./locales/generate_mo.py
+	@echo Translations generated
+	pyinstaller -F --icon=images/bot.ico --add-data "images/sad_dog.jpg;images" --add-data "./locales/en/LC_MESSAGES/lang.mo;locales/en/LC_MESSAGES" --add-data "./locales/ru/LC_MESSAGES/lang.mo;locales/ru/LC_MESSAGES" --distpath=./dist_build Discord_bot.py
 	@echo Built
 
-Discord_bot:
-	pyinstaller -F --add-data "images/sad_dog.jpg:images" --distpath=./dist_build Discord_bot.py
+dist_build/Discord_bot:
+	py ./locales/generate_mo.py
+	@echo Translations generated
+	pyinstaller -F --add-data "images/sad_dog.jpg:images" --add-data "./locales/en/LC_MESSAGES/lang.mo:locales/en/LC_MESSAGES" --add-data "./locales/ru/LC_MESSAGES/lang.mo:locales/ru/LC_MESSAGES" --distpath=./dist_build Discord_bot.py
 	@echo Built
 
 clear_lin:

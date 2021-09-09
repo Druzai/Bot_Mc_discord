@@ -5,6 +5,8 @@ from enum import Enum, auto
 from discord import Color, Embed
 from discord.ext import commands
 
+from components.localization import get_translation
+
 
 class Poll(commands.Cog):
     _polls = {}
@@ -12,15 +14,15 @@ class Poll(commands.Cog):
     _await_date = datetime.now()
 
     def __init__(self, bot: commands.Bot):
-        # Для работы с сообщениями, сообщения, которые выводить при опросе, минимальное кол-во проголосовавших за или против
+        # Для работы с сообщениями, сообщения, которые выводить при опросе,
+        # минимальное кол-во проголосовавших за или против
         # Сделать временное голосование, по истечении голосование завершено неудачей, cancel работает так же,
         self._bot: commands.Bot = bot
 
     # TODO: Make it usable with stop command, give to command some strings!
-    async def run(self, ctx, need_for_voting=2, needed_role=None, timeout=60 * 60, remove_logs_after=None):
-        start_msg = await ctx.send("@everyone, this man " + ctx.author.mention +
-                                   " trying to delete some history of this channel. Will you let that happen?" +
-                                   f" To win the poll need {str(need_for_voting)} votes! So keep it up! I'm waiting")
+    async def run(self, ctx, message, need_for_voting=2, needed_role=None, timeout=60 * 60, remove_logs_after=None):
+        start_msg = await ctx.send("@everyone, " + message + " " +
+                                   get_translation("To win the poll needed {1} votes!").format(str(need_for_voting)))
         poll_msg = await self.make_embed(ctx)
         current_poll = Poll.PollContent(ctx, need_for_voting, needed_role, remove_logs_after)
         self._polls[poll_msg.id] = current_poll
@@ -34,18 +36,19 @@ class Poll(commands.Cog):
         await poll_msg.delete()
         del self._polls[poll_msg.id]
         if current_poll.state == Poll.States.CANCELED:
-            await ctx.send("Poll result: canceled!", delete_after=remove_logs_after)
+            await ctx.send(get_translation("Poll result: canceled!"), delete_after=remove_logs_after)
             return None
-        await ctx.send("Poll result: permission " +
-                       ("granted" if current_poll.state == Poll.States.GRANTED else "refused") + "!",
+        poll_res = get_translation("granted") if current_poll.state == Poll.States.GRANTED else get_translation(
+            "refused")
+        await ctx.send(get_translation("Poll result: permission {0}!").format(poll_res),
                        delete_after=remove_logs_after)
         return current_poll.state == Poll.States.GRANTED
 
     async def make_embed(self, ctx):
-        emb = Embed(title='Опрос. ГолосовалОЧКА!',
+        emb = Embed(title=get_translation("Survey. Voting!"),
                     color=Color.orange())
-        emb.add_field(name='yes', value=':ballot_box_with_check:')
-        emb.add_field(name='no', value=':negative_squared_cross_mark:')
+        emb.add_field(name=get_translation("yes"), value=':ballot_box_with_check:')
+        emb.add_field(name=get_translation("no"), value=':negative_squared_cross_mark:')
         add_reactions_to = await ctx.send(embed=emb)
         for emote in self._emoji_symbols.values():
             await add_reactions_to.add_reaction(emote)
@@ -68,8 +71,9 @@ class Poll(commands.Cog):
             self._await_date = datetime.now()
             return True
         else:
-            await ctx.send(ctx.author.mention + ", what are you doing? Time hasn't passed yet. I have " + str(seconds) +
-                           " sec/s timer! Waiting...")
+            await ctx.send(f"{ctx.author.mention}, " +
+                           get_translation("what are you doing? Time hasn't passed yet. Waiting {0} sec...")
+                           .format((datetime.now() - self._await_date).seconds))
             return False
 
     class States(Enum):
@@ -91,13 +95,16 @@ class Poll(commands.Cog):
 
         async def count_voice(self, channel, user, to_left):
             if self.state is not Poll.States.NONE:
-                await channel.send(user.mention + ", poll've already finished!", delete_after=self.RLA)
+                await channel.send(f"{user.mention}, " + get_translation("poll've already finished!"),
+                                   delete_after=self.RLA)
                 return False
             if user.id in self.poll_voted_uniq:
-                await channel.send(user.mention + ", you've already voted!", delete_after=self.RLA)
+                await channel.send(f"{user.mention}, " + get_translation("you've already voted!"),
+                                   delete_after=self.RLA)
                 return False
             if self.NR and self.NR not in (e.name for e in user.roles):
-                await channel.send(user.mention + ", you don't have needed '" + self.NR + "' role",
+                await channel.send(f"{user.mention}, " +
+                                   get_translation("you don't have needed '{0}' role").format(self.NR),
                                    delete_after=self.RLA)
                 return False
             self.poll_voted_uniq.add(user.id)

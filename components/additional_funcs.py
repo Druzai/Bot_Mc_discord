@@ -1,6 +1,8 @@
+import inspect
 from ast import literal_eval
 from asyncio import sleep as asleep
 from contextlib import contextmanager
+from contextlib import suppress
 from datetime import datetime
 from hashlib import md5
 from itertools import chain
@@ -11,6 +13,7 @@ from pathlib import Path
 from random import randint
 from re import search, split, findall
 from sys import platform, argv
+from typing import Tuple
 
 from discord import Activity, ActivityType
 from discord.ext import commands
@@ -19,11 +22,18 @@ from mcipc.rcon import Client as Client_r
 from psutil import process_iter, NoSuchProcess
 from requests import post as req_post
 
+from components.localization import get_translation
 from components.watcher_handle import create_watcher
 from config.init_config import Config, BotVars
 
 if platform == "win32":
     from os import startfile
+
+__all__ = [
+    "server_checkups", "send_error", "send_msg", "send_status", "stop_server", "start_server",
+    "get_author_and_mention", "save_to_whitelist_json", "get_whitelist_entry", "get_server_online_mode",
+    "get_server_players", "add_quotes", "bot_status", "bot_list", "bot_start", "bot_stop", "bot_restart"
+]
 
 
 async def send_msg(ctx, msg, is_reaction=False):
@@ -32,6 +42,10 @@ async def send_msg(ctx, msg, is_reaction=False):
                        delete_after=Config.get_awaiting_times_settings().await_seconds_before_message_deletion)
     else:
         await ctx.send(msg)
+
+
+def add_quotes(msg: str) -> str:
+    return f"```{msg}```"
 
 
 async def delete_after_by_msg_id(ctx, message_id):
@@ -56,21 +70,22 @@ def get_author_and_mention(ctx, bot, is_reaction=False):
 
 async def send_status(ctx, is_reaction=False):
     if BotVars.is_server_on:
-        await send_msg(ctx, "```Server have already started!```", is_reaction)
+        await send_msg(ctx, add_quotes(get_translation("server have already started!").capitalize()), is_reaction)
     else:
         if BotVars.is_loading:
-            await send_msg(ctx, "```Server is loading!```", is_reaction)
+            await send_msg(ctx, add_quotes(get_translation("server is loading!").capitalize()), is_reaction)
         elif BotVars.is_stopping:
-            await send_msg(ctx, "```Server is stopping!```", is_reaction)
+            await send_msg(ctx, add_quotes(get_translation("server is stopping!").capitalize()), is_reaction)
         else:
-            await send_msg(ctx, "```Server have already been stopped!```", is_reaction)
+            await send_msg(ctx, add_quotes(get_translation("server have already been stopped!").capitalize()),
+                           is_reaction)
 
 
 async def start_server(ctx, bot, shut_up=False, is_reaction=False):
     BotVars.is_loading = True
-    print("Loading server")
+    print(get_translation("Loading server"))
     if ctx and not shut_up:
-        await send_msg(ctx, "```Loading server.......\nPlease wait)```", is_reaction)
+        await send_msg(ctx, add_quotes(get_translation("Loading server.......\nPlease wait)")), is_reaction)
     chdir(Config.get_selected_server_from_list().working_directory)
     try:
         if platform == "linux" or platform == "linux2":
@@ -84,8 +99,9 @@ async def start_server(ctx, bot, shut_up=False, is_reaction=False):
             startfile(Config.get_selected_server_from_list().start_file_name)
         BotVars.server_start_time = int(datetime.now().timestamp())
     except BaseException:
-        print("Couldn't open script! Check naming and extension of the script!")
-        await send_msg(ctx, "```Couldn't open script because of naming! Retreating...```", is_reaction)
+        print(get_translation("Couldn't open script! Check naming and extension of the script!"))
+        await send_msg(ctx, add_quotes(get_translation("Couldn't open script because of naming! Retreating...")),
+                       is_reaction)
         BotVars.is_loading = False
         if BotVars.is_restarting:
             BotVars.is_restarting = False
@@ -95,7 +111,8 @@ async def start_server(ctx, bot, shut_up=False, is_reaction=False):
     check_time = datetime.now()
     while True:
         if len(get_list_of_processes()) == 0:
-            await send_msg(ctx, "```Error while loading server```", is_reaction)
+            await send_msg(ctx, add_quotes(get_translation("Error while loading server! Retreating...")),
+                           is_reaction)
             await bot.change_presence(activity=Activity(type=ActivityType.listening,
                                                         name=Config.get_settings().bot_settings.idle_status))
             BotVars.is_loading = False
@@ -105,20 +122,19 @@ async def start_server(ctx, bot, shut_up=False, is_reaction=False):
         timedelta_secs = (datetime.now() - check_time).seconds
         if Config.get_selected_server_from_list().server_loading_time:
             percentage = round((timedelta_secs / Config.get_selected_server_from_list().server_loading_time) * 100)
-            output_bot = "Loading: " + ((str(percentage) + "%") if percentage < 101 else "100%...")
+            output_bot = get_translation("Loading: ") + ((str(percentage) + "%") if percentage < 101 else "100%...")
         else:
-            output_bot = "Server, elapsed time: " + (
-                str(timedelta_secs // 60) + ":" + f"{(timedelta_secs % 60):02d}" if timedelta_secs // 60 != 0 else str(
-                    timedelta_secs % 60) + " sec")
+            output_bot = get_translation("{0}, elapsed time: ") \
+                             .format(Config.get_settings().bot_settings.idle_status) + (
+                             str(timedelta_secs // 60) + ":" + f"{(timedelta_secs % 60):02d}" if timedelta_secs // 60 != 0 else str(
+                                 timedelta_secs % 60) + " sec")
         await bot.change_presence(activity=Activity(type=ActivityType.listening, name=output_bot))
         await asleep(Config.get_awaiting_times_settings().await_seconds_when_connecting_via_rcon)
-        try:
+        with suppress(BaseException):
             with Client_q(Config.get_settings().bot_settings.local_address,
                           BotVars.port_query, timeout=0.5) as cl_q:
                 _ = cl_q.basic_stats
             break
-        except BaseException:
-            pass
     if Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
             Config.get_cross_platform_chat_settings().channel_id and \
             Config.get_cross_platform_chat_settings().webhook_url:
@@ -132,10 +148,10 @@ async def start_server(ctx, bot, shut_up=False, is_reaction=False):
     Config.save_config()
     author, author_mention = get_author_and_mention(ctx, bot, is_reaction)
     if ctx and not shut_up:
-        await send_msg(ctx, author_mention + "\n```Server's on now```", is_reaction)
-        print("Server on!")
+        await send_msg(ctx, author_mention + "\n" + add_quotes(get_translation("Server's on now")), is_reaction)
+        print(get_translation("Server on!"))
         if randint(0, 8) == 0:
-            await send_msg(ctx, "Kept you waiting, huh?", is_reaction)
+            await send_msg(ctx, get_translation("Kept you waiting, huh?"), is_reaction)
     BotVars.is_loading = False
     BotVars.is_server_on = True
     if BotVars.is_restarting:
@@ -150,8 +166,9 @@ async def start_server(ctx, bot, shut_up=False, is_reaction=False):
 async def stop_server(ctx, bot, how_many_sec=10, is_restart=False, is_reaction=False):
     BotVars.is_stopping = True
     no_connection = False
-    print("Stopping server")
-    await send_msg(ctx, "```Stopping server.......\nPlease wait " + str(how_many_sec) + " sec.```", is_reaction)
+    print(get_translation("Stopping server"))
+    await send_msg(ctx, add_quotes(get_translation("Stopping server.......\nPlease wait {0} sec.")
+                                   .format(str(how_many_sec))), is_reaction)
     try:
         with Client_r(Config.get_settings().bot_settings.local_address, BotVars.port_rcon, timeout=1) as cl_r:
             cl_r.login(BotVars.rcon_pass)
@@ -166,17 +183,19 @@ async def stop_server(ctx, bot, how_many_sec=10, is_restart=False, is_reaction=F
                             how_many_sec += 1
                             w = 1
                 if not is_restart:
-                    cl_r.say('Server\'s shutting down in ' + str(how_many_sec) + ' seconds')
+                    cl_r.say(get_translation("Server\'s shutting down in {0} seconds").format(str(how_many_sec)))
                 else:
-                    cl_r.say('Server\'s restarting in ' + str(how_many_sec) + ' seconds')
+                    cl_r.say(get_translation("Server\'s restarting in {0} seconds").format(str(how_many_sec)))
                 for i in range(how_many_sec, -1, -w):
-                    cl_r.say(str(i) + ' sec to go')
+                    cl_r.say(get_translation("{0} sec to go").format(str(i)))
                     await asleep(w)
             cl_r.run("stop")
     except BaseException:
         if len(get_list_of_processes()) == 0:
-            print("Exception: Couldn't connect to server, because it's stopped")
-            await send_msg(ctx, "Couldn't connect to server to shut it down! Server stopped...", is_reaction)
+            print(get_translation("Bot Exception: Couldn't connect to server, because it's stopped"))
+            await send_msg(ctx,
+                           add_quotes(get_translation("Couldn't connect to server to shut it down! Server stopped...")),
+                           is_reaction)
             BotVars.is_stopping = False
             BotVars.is_server_on = False
             return
@@ -194,14 +213,16 @@ async def stop_server(ctx, bot, how_many_sec=10, is_restart=False, is_reaction=F
             except BaseException:
                 break
     else:
-        print("Exception: Couldn't connect to server, so killing it now...")
-        await send_msg(ctx, "Couldn't connect to server to shut it down! Killing it now...", is_reaction)
+        print(get_translation("Bot Exception: Couldn't connect to server, so killing it now..."))
+        await send_msg(ctx,
+                       add_quotes(get_translation("Couldn't connect to server to shut it down! Killing it now...")),
+                       is_reaction)
     kill_server()
     BotVars.is_stopping = False
     BotVars.is_server_on = False
     author, author_mention = get_author_and_mention(ctx, bot, is_reaction)
-    print("Server's off now")
-    await send_msg(ctx, author_mention + "\n```Server's off now```", is_reaction)
+    print(get_translation("Server's off now"))
+    await send_msg(ctx, author_mention + "\n" + add_quotes(get_translation("Server's off now")), is_reaction)
     Config.get_server_config().states.stopped_info.set_state_info(str(author),
                                                                   datetime.now().strftime("%d/%m/%y, %H:%M:%S"))
     Config.save_server_config()
@@ -215,15 +236,13 @@ def get_list_of_processes() -> list:
     list_proc = []
 
     for proc in process_iter():
-        try:
+        with suppress(NoSuchProcess):
             parents_name_list = [i.name() for i in proc.parents()]
             if process_name in proc.name() and ("screen" in parents_name_list or
                                                 basename_of_executable in parents_name_list or
                                                 "python.exe" in parents_name_list) \
                     and abs(int(proc.create_time()) - BotVars.server_start_time) < 5:
                 list_proc.append(proc)
-        except NoSuchProcess:
-            pass
     return list_proc
 
 
@@ -231,10 +250,8 @@ def kill_server():
     list_proc = get_list_of_processes()
     if len(list_proc) != 0:
         for p in list_proc:
-            try:
+            with suppress(NoSuchProcess):
                 p.kill()
-            except NoSuchProcess:
-                pass
     BotVars.server_start_time = None
 
 
@@ -265,8 +282,9 @@ async def server_checkups(bot, always=True):
             if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 0 or info.num_players != 0 or \
                     (len(number_match) > 0 and number_match[0].split(" ")[-1] != 0):
                 await bot.change_presence(activity=Activity(type=ActivityType.playing,
-                                                            name=Config.get_settings().bot_settings.gaming_status + ", "
-                                                                 + str(info.num_players) + " player(s) online"))
+                                                            name=Config.get_settings().bot_settings.gaming_status +
+                                                                 ", " + str(info.num_players) +
+                                                                 get_translation(" player(s) online")))
         except BaseException:
             if len(get_list_of_processes()) == 0:
                 if BotVars.is_server_on:
@@ -285,23 +303,155 @@ async def server_checkups(bot, always=True):
                     if sent:
                         break
                     for channel in guild.channels:
-                        try:
+                        with suppress(BaseException):
                             await channel.fetch_message(Config.get_settings().bot_settings.menu_id)
                             await send_msg(ctx=channel,
-                                           msg='```Bot detected: Server\'s offline!\n'
-                                               f'Time: {datetime.now().strftime("%d/%m/%y, %H:%M:%S")}\n'
-                                               'Starting up server again!```',
+                                           msg=add_quotes(get_translation("Bot detected: Server\'s offline!\n"
+                                                                          "Time: {0}\n"
+                                                                          "Starting up server again!").format(
+                                               datetime.now().strftime("%d/%m/%y, %H:%M:%S"))),
                                            is_reaction=True)
                             await start_server(ctx=channel, bot=bot, shut_up=True)
                             sent = True
                             break
-                        except BaseException:
-                            pass
         if Config.get_awaiting_times_settings().await_seconds_in_check_ups > 0 and always:
             await asleep(Config.get_awaiting_times_settings().await_seconds_in_check_ups)
         if not always:
             break
 
+
+async def bot_status(ctx, is_reaction=False):
+    states = ""
+    states_info = Config.get_server_config().states
+    if states_info.started_info.date is not None and states_info.started_info.user is not None:
+        states += get_translation("Server has been started at {0}, by {1}").format(states_info.started_info.date,
+                                                                                   states_info.started_info.user) \
+                  + "\n"
+    if states_info.stopped_info.date is not None and states_info.stopped_info.user is not None:
+        states += get_translation("Server has been stopped at {0}, by {1}").format(states_info.stopped_info.date,
+                                                                                   states_info.stopped_info.user) \
+                  + "\n"
+    states = states.strip("\n")
+    if BotVars.is_server_on:
+        try:
+            with Client_r(Config.get_settings().bot_settings.local_address,
+                          BotVars.port_rcon, timeout=1) as cl_r:
+                cl_r.login(BotVars.rcon_pass)
+                """rcon check daytime cycle"""
+                time_ticks = int(cl_r.run("time query daytime").split(" ")[-1])
+            message = get_translation("Time in minecraft: ")
+            if 450 <= time_ticks <= 11616:
+                message += get_translation("Day, ")
+            elif 11617 <= time_ticks <= 13800:
+                message += get_translation("Sunset, ")
+            elif 13801 <= time_ticks <= 22550:
+                message += get_translation("Night, ")
+            else:
+                message += get_translation("Sunrise, ")
+            await send_msg(ctx, add_quotes(get_translation("server online").capitalize() + "\n" +
+                                           get_translation("Server address: ") +
+                                           Config.get_settings().bot_settings.ip_address + "\n"
+                                           + message + str((6 + time_ticks // 1000) % 24) + ":"
+                                           + f"{((time_ticks % 1000) * 60 // 1000):02d}"
+                                           + "\n" + get_translation("Selected server: ") +
+                                           Config.get_selected_server_from_list().server_name + "\n" + states),
+                           is_reaction)
+        except BaseException:
+            await send_msg(ctx,
+                           add_quotes(get_translation("server online").capitalize() + "\n" +
+                                      get_translation("Server address: ") +
+                                      Config.get_settings().bot_settings.ip_address +
+                                      "\n" + get_translation("Server thinking...") +
+                                      "\n" + get_translation("Selected server: ") +
+                                      Config.get_selected_server_from_list().server_name + "\n" + states),
+                           is_reaction)
+            print(get_translation("Server's down via rcon"))
+    else:
+        await send_msg(ctx, add_quotes(get_translation("server offline").capitalize() + "\n" +
+                                       get_translation("Server address: ") +
+                                       Config.get_settings().bot_settings.ip_address +
+                                       "\n" + get_translation("Selected server: ") +
+                                       Config.get_selected_server_from_list().server_name +
+                                       "\n" + states),
+                       is_reaction)
+
+
+async def bot_list(ctx, bot, is_reaction=False):
+    try:
+        with Client_q(Config.get_settings().bot_settings.local_address, BotVars.port_query,
+                      timeout=1) as cl_q:
+            info = cl_q.full_stats
+        if info.num_players == 0:
+            await send_msg(ctx, add_quotes(get_translation("There are no players on the server")), is_reaction)
+        else:
+            await send_msg(ctx, add_quotes(get_translation("There are {0} player(s)"
+                                                           "\nPlayer(s): {1}").format(info.num_players,
+                                                                                      ", ".join(info.players))),
+                           is_reaction)
+    except BaseException:
+        _, author_mention = get_author_and_mention(ctx, bot, is_reaction)
+        await send_msg(ctx, f"{author_mention}, " + get_translation("server offline"), is_reaction)
+
+
+async def bot_start(ctx, bot, is_reaction=False):
+    if not BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading:
+        await start_server(ctx, bot=bot, is_reaction=is_reaction)
+    else:
+        await send_status(ctx, is_reaction=is_reaction)
+
+
+# TODO: add poll when there's more than 0 player on server, add yes - no in reactions! Do this to make approval
+async def bot_stop(ctx, command, bot, is_reaction=False):
+    if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading:
+        if BotVars.is_doing_op:
+            await send_msg(ctx, add_quotes(get_translation("Some player(s) still oped, waiting for them")),
+                           is_reaction)
+            return
+        if Config.get_settings().bot_settings.forceload:
+            Config.get_settings().bot_settings.forceload = False
+            Config.save_config()
+        await stop_server(ctx, bot, int(command), is_reaction=is_reaction)
+    else:
+        await send_status(ctx, is_reaction=is_reaction)
+
+
+async def bot_restart(ctx, command, bot, is_reaction=False):
+    if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading:
+        if BotVars.is_doing_op:
+            await send_msg(ctx, add_quotes(get_translation("Some player(s) still oped, waiting for them")),
+                           is_reaction)
+            return
+        BotVars.is_restarting = True
+        print(get_translation("Restarting server"))
+        await stop_server(ctx, bot, int(command), True, is_reaction=is_reaction)
+        await start_server(ctx, bot, is_reaction=is_reaction)
+    else:
+        await send_status(ctx, is_reaction=is_reaction)
+
+
+def parse_params_for_help(command_params: dict, string_to_add: str, create_params_dict=False) -> Tuple[str, dict]:
+    params = {}
+    for arg_name, arg_data in command_params.items():
+        if create_params_dict:
+            if arg_data.annotation != inspect._empty:
+                if not getattr(arg_data.annotation, '__name__', None) is None:
+                    params[arg_name] = getattr(arg_data.annotation, '__name__', None)
+                else:
+                    params[arg_name] = str(arg_data.annotation).replace("typing.", "")
+            elif arg_data.annotation == inspect._empty:
+                params[arg_name] = type(arg_data.default).__name__
+            elif arg_data.default == inspect._empty:
+                params[arg_name] = "Any"
+
+        if arg_data.default != inspect._empty:
+            add_data = ""
+            if bool(arg_data.default):
+                add_data = f"'{arg_data.default}'" if isinstance(arg_data.default, str) else str(
+                    arg_data.default)
+            string_to_add += f" [{arg_name}" + (f" = {add_data}" if add_data else "") + "]"
+        else:
+            string_to_add += f" <{arg_name}>"
+    return string_to_add, params
 
 def get_offline_uuid(username):
     data = bytearray(md5(("OfflinePlayer:" + username).encode()).digest())
@@ -334,7 +484,7 @@ def save_to_whitelist_json(entry: dict):
 def get_server_online_mode():
     filepath = Path(Config.get_selected_server_from_list().working_directory + "/server.properties")
     if not filepath.exists():
-        raise RuntimeError(f"File '{filepath.as_posix()}' doesn't exist!")
+        raise RuntimeError(get_translation("File '{0}' doesn't exist!").format(filepath.as_posix()))
     with open(filepath, "r") as f:
         for i in f.readlines():
             if i.find("online-mode") >= 0:
@@ -345,33 +495,45 @@ def get_server_online_mode():
 async def send_error(ctx, bot, error, is_reaction=False):
     author, author_mention = get_author_and_mention(ctx, bot, is_reaction)
     if isinstance(error, commands.MissingRequiredArgument):
-        print(f'{author} не указал аргумент')
-        await send_msg(ctx, f'{author_mention}, пожалуйста, введи все аргументы', is_reaction)
+        print(get_translation("{0} didn't input the argument").format(author))
+        await send_msg(ctx, f"{author_mention}\n" + add_quotes(get_translation("enter all arguments").capitalize()),
+                       is_reaction)
     elif isinstance(error, commands.MissingPermissions):
-        print(f'У {author} мало прав для команды')
+        print(get_translation("{0} don't have some permissions to run command").format(author))
         missing_perms = [perm.replace('_', ' ').replace('guild', 'server').title() for perm in error.missing_perms]
-        await send_msg(ctx, f'{author_mention}, для выполнения этой команды у вас нет прав: {", ".join(missing_perms)}',
+        await send_msg(ctx, f"{author_mention}\n" +
+                       add_quotes(get_translation("to run this command you don't have these permissions: {0}")
+                                  .format(author_mention, ", ".join(missing_perms)).capitalize()),
                        is_reaction)
     elif isinstance(error, commands.MissingRole):
-        print(f'У {author} нет роли "{error.missing_role}" для команды')
-        await send_msg(ctx,
-                       f'{author_mention}, у вас нет роли "{error.missing_role}" для выполнения этой команды',
+        print(get_translation("{0} don't have role '{1}' to run command").format(author, error.missing_role))
+        await send_msg(ctx, f"{author_mention}\n" +
+                       add_quotes(get_translation("you don't have role '{0}' to run this command")
+                                  .format(error.missing_role).capitalize()),
                        is_reaction)
     elif isinstance(error, commands.CommandNotFound):
-        print(f'{author} ввёл несуществующую команду')
-        await send_msg(ctx, f'{author_mention}, вы ввели несуществующую команду', is_reaction)
+        print(get_translation("{0} entered non-existent command").format(author))
+        await send_msg(ctx, f"{author_mention}\n" +
+                       add_quotes(get_translation("you entered non-existent command").capitalize()),
+                       is_reaction)
     elif isinstance(error, commands.UserInputError):
-        print(f'{author} неправильно ввёл аргумент(ы) команды')
-        await send_msg(ctx, f'{author_mention}, вы неправильно ввели агрумент(ы) команды', is_reaction)
+        print(get_translation("{0} entered wrong argument(s) of command").format(author))
+        await send_msg(ctx, f"{author_mention}\n" +
+                       add_quotes(get_translation("you entered wrong argument(s) of this command").capitalize()),
+                       is_reaction)
     elif isinstance(error, commands.DisabledCommand):
-        print(f'{author} ввёл отключённую команду')
-        await send_msg(ctx, f'{author_mention}, вы ввели отлючённую команду', is_reaction)
+        print(get_translation("{0} entered disabled command").format(author))
+        await send_msg(ctx, f"{author_mention}\n" +
+                       add_quotes(get_translation("you entered disabled command").capitalize()),
+                       is_reaction)
     elif isinstance(error, commands.NoPrivateMessage):
-        print(f'{author} ввёл комманду, работающую только в гильдии')
-        await send_msg(ctx, f'{author_mention}, введённая команда работает только на сервере', is_reaction)
+        print(get_translation("{0} entered a command that only works in the guild"))
+        await send_msg(ctx, f"{author_mention}\n" +
+                       add_quotes(get_translation("this command only works on server").capitalize()),
+                       is_reaction)
     else:
         print(", ".join(error.args))
-        await send_msg(ctx, ", ".join(error.original.args), is_reaction)
+        await send_msg(ctx, f"{author_mention}\n" + add_quotes(", ".join(error.original.args)), is_reaction)
 
 
 async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, on_edit=False, before_message=None):
@@ -385,51 +547,55 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
 
     if not Config.get_cross_platform_chat_settings().channel_id or \
             not Config.get_cross_platform_chat_settings().webhook_url:
-        await send_msg(message.channel, f"{author_mention}, this chat can't work! Cross platform chat disabled!", True)
+        await send_msg(message.channel, f"{author_mention}, " +
+                       get_translation("this chat can't work! Cross-platform chat disabled!"), True)
     elif not BotVars.is_server_on:
-        await send_msg(message.channel, f"{author_mention}, server offline!", True)
+        await send_msg(message.channel, f"{author_mention}\n" +
+                       add_quotes(get_translation("server offline!").capitalize()), True)
     elif BotVars.is_restarting:
-        await send_msg(message.channel, f"{author_mention}, server is restarting!", True)
+        await send_msg(message.channel, f"{author_mention}\n" +
+                       add_quotes(get_translation("server is restarting!").capitalize()), True)
     elif BotVars.is_stopping and BotVars.watcher_of_log_file is None:
-        await send_msg(message.channel, f"{author_mention}, server is stopping!", True)
+        await send_msg(message.channel, f"{author_mention}\n" +
+                       add_quotes(get_translation("server is stopping!").capitalize()), True)
     elif BotVars.is_loading:
-        await send_msg(message.channel, f"{author_mention}, server is loading!", True)
+        await send_msg(message.channel, f"{author_mention}\n" +
+                       add_quotes(get_translation("server is loading!").capitalize()), True)
     else:
-        result_msg = _handle_custom_emojis(message)
-        result_msg = await _handle_reply_in_message(message, result_msg)
-        result_msg = _handle_urls_and_attachments_in_message(result_msg, message)
+        if len(get_server_players()) > 0:
+            result_msg = _handle_custom_emojis(message)
+            result_msg = await _handle_reply_in_message(message, result_msg)
+            result_msg = _handle_urls_and_attachments_in_message(result_msg, message)
 
-        # Building object for tellraw
-        res_obj = ["", {"text": "<"}, {"text": message.author.display_name, "color": "dark_gray"},
-                   {"text": "> "}]
-        if result_msg.get("reply", None) is not None:
-            if isinstance(result_msg.get("reply"), list):
-                res_obj.extend([{"text": result_msg.get("reply")[0], "color": "gray"},
-                                {"text": result_msg.get("reply")[1], "color": "dark_gray"}])
-                _build_if_urls_in_message(res_obj, result_msg.get("reply")[2], "gray")
-            else:
-                _build_if_urls_in_message(res_obj, result_msg.get("reply"), "gray")
-        if on_edit:
-            result_before = _handle_custom_emojis(before_message)
-            result_before = _handle_urls_and_attachments_in_message(result_before, before_message, True)
-            if get_server_version() >= 1.16:
-                res_obj.append({"text": "*", "color": "gold",
-                                "hoverEvent": {"action": "show_text", "contents": result_before.get("content")}})
-            else:
-                res_obj.append({"text": "*", "color": "gold",
-                                "hoverEvent": {"action": "show_text", "value": result_before.get("content")}})
-        _build_if_urls_in_message(res_obj, result_msg.get("content"), None)
+            # Building object for tellraw
+            res_obj = ["", {"text": "<"}, {"text": message.author.display_name, "color": "dark_gray"},
+                       {"text": "> "}]
+            if result_msg.get("reply", None) is not None:
+                if isinstance(result_msg.get("reply"), list):
+                    res_obj.extend([{"text": result_msg.get("reply")[0], "color": "gray"},
+                                    {"text": result_msg.get("reply")[1], "color": "dark_gray"}])
+                    _build_if_urls_in_message(res_obj, result_msg.get("reply")[2], "gray")
+                else:
+                    _build_if_urls_in_message(res_obj, result_msg.get("reply"), "gray")
+            if on_edit:
+                result_before = _handle_custom_emojis(before_message)
+                result_before = _handle_urls_and_attachments_in_message(result_before, before_message, True)
+                if get_server_version() >= 1.16:
+                    res_obj.append({"text": "*", "color": "gold",
+                                    "hoverEvent": {"action": "show_text", "contents": result_before.get("content")}})
+                else:
+                    res_obj.append({"text": "*", "color": "gold",
+                                    "hoverEvent": {"action": "show_text", "value": result_before.get("content")}})
+            _build_if_urls_in_message(res_obj, result_msg.get("content"), None)
 
-        with Client_r(Config.get_settings().bot_settings.local_address, BotVars.port_rcon, timeout=1) as cl_r:
-            cl_r.login(BotVars.rcon_pass)
-            answ = cl_r.tellraw("@a", res_obj)
-            # TODO: Replace with checking via query num of players for localization!
+            with Client_r(Config.get_settings().bot_settings.local_address, BotVars.port_rcon, timeout=1) as cl_r:
+                cl_r.login(BotVars.rcon_pass)
+                cl_r.tellraw("@a", res_obj)
 
-        if answ == '':
             delete_user_message = False
             nicks = _search_mentions_in_message(message)
             if len(nicks) > 0:
-                try:
+                with suppress(BaseException):
                     with Client_r(Config.get_settings().bot_settings.local_address,
                                   BotVars.port_rcon, timeout=1) as cl_r:
                         cl_r.login(BotVars.rcon_pass)
@@ -438,10 +604,8 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
                                 announce(nick,
                                          f"@{message.author.display_name} -> @{nick if nick != '@a' else 'everyone'}",
                                          cl_r)
-                except BaseException:
-                    pass
         else:
-            await send_msg(message.channel, f"{author_mention}, {answ.lower()}!", True)
+            await send_msg(message.channel, f"{author_mention}, " + get_translation("No players on server!"), True)
 
     if delete_user_message and need_to_delete_on_error:
         await delete_after_by_msg_id(message, message.id)

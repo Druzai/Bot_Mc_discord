@@ -8,10 +8,18 @@ from discord.ext import commands
 from vk_api import VkApi
 
 from commands.poll import Poll
-from components.additional_funcs import handle_message_for_chat, server_checkups, send_error, send_msg
-from components.watcher_handle import create_watcher
+from components import decorators
+from components.additional_funcs import handle_message_for_chat, server_checkups, send_error, send_msg, add_quotes, \
+    parse_params_for_help
+from components.localization import get_translation, get_locales, set_locale
 from config.init_config import BotVars, Config
-from decorators import role
+
+
+def channel_mention(arg: str):
+    try:
+        return int(arg)
+    except ValueError:
+        return arg
 
 
 class ChatCommands(commands.Cog):
@@ -21,14 +29,14 @@ class ChatCommands(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        print('------')
-        print('Logged in discord as')
+        print("------")
+        print(get_translation("Logged in discord as"))
         print(f"{self._bot.user.name}#{self._bot.user.discriminator}")
-        print("Discord.py version", discord.__version__)
-        print('------')
+        print(get_translation("Discord.py version"), discord.__version__)
+        print("------")
         await self._bot.change_presence(activity=Activity(type=ActivityType.watching, name="nsfw"))
-        print("Bot is ready!")
-        print("Starting server check-ups")
+        print(get_translation("Bot is ready!"))
+        print(get_translation("Starting server check-ups"))
         BotVars.server_checkups_task = self._bot.loop.create_task(server_checkups(self._bot))
 
     """
@@ -41,10 +49,10 @@ class ChatCommands(commands.Cog):
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
-    @role.has_role_or_default()
-    async def chat(self, ctx, channel_id=None):
+    @decorators.has_role_or_default()
+    async def chat(self, ctx, channel_id: channel_mention = None):
         if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
-            await ctx.channel.send("Cross platform chat is disabled in bot config!")
+            await ctx.channel.send(get_translation("Cross-platform chat is disabled in bot config!"))
             return
 
         channel_set = False
@@ -52,15 +60,12 @@ class ChatCommands(commands.Cog):
             Config.get_cross_platform_chat_settings().channel_id = ctx.channel.id
             channel_set = True
         else:
-            if channel_id.startswith("<#"):
+            if isinstance(channel_id, int):
+                Config.get_cross_platform_chat_settings().channel_id = channel_id
+                channel_set = True
+            elif channel_id.startswith("<#"):
                 try:
                     Config.get_cross_platform_chat_settings().channel_id = int(channel_id.strip("<#>"))
-                    channel_set = True
-                except ValueError:
-                    pass
-            else:
-                try:
-                    Config.get_cross_platform_chat_settings().channel_id = int(channel_id)
                     channel_set = True
                 except ValueError:
                     pass
@@ -68,14 +73,10 @@ class ChatCommands(commands.Cog):
         if channel_set:
             Config.save_config()
             await ctx.channel.send(
-                "Channel `" +
-                (await self._bot.fetch_channel(Config.get_cross_platform_chat_settings().channel_id)).name +
-                "` set to minecraft cross platform chat!")
-            if BotVars.watcher_of_log_file is None:
-                BotVars.watcher_of_log_file = create_watcher()
-                BotVars.watcher_of_log_file.start()
+                get_translation("Channel `{0}` set to minecraft cross-platform chat!")
+                    .format((await self._bot.fetch_channel(Config.get_cross_platform_chat_settings().channel_id)).name))
         else:
-            await ctx.channel.send("You entered wrong argument!")
+            await ctx.channel.send(get_translation("You entered wrong argument!"))
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -90,6 +91,24 @@ class ChatCommands(commands.Cog):
             return
 
         await handle_message_for_chat(after, self._bot, False, on_edit=True, before_message=before)
+
+    @commands.command(pass_context=True, aliases=["lang"])
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    async def language(self, ctx, set_language=""):
+        """Get/Select language"""
+        if len(set_language) > 0:
+            if set_locale(set_language):
+                await ctx.send(add_quotes(get_translation("Bot doesn't have this language!\n"
+                                                          "Check list pf available languages via {0}language")
+                                          .format(Config.get_settings().bot_settings.prefix)))
+            else:
+                Config.get_settings().bot_settings.language = set_language.lower()
+                Config.save_config()
+                await ctx.send(add_quotes(get_translation("Language switched successfully!")))
+
+        else:
+            await ctx.send(add_quotes(get_translation("Available languages:\n{0}")
+                                      .format(", ".join([ln.capitalize() for ln in get_locales()]))))
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(send_messages=True, embed_links=True, view_channel=True)
@@ -143,15 +162,16 @@ class ChatCommands(commands.Cog):
                     e.set_image(url=photo_url)
                     await ctx.send(embed=e)
                 except BaseException:
-                    e = discord.Embed(title="Ошибка vk:  Что-то пошло не так",
+                    e = discord.Embed(title=get_translation("Vk Error: Something went wrong"),
                                       color=discord.Color.red())
                     file = discord.File(Path(Config.get_inside_path(), "images/sad_dog.jpg"), filename="image.jpg")
                     e.set_image(url="attachment://image.jpg")
                     await ctx.send(embed=e, file=file)
             else:
-                await ctx.send("Я бы мог рассказать что-то, но мне лень. ( ͡° ͜ʖ ͡°)\nReturning to my duties.")
+                await ctx.send(get_translation("I could tell you something, but I'm too lazy. {0}\n"
+                                               "Returning to my duties.").format("( ͡° ͜ʖ ͡°)"))
         else:
-            e = discord.Embed(title="Ошибка vk:  Не введены данные аккаунта",
+            e = discord.Embed(title=get_translation("Vk Error: Account details not entered"),
                               color=discord.Color.red())
             file = discord.File(Path(Config.get_inside_path(), "images/sad_dog.jpg"), filename="image.jpg")
             e.set_image(url="attachment://image.jpg")
@@ -160,38 +180,73 @@ class ChatCommands(commands.Cog):
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, embed_links=True, view_channel=True)
     @commands.guild_only()
-    async def help(self, ctx):
-        await ctx.channel.purge(limit=1)
-        emb = discord.Embed(title=f'Список всех команд (через {Config.get_settings().bot_settings.prefix})',
-                            color=discord.Color.gold())
-        emb.add_field(name='status', value='Возвращает статус сервера')
-        emb.add_field(name='list/ls',
-                      value='Возвращает список игроков')
-        emb.add_field(name='start', value='Запускает сервер')
-        emb.add_field(name='stop {10}',
-                      value='Останавливает сервер, {} (сек) сколько идёт отсчёт, без аргументов - убирает таймер')
-        emb.add_field(name='restart {10}',
-                      value='Перезапускает сервер, {} (сек) сколько идёт отсчёт, без аргументов - убирает таймер')
-        emb.add_field(name='op {1} {2}',
-                      value='Даёт op\'ку на {1} ник {2} c комментарием причины, если надо')
-        emb.add_field(name='assoc {1} {2} {3}',
-                      value='Ассоциирует {1} упоминание ника в дискорде по {2} команде (+=/-=) (добавить или удалить) {3} c ником в майнкрафте **для админа**')
-        emb.add_field(name='ops {1} {2}', value='Даёт инфу о том, какие аккаунты привязаны у вас (при {1} равном "me") '
-                                                'или у всех (при {1} равном "all" **для админа**) и сколько осталось раз op\'нуться. '
-                                                'Показывает не появлявшиеся на сервере аккаунты при {2} равном "missing"')
-        emb.add_field(name='menu', value='Создаёт меню-пульт для удобного управления командами')
-        emb.add_field(name='chat {1}',
-                      value='Сохраняет текущий канал (если без аргументов) или выбранный канал с первого аргумента откуда бот переправляет сообщения в майн')
-        emb.add_field(name='forceload/fl {on/off}',
-                      value='По {on/off} постоянная загрузка сервера, когда он отключен, без аргументов - статус')
-        emb.add_field(name='whitelist/wl {1}',
-                      value='Использует whitelist с сервера майна, аргументы {1} - on, off, add, del, list, reload.  С add и del ещё пишется ник игрока')
-        emb.add_field(name='servers/servs {1}',
-                      value='Использует список серверов в боте, аргументы {1} - select, list, show.  При select ещё пишется номер сервера из list')
-        emb.add_field(name='say', value='"Петросянит" ( ͡° ͜ʖ ͡°)')
-        emb.add_field(name='clear/cls {1}',
-                      value='Если положительное число удаляет {1} сообщений, если отрицательное - удаляет n сообщений до {1} от начала канала')
-        await ctx.send(embed=emb)
+    async def help(self, ctx, command=""):
+        if len(command) > 0:
+            # Finding command
+            for c in self._bot.commands:
+                if command.lower() == c.name or command.lower() in c.aliases:
+                    command = c
+                    break
+            if isinstance(command, str):
+                await ctx.send(add_quotes(get_translation("Bot doesn't have such command!")))
+                return
+
+            str_help = f"{Config.get_settings().bot_settings.prefix}{command.name}"
+            str_help, params = parse_params_for_help(command.clean_params, str_help, True)
+
+            str_help += f"\n{get_translation(f'help_{command.name}')}\n\n"
+            if len(command.aliases):
+                str_help += get_translation("Aliases") + ": " + ", ".join(command.aliases) + "\n\n"
+            if len(params.keys()):
+                str_help += get_translation("Parameters") + ":\n"
+                for arg_name, arg_type in params.items():
+                    str_help += f"{arg_name}: {arg_type}\n{get_translation(f'help_{command.name}_{arg_name}')}\n\n"
+            await ctx.send(add_quotes(f"py\n{str_help}"))
+        else:
+            await ctx.channel.purge(limit=1)
+            emb = discord.Embed(title=get_translation("List of all commands, prefix - {0}")
+                                .format(Config.get_settings().bot_settings.prefix),
+                                color=discord.Color.gold())
+            for c in sorted(self._bot.commands, key=lambda i: i.name):
+                params, _ = parse_params_for_help(c.clean_params, "")
+                emb.add_field(name=c.name + ("/" if len(c.aliases) > 0 else "") + "/".join(c.aliases) + params,
+                              value=get_translation(f"help_brief_{c.name}"), inline=False)
+            emb.set_footer(text=get_translation("Values in [square brackets] are optional.\n"
+                                                "Values in <angle brackets> have to be provided by you.\n"
+                                                "For more info enter {0}help command")
+                           .format(Config.get_settings().bot_settings.prefix))
+            await ctx.send(embed=emb)
+            # ------------------------------------------------------------------------------
+
+            # emb.add_field(name='status', value='Возвращает статус сервера')
+            # emb.add_field(name='list/ls',
+            #               value='Возвращает список игроков')
+            # emb.add_field(name='start', value='Запускает сервер')
+            # emb.add_field(name='stop {10}',
+            #               value='Останавливает сервер, {} (сек) сколько идёт отсчёт, без аргументов - убирает таймер')
+            # emb.add_field(name='restart {10}',
+            #               value='Перезапускает сервер, {} (сек) сколько идёт отсчёт, без аргументов - убирает таймер')
+            # emb.add_field(name='op {1} {2}',
+            #               value='Даёт op\'ку на {1} ник {2} c комментарием причины, если надо')
+            # emb.add_field(name='assoc {1} {2} {3}',
+            #               value='Ассоциирует {1} упоминание ника в дискорде по {2} команде (+=/-=) (добавить или удалить) {3} c ником в майнкрафте **для админа**')
+            # emb.add_field(name='ops {1} {2}',
+            #               value='Даёт инфу о том, какие аккаунты привязаны у вас (при {1} равном "me") '
+            #                     'или у всех (при {1} равном "all" **для админа**) и сколько осталось раз op\'нуться. '
+            #                     'Показывает не появлявшиеся на сервере аккаунты при {2} равном "missing"')
+            # emb.add_field(name='menu', value='Создаёт меню-пульт для удобного управления командами')
+            # emb.add_field(name='chat {1}',
+            #               value='Сохраняет текущий канал (если без аргументов) или выбранный канал с первого аргумента откуда бот переправляет сообщения в майн')
+            # emb.add_field(name='forceload/fl {on/off}',
+            #               value='По {on/off} постоянная загрузка сервера, когда он отключен, без аргументов - статус')
+            # emb.add_field(name='whitelist/wl {1}',
+            #               value='Использует whitelist с сервера майна, аргументы {1} - on, off, add, del, list, reload.  С add и del ещё пишется ник игрока')
+            # emb.add_field(name='servers/servs {1}',
+            #               value='Использует список серверов в боте, аргументы {1} - select, list, show.  При select ещё пишется номер сервера из list')
+            # emb.add_field(name='say', value='"Петросянит" ( ͡° ͜ʖ ͡°)')
+            # emb.add_field(name='clear/cls {1}',
+            #               value='Если положительное число удаляет {1} сообщений, если отрицательное - удаляет n сообщений до {1} от начала канала')
+            # await ctx.send(embed=emb)
 
     @commands.command(pass_context=True, aliases=["cls"])
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, mention_everyone=True,
@@ -202,7 +257,7 @@ class ChatCommands(commands.Cog):
         try:
             int(str(count))
         except ValueError:
-            await ctx.send("Ты дебик? Чё ты там написал? Как мне это понимать? А? '" + str(count) + "' Убейся там!")
+            await ctx.send(get_translation("{0}, this `{1}` isn't a number!").format(ctx.author.mention, str(count)))
             count = 0
         if count > 0:
             if len(await ctx.channel.history(limit=count).flatten()) < 51:
@@ -214,10 +269,14 @@ class ChatCommands(commands.Cog):
                 await ctx.channel.purge(limit=None, after=message_created_time, bulk=False)
                 return
         else:
-            await send_msg(ctx, "Nothing's done!", True)
+            await send_msg(ctx, get_translation("Nothing's done!"), True)
             return
         if await self._IndPoll.timer(ctx, 5):
-            if await self._IndPoll.run(ctx=ctx, remove_logs_after=5):
+            if await self._IndPoll.run(ctx=ctx,
+                                       message=get_translation("this man {0} trying to delete some history"
+                                                               " of this channel. Will you let that happen?")
+                                               .format(ctx.author.mention),
+                                       remove_logs_after=5):
                 if count < 0:
                     await ctx.channel.purge(limit=None, after=message_created_time, bulk=False)
                 else:

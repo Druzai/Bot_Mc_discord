@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from glob import glob
 from json import load
+from locale import getdefaultlocale
 from os.path import isfile, isdir
 from pathlib import Path
 from secrets import choice as sec_choice
@@ -16,6 +17,7 @@ from discord.ext.commands import Bot
 from jsons import load as sload, DeserializationError
 from omegaconf import OmegaConf as Conf
 
+from components.localization import get_translation, get_locales, set_locale
 from config.crypt_wrapper import *
 
 if TYPE_CHECKING:
@@ -23,7 +25,7 @@ if TYPE_CHECKING:
 
 
 class BotVars:
-    react_auth: Member = None  # Variable for situation when command calls via reactions, represents author that added reaction
+    react_auth: Member = None  # Represents author that added reaction
     server_checkups_task = None
     server_start_time: int = None
     is_server_on: bool = False
@@ -71,6 +73,7 @@ class Awating_times:
 
 @dataclass
 class Bot_settings:
+    language: Optional[str] = None
     _token = None
     token_encrypted: Optional[str] = None
 
@@ -276,13 +279,15 @@ class Config:
         cls.read_server_config()
         filepath = Path(cls.get_selected_server_from_list().working_directory + "/server.properties")
         if not filepath.exists():
-            raise RuntimeError(f"File '{filepath.as_posix()}' doesn't exist! "
-                               "Run minecraft server manually to create one and accept eula!")
+            raise RuntimeError(get_translation("File '{0}' doesn't exist! "
+                                               "Run minecraft server manually to create one and accept eula!")
+                               .format(filepath.as_posix()))
         with open(filepath, "r", encoding="utf8") as f:
             lines = f.readlines()
             if len(lines) < 3:
-                raise RuntimeError(f"File '{filepath.as_posix()}' doesn't have any parameters! "
-                                   "Accept eula and run minecraft server manually to fill it with parameters!")
+                raise RuntimeError(get_translation("File '{0}' doesn't have any parameters! "
+                                                   "Accept eula and run minecraft server manually to fill it with parameters!")
+                                   .format(filepath.as_posix()))
             for i in lines:
                 if i.find("enable-query") >= 0:
                     enable_query = literal_eval(i.split("=")[1].capitalize())
@@ -303,8 +308,9 @@ class Config:
                 changed_parameters.append("enable-rcon=true")
             if not BotVars.rcon_pass:
                 BotVars.rcon_pass = "".join(sec_choice(ascii_letters + digits) for _ in range(20))
-                changed_parameters.append(f"rcon.password={BotVars.rcon_pass}\nReminder: for better security "
-                                          "you have to change this password for a more secure one.")
+                changed_parameters.append(f"rcon.password={BotVars.rcon_pass}\n" +
+                                          get_translation("Reminder: for better security "
+                                                          "you have to change this password for a more secure one."))
             with open(filepath, "r", encoding="utf8") as f:
                 properties_file = f.readlines()
             for i in range(len(properties_file)):
@@ -325,7 +331,8 @@ class Config:
                 properties_file.append(f"rcon.password={BotVars.rcon_pass}\n")
             with open(filepath, "w", encoding="utf8") as f:
                 f.writelines(properties_file)
-            print(f"\nNote: in '{filepath.as_posix()}' bot set these parameters:\n" +
+            print("\n" + get_translation("Note: in '{0}' bot set these parameters:").format(
+                filepath.as_posix()) + "\n" +
                   "\n".join(changed_parameters) + "\n")
 
     @classmethod
@@ -359,29 +366,31 @@ class Config:
                 if try_int or int_high_than is not None:
                     try:
                         if int_high_than is not None and int(answer) < int_high_than:
-                            print(f"Your number lower than {int_high_than}!")
+                            print(get_translation("Your number lower than {0}!").format(int_high_than))
                             continue
                         return int(answer)
                     except ValueError:
-                        print("Your string doesn't contain an integer!")
+                        print(get_translation("Your string doesn't contain an integer!"))
                         continue
                 if try_float or float_hight_than is not None:
                     try:
                         if float_hight_than is not None and float(answer) < float_hight_than:
-                            print(f"Your number lower than {float_hight_than}!")
+                            print(get_translation("Your number lower than {0}!").format(float_hight_than))
                             continue
                         return float(answer)
                     except ValueError:
-                        print("Your string doesn't contain a fractional number !")
+                        print(get_translation("Your string doesn't contain a fractional number!"))
                         continue
                 return answer
 
     @classmethod
     def _setup_config(cls, file_exists=False):
+        cls._setup_language()
+
         if not file_exists:
-            print(f"File '{cls._config_name}' wasn't found! Setting up a new one!")
+            print(get_translation("File '{0}' wasn't found! Setting up a new one!").format(cls._config_name))
         else:
-            print(f"File '{cls._config_name}' was found!")
+            print(get_translation("File '{0}' was found!").format(cls._config_name))
 
         cls._setup_token()
         cls._setup_prefix()
@@ -400,35 +409,67 @@ class Config:
         if cls._need_to_rewrite:
             cls._need_to_rewrite = False
             cls.save_config()
-            print("Config saved!")
-        print("Config read!")
+            print(get_translation("Config saved!"))
+        print(get_translation("Config read!"))
+
+    @classmethod
+    def _setup_language(cls):
+        if cls._settings_instance.bot_settings.language is None or \
+                set_locale(cls._settings_instance.bot_settings.language):
+            if cls._settings_instance.bot_settings.language is not None and \
+                    set_locale(cls._settings_instance.bot_settings.language):
+                print("Language setting in bot config is wrong! Setting up language again...")
+
+            cls._need_to_rewrite = True
+            lang = getdefaultlocale()[0].split('_')[0].lower()
+            output = set_locale(lang, set_eng_if_error=True)
+            if output:
+                print("Bot doesn't have your system language. So bot selected english.")
+            else:
+                print(get_translation("Bot selected language based on your system language."))
+            cls._settings_instance.bot_settings.language = "en" if output else lang.lower()
+
+            if cls._ask_for_data(get_translation("Do you want to change it?") + " Y/n\n", "y"):
+                while True:
+                    lang = cls._ask_for_data(get_translation("Enter one of these languages: ") +
+                                             ", ".join(get_locales()) + "\n")
+                    output = set_locale(lang)
+                    if not output:
+                        cls._settings_instance.bot_settings.language = lang.lower()
+                        print(get_translation("This language selected!"))
+                        break
+                    else:
+                        print(get_translation("Bot doesn't have such language. Try again."))
 
     @classmethod
     def _setup_token(cls):
         if cls._settings_instance.bot_settings.token is None:
             cls._need_to_rewrite = True
-            cls._settings_instance.bot_settings.token = cls._ask_for_data("Token not founded. Enter token: ")
+            cls._settings_instance.bot_settings.token = cls._ask_for_data(
+                get_translation("Token not founded. Enter token: "))
 
     @classmethod
     def _setup_prefix(cls):
         if cls._settings_instance.bot_settings.prefix == "":
             cls._need_to_rewrite = True
-            cls._settings_instance.bot_settings.prefix = cls._ask_for_data("Enter bot prefix: ")
-        print(f"Bot prefix set to '{cls._settings_instance.bot_settings.prefix}'.")
+            cls._settings_instance.bot_settings.prefix = cls._ask_for_data(get_translation("Enter bot prefix: "))
+        print(get_translation("Bot prefix set to '{0}'.").format(cls._settings_instance.bot_settings.prefix))
 
     @classmethod
     def _setup_role(cls):
         if cls._settings_instance.bot_settings.role is not None:
             command_role = cls._settings_instance.bot_settings.role
             if command_role:
-                print(f"Current role for some commands is '{command_role}'.")
+                print(get_translation("Current role for some commands is '{0}'.").format(command_role))
             else:
-                print("Current role doesn't stated.")
+                print(get_translation("Current role doesn't stated."))
         else:
             cls._need_to_rewrite = True
-            if cls._ask_for_data("Do you want to set role for some specific commands? Y/n\n", "y"):
+            if cls._ask_for_data(
+                    get_translation("Do you want to set role for some specific commands?") + " Y/n\n", "y"):
                 cls._settings_instance.bot_settings.role = \
-                    cls._ask_for_data("Set discord role for some specific commands such as start, stop, etc.\n")
+                    cls._ask_for_data(get_translation(
+                        "Set discord role for some specific commands such as start, stop, etc.") + "\n")
             else:
                 cls._settings_instance.bot_settings.role = ""
 
@@ -438,128 +479,149 @@ class Config:
             cls._settings_instance.bot_settings.vk_login = None
             cls._settings_instance.bot_settings.vk_password = None
         if cls._settings_instance.bot_settings.vk_ask_credentials:
-            if cls._ask_for_data("Would you like to " +
-                                 ('change' if cls._settings_instance.bot_settings.vk_login is not None else 'enter') +
-                                 " vk account data? Y/n\n", "y"):
-                cls._settings_instance.bot_settings.vk_login = cls._ask_for_data("Enter vk login: ")
-                cls._settings_instance.bot_settings.vk_password = cls._ask_for_data("Enter vk password: ")
+            if cls._settings_instance.bot_settings.vk_login is not None:
+                word = get_translation('change')
+            else:
+                word = get_translation('enter')
+            if cls._ask_for_data(get_translation("Would you like to ") + word +
+                                 get_translation(" vk account data?") + " Y/n\n", "y"):
+                cls._settings_instance.bot_settings.vk_login = cls._ask_for_data(
+                    get_translation("Enter vk login: "))
+                cls._settings_instance.bot_settings.vk_password = cls._ask_for_data(
+                    get_translation("Enter vk password: "))
                 cls._need_to_rewrite = True
-            if cls._ask_for_data("Never ask about it again? Y/n\n", "y"):
+            if cls._ask_for_data(get_translation("Never ask about it again?") + " Y/n\n", "y"):
                 cls._settings_instance.bot_settings.vk_ask_credentials = False
                 cls._need_to_rewrite = True
                 if cls._settings_instance.bot_settings.vk_login is not None and \
                         cls._settings_instance.bot_settings.vk_password is not None:
-                    print("I'll never ask you about it again.")
+                    print(get_translation("I'll never ask you about it again."))
                 else:
-                    print("Vk account data not received.\n"
-                          "I'll never ask you about it again.\n"
-                          f"Note: command {cls._settings_instance.bot_settings.prefix}say won't work.")
+                    print(get_translation("Vk account data not received.\n"
+                                          "I'll never ask you about it again.\n"
+                                          "Note: command {0}say won't work.").format(
+                        cls._settings_instance.bot_settings.prefix))
             else:
-                print("Vk account data received. Why man?")
+                print(get_translation("Vk account data received. Why man?"))
         else:
             if cls._settings_instance.bot_settings.vk_login is not None and \
                     cls._settings_instance.bot_settings.vk_password is not None:
-                print("Vk account data received.")
+                print(get_translation("Vk account data received."))
             else:
-                print("Vk account data not received.\n"
-                      f"Note: command {cls._settings_instance.bot_settings.prefix}say won't work.")
+                print(get_translation("Vk account data not received.\n"
+                                      "Note: command {0}say won't work.").format(
+                    cls._settings_instance.bot_settings.prefix))
 
     @classmethod
     def _setup_ip_address(cls):
         if cls._settings_instance.bot_settings.ip_address == "":
             cls._need_to_rewrite = True
             cls._settings_instance.bot_settings.ip_address = \
-                cls._ask_for_data("Enter server's real IP-address or DNS-name: ")
-        print(f"Server's real IP-address or DNS-name is '{cls._settings_instance.bot_settings.ip_address}'.")
+                cls._ask_for_data(get_translation("Enter server's real IP-address or DNS-name: "))
+        print(get_translation("Server's real IP-address or DNS-name is '{0}'.")
+              .format(cls._settings_instance.bot_settings.ip_address))
 
     @classmethod
     def _setup_local_address(cls):
         if cls._settings_instance.bot_settings.local_address == "":
             cls._need_to_rewrite = True
             cls._settings_instance.bot_settings.local_address = \
-                cls._ask_for_data("Enter server's local address (default - 'localhost'): ")
+                cls._ask_for_data(get_translation("Enter server's local address (default - 'localhost'): "))
 
     @classmethod
     def _setup_menu_id(cls):
         if cls._settings_instance.bot_settings.menu_id is None:
-            if cls._ask_for_data("Menu message id not found. Would you like to enter it? Y/n\n", "y"):
+            if cls._ask_for_data(
+                    get_translation("Menu message id not found. Would you like to enter it?") + " Y/n\n", "y"):
                 cls._need_to_rewrite = True
-                cls._settings_instance.bot_settings.menu_id = cls._ask_for_data("Enter menu message id: ",
-                                                                                try_int=True, int_high_than=0)
+                cls._settings_instance.bot_settings.menu_id = cls._ask_for_data(
+                    get_translation("Enter menu message id: "),
+                    try_int=True, int_high_than=0)
             else:
-                print("Menu via reactions wouldn't work. To make it work type "
-                      f"'{cls._settings_instance.bot_settings.prefix}menu' to create new menu and its id.")
+                print(get_translation("Menu via reactions wouldn't work. To make it work type "
+                                      "'{0}menu' to create new menu and its id.").format(
+                    cls._settings_instance.bot_settings.prefix))
 
     @classmethod
     def _setup_bot_statuses(cls):
         # Gaming status
         if cls._settings_instance.bot_settings.gaming_status == "":
-            cls._settings_instance.bot_settings.gaming_status = cls._ask_for_data("Set gaming status: ")
+            cls._settings_instance.bot_settings.gaming_status = cls._ask_for_data(
+                get_translation("Set gaming status: "))
         # Idle status
         if cls._settings_instance.bot_settings.idle_status == "":
-            cls._settings_instance.bot_settings.idle_status = cls._ask_for_data("Set idle status: ")
+            cls._settings_instance.bot_settings.idle_status = cls._ask_for_data(
+                get_translation("Set idle status: "))
 
     @classmethod
     def _setup_default_number_of_times_to_op(cls):
         if cls._settings_instance.bot_settings.default_number_of_times_to_op < 1:
             cls._settings_instance.bot_settings.default_number_of_times_to_op = \
-                cls._ask_for_data("Set default number of times to op for every player (int):\n")
+                cls._ask_for_data(
+                    get_translation("Set default number of times to op for every player (int):") + "\n")
 
     @classmethod
     def _setup_awaiting_times(cls):
         # Await time check-ups func
         if cls._settings_instance.bot_settings.awating_times.await_seconds_in_check_ups < 1:
             cls._need_to_rewrite = True
-            print("Await time check-ups set below 1. Change this option")
-            print("Note: If your machine has processor with frequency 2-2.5 GHz, "
-                  "you have to set this option at least to '2' seconds or higher for the bot to work properly.")
+            print(get_translation("Await time between check-ups set below 1. Change this option"))
+            print(get_translation("Note: If your machine has processor with frequency 2-2.5 GHz, "
+                                  "you have to set this option at least to '2' seconds or higher for the bot to work properly."))
             cls._settings_instance.bot_settings.awating_times.await_seconds_in_check_ups = \
-                cls._ask_for_data("Set await time between check-ups 'Server on/off' (in seconds, int): ",
-                                  try_int=True, int_high_than=1)
-        print("Await time check-ups set to " +
-              str(cls._settings_instance.bot_settings.awating_times.await_seconds_in_check_ups) + " sec.")
+                cls._ask_for_data(
+                    get_translation("Set await time between check-ups 'Server on/off' (in seconds, int): "),
+                    try_int=True, int_high_than=1)
+        print(get_translation("Await time check-ups set to {0} sec.")
+              .format(str(cls._settings_instance.bot_settings.awating_times.await_seconds_in_check_ups)))
 
         # Await time op
         if cls._settings_instance.bot_settings.awating_times.await_seconds_when_opped < 0:
             cls._need_to_rewrite = True
-            print("Await time op set below zero. Change this option")
+            print(get_translation("Await time op set below zero. Change this option"))
             cls._settings_instance.bot_settings.awating_times.await_seconds_when_opped = \
-                cls._ask_for_data("Set await time for op (in seconds, int): ", try_int=True, int_high_than=-1)
-        print("Await time op set to " +
-              str(cls._settings_instance.bot_settings.awating_times.await_seconds_when_opped) + " sec.")
+                cls._ask_for_data(get_translation("Set await time for op (in seconds, int): "), try_int=True,
+                                  int_high_than=-1)
+        print(get_translation("Await time op set to {0} sec.")
+              .format(str(cls._settings_instance.bot_settings.awating_times.await_seconds_when_opped)))
         if cls._settings_instance.bot_settings.awating_times.await_seconds_when_opped == 0:
-            print("Limitation doesn't exist, padawan.")
+            print(get_translation("Limitation doesn't exist, padawan."))
 
         # Await time to sleep while bot pinging server for info
         if cls._settings_instance.bot_settings.awating_times.await_seconds_when_connecting_via_rcon < 0.05:
             cls._need_to_rewrite = True
-            print("Await time to sleep set below zero. Change this option")
+            print(get_translation("Await time while bot pinging server for info set below zero. Change this option"))
             cls._settings_instance.bot_settings.awating_times.await_seconds_when_connecting_via_rcon = \
-                cls._ask_for_data("Set await time to sleep while bot pinging server for info (in seconds, float): ",
-                                  try_float=True, float_hight_than=0.05)
-        print("Await time to sleep while bot pinging server for info set to " +
-              str(cls._settings_instance.bot_settings.awating_times.await_seconds_when_connecting_via_rcon) + " sec.")
+                cls._ask_for_data(get_translation(
+                    "Set await time while bot pinging server for info (in seconds, float): "),
+                    try_float=True, float_hight_than=0.05)
+        print(get_translation("Await time while bot pinging server for info set to {0} sec.")
+              .format(str(cls._settings_instance.bot_settings.awating_times.await_seconds_when_connecting_via_rcon)))
         if cls._settings_instance.bot_settings.awating_times.await_seconds_when_connecting_via_rcon == 0:
-            print("I'm fast as f*ck, boi!")
+            print(get_translation("I'm fast as f*ck, boi!"))
 
         # Await time before_message_deletion
         if cls._settings_instance.bot_settings.awating_times.await_seconds_before_message_deletion < 1:
             cls._need_to_rewrite = True
-            print("Await time to delete before message deletion set below one. Change this option")
+            print(get_translation(
+                "Await time to delete message set below one. Change this option"))
             cls._settings_instance.bot_settings.awating_times.await_seconds_before_message_deletion = \
-                cls._ask_for_data("Set await time to delete (in seconds, int): ", try_int=True, int_high_than=0)
-        print("Await time to sleep set to " +
-              str(cls._settings_instance.bot_settings.awating_times.await_seconds_before_message_deletion) + " sec.")
+                cls._ask_for_data(get_translation("Set await time to delete message (in seconds, int): "), try_int=True,
+                                  int_high_than=0)
+        print(get_translation("Await time to delete message set to {0} sec.")
+              .format(str(cls._settings_instance.bot_settings.awating_times.await_seconds_before_message_deletion)))
 
     @classmethod
     def _setup_servers(cls):
         if not cls._settings_instance.ask_to_change_servers_list:
-            print("Selected minecraft server dir set to path '" + cls.get_selected_server_from_list().working_directory
-                  + "' also known as '" + cls.get_selected_server_from_list().server_name + "'.")
+            print(get_translation("Selected minecraft server dir set to path '{0}' also known as '{1}'.")
+                  .format(cls.get_selected_server_from_list().working_directory,
+                          cls.get_selected_server_from_list().server_name))
             return
 
         cls._need_to_rewrite = True
-        new_servers_number = cls._ask_for_data("How much servers you intend to keep?\n", try_int=True, int_high_than=0)
+        new_servers_number = cls._ask_for_data(get_translation("How much servers you intend to keep?") + "\n",
+                                               try_int=True, int_high_than=0)
         if new_servers_number >= len(cls._settings_instance.servers_list):
             for i in range(len(cls._settings_instance.servers_list)):
                 cls._settings_instance.servers_list[i] = \
@@ -573,48 +635,59 @@ class Config:
                     old_server_pos = [s for s in range(len(cls._settings_instance.servers_list))
                                       if cls._settings_instance.servers_list[s] == server][0]
                     cls._settings_instance.servers_list[old_server_pos] = changed_server
-                elif cls._ask_for_data(f"Would you like to delete this server '{server.server_name}'? Y/n\n", "y"):
+                elif cls._ask_for_data(get_translation("Would you like to delete this server '{0}'?").format(
+                        server.server_name) +
+                                       " Y/n\n", "y"):
                     cls._settings_instance.servers_list.remove(server)
 
         cls._settings_instance.ask_to_change_servers_list = False
-        print("Selected minecraft server dir set to path '" + cls.get_selected_server_from_list().working_directory
-              + "' also known as '" + cls.get_selected_server_from_list().server_name + "'.")
+        print(get_translation("Selected minecraft server dir set to path '{0}' also known as '{1}'.")
+              .format(cls.get_selected_server_from_list().working_directory,
+                      cls.get_selected_server_from_list().server_name))
 
     @classmethod
     def _change_server_settings(cls, server: Server_settings = None):
         changing_settings = False
         if server is not None:
-            if not cls._ask_for_data(f"Would you like to change this server '{server.server_name}'? Y/n\n", "y"):
+            if not cls._ask_for_data(
+                    get_translation("Would you like to change this server '{0}'?").format(server.server_name) +
+                    " Y/n\n", "y"):
                 return server
             changing_settings = True
         else:
-            print("Configuring new server settings...")
+            print(get_translation("Configuring new server settings..."))
 
         if not changing_settings:
             server = Server_settings()
-            server.server_name = cls._ask_for_data(f"Enter server name: ")
+            server.server_name = cls._ask_for_data(get_translation("Enter server name: "))
             server.working_directory = cls._get_server_working_directory()
             server.start_file_name = cls._get_server_start_file_name(server.working_directory)
         else:
-            if cls._ask_for_data(f"Change server name '{server.server_name}'? Y/n\n", "y"):
-                server.server_name = cls._ask_for_data(f"Enter server name: ")
-            if cls._ask_for_data(f"Change server working directory '{server.working_directory}'? Y/n\n", "y"):
+            if cls._ask_for_data(
+                    get_translation("Change server name '{0}'?").format(server.server_name) + " Y/n\n", "y"):
+                server.server_name = cls._ask_for_data(get_translation("Enter server name: "))
+            if cls._ask_for_data(
+                    get_translation("Change server working directory '{0}'?").format(server.working_directory) +
+                    " Y/n\n", "y"):
                 server.working_directory = cls._get_server_working_directory()
-            if cls._ask_for_data(f"Change server start file name '{server.start_file_name}'? Y/n\n", "y"):
+            if cls._ask_for_data(
+                    get_translation("Change server start file name '{0}'?").format(server.start_file_name) +
+                    " Y/n\n", "y"):
                 server.start_file_name = cls._get_server_start_file_name(server.working_directory)
         return server
 
     @classmethod
     def _get_server_working_directory(cls):
         while True:
-            working_directory = cls._ask_for_data(f"Enter server working directory (full path): ")
+            working_directory = cls._ask_for_data(
+                get_translation("Enter server working directory (full path): "))
             if isdir(working_directory):
                 if len(glob(Path(working_directory + "/*.jar").as_posix())) > 0:
                     return working_directory
                 else:
-                    print("There are no '*.jar' files in this working directory.")
+                    print(get_translation("There are no '*.jar' files in this working directory."))
             else:
-                print("This working directory is wrong.")
+                print(get_translation("This working directory is wrong."))
 
     @classmethod
     def _get_server_start_file_name(cls, working_directory: str):
@@ -623,100 +696,112 @@ class Config:
         END = '\033[0m'
         if sys.platform == "linux" or sys.platform == "linux2":
             file_extension = ".sh"
-            print("Bot detected your operating system is Linux.\n"
-                  "Bot will search for ***.sh file.\n"
-                  f"You need to enter file name {BOLD}without{END} file extension!")
+            print(get_translation("Bot detected your operating system is Linux.\n"
+                                  "Bot will search for ***.sh file.\n"
+                                  "You need to enter file name {0}without{1} file extension!").format(BOLD, END))
         elif sys.platform == "win32":
             file_extension = ".bat"
-            print("Bot detected your operating system is Windows.\n"
-                  "Bot will search for ***.bat file.\n"
-                  f"You need to enter file name {BOLD}without{END} file extension!")
+            print(get_translation("Bot detected your operating system is Windows.\n"
+                                  "Bot will search for ***.bat file.\n"
+                                  "You need to enter file name {0}without{1} file extension!").format(BOLD, END))
         else:
-            print("Bot couldn't detect your operating system.\n"
-                  f"You need to enter file name {BOLD}with{END} file extension!")
+            print(get_translation("Bot couldn't detect your operating system.\n"
+                                  "You need to enter file name {0}without{1} file extension!").format(BOLD, END))
         while True:
-            start_file_name = cls._ask_for_data(f"Enter server start file name: ") + \
+            start_file_name = cls._ask_for_data(get_translation("Enter server start file name: ")) + \
                               (file_extension if file_extension is not None else '')
             if isfile(Path(working_directory + "/" + start_file_name)):
                 return start_file_name
             else:
-                print("This start file doesn't exist.")
+                print(get_translation("This start file doesn't exist."))
 
     @classmethod
     def _setup_cross_platform_chat(cls):
         if cls._settings_instance.bot_settings.cross_platform_chat.enable_cross_platform_chat is None:
             cls._need_to_rewrite = True
-            if cls._ask_for_data("Would you like to enable cross-platform chat? Y/n\n", "y"):
+            if cls._ask_for_data(get_translation("Would you like to enable cross-platform chat?") + " Y/n\n",
+                                 "y"):
                 cls._settings_instance.bot_settings.cross_platform_chat.enable_cross_platform_chat = True
 
                 if cls._settings_instance.bot_settings.cross_platform_chat.channel_id is None:
-                    if cls._ask_for_data("Channel id not found. Would you like to enter it? Y/n\n", "y"):
+                    if cls._ask_for_data(
+                            get_translation("Channel id not found. Would you like to enter it?") + " Y/n\n",
+                            "y"):
                         cls._settings_instance.bot_settings.cross_platform_chat.channel_id = \
-                            cls._ask_for_data("Enter channel id: ")
+                            cls._ask_for_data(get_translation("Enter channel id: "))
                     else:
-                        print("Cross-platform chat wouldn't work. To make it work type '%chat <id>' to create link.")
+                        print(get_translation("Cross-platform chat wouldn't work. "
+                                              "To make it work type '{0}chat <id>' to create link.")
+                              .format(cls._settings_instance.bot_settings.prefix))
 
                 if cls._settings_instance.bot_settings.cross_platform_chat.webhook_url is None:
-                    if cls._ask_for_data("Webhook url for cross-platform chat not found. "
-                                         "Would you like to enter it? Y/n\n", "y"):
+                    if cls._ask_for_data(get_translation("Webhook url for cross-platform chat not found. "
+                                                         "Would you like to enter it?") + " Y/n\n", "y"):
                         cls._settings_instance.bot_settings.cross_platform_chat.webhook_url = \
-                            cls._ask_for_data("Enter webhook url: ")
+                            cls._ask_for_data(get_translation("Enter webhook url: "))
                     else:
-                        print("Cross-platform chat wouldn't work. Create webhook and enter it to bot config!")
+                        print(get_translation(
+                            "Cross-platform chat wouldn't work. Create webhook and enter it to bot config!"))
 
                 if cls._settings_instance.bot_settings.cross_platform_chat.refresh_delay_of_console_log <= 0.05:
-                    print("Watcher's delay to refresh doesn't set.")
-                    print("Note: If your machine has processor with frequency 2-2.5 GHz, "
-                          "you have to set this option from '0.5' to '0.9' second for the bot to work properly.")
+                    print(get_translation("Watcher's delay to refresh doesn't set."))
+                    print(get_translation("Note: If your machine has processor with frequency 2-2.5 GHz, "
+                                          "you have to set this option from '0.5' to '0.9' second for the bot to work properly."))
                     cls._settings_instance.bot_settings.cross_platform_chat.refresh_delay_of_console_log = \
-                        cls._ask_for_data("Set delay to refresh (in seconds, float): ",
+                        cls._ask_for_data(get_translation("Set delay to refresh (in seconds, float): "),
                                           try_float=True, float_hight_than=0.05)
 
                 if cls._settings_instance.bot_settings.cross_platform_chat.number_of_lines_to_check_in_console_log < 1:
-                    print("Watcher's number of lines to check in server log doesn't set.")
+                    print(get_translation("Watcher's number of lines to check in server log doesn't set."))
                     cls._settings_instance.bot_settings.cross_platform_chat.number_of_lines_to_check_in_console_log = \
-                        cls._ask_for_data("Set number of lines to check:", try_int=True, int_high_than=0)
+                        cls._ask_for_data(get_translation("Set number of lines to check:"), try_int=True,
+                                          int_high_than=0)
             else:
                 cls._settings_instance.bot_settings.cross_platform_chat.enable_cross_platform_chat = False
-                print("Cross-platform chat wouldn't work.")
+                print(get_translation("Cross-platform chat wouldn't work."))
 
         if cls._settings_instance.bot_settings.cross_platform_chat.enable_cross_platform_chat:
-            print("Cross-platform chat enabled.")
+            print(get_translation("Cross-platform chat enabled."))
         else:
-            print("Cross-platform chat disabled.")
+            print(get_translation("Cross-platform chat disabled."))
 
     @classmethod
     def _setup_rss_feed(cls):
         if cls._settings_instance.bot_settings.rss_feed.enable_rss_feed is None:
             cls._need_to_rewrite = True
-            if cls._ask_for_data("Would you like to enable rss feed? Y/n\n", "y"):
+            if cls._ask_for_data(get_translation("Would you like to enable rss feed?") + " Y/n\n", "y"):
                 cls._settings_instance.bot_settings.rss_feed.enable_rss_feed = True
 
                 if cls._settings_instance.bot_settings.rss_feed.webhook_url is None:
-                    if cls._ask_for_data("Webhook rss url not found. Would you like to enter it? Y/n\n", "y"):
+                    if cls._ask_for_data(
+                            get_translation("Webhook rss url not found. Would you like to enter it?") + " Y/n\n",
+                            "y"):
                         cls._settings_instance.bot_settings.rss_feed.webhook_url = \
-                            cls._ask_for_data("Enter webhook rss url: ")
+                            cls._ask_for_data(get_translation("Enter webhook rss url: "))
                     else:
-                        print("Rss wouldn't work. Create webhook and enter it to bot config!")
+                        print(get_translation("Rss wouldn't work. Create webhook and enter it to bot config!"))
 
                 if cls._settings_instance.bot_settings.rss_feed.rss_url is None:
-                    if cls._ask_for_data("Rss url not found. Would you like to enter it? Y/n\n", "y"):
-                        cls._settings_instance.bot_settings.rss_feed.rss_url = cls._ask_for_data("Enter rss url: ")
+                    if cls._ask_for_data(
+                            get_translation("Rss url not found. Would you like to enter it?") + " Y/n\n", "y"):
+                        cls._settings_instance.bot_settings.rss_feed.rss_url = cls._ask_for_data(
+                            get_translation("Enter rss url: "))
                     else:
-                        print("Rss wouldn't work. Enter url of rss feed to bot config!")
+                        print(get_translation("Rss wouldn't work. Enter url of rss feed to bot config!"))
 
                 if cls._settings_instance.bot_settings.rss_feed.rss_download_delay < 1:
-                    print("Rss download delay doesn't set")
+                    print(get_translation("Rss download delay doesn't set."))
                     cls._settings_instance.bot_settings.rss_feed.rss_download_delay = \
-                        cls._ask_for_data("Enter rss download delay (in seconds, int): ", try_int=True, int_high_than=0)
+                        cls._ask_for_data(get_translation("Enter rss download delay (in seconds, int): "),
+                                          try_int=True, int_high_than=0)
 
                 cls._settings_instance.bot_settings.rss_feed.rss_last_date = \
                     datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
             else:
                 cls._settings_instance.bot_settings.rss_feed.enable_rss_feed = False
-                print("Rss feed wouldn't work.")
+                print(get_translation("Rss feed wouldn't work."))
         else:
             if cls._settings_instance.bot_settings.rss_feed.enable_rss_feed:
-                print("Rss feed enabled.")
+                print(get_translation("Rss feed enabled."))
             else:
-                print("Rss feed disabled.")
+                print(get_translation("Rss feed disabled."))

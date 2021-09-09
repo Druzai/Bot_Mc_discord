@@ -8,6 +8,7 @@ from traceback import print_exc
 
 from discord import Webhook, RequestsWebhookAdapter
 
+from components.localization import get_translation
 from config.init_config import Config, BotVars
 
 
@@ -43,14 +44,14 @@ class Watcher:
                 sleep(self._refresh_delay_secs)
                 self.look()
             except FileNotFoundError:
-                print(f"Watcher Error: File {self._filename} wasn't found!")
+                print(get_translation("Watcher Error: File {0} wasn't found!").format(self._filename))
             except UnicodeDecodeError:
-                print(f"Watcher Error: Can't decode strings from file '{self._filename.as_posix()}'"
-                      ", check that minecraft server saves it in utf-8 encoding!\n"
-                      "(Ensure you have '-Dfile.encoding=UTF-8' as one of the arguments "
-                      "to start the server in start script)")
+                print(get_translation("Watcher Error: Can't decode strings from file '{0}'"
+                                      ", check that minecraft server saves it in utf-8 encoding!\n"
+                                      "(Ensure you have '-Dfile.encoding=UTF-8' as one of the arguments "
+                                      "to start the server in start script)").format(self._filename.as_posix()))
             except BaseException:
-                print(f"Watcher Unhandled Error: {exc_info()[0]}")
+                print(get_translation("Watcher Unhandled Error: {0}").format(exc_info()[0]))
                 print_exc()
 
     def start(self):
