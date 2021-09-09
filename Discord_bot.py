@@ -35,6 +35,16 @@ from config.init_config import Config, BotVars
 #  https://github.com/Rapptz/discord.py/blob/master/examples/views/persistent.py
 #  maybe add slash commands via separate `Slash` Cog
 
+def _create_pot_lines_for_subcommands(command, find_str: str):
+    if not hasattr(command, "all_commands") or len(command.all_commands) == 0:
+        return
+
+    for subcommand in command.all_commands.values():
+        RuntimeTextHandler.add_translation(f"{find_str}_{subcommand.name}")
+        for arg in subcommand.clean_params.keys():
+            RuntimeTextHandler.add_translation(f"{find_str}_{subcommand.name}_{arg}")
+        _create_pot_lines_for_subcommands(subcommand, f"{find_str}_{subcommand.name}")
+
 
 def create_pot_lines(bot: commands.Bot):
     if len(argv) > 1 and argv[1] == "-g":
@@ -43,6 +53,7 @@ def create_pot_lines(bot: commands.Bot):
             RuntimeTextHandler.add_translation(f"help_{command.name}")
             for arg in command.clean_params.keys():
                 RuntimeTextHandler.add_translation(f"help_{command.name}_{arg}")
+            _create_pot_lines_for_subcommands(command, f"help_{command.name}")
         RuntimeTextHandler.freeze_translation()
         exit(0)
 

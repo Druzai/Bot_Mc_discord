@@ -44,17 +44,17 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def stop(self, ctx, sub_command=0):
+    async def stop(self, ctx, subcommand=0):
         """Stop server"""
-        await bot_stop(ctx, sub_command, self._bot)
+        await bot_stop(ctx, subcommand, self._bot)
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def restart(self, ctx, sub_command=0):
+    async def restart(self, ctx, subcommand=0):
         """Restart server"""
-        await bot_restart(ctx, sub_command, self._bot)
+        await bot_restart(ctx, subcommand, self._bot)
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -323,16 +323,16 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def forceload(self, ctx, sub_command=""):
-        if sub_command == "on" and not Config.get_settings().bot_settings.forceload:
+    async def forceload(self, ctx, subcommand=""):
+        if subcommand == "on" and not Config.get_settings().bot_settings.forceload:
             Config.get_settings().bot_settings.forceload = True
             Config.save_config()
             await ctx.send(add_quotes(get_translation("Forceload on")))
-        elif sub_command == "off" and Config.get_settings().bot_settings.forceload:
+        elif subcommand == "off" and Config.get_settings().bot_settings.forceload:
             Config.get_settings().bot_settings.forceload = False
             Config.save_config()
             await ctx.send(add_quotes(get_translation("Forceload off")))
-        elif sub_command == "":
+        elif subcommand == "":
             if Config.get_settings().bot_settings.forceload:
                 await ctx.send(add_quotes(get_translation("Forceload on")))
             else:
@@ -344,30 +344,30 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def whitelist(self, ctx, sub_command: str, minecraft_nick=""):
-        if sub_command in ["add", "del", "list", "on", "off", "reload"]:
+    async def whitelist(self, ctx, subcommand: str, minecraft_nick=""):
+        if subcommand in ["add", "del", "list", "on", "off", "reload"]:
             try:
                 with Client_r(Config.get_settings().bot_settings.local_address,
                               BotVars.port_rcon, timeout=1) as cl_r:
                     cl_r.login(BotVars.rcon_pass)
-                    if sub_command == "on":
+                    if subcommand == "on":
                         cl_r.run("whitelist on")
                         await ctx.send(add_quotes(get_translation("Turned on the whitelist")))
-                    elif sub_command == "off":
+                    elif subcommand == "off":
                         cl_r.run("whitelist off")
                         await ctx.send(add_quotes(get_translation("Turned off the whitelist")))
-                    elif sub_command == "add":
+                    elif subcommand == "add":
                         if get_server_online_mode():
                             cl_r.run("whitelist add", minecraft_nick)
                         else:
                             save_to_whitelist_json(get_whitelist_entry(minecraft_nick))
                             cl_r.run("whitelist reload")
                         await ctx.send(add_quotes(get_translation("Added {0} to the whitelist").format(minecraft_nick)))
-                    elif sub_command == "del":
+                    elif subcommand == "del":
                         cl_r.run("whitelist remove", minecraft_nick)
                         await ctx.send(add_quotes(get_translation("Removed {0} from the whitelist")
                                                   .format(minecraft_nick)))
-                    elif sub_command == "list":
+                    elif subcommand == "list":
                         white_list = cl_r.run("whitelist list")
                         if ":" in white_list:
                             players = white_list.split(':')[1].split(", ")
@@ -378,7 +378,7 @@ class MinecraftCommands(commands.Cog):
                                                       .format(len(players), ", ".join(players))))
                         else:
                             await ctx.send(add_quotes(get_translation("There are no whitelisted players")))
-                    elif sub_command == "reload":
+                    elif subcommand == "reload":
                         cl_r.run("whitelist reload")
                         await ctx.send(add_quotes(get_translation("Reloaded the whitelist")))
                     else:
@@ -393,15 +393,15 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def servers(self, ctx, sub_command: str, selected_server=None):
-        if sub_command in ["list", "select", "show"]:
-            if sub_command == "list":
+    async def servers(self, ctx, subcommand: str, selected_server=None):
+        if subcommand in ["list", "select", "show"]:
+            if subcommand == "list":
                 send_ = "```" + get_translation("List of servers")
                 for i in range(len(Config.get_settings().servers_list)):
                     send_ += "\n№ " + str(i) + ". " + Config.get_settings().servers_list[i].server_name
                 send_ += "```"
                 await ctx.send(send_)
-            elif sub_command == "select":
+            elif subcommand == "select":
                 if selected_server is None:
                     # await ctx.send("Э, " + ctx.author.mention + ", где число?")
                     await ctx.send(get_translation("Hey, {0}, where's number?").format(ctx.author.mention))
@@ -433,7 +433,7 @@ class MinecraftCommands(commands.Cog):
                                                                   "server number on the list!")))
                 except ValueError:
                     await ctx.send(add_quotes(get_translation("Argument for 'select' must be a number!")))
-            elif sub_command == "show":
+            elif subcommand == "show":
                 await ctx.send(add_quotes(get_translation("Selected server") +
                                           " № " + str(Config.get_settings().selected_server_number) +
                                           ". " + Config.get_selected_server_from_list().server_name))

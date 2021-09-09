@@ -10,7 +10,7 @@ from vk_api import VkApi
 from commands.poll import Poll
 from components import decorators
 from components.additional_funcs import handle_message_for_chat, server_checkups, send_error, send_msg, add_quotes, \
-    parse_params_for_help, send_help_of_command
+    parse_params_for_help, send_help_of_command, parse_subcommands_for_help, find_subcommand
 from components.localization import get_translation, get_locales, set_locale
 from config.init_config import BotVars, Config
 
@@ -178,25 +178,36 @@ class ChatCommands(commands.Cog):
             await ctx.send(embed=e, file=file)
 
     async def bot_check(self, ctx):
-        # Check if user asks help on each command
-        h_command = ctx.message.content.split()[-1]
-        if h_command in Config.get_settings().bot_settings.help_arguments:
-            await send_help_of_command(ctx, ctx.command)
+        # Check if user asks help on each command or subcommand
+        tokens = ctx.message.content.split()
+        if len(tokens) > 1 and tokens[-1] in Config.get_settings().bot_settings.help_arguments:
+            mess_command = tokens[-2].strip(Config.get_settings().bot_settings.prefix)
+            if mess_command.lower() == ctx.command.name.lower() or mess_command.lower() in ctx.command.aliases:
+                await send_help_of_command(ctx, ctx.command)
+            else:
+                await ctx.send(add_quotes(get_translation("Bot doesn't have such subcommand!")))
             return False
         return True
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, embed_links=True, view_channel=True)
     @commands.guild_only()
-    async def help(self, ctx, command=""):
-        if len(command) > 0:
+    async def help(self, ctx, *commands: str):
+        if len(commands) > 0:
             # Finding command
+            command, *subcommands = commands
             for c in self._bot.commands:
                 if command.lower() == c.name or command.lower() in c.aliases:
-                    command = c
+                    if len(subcommands):
+                        command = find_subcommand(subcommands, c, -1)
+                    else:
+                        command = c
                     break
-            if isinstance(command, str):
-                await ctx.send(add_quotes(get_translation("Bot doesn't have such command!")))
+            if isinstance(command, str) or command is None:
+                if len(subcommands):
+                    await ctx.send(add_quotes(get_translation("Bot doesn't have such subcommand!")))
+                else:
+                    await ctx.send(add_quotes(get_translation("Bot doesn't have such command!")))
                 return
 
             await send_help_of_command(ctx, command)
@@ -207,10 +218,13 @@ class ChatCommands(commands.Cog):
                                 color=discord.Color.gold())
             for c in sorted(self._bot.commands, key=lambda i: i.name):
                 params, _ = parse_params_for_help(c.clean_params, "")
-                emb.add_field(name=c.name + ("/" if len(c.aliases) > 0 else "") + "/".join(c.aliases) + params,
-                              value=get_translation(f"help_brief_{c.name}"), inline=False)
+                subcommands = parse_subcommands_for_help(c)[0]
+                emb.add_field(name=f"__`{c.name}" + ("/" if len(c.aliases) > 0 else "") + "/".join(c.aliases) + "`__" +
+                                   (" " + " | ".join(subcommands) if len(subcommands) else "") + params,
+                              value=add_quotes("\n" + get_translation(f"help_brief_{c.name}")), inline=False)
             emb.set_footer(text=get_translation("Values in [square brackets] are optional.\n"
                                                 "Values in <angle brackets> have to be provided by you.\n"
+                                                "The | sign means one or the other.\n"  # Add subcommands
                                                 "Use {prefix}help command for more info.\n"
                                                 "Or {prefix}command {arg_list} for short.")
                            .format(prefix=Config.get_settings().bot_settings.prefix,

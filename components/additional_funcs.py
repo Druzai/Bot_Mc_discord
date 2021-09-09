@@ -13,7 +13,7 @@ from pathlib import Path
 from random import randint
 from re import search, split, findall
 from sys import platform, argv
-from typing import Tuple
+from typing import Tuple, List
 
 from discord import Activity, ActivityType
 from discord.ext import commands
@@ -438,34 +438,66 @@ def parse_params_for_help(command_params: dict, string_to_add: str, create_param
                     params[arg_name] = getattr(arg_data.annotation, '__name__', None)
                 else:
                     params[arg_name] = str(arg_data.annotation).replace("typing.", "")
-            elif arg_data.annotation == inspect._empty:
+            elif arg_data.annotation == inspect._empty and arg_data.default != inspect._empty:
                 params[arg_name] = type(arg_data.default).__name__
-            elif arg_data.default == inspect._empty:
+            else:
                 params[arg_name] = "Any"
 
-        if arg_data.default != inspect._empty:
+        if arg_data.default != inspect._empty or arg_data.kind == arg_data.VAR_POSITIONAL:
             add_data = ""
-            if bool(arg_data.default):
+            if bool(arg_data.default) and arg_data.kind != arg_data.VAR_POSITIONAL:
                 add_data = f"'{arg_data.default}'" if isinstance(arg_data.default, str) else str(
                     arg_data.default)
-            string_to_add += f" [{arg_name}" + (f" = {add_data}" if add_data else "") + "]"
+            string_to_add += f" [{arg_name}" + (f" = {add_data}" if add_data else "") + \
+                             ("..." if arg_data.kind == arg_data.VAR_POSITIONAL else "") + "]"
         else:
             string_to_add += f" <{arg_name}>"
     return string_to_add, params
 
 
+def parse_subcommands_for_help(command, all_params=False) -> Tuple[List[str], List[str]]:
+    if not hasattr(command, "all_commands") or len(command.all_commands) == 0:
+        return [], []
+
+    if not all_params:
+        return list(command.all_commands.keys()), []
+
+    subcommands = []
+    for name, subcommand in command.all_commands.items():
+        subcommands.append(parse_params_for_help(subcommand.clean_params, name)[0])
+    return list(command.all_commands.keys()), subcommands
+
+
 async def send_help_of_command(ctx, command):
-    str_help = f"{Config.get_settings().bot_settings.prefix}{command.name}"
+    subcommands_names, subcommands = parse_subcommands_for_help(command, True)
+    str_help = f"{Config.get_settings().bot_settings.prefix}{command}"
+    str_help += " " + " | ".join(subcommands_names) if len(subcommands_names) else ""
     str_help, params = parse_params_for_help(command.clean_params, str_help, True)
 
-    str_help += f"\n{get_translation(f'help_{command.name}')}\n\n"
+    str_help += "\n" + get_translation(f'help_{"_".join(str(command).split())}') + "\n\n"
     if len(command.aliases):
         str_help += get_translation("Aliases") + ": " + ", ".join(command.aliases) + "\n\n"
+
+    if len(subcommands):
+        str_help += get_translation("Subcommands") + ":\n" + "\n".join(subcommands) + "\n\n"
+
     if len(params.keys()):
         str_help += get_translation("Parameters") + ":\n"
         for arg_name, arg_type in params.items():
-            str_help += f"{arg_name}: {arg_type}\n{get_translation(f'help_{command.name}_{arg_name}')}\n\n"
+            str_help += f"{arg_name}: {arg_type}\n" + \
+                        get_translation(f'help_{"_".join(str(command).split())}_{arg_name}') + "\n\n"
     await ctx.send(add_quotes(f"py\n{str_help}"))
+
+
+def find_subcommand(subcommands, command, pos: int):
+    if hasattr(command, "all_commands") and len(command.all_commands) != 0:
+        pos += 1
+        for subcomm_name, subcomm in command.all_commands.items():
+            if subcomm_name == subcommands[pos]:
+                if len(subcommands) == pos + 1:
+                    return subcomm
+                else:
+                    return find_subcommand(subcommands, subcomm, pos)
 
 
 def get_offline_uuid(username):
