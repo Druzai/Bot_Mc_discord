@@ -626,7 +626,7 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
             res_obj = ["", {"text": "<"}, {"text": message.author.display_name, "color": "dark_gray"},
                        {"text": "> "}]
             if result_msg.get("reply", None) is not None:
-                if isinstance(result_msg.get("reply"), list):
+                if isinstance(result_msg.get("reply"), list) and isinstance(result_msg.get("reply")[1], str):
                     res_obj.extend([{"text": result_msg.get("reply")[0], "color": "gray"},
                                     {"text": result_msg.get("reply")[1], "color": "dark_gray"}])
                     _build_if_urls_in_message(res_obj, result_msg.get("reply")[2], "gray")
@@ -687,11 +687,11 @@ async def _handle_reply_in_message(message, result_msg):
         if reply_msg.author.discriminator == "0000":
             # reply to minecraft player
             cnt = cnt.replace("**<", "<").replace(">**", ">")
-            result_msg["reply"] = f"\n -> {cnt}"
+            result_msg["reply"] = f"\n -> {cnt}\n"
         else:
             # Reply to discord user
             nick = (await message.guild.fetch_member(reply_msg.author.id)).display_name
-            result_msg["reply"] = ["\n -> <", nick, f"> {cnt}"]
+            result_msg["reply"] = ["\n -> <", nick, f"> {cnt}\n"]
     return result_msg
 
 
@@ -731,9 +731,6 @@ def _handle_urls_and_attachments_in_message(result_msg, message, only_replace_li
                     temp_split.append(i[0])
                 else:
                     temp_split.append(i)
-
-        if key == "reply":
-            temp_split.append("\n")
 
         if isinstance(ms, list):
             result_msg[key] = [ms[0], ms[1], "".join(temp_split) if only_replace_links else temp_split]
