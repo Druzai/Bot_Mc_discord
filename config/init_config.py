@@ -139,7 +139,7 @@ class User:
 class Settings:
     bot_settings: Bot_settings = Bot_settings()
     ask_to_change_servers_list: bool = True
-    selected_server_number: int = 0
+    selected_server_number: int = 1
     servers_list: List[Server_settings] = field(default_factory=list)
     known_users: List[User] = field(default_factory=list)
 
@@ -229,7 +229,7 @@ class Config:
 
     @classmethod
     def get_selected_server_from_list(cls) -> Server_settings:
-        return cls._settings_instance.servers_list[cls._settings_instance.selected_server_number]
+        return cls._settings_instance.servers_list[cls._settings_instance.selected_server_number - 1]
 
     @classmethod
     def get_known_users_list(cls) -> List[User]:
@@ -631,6 +631,10 @@ class Config:
 
     @classmethod
     def _setup_servers(cls):
+        if not 0 < cls._settings_instance.selected_server_number < len(cls._settings_instance.servers_list):
+            cls._settings_instance.selected_server_number = 1
+            print(get_translation("Selected minecraft server number is out of range! Bot set it to '1'."))
+            cls._need_to_rewrite = True
         if not cls._settings_instance.ask_to_change_servers_list:
             print(get_translation("Selected minecraft server dir set to path '{0}' also known as '{1}'.")
                   .format(cls.get_selected_server_from_list().working_directory,

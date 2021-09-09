@@ -314,125 +314,200 @@ class MinecraftCommands(commands.Cog):
         message += "```"
         await ctx.send(message)
 
-    @commands.command(pass_context=True, aliases=["fl"])
+    @commands.group(pass_context=True, aliases=["fl"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
-    @decorators.has_role_or_default()
-    async def forceload(self, ctx, subcommand=""):
-        if subcommand == "on" and not Config.get_settings().bot_settings.forceload:
-            Config.get_settings().bot_settings.forceload = True
-            Config.save_config()
+    async def forceload(self, ctx):
+        if Config.get_settings().bot_settings.forceload:
             await ctx.send(add_quotes(get_translation("Forceload on")))
-        elif subcommand == "off" and Config.get_settings().bot_settings.forceload:
-            Config.get_settings().bot_settings.forceload = False
-            Config.save_config()
+        else:
             await ctx.send(add_quotes(get_translation("Forceload off")))
-        elif subcommand == "":
-            if Config.get_settings().bot_settings.forceload:
-                await ctx.send(add_quotes(get_translation("Forceload on")))
-            else:
-                await ctx.send(add_quotes(get_translation("Forceload off")))
-        else:
-            raise commands.UserInputError()
 
-    @commands.command(pass_context=True, aliases=["wl"])
+    @forceload.command(pass_context=True, name="on")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def whitelist(self, ctx, subcommand: str, minecraft_nick=""):
-        if subcommand in ["add", "del", "list", "on", "off", "reload"]:
-            try:
-                with connect_rcon() as cl_r:
-                    if subcommand == "on":
-                        cl_r.run("whitelist on")
-                        await ctx.send(add_quotes(get_translation("Turned on the whitelist")))
-                    elif subcommand == "off":
-                        cl_r.run("whitelist off")
-                        await ctx.send(add_quotes(get_translation("Turned off the whitelist")))
-                    elif subcommand == "add":
-                        if get_server_online_mode():
-                            cl_r.run("whitelist add", minecraft_nick)
-                        else:
-                            save_to_whitelist_json(get_whitelist_entry(minecraft_nick))
-                            cl_r.run("whitelist reload")
-                        await ctx.send(add_quotes(get_translation("Added {0} to the whitelist").format(minecraft_nick)))
-                    elif subcommand == "del":
-                        cl_r.run("whitelist remove", minecraft_nick)
-                        await ctx.send(add_quotes(get_translation("Removed {0} from the whitelist")
-                                                  .format(minecraft_nick)))
-                    elif subcommand == "list":
-                        white_list = cl_r.run("whitelist list")
-                        if ":" in white_list:
-                            players = white_list.split(':')[1].split(", ")
-                            if " and " in players[-1]:
-                                players[-1], last_player = players[-1].split(" and ")
-                                players.append(last_player)
-                            await ctx.send(add_quotes(get_translation("There are {0} players in whitelist\n{1}")
-                                                      .format(len(players), ", ".join(players))))
-                        else:
-                            await ctx.send(add_quotes(get_translation("There are no whitelisted players")))
-                    elif subcommand == "reload":
-                        cl_r.run("whitelist reload")
-                        await ctx.send(add_quotes(get_translation("Reloaded the whitelist")))
-                    else:
-                        await ctx.send(add_quotes(get_translation("Wrong command!")))
-            except BaseException:
+    async def f_on(self, ctx):
+        Config.get_settings().bot_settings.forceload = True
+        Config.save_config()
+        await ctx.send(add_quotes(get_translation("Forceload on")))
+
+    @forceload.command(pass_context=True, name="off")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_role_or_default()
+    async def f_off(self, ctx):
+        Config.get_settings().bot_settings.forceload = False
+        Config.save_config()
+        await ctx.send(add_quotes(get_translation("Forceload off")))
+
+    @commands.group(pass_context=True, aliases=["wl"], invoke_without_command=True)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_role_or_default()
+    async def whitelist(self, ctx):
+        await ctx.send(add_quotes(get_translation("Wrong syntax, subcommands:") + " on, off, add, del, list, reload"))
+        raise commands.UserInputError()
+
+    @whitelist.command(pass_context=True, name="add")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_role_or_default()
+    async def w_add(self, ctx, minecraft_nick: str):
+        try:
+            with connect_rcon() as cl_r:
+                if get_server_online_mode():
+                    cl_r.run("whitelist add", minecraft_nick)
+                else:
+                    save_to_whitelist_json(get_whitelist_entry(minecraft_nick))
+                    cl_r.run("whitelist reload")
+                await ctx.send(add_quotes(get_translation("Added {0} to the whitelist").format(minecraft_nick)))
+        except BaseException:
+            if BotVars.is_server_on:
                 await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
-        else:
-            await ctx.send(add_quotes(get_translation("Commands:") + " on, off, add, del, list, reload"))
-            raise commands.UserInputError()
+            else:
+                await ctx.send(add_quotes(get_translation("server offline").capitalize()))
 
-    @commands.command(pass_context=True, aliases=["servs"])
+    @whitelist.command(pass_context=True, name="del")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def servers(self, ctx, subcommand: str, selected_server=None):
-        if subcommand in ["list", "select", "show"]:
-            if subcommand == "list":
-                send_ = "```" + get_translation("List of servers")
-                for i in range(len(Config.get_settings().servers_list)):
-                    send_ += "\n№ " + str(i) + ". " + Config.get_settings().servers_list[i].server_name
-                send_ += "```"
-                await ctx.send(send_)
-            elif subcommand == "select":
-                if selected_server is None:
-                    # await ctx.send("Э, " + ctx.author.mention + ", где число?")
-                    await ctx.send(get_translation("Hey, {0}, where's number?").format(ctx.author.mention))
-                    return
-                try:
-                    if int(selected_server) <= len(Config.get_settings().servers_list):
-                        if int(selected_server) == Config.get_settings().selected_server_number:
-                            await ctx.send(add_quotes(get_translation("My, you have chosen selected server, insane?)\n"
-                                                                      " ...Patsan ramsi poputal")))
-                            return
-                        if BotVars.is_server_on:
-                            await ctx.send(add_quotes(get_translation(
-                                "You can't change servers, while some instance(s) is/are still running\n"
-                                "Please stop them, before trying again")))
-                            return
+    async def w_del(self, ctx, minecraft_nick: str):
+        try:
+            with connect_rcon() as cl_r:
+                cl_r.run("whitelist remove", minecraft_nick)
+                await ctx.send(add_quotes(get_translation("Removed {0} from the whitelist").format(minecraft_nick)))
+        except BaseException:
+            if BotVars.is_server_on:
+                await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
+            else:
+                await ctx.send(add_quotes(get_translation("server offline").capitalize()))
 
-                        if BotVars.watcher_of_log_file is not None:
-                            BotVars.watcher_of_log_file.stop()
-                            BotVars.watcher_of_log_file = None
-                        Config.get_settings().selected_server_number = int(selected_server)
-                        Config.save_config()
-                        await ctx.send(add_quotes(get_translation("Selected server") +
-                                                  " № " + str(Config.get_settings().selected_server_number) +
-                                                  ". " + Config.get_selected_server_from_list().server_name))
-                        Config.read_server_info()
-                        await ctx.send(add_quotes(get_translation("Server properties read!")))
-                    else:
-                        await ctx.send(add_quotes(get_translation("Use server list, there's no such "
-                                                                  "server number on the list!")))
-                except ValueError:
-                    await ctx.send(add_quotes(get_translation("Argument for 'select' must be a number!")))
-            elif subcommand == "show":
-                await ctx.send(add_quotes(get_translation("Selected server") +
-                                          " № " + str(Config.get_settings().selected_server_number) +
-                                          ". " + Config.get_selected_server_from_list().server_name))
+    @whitelist.command(pass_context=True, name="list")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_role_or_default()
+    async def w_list(self, ctx):
+        try:
+            with connect_rcon() as cl_r:
+                white_list = cl_r.run("whitelist list")
+                if ":" in white_list:
+                    players = white_list.split(':')[1].split(", ")
+                    if " and " in players[-1]:
+                        players[-1], last_player = players[-1].split(" and ")
+                        players.append(last_player)
+                    await ctx.send(add_quotes(get_translation("There are {0} players in whitelist\n{1}")
+                                              .format(len(players), ", ".join(players))))
+                else:
+                    await ctx.send(add_quotes(get_translation("There are no whitelisted players")))
+        except BaseException:
+            if BotVars.is_server_on:
+                await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
+            else:
+                await ctx.send(add_quotes(get_translation("server offline").capitalize()))
+
+    @whitelist.command(pass_context=True, name="on")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_role_or_default()
+    async def w_on(self, ctx):
+        try:
+            with connect_rcon() as cl_r:
+                cl_r.run("whitelist on")
+                await ctx.send(add_quotes(get_translation("Turned on the whitelist")))
+        except BaseException:
+            if BotVars.is_server_on:
+                await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
+            else:
+                await ctx.send(add_quotes(get_translation("server offline").capitalize()))
+
+    @whitelist.command(pass_context=True, name="off")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_role_or_default()
+    async def w_off(self, ctx):
+        try:
+            with connect_rcon() as cl_r:
+                cl_r.run("whitelist off")
+                await ctx.send(add_quotes(get_translation("Turned off the whitelist")))
+        except BaseException:
+            if BotVars.is_server_on:
+                await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
+            else:
+                await ctx.send(add_quotes(get_translation("server offline").capitalize()))
+
+    @whitelist.command(pass_context=True, name="reload")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_role_or_default()
+    async def w_reload(self, ctx):
+        try:
+            with connect_rcon() as cl_r:
+                cl_r.run("whitelist reload")
+                await ctx.send(add_quotes(get_translation("Reloaded the whitelist")))
+        except BaseException:
+            if BotVars.is_server_on:
+                await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
+            else:
+                await ctx.send(add_quotes(get_translation("server offline").capitalize()))
+
+    @commands.group(pass_context=True, aliases=["servs"], invoke_without_command=True)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_role_or_default()
+    async def servers(self, ctx):
+        await ctx.send(add_quotes(get_translation("Wrong syntax, subcommands:") + " select, list, show"))
+        raise commands.UserInputError()
+
+    @servers.command(pass_context=True, name="show")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_role_or_default()
+    async def s_show(self, ctx):
+        await ctx.send(add_quotes(get_translation("Selected server") + ": " +
+                                  Config.get_selected_server_from_list().server_name +
+                                  f" [{str(Config.get_settings().selected_server_number)}]"))
+
+    @servers.command(pass_context=True, name="select")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_role_or_default()
+    async def s_select(self, ctx, selected_server: int):
+        if 0 < selected_server <= len(Config.get_settings().servers_list):
+            if selected_server == Config.get_settings().selected_server_number:
+                await ctx.send(add_quotes(get_translation("My, you have chosen selected server, insane?)\n"
+                                                          " ...Patsan ramsi poputal")))
+                return
+            if BotVars.is_server_on:
+                await ctx.send(add_quotes(get_translation(
+                    "You can't change servers, while some instance(s) is/are still running\n"
+                    "Please stop them, before trying again")))
+                return
+
+            if BotVars.watcher_of_log_file is not None:
+                BotVars.watcher_of_log_file.stop()
+                BotVars.watcher_of_log_file = None
+            Config.get_settings().selected_server_number = selected_server
+            Config.save_config()
+            await ctx.send(add_quotes(get_translation("Selected server") + ": " +
+                                      Config.get_selected_server_from_list().server_name +
+                                      f" [{str(Config.get_settings().selected_server_number)}]"))
+            Config.read_server_info()
+            await ctx.send(add_quotes(get_translation("Server properties read!")))
         else:
-            await ctx.send(add_quotes(get_translation("Commands:") + " select, list, show"))
-            raise commands.UserInputError()
+            await ctx.send(add_quotes(get_translation("Use server list, there's no such "
+                                                      "server number on the list!")))
+
+    @servers.command(pass_context=True, name="list")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_role_or_default()
+    async def s_list(self, ctx):
+        send_ = "```" + get_translation("List of servers") + ":"
+        for i in range(len(Config.get_settings().servers_list)):
+            send_ += "\n[" + str(i + 1) + "] " + Config.get_settings().servers_list[i].server_name
+        send_ += "```"
+        await ctx.send(send_)
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(manage_messages=True, send_messages=True,
