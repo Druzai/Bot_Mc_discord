@@ -20,9 +20,9 @@ class Poll(commands.Cog):
         self._bot: commands.Bot = bot
 
     # TODO: Make it usable with stop command, give to command some strings!
-    async def run(self, ctx, message, need_for_voting=2, needed_role=None, timeout=60 * 60, remove_logs_after=None):
+    async def run(self, ctx, message: str, need_for_voting=2, needed_role=None, timeout=60 * 60, remove_logs_after=None):
         start_msg = await ctx.send("@everyone, " + message + " " +
-                                   get_translation("To win the poll needed {1} votes!").format(str(need_for_voting)))
+                                   get_translation("To win the poll needed {0} votes!").format(str(need_for_voting)))
         poll_msg = await self.make_embed(ctx)
         current_poll = Poll.PollContent(ctx, need_for_voting, needed_role, remove_logs_after)
         self._polls[poll_msg.id] = current_poll
@@ -47,8 +47,8 @@ class Poll(commands.Cog):
     async def make_embed(self, ctx):
         emb = Embed(title=get_translation("Survey. Voting!"),
                     color=Color.orange())
-        emb.add_field(name=get_translation("yes"), value=':ballot_box_with_check:')
-        emb.add_field(name=get_translation("no"), value=':negative_squared_cross_mark:')
+        emb.add_field(name=get_translation("yes"), value=self._emoji_symbols.get("yes"))
+        emb.add_field(name=get_translation("no"), value=self._emoji_symbols.get("no"))
         add_reactions_to = await ctx.send(embed=emb)
         for emote in self._emoji_symbols.values():
             await add_reactions_to.add_reaction(emote)

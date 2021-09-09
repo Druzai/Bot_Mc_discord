@@ -1,8 +1,7 @@
 import inspect
 from ast import literal_eval
 from asyncio import sleep as asleep
-from contextlib import contextmanager
-from contextlib import suppress
+from contextlib import contextmanager, suppress
 from datetime import datetime
 from hashlib import md5
 from itertools import chain
@@ -32,7 +31,7 @@ if platform == "win32":
 __all__ = [
     "server_checkups", "send_error", "send_msg", "send_status", "stop_server", "start_server",
     "get_author_and_mention", "save_to_whitelist_json", "get_whitelist_entry", "get_server_online_mode",
-    "get_server_players", "add_quotes", "bot_status", "bot_list", "bot_start", "bot_stop", "bot_restart"
+    "get_server_players", "add_quotes", "bot_status", "bot_list", "bot_start", "bot_stop", "bot_restart", "connect_rcon"
 ]
 
 
@@ -131,8 +130,7 @@ async def start_server(ctx, bot, shut_up=False, is_reaction=False):
         await bot.change_presence(activity=Activity(type=ActivityType.listening, name=output_bot))
         await asleep(Config.get_awaiting_times_settings().await_seconds_when_connecting_via_rcon)
         with suppress(BaseException):
-            with Client_q(Config.get_settings().bot_settings.local_address,
-                          BotVars.port_query, timeout=0.5) as cl_q:
+            with connect_query() as cl_q:
                 _ = cl_q.basic_stats
             break
     if Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
@@ -170,8 +168,7 @@ async def stop_server(ctx, bot, how_many_sec=10, is_restart=False, is_reaction=F
     await send_msg(ctx, add_quotes(get_translation("Stopping server.......\nPlease wait {0} sec.")
                                    .format(str(how_many_sec))), is_reaction)
     try:
-        with Client_r(Config.get_settings().bot_settings.local_address, BotVars.port_rcon, timeout=1) as cl_r:
-            cl_r.login(BotVars.rcon_pass)
+        with connect_rcon() as cl_r:
             if how_many_sec != 0:
                 w = 1
                 if how_many_sec > 5:
@@ -207,8 +204,7 @@ async def stop_server(ctx, bot, how_many_sec=10, is_restart=False, is_reaction=F
         while True:
             await asleep(Config.get_awaiting_times_settings().await_seconds_when_connecting_via_rcon)
             try:
-                with Client_q(Config.get_settings().bot_settings.local_address,
-                              BotVars.port_query, timeout=0.5) as cl_q:
+                with connect_query() as cl_q:
                     _ = cl_q.basic_stats
             except BaseException:
                 break
@@ -258,8 +254,7 @@ def kill_server():
 async def server_checkups(bot, always=True):
     while True:
         try:
-            with Client_q(Config.get_settings().bot_settings.local_address,
-                          BotVars.port_query, timeout=1) as cl_q:
+            with connect_query() as cl_q:
                 info = cl_q.full_stats
             if info.num_players != 0:
                 to_save = False
@@ -334,9 +329,7 @@ async def bot_status(ctx, is_reaction=False):
     states = states.strip("\n")
     if BotVars.is_server_on:
         try:
-            with Client_r(Config.get_settings().bot_settings.local_address,
-                          BotVars.port_rcon, timeout=1) as cl_r:
-                cl_r.login(BotVars.rcon_pass)
+            with connect_rcon() as cl_r:
                 """rcon check daytime cycle"""
                 time_ticks = int(cl_r.run("time query daytime").split(" ")[-1])
             message = get_translation("Time in minecraft: ")
@@ -378,8 +371,7 @@ async def bot_status(ctx, is_reaction=False):
 
 async def bot_list(ctx, bot, is_reaction=False):
     try:
-        with Client_q(Config.get_settings().bot_settings.local_address, BotVars.port_query,
-                      timeout=1) as cl_q:
+        with connect_query() as cl_q:
             info = cl_q.full_stats
         if info.num_players == 0:
             await send_msg(ctx, add_quotes(get_translation("There are no players on the server")), is_reaction)
@@ -474,7 +466,8 @@ async def send_help_of_command(ctx, command):
     str_help += " " + " | ".join(subcommands_names) if len(subcommands_names) else ""
     str_help, params = parse_params_for_help(command.clean_params, str_help, True)
 
-    str_help += "\n" + get_translation(f'help_{"_".join(str(command).split())}') + "\n\n"
+    str_help += "\n\n" + get_translation("Description") + ":\n"
+    str_help += get_translation(f'help_{"_".join(str(command).split())}') + "\n\n"
     if len(command.aliases):
         str_help += get_translation("Aliases") + ": " + ", ".join(command.aliases) + "\n\n"
 
@@ -486,7 +479,7 @@ async def send_help_of_command(ctx, command):
         for arg_name, arg_type in params.items():
             str_help += f"{arg_name}: {arg_type}\n" + \
                         get_translation(f'help_{"_".join(str(command).split())}_{arg_name}') + "\n\n"
-    await ctx.send(add_quotes(f"py\n{str_help}"))
+    await ctx.send(add_quotes(f"\n{str_help}"))
 
 
 def find_subcommand(subcommands, command, pos: int):
@@ -498,6 +491,19 @@ def find_subcommand(subcommands, command, pos: int):
                     return subcomm
                 else:
                     return find_subcommand(subcommands, subcomm, pos)
+
+
+@contextmanager
+def connect_rcon():
+    with Client_r(Config.get_settings().bot_settings.local_address, BotVars.port_rcon, timeout=1) as cl_r:
+        cl_r.login(BotVars.rcon_pass)
+        yield cl_r
+
+
+@contextmanager
+def connect_query():
+    with Client_q(Config.get_settings().bot_settings.local_address, BotVars.port_query, timeout=1) as cl_q:
+        yield cl_q
 
 
 def get_offline_uuid(username):
@@ -550,13 +556,13 @@ async def send_error(ctx, bot, error, is_reaction=False):
         missing_perms = [perm.replace('_', ' ').replace('guild', 'server').title() for perm in error.missing_perms]
         await send_msg(ctx, f"{author_mention}\n" +
                        add_quotes(get_translation("to run this command you don't have these permissions: {0}")
-                                  .format(author_mention, ", ".join(missing_perms)).capitalize()),
+                                  .capitalize().format(author_mention, ", ".join(missing_perms))),
                        is_reaction)
     elif isinstance(error, commands.MissingRole):
         print(get_translation("{0} don't have role '{1}' to run command").format(author, error.missing_role))
         await send_msg(ctx, f"{author_mention}\n" +
-                       add_quotes(get_translation("you don't have role '{0}' to run this command")
-                                  .format(error.missing_role).capitalize()),
+                       add_quotes(get_translation("you don't have role '{0}' to run this command").capitalize()
+                                  .format(error.missing_role)),
                        is_reaction)
     elif isinstance(error, commands.CommandNotFound):
         print(get_translation("{0} entered non-existent command").format(author))
@@ -637,17 +643,14 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
                                     "hoverEvent": {"action": "show_text", "value": result_before.get("content")}})
             _build_if_urls_in_message(res_obj, result_msg.get("content"), None)
 
-            with Client_r(Config.get_settings().bot_settings.local_address, BotVars.port_rcon, timeout=1) as cl_r:
-                cl_r.login(BotVars.rcon_pass)
+            with connect_rcon() as cl_r:
                 cl_r.tellraw("@a", res_obj)
 
             delete_user_message = False
             nicks = _search_mentions_in_message(message)
             if len(nicks) > 0:
                 with suppress(BaseException):
-                    with Client_r(Config.get_settings().bot_settings.local_address,
-                                  BotVars.port_rcon, timeout=1) as cl_r:
-                        cl_r.login(BotVars.rcon_pass)
+                    with connect_rcon() as cl_r:
                         with times(500, 2500, 1500, cl_r):
                             for nick in nicks:
                                 announce(nick,
@@ -817,8 +820,8 @@ def _search_mentions_in_message(message) -> list:
 
 
 def get_server_version() -> float:
-    with Client_q(Config.get_settings().bot_settings.local_address, BotVars.port_query, timeout=1) as cl_r:
-        version = cl_r.full_stats.version
+    with connect_query() as cl_q:
+        version = cl_q.full_stats.version
     if search(r"\d+\.\d+\.\d+", version):
         matches = findall(r"\d+", version)
         return float(f"{matches[0]}.{matches[1]}")
@@ -827,8 +830,8 @@ def get_server_version() -> float:
 
 
 def get_server_players() -> tuple:
-    with Client_q(Config.get_settings().bot_settings.local_address, BotVars.port_query, timeout=1) as cl_r:
-        players = cl_r.full_stats.players
+    with connect_query() as cl_q:
+        players = cl_q.full_stats.players
     return players
 
 

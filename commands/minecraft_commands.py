@@ -5,7 +5,6 @@ from random import randint
 
 import discord
 from discord.ext import commands
-from mcipc.rcon import Client as Client_r
 
 from components import decorators
 from components.additional_funcs import *
@@ -15,7 +14,7 @@ from config.init_config import BotVars, Config
 
 class MinecraftCommands(commands.Cog):
     _emoji_symbols = {"status": "🗨", "list": "📋", "start": "♿",
-                      "stop": "⏹", "restart": "🔄", "update": "📶"}  # Symbols for menu
+                      "stop 10": "⏹", "restart 10": "🔄", "update": "📶"}  # Symbols for menu
 
     def __init__(self, bot: commands.Bot):
         self._bot: commands.Bot = bot
@@ -44,17 +43,17 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def stop(self, ctx, subcommand=0):
+    async def stop(self, ctx, timeout=0):
         """Stop server"""
-        await bot_stop(ctx, subcommand, self._bot)
+        await bot_stop(ctx, timeout, self._bot)
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def restart(self, ctx, subcommand=0):
+    async def restart(self, ctx, timeout=0):
         """Restart server"""
-        await bot_restart(ctx, subcommand, self._bot)
+        await bot_restart(ctx, timeout, self._bot)
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -103,9 +102,7 @@ class MinecraftCommands(commands.Cog):
                                     (" ".join(reasons) if reasons else "None"))
             await_time_op = Config.get_awaiting_times_settings().await_seconds_when_opped
             try:
-                with Client_r(Config.get_settings().bot_settings.local_address,
-                              BotVars.port_rcon, timeout=1) as cl_r:
-                    cl_r.login(BotVars.rcon_pass)
+                with connect_rcon() as cl_r:
                     cl_r.say(minecraft_nick + get_translation(" you've opped for") + (
                         "" if await_time_op // 60 == 0 else " " + str(await_time_op // 60) + get_translation(" min")) +
                              ("." if await_time_op % 60 == 0 else " " + str(await_time_op % 60) +
@@ -170,9 +167,7 @@ class MinecraftCommands(commands.Cog):
                     await asleep(
                         Config.get_awaiting_times_settings().await_seconds_when_connecting_via_rcon)
                     with suppress(BaseException):
-                        with Client_r(Config.get_settings().bot_settings.local_address,
-                                      BotVars.port_rcon, timeout=1) as cl_r:
-                            cl_r.login(BotVars.rcon_pass)
+                        with connect_rcon() as cl_r:
                             cl_r.say(minecraft_nick + get_translation(" you all will be deoped now."))
                             for player in to_delete_ops:
                                 cl_r.deop(player)
@@ -247,13 +242,13 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def ops(self, ctx, for_who: str, missing: str):
+    async def ops(self, ctx, for_who: str, show: str):
         """
         Get info about ops
         :param for_who: string, "me" or "all"
-        :param missing: "seen" or "missing"
+        :param show: "seen" or "missing"
         """
-        if for_who not in ["me", "all"] or missing not in ["seen", "missing"]:
+        if for_who not in ["me", "all"] or show not in ["seen", "missing"]:
             await ctx.send(get_translation("Syntax:") +
                            f" `{Config.get_settings().bot_settings.prefix}ops <'me', 'all'> <'seen', 'missing'>`")
             raise commands.UserInputError()
@@ -274,7 +269,7 @@ class MinecraftCommands(commands.Cog):
                     if p.player_minecraft_nick == m_nick:
                         user_players_data.update({p.player_minecraft_nick: p.number_of_times_to_op})
                         user_nicks.remove(m_nick)
-            if missing == "missing":
+            if show == "missing":
                 user_players_data.update({n: -1 for n in user_nicks})
 
             message = get_translation("{0}, bot has these data on your nick and number of remaining uses:") \
@@ -303,12 +298,12 @@ class MinecraftCommands(commands.Cog):
                           .format(ctx.author.mention) + "\n```"
             # message = f"{ctx.author.mention}, у бота есть такие данные по никам и кол-ву оставшихся использований:\n```"
             for k, v in users_to_nicks.items():
-                if not len(v) or (missing == "seen" and all([isinstance(i, str) for i in v])):
+                if not len(v) or (show == "seen" and all([isinstance(i, str) for i in v])):
                     continue
                 member = await ctx.guild.fetch_member(k)
                 message += f"{member.display_name}#{member.discriminator}:\n"
                 for item in v:
-                    if missing == "missing" and isinstance(item, str):
+                    if show == "missing" and isinstance(item, str):
                         message += f"\t{item}: " + get_translation("not seen on server") + "\n"
                         # message += f"\t{item}: не замечен на сервере\n"
                     elif isinstance(item, dict):
@@ -347,9 +342,7 @@ class MinecraftCommands(commands.Cog):
     async def whitelist(self, ctx, subcommand: str, minecraft_nick=""):
         if subcommand in ["add", "del", "list", "on", "off", "reload"]:
             try:
-                with Client_r(Config.get_settings().bot_settings.local_address,
-                              BotVars.port_rcon, timeout=1) as cl_r:
-                    cl_r.login(BotVars.rcon_pass)
+                with connect_rcon() as cl_r:
                     if subcommand == "on":
                         cl_r.run("whitelist on")
                         await ctx.send(add_quotes(get_translation("Turned on the whitelist")))
@@ -450,12 +443,8 @@ class MinecraftCommands(commands.Cog):
         await ctx.channel.purge(limit=1)
         emb = discord.Embed(title=get_translation("List of commands via reactions"),
                             color=discord.Color.teal())
-        emb.add_field(name='status', value=':speech_left:')
-        emb.add_field(name='list', value=':clipboard:')
-        emb.add_field(name='start', value=':wheelchair:')
-        emb.add_field(name='stop 10', value=':stop_button:')
-        emb.add_field(name='restart 10', value=':arrows_counterclockwise:')
-        emb.add_field(name='update', value=':signal_strength:')
+        for key, value in self._emoji_symbols.items():
+            emb.add_field(name=key, value=value)
         add_reactions_to = await ctx.send(embed=emb)
         Config.get_settings().bot_settings.menu_id = add_reactions_to.id
         Config.save_config()
