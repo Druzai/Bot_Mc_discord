@@ -453,6 +453,21 @@ def parse_params_for_help(command_params: dict, string_to_add: str, create_param
             string_to_add += f" <{arg_name}>"
     return string_to_add, params
 
+
+async def send_help_of_command(ctx, command):
+    str_help = f"{Config.get_settings().bot_settings.prefix}{command.name}"
+    str_help, params = parse_params_for_help(command.clean_params, str_help, True)
+
+    str_help += f"\n{get_translation(f'help_{command.name}')}\n\n"
+    if len(command.aliases):
+        str_help += get_translation("Aliases") + ": " + ", ".join(command.aliases) + "\n\n"
+    if len(params.keys()):
+        str_help += get_translation("Parameters") + ":\n"
+        for arg_name, arg_type in params.items():
+            str_help += f"{arg_name}: {arg_type}\n{get_translation(f'help_{command.name}_{arg_name}')}\n\n"
+    await ctx.send(add_quotes(f"py\n{str_help}"))
+
+
 def get_offline_uuid(username):
     data = bytearray(md5(("OfflinePlayer:" + username).encode()).digest())
     data[6] &= 0x0f  # clear version
@@ -531,6 +546,8 @@ async def send_error(ctx, bot, error, is_reaction=False):
         await send_msg(ctx, f"{author_mention}\n" +
                        add_quotes(get_translation("this command only works on server").capitalize()),
                        is_reaction)
+    elif isinstance(error, commands.CheckFailure):
+        pass
     else:
         print(", ".join(error.args))
         await send_msg(ctx, f"{author_mention}\n" + add_quotes(", ".join(error.original.args)), is_reaction)

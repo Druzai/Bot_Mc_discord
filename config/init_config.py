@@ -87,6 +87,7 @@ class Bot_settings:
         self.token_encrypted = encrypt_string(token_decrypted)
 
     prefix: str = ""
+    help_arguments: List[str] = field(default_factory=list)
     gaming_status: str = ""
     idle_status: str = ""
     role: Optional[str] = None
@@ -394,6 +395,7 @@ class Config:
 
         cls._setup_token()
         cls._setup_prefix()
+        cls._setup_help_arguments()
         cls._setup_role()
         cls._setup_bot_statuses()
         cls._setup_ip_address()
@@ -454,6 +456,22 @@ class Config:
             cls._need_to_rewrite = True
             cls._settings_instance.bot_settings.prefix = cls._ask_for_data(get_translation("Enter bot prefix: "))
         print(get_translation("Bot prefix set to '{0}'.").format(cls._settings_instance.bot_settings.prefix))
+
+    @classmethod
+    def _setup_help_arguments(cls):
+        if cls._settings_instance.bot_settings.help_arguments is None or \
+                len(cls._settings_instance.bot_settings.help_arguments) == 0:
+            cls._need_to_rewrite = True
+            cls._settings_instance.bot_settings.help_arguments.extend(["-h", "--help", "?"])
+            print(get_translation("Default help arguments for each command are {0}.")
+                  .format(str(cls._settings_instance.bot_settings.help_arguments).strip("[]")))
+            if cls._ask_for_data(get_translation("Would you like to add something else?") + " Y/n\n", "y"):
+                new_help_args = cls._ask_for_data(get_translation("Enter new arguments comma separated: "))
+                new_help_args = [i.strip() for i in new_help_args.split(",")]
+                cls._settings_instance.bot_settings.help_arguments.extend(new_help_args)
+                print(get_translation("Arguments added!"))
+        print(get_translation("Help arguments for each command set to {0}.")
+              .format(str(cls._settings_instance.bot_settings.help_arguments).strip("[]")))
 
     @classmethod
     def _setup_role(cls):

@@ -10,7 +10,7 @@ from vk_api import VkApi
 from commands.poll import Poll
 from components import decorators
 from components.additional_funcs import handle_message_for_chat, server_checkups, send_error, send_msg, add_quotes, \
-    parse_params_for_help
+    parse_params_for_help, send_help_of_command
 from components.localization import get_translation, get_locales, set_locale
 from config.init_config import BotVars, Config
 
@@ -177,6 +177,14 @@ class ChatCommands(commands.Cog):
             e.set_image(url="attachment://image.jpg")
             await ctx.send(embed=e, file=file)
 
+    async def bot_check(self, ctx):
+        # Check if user asks help on each command
+        h_command = ctx.message.content.split()[-1]
+        if h_command in Config.get_settings().bot_settings.help_arguments:
+            await send_help_of_command(ctx, ctx.command)
+            return False
+        return True
+
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, embed_links=True, view_channel=True)
     @commands.guild_only()
@@ -191,17 +199,7 @@ class ChatCommands(commands.Cog):
                 await ctx.send(add_quotes(get_translation("Bot doesn't have such command!")))
                 return
 
-            str_help = f"{Config.get_settings().bot_settings.prefix}{command.name}"
-            str_help, params = parse_params_for_help(command.clean_params, str_help, True)
-
-            str_help += f"\n{get_translation(f'help_{command.name}')}\n\n"
-            if len(command.aliases):
-                str_help += get_translation("Aliases") + ": " + ", ".join(command.aliases) + "\n\n"
-            if len(params.keys()):
-                str_help += get_translation("Parameters") + ":\n"
-                for arg_name, arg_type in params.items():
-                    str_help += f"{arg_name}: {arg_type}\n{get_translation(f'help_{command.name}_{arg_name}')}\n\n"
-            await ctx.send(add_quotes(f"py\n{str_help}"))
+            await send_help_of_command(ctx, command)
         else:
             await ctx.channel.purge(limit=1)
             emb = discord.Embed(title=get_translation("List of all commands, prefix - {0}")
@@ -213,8 +211,10 @@ class ChatCommands(commands.Cog):
                               value=get_translation(f"help_brief_{c.name}"), inline=False)
             emb.set_footer(text=get_translation("Values in [square brackets] are optional.\n"
                                                 "Values in <angle brackets> have to be provided by you.\n"
-                                                "For more info enter {0}help command")
-                           .format(Config.get_settings().bot_settings.prefix))
+                                                "Use {prefix}help command for more info.\n"
+                                                "Or {prefix}command {arg_list} for short.")
+                           .format(prefix=Config.get_settings().bot_settings.prefix,
+                                   arg_list=str(Config.get_settings().bot_settings.help_arguments)))
             await ctx.send(embed=emb)
             # ------------------------------------------------------------------------------
 
