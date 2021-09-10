@@ -73,8 +73,6 @@ class MinecraftCommands(commands.Cog):
             if minecraft_nick not in [p.player_minecraft_nick for p in Config.get_server_config().seen_players]:
                 await ctx.send(get_translation("{0}, I didn't see this nick on server, son! "
                                                "Go to the server via this nick before...").format(ctx.author.mention))
-                # await ctx.send(f"{ctx.author.mention}, не видел такого ника на сервере, сынок! "
-                #                "Отметься на сервере перед опкой...")
                 return
 
             if minecraft_nick not in [u.user_minecraft_nick for u in Config.get_known_users_list()] or \
@@ -82,8 +80,6 @@ class MinecraftCommands(commands.Cog):
                                           if u.user_minecraft_nick == minecraft_nick]:
                 await ctx.send(get_translation("{0}, this nick isn't bound to you, use {1}assoc first...")
                                .format(ctx.author.mention, Config.get_settings().bot_settings.prefix))
-                # await ctx.send(f"{ctx.author.mention}, к тебе не привязан этот {minecraft_nick} ник, воспользуйся "
-                #                f"{Config.get_settings().bot_settings.prefix}assoc...")
                 return
 
             if minecraft_nick in [p.player_minecraft_nick for p in Config.get_server_config().seen_players] and \
@@ -91,14 +87,11 @@ class MinecraftCommands(commands.Cog):
                      if p.player_minecraft_nick == minecraft_nick][0] == 0:
                 await ctx.send(get_translation("{0}, you had run out of attempts to get opped for `{1}` nick!")
                                .format(ctx.author.mention, minecraft_nick))
-                # await ctx.send(f"{ctx.author.mention}, вы исчерпали кол-во попыток опнуться для данного "
-                #                f"{minecraft_nick} аккаунта!")
                 return
 
             if minecraft_nick not in get_server_players():
                 await ctx.send(get_translation("{0}, I didn't see this nick `{1}` online!")
                                .format(ctx.author.mention, minecraft_nick))
-                # await ctx.send(f"{ctx.author.mention}, я не вижу в сети данный аккаунт `{minecraft_nick}`!")
                 return
 
             BotVars.op_deop_list.append(minecraft_nick)
@@ -118,17 +111,10 @@ class MinecraftCommands(commands.Cog):
             except BaseException:
                 await ctx.send(get_translation("{0}, server isn't working (at least I've tried), try again later...")
                                .format(ctx.author.mention))
-                # await ctx.send(ctx.author.mention +
-                #                ", а сервак-то не работает (по крайней мере я пытался), попробуй-ка позже.")
                 return
             await ctx.send(add_quotes(get_translation("Bot has given you an operator")))
             if await_time_op > 0:
                 if randint(0, 2) == 1:
-                    # await ctx.send(
-                    #     f"Короче, {ctx.author.mention}, я тебя op'нул и в благородство играть не буду: приду через "
-                    #     + str(int(await_time_op / 60)) + " мин," +
-                    #     " deop'ну всех - и мы в расчёте. Заодно постараюсь разузнать на кой ляд тебе эта op'ка нужна," +
-                    #     " но я в чужие дела не лезу, если хочешь получить, значит есть за что...")
                     await ctx.send(
                         get_translation(
                             "So {0}, I opped you, but I'm not going to pretend like I did it to win favors upstairs. "
@@ -136,30 +122,6 @@ class MinecraftCommands(commands.Cog):
                             "I don't give a shit why you want this op and mind my own business. "
                             "If you want to be opped, well, you must have your reasons...")
                             .format(ctx.author.mention, str(int(await_time_op / 60))))
-                    """
-                    So {0}, I opped you, but I'm not going to pretend like I did it to win favors upstairs.
-                    I'll come in {1} min, deop everyone and we're even.
-                    I don't give a shit why you want this op and mind my own business.
-                    If you want to be opped, well, you must have your reasons...
-                    """
-                    """
-                    "Короче, {0}, я тебя op'нул и в благородство играть не буду: приду через {1} мин, deop'ну всех - и мы в расчёте. 
-                    Хрен его знает, на кой ляд тебе эта op'ка сдалась, но я в чужие дела не лезу, если хочешь получить, значит есть на что..."
-                    """
-                    """
-                    So Marked One, I saved you, but I'm not going to pretend like I did it to win favors upstairs. 
-                    You'll do some jobs for me and we're even. 
-                    Besides, keeping you busy might be a good way to deal with your amnesia. 
-                    And I'll see what I can find out about your problem. 
-                    I don't give a shit why you want this Strelok guy and mind my own business. 
-                    If you want to kill him, well, you must have your reasons.
-                    """
-                    """
-                    Короче, Меченый, я тебя спас и в благородство играть не буду: выполнишь для меня пару заданий – и мы в расчете. 
-                    Заодно посмотрим, как быстро у тебя башка после амнезии прояснится. 
-                    А по твоей теме постараюсь разузнать. 
-                    Хрен его знает, на кой ляд тебе этот Стрелок сдался, но я в чужие дела не лезу, хочешь убить, значит есть за что…
-                    """
                 await asleep(await_time_op)
                 if minecraft_nick != BotVars.op_deop_list[-1]:
                     return
@@ -186,13 +148,10 @@ class MinecraftCommands(commands.Cog):
                          " people deoped in belated list") if len(BotVars.op_deop_list) > 1 else ""))
                 await ctx.send(get_translation("Well, {0}, your time is over... and not only yours...\n"
                                                "As they say \"Cheeki breeki i v damké!\"").format(ctx.author.mention))
-                # await ctx.send("Ну что, " + ctx.author.mention +
-                #              ", кончилось твоё время.. и не только твоё.... Как говорится \"Чики-брики и в дамки!\"")
                 BotVars.op_deop_list.clear()
             else:
                 await ctx.send(get_translation("{0}, you have no time limit, but you are all doomed...")
                                .format(ctx.author.mention))
-                # await ctx.send(f"{ctx.author.mention}, у тебя нет ограничения по времени, но вы все обречены...")
 
             if len(BotVars.op_deop_list) == 0:
                 BotVars.is_doing_op = False
@@ -262,7 +221,6 @@ class MinecraftCommands(commands.Cog):
         if for_who == "me":
             if ctx.author.id not in [u.user_discord_id for u in Config.get_known_users_list()]:
                 await ctx.send(get_translation("{0}, you have no bound nicks").format(ctx.author.mention))
-                # await ctx.send(f"{ctx.author.mention}, у вас нету привязанных ников!")
                 return
 
             user_nicks = [u.user_minecraft_nick for u in Config.get_known_users_list()
@@ -279,10 +237,8 @@ class MinecraftCommands(commands.Cog):
 
             message = get_translation("{0}, bot has these data on your nicks and number of remaining uses:") \
                           .format(ctx.author.mention) + "\n```"
-            # message = f"{ctx.author.mention}, у вас есть такие данные по никам и кол-ву оставшихся использований:\n```"
             for k, v in user_players_data.items():
                 message += f"{k}: {str(v) if v >= 0 else get_translation('not seen on server')}\n"
-                # message += f"{k}: {str(v) if v >= 0 else 'не замечен на сервере'}\n"
         elif for_who == "everyone":
             if not ctx.author.guild_permissions.administrator:
                 raise commands.MissingPermissions(['administrator'])
@@ -301,7 +257,6 @@ class MinecraftCommands(commands.Cog):
 
             message = get_translation("{0}, bot has these data on your nicks and number of remaining uses:") \
                           .format(ctx.author.mention) + "\n```"
-            # message = f"{ctx.author.mention}, у бота есть такие данные по никам и кол-ву оставшихся использований:\n```"
             for k, v in users_to_nicks.items():
                 if not len(v) or (show == "seen" and all([isinstance(i, str) for i in v])):
                     continue
@@ -310,7 +265,6 @@ class MinecraftCommands(commands.Cog):
                 for item in v:
                     if show == "all" and isinstance(item, str):
                         message += f"\t{item}: " + get_translation("not seen on server") + "\n"
-                        # message += f"\t{item}: не замечен на сервере\n"
                     elif isinstance(item, dict):
                         message += f"\t{list(item.items())[0][0]}: {str(list(item.items())[0][1])}\n"
 
@@ -547,7 +501,7 @@ class MinecraftCommands(commands.Cog):
                     if BotVars.server_checkups_task is not None:
                         BotVars.server_checkups_task.cancel()
                         with suppress(CancelledError):
-                            await BotVars.server_checkups_task  # await for task cancellation
+                            await BotVars.server_checkups_task  # Await for task cancellation
                     BotVars.server_checkups_task = self._bot.loop.create_task(server_checkups(self._bot))
                     return
                 else:

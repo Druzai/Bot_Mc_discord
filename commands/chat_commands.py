@@ -230,37 +230,6 @@ class ChatCommands(commands.Cog):
                            .format(prefix=Config.get_settings().bot_settings.prefix,
                                    arg_list=str(Config.get_settings().bot_settings.help_arguments)))
             await ctx.send(embed=emb)
-            # ------------------------------------------------------------------------------
-
-            # emb.add_field(name='status', value='Возвращает статус сервера')
-            # emb.add_field(name='list/ls',
-            #               value='Возвращает список игроков')
-            # emb.add_field(name='start', value='Запускает сервер')
-            # emb.add_field(name='stop {10}',
-            #               value='Останавливает сервер, {} (сек) сколько идёт отсчёт, без аргументов - убирает таймер')
-            # emb.add_field(name='restart {10}',
-            #               value='Перезапускает сервер, {} (сек) сколько идёт отсчёт, без аргументов - убирает таймер')
-            # emb.add_field(name='op {1} {2}',
-            #               value='Даёт op\'ку на {1} ник {2} c комментарием причины, если надо')
-            # emb.add_field(name='assoc {1} {2} {3}',
-            #               value='Ассоциирует {1} упоминание ника в дискорде по {2} команде (+=/-=) (добавить или удалить) {3} c ником в майнкрафте **для админа**')
-            # emb.add_field(name='ops {1} {2}',
-            #               value='Даёт инфу о том, какие аккаунты привязаны у вас (при {1} равном "me") '
-            #                     'или у всех (при {1} равном "all" **для админа**) и сколько осталось раз op\'нуться. '
-            #                     'Показывает не появлявшиеся на сервере аккаунты при {2} равном "missing"')
-            # emb.add_field(name='menu', value='Создаёт меню-пульт для удобного управления командами')
-            # emb.add_field(name='chat {1}',
-            #               value='Сохраняет текущий канал (если без аргументов) или выбранный канал с первого аргумента откуда бот переправляет сообщения в майн')
-            # emb.add_field(name='forceload/fl {on/off}',
-            #               value='По {on/off} постоянная загрузка сервера, когда он отключен, без аргументов - статус')
-            # emb.add_field(name='whitelist/wl {1}',
-            #               value='Использует whitelist с сервера майна, аргументы {1} - on, off, add, del, list, reload.  С add и del ещё пишется ник игрока')
-            # emb.add_field(name='servers/servs {1}',
-            #               value='Использует список серверов в боте, аргументы {1} - select, list, show.  При select ещё пишется номер сервера из list')
-            # emb.add_field(name='say', value='"Петросянит" ( ͡° ͜ʖ ͡°)')
-            # emb.add_field(name='clear/cls {1}',
-            #               value='Если положительное число удаляет {1} сообщений, если отрицательное - удаляет n сообщений до {1} от начала канала')
-            # await ctx.send(embed=emb)
 
     @commands.command(pass_context=True, aliases=["cls"])
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, mention_everyone=True,

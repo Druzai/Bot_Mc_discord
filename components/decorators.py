@@ -6,10 +6,6 @@ from discord.utils import get as utils_get
 from config.init_config import Config
 
 
-# from functools import wraps
-# import inspect
-
-
 def has_role_or_default():
     def predicate(ctx):
         config_role = Config.get_settings().bot_settings.role
@@ -27,22 +23,3 @@ def has_role_or_default():
         return True
 
     return check(predicate)
-
-
-# def check_before_invocation(func):
-#     @wraps(func)
-#     async def predicate(ctx, *args, **kwargs):
-#         if "-h" in ctx.message.content:
-#             str_help = f"{Config.get_settings().bot_settings.prefix}{ctx.command.name}"
-#             for key, par in ctx.command.clean_params.items():
-#                 if par.annotation != inspect._empty:
-#                     str_help += f" [{key}]: {par.annotation.__name__}"
-#                 else:
-#                     str_help += f" <{key}>: {type(par.default).__name__}"
-#             await ctx.send(str_help)
-#
-#             await ctx.send(trnslt())
-#         else:
-#             return await func(ctx, *args, **kwargs)
-#
-#     return predicate

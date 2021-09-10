@@ -15,7 +15,6 @@ from config.init_config import Config, BotVars
 
 
 # TODO: features
-#  Make rus/eng localization and get it from dict from file or so and setup *.spec file!
 #  Continuously rewrite code in classes
 #  Сделать отправку об выключении/перезагрузке через tellraw тоже
 #  https://github.com/MyTheValentinus/minecraftTellrawGenerator
