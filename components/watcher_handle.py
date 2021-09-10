@@ -44,7 +44,7 @@ class Watcher:
                 sleep(self._refresh_delay_secs)
                 self.look()
             except FileNotFoundError:
-                print(get_translation("Watcher Error: File {0} wasn't found!").format(self._filename))
+                print(get_translation("Watcher Error: File '{0}' wasn't found!").format(self._filename))
             except UnicodeDecodeError:
                 print(get_translation("Watcher Error: Can't decode strings from file '{0}'"
                                       ", check that minecraft server saves it in utf-8 encoding!\n"

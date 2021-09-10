@@ -65,8 +65,13 @@ class MinecraftCommands(commands.Cog):
         :param reasons: comment"""
         BotVars.is_doing_op = True
         if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and not BotVars.is_restarting:
+            if len(get_server_players()) == 0:
+                await ctx.send(f"{ctx.author.mention}, " +
+                               get_translation("There are no players on the server").lower() + "!")
+                return
+
             if minecraft_nick not in [p.player_minecraft_nick for p in Config.get_server_config().seen_players]:
-                await ctx.send(get_translation("{0}, I didn't see this nick on server, son!"
+                await ctx.send(get_translation("{0}, I didn't see this nick on server, son! "
                                                "Go to the server via this nick before...").format(ctx.author.mention))
                 # await ctx.send(f"{ctx.author.mention}, не видел такого ника на сервере, сынок! "
                 #                "Отметься на сервере перед опкой...")
@@ -116,7 +121,7 @@ class MinecraftCommands(commands.Cog):
                 # await ctx.send(ctx.author.mention +
                 #                ", а сервак-то не работает (по крайней мере я пытался), попробуй-ка позже.")
                 return
-            await ctx.send(add_quotes(get_translation("Code activated")))
+            await ctx.send(add_quotes(get_translation("Bot has given you an operator")))
             if await_time_op > 0:
                 if randint(0, 2) == 1:
                     # await ctx.send(
@@ -231,12 +236,12 @@ class MinecraftCommands(commands.Cog):
                 else:
                     await ctx.send(get_translation("Doesn't have `mention to nick` link already!"))
             else:
-                await ctx.send(get_translation("Wrong command syntax! Right example: `{0}assoc @me +=/-= My_nick`")
+                await ctx.send(get_translation("Wrong command syntax! Right example: `{0}assoc @me +=/-= My_nick`.")
                                .format(Config.get_settings().bot_settings.prefix))
             if need_to_save:
                 Config.save_config()
         else:
-            await ctx.send(get_translation("Wrong 1-st argument! You can mention ONLY members"))
+            await ctx.send(get_translation("Wrong 1-st argument! You can mention ONLY members of this server."))
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -245,12 +250,12 @@ class MinecraftCommands(commands.Cog):
     async def ops(self, ctx, for_who: str, show: str):
         """
         Get info about ops
-        :param for_who: string, "me" or "all"
-        :param show: "seen" or "missing"
+        :param for_who: string, "me" or "everyone"
+        :param show: "seen" or "all"
         """
-        if for_who not in ["me", "all"] or show not in ["seen", "missing"]:
+        if for_who not in ["me", "everyone"] or show not in ["seen", "all"]:
             await ctx.send(get_translation("Syntax:") +
-                           f" `{Config.get_settings().bot_settings.prefix}ops <'me', 'all'> <'seen', 'missing'>`")
+                           f" `{Config.get_settings().bot_settings.prefix}ops <'me', 'everyone'> <'seen', 'all'>`")
             raise commands.UserInputError()
 
         message = ""
@@ -269,16 +274,16 @@ class MinecraftCommands(commands.Cog):
                     if p.player_minecraft_nick == m_nick:
                         user_players_data.update({p.player_minecraft_nick: p.number_of_times_to_op})
                         user_nicks.remove(m_nick)
-            if show == "missing":
+            if show == "all":
                 user_players_data.update({n: -1 for n in user_nicks})
 
-            message = get_translation("{0}, bot has these data on your nick and number of remaining uses:") \
+            message = get_translation("{0}, bot has these data on your nicks and number of remaining uses:") \
                           .format(ctx.author.mention) + "\n```"
             # message = f"{ctx.author.mention}, у вас есть такие данные по никам и кол-ву оставшихся использований:\n```"
             for k, v in user_players_data.items():
                 message += f"{k}: {str(v) if v >= 0 else get_translation('not seen on server')}\n"
                 # message += f"{k}: {str(v) if v >= 0 else 'не замечен на сервере'}\n"
-        elif for_who == "all":
+        elif for_who == "everyone":
             if not ctx.author.guild_permissions.administrator:
                 raise commands.MissingPermissions(['administrator'])
 
@@ -294,7 +299,7 @@ class MinecraftCommands(commands.Cog):
                         users_to_nicks[user_id].remove(p.player_minecraft_nick)
                         users_to_nicks[user_id].append({p.player_minecraft_nick: p.number_of_times_to_op})
 
-            message = get_translation("{0}, bot has these data on your nick and number of remaining uses:") \
+            message = get_translation("{0}, bot has these data on your nicks and number of remaining uses:") \
                           .format(ctx.author.mention) + "\n```"
             # message = f"{ctx.author.mention}, у бота есть такие данные по никам и кол-ву оставшихся использований:\n```"
             for k, v in users_to_nicks.items():
@@ -303,7 +308,7 @@ class MinecraftCommands(commands.Cog):
                 member = await ctx.guild.fetch_member(k)
                 message += f"{member.display_name}#{member.discriminator}:\n"
                 for item in v:
-                    if show == "missing" and isinstance(item, str):
+                    if show == "all" and isinstance(item, str):
                         message += f"\t{item}: " + get_translation("not seen on server") + "\n"
                         # message += f"\t{item}: не замечен на сервере\n"
                     elif isinstance(item, dict):
@@ -550,9 +555,9 @@ class MinecraftCommands(commands.Cog):
                             Config.get_settings().bot_settings.role in (e.name for e in payload.member.roles):
                         if payload.emoji.name == self._emoji_symbols.get("start"):
                             await bot_start(channel, self._bot, is_reaction=True)
-                        elif payload.emoji.name == self._emoji_symbols.get("stop"):
+                        elif payload.emoji.name == self._emoji_symbols.get("stop 10"):
                             await bot_stop(channel, command="10", bot=self._bot, is_reaction=True)
-                        elif payload.emoji.name == self._emoji_symbols.get("restart"):
+                        elif payload.emoji.name == self._emoji_symbols.get("restart 10"):
                             await bot_restart(channel, command="10", bot=self._bot, is_reaction=True)
                     else:
                         await send_error(channel, self._bot,

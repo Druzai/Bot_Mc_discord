@@ -64,7 +64,7 @@ class Rss_feed:
 
 
 @dataclass
-class Awating_times:
+class Timeouts:
     await_seconds_when_connecting_via_rcon: float = -1.0
     await_seconds_in_check_ups: int = -1
     await_seconds_when_opped: int = -1
@@ -112,7 +112,7 @@ class Bot_settings:
 
     cross_platform_chat: Cross_platform_chat = Cross_platform_chat()
     rss_feed: Rss_feed = Rss_feed()
-    awating_times: Awating_times = Awating_times()
+    timeouts: Timeouts = Timeouts()
 
     def __post_init__(self):
         if self.token_encrypted:
@@ -224,8 +224,8 @@ class Config:
         return cls._settings_instance.bot_settings.rss_feed
 
     @classmethod
-    def get_awaiting_times_settings(cls) -> Awating_times:
-        return cls._settings_instance.bot_settings.awating_times
+    def get_awaiting_times_settings(cls) -> Timeouts:
+        return cls._settings_instance.bot_settings.timeouts
 
     @classmethod
     def get_selected_server_from_list(cls) -> Server_settings:
@@ -310,7 +310,7 @@ class Config:
             if not BotVars.rcon_pass:
                 BotVars.rcon_pass = "".join(sec_choice(ascii_letters + digits) for _ in range(20))
                 changed_parameters.append(f"rcon.password={BotVars.rcon_pass}\n" +
-                                          get_translation("Reminder: for better security "
+                                          get_translation("Reminder: For better security "
                                                           "you have to change this password for a more secure one."))
             with open(filepath, "r", encoding="utf8") as f:
                 properties_file = f.readlines()
@@ -332,7 +332,7 @@ class Config:
                 properties_file.append(f"rcon.password={BotVars.rcon_pass}\n")
             with open(filepath, "w", encoding="utf8") as f:
                 f.writelines(properties_file)
-            print("\n" + get_translation("Note: in '{0}' bot set these parameters:").format(
+            print("\n" + get_translation("Note: In '{0}' bot set these parameters:").format(
                 filepath.as_posix()) + "\n" +
                   "\n".join(changed_parameters) + "\n")
 
@@ -405,7 +405,7 @@ class Config:
         cls._setup_vk_credentials()
         cls._setup_cross_platform_chat()
         cls._setup_rss_feed()
-        cls._setup_awaiting_times()
+        cls._setup_timeouts()
         cls._setup_servers()
 
         if cls._need_to_rewrite:
@@ -478,9 +478,9 @@ class Config:
         if cls._settings_instance.bot_settings.role is not None:
             command_role = cls._settings_instance.bot_settings.role
             if command_role:
-                print(get_translation("Current role for some commands is '{0}'.").format(command_role))
+                print(get_translation("Role for specific commands is '{0}'.").format(command_role))
             else:
-                print(get_translation("Current role doesn't stated."))
+                print(get_translation("Role for specific commands doesn't stated."))
         else:
             cls._need_to_rewrite = True
             if cls._ask_for_data(
@@ -517,7 +517,7 @@ class Config:
                 else:
                     print(get_translation("Vk account data not received.\n"
                                           "I'll never ask you about it again.\n"
-                                          "Note: command {0}say won't work.").format(
+                                          "Note: Command {0}say won't work.").format(
                         cls._settings_instance.bot_settings.prefix))
             else:
                 print(get_translation("Vk account data received. Why man?"))
@@ -527,7 +527,7 @@ class Config:
                 print(get_translation("Vk account data received."))
             else:
                 print(get_translation("Vk account data not received.\n"
-                                      "Note: command {0}say won't work.").format(
+                                      "Note: Command {0}say won't work.").format(
                     cls._settings_instance.bot_settings.prefix))
 
     @classmethod
@@ -579,55 +579,56 @@ class Config:
                     get_translation("Set default number of times to op for every player (int):") + "\n")
 
     @classmethod
-    def _setup_awaiting_times(cls):
-        # Await time check-ups func
-        if cls._settings_instance.bot_settings.awating_times.await_seconds_in_check_ups < 1:
+    def _setup_timeouts(cls):
+        # Timeout between check-ups func
+        if cls._settings_instance.bot_settings.timeouts.await_seconds_in_check_ups < 1:
             cls._need_to_rewrite = True
-            print(get_translation("Await time between check-ups set below 1. Change this option"))
+            print(get_translation("Timeout between check-ups 'Server on/off' set below 1. Change this option."))
             print(get_translation("Note: If your machine has processor with frequency 2-2.5 GHz, "
-                                  "you have to set this option at least to '2' seconds or higher for the bot to work properly."))
-            cls._settings_instance.bot_settings.awating_times.await_seconds_in_check_ups = \
+                                  "you have to set this option at least to '2' seconds "
+                                  "or higher for the bot to work properly."))
+            cls._settings_instance.bot_settings.timeouts.await_seconds_in_check_ups = \
                 cls._ask_for_data(
-                    get_translation("Set await time between check-ups 'Server on/off' (in seconds, int): "),
+                    get_translation("Set timeout between check-ups 'Server on/off' (in seconds, int): "),
                     try_int=True, int_high_than=1)
-        print(get_translation("Await time check-ups set to {0} sec.")
-              .format(str(cls._settings_instance.bot_settings.awating_times.await_seconds_in_check_ups)))
+        print(get_translation("Timeout between check-ups 'Server on/off' set to {0} sec.")
+              .format(str(cls._settings_instance.bot_settings.timeouts.await_seconds_in_check_ups)))
 
-        # Await time op
-        if cls._settings_instance.bot_settings.awating_times.await_seconds_when_opped < 0:
+        # Timeout for op
+        if cls._settings_instance.bot_settings.timeouts.await_seconds_when_opped < 0:
             cls._need_to_rewrite = True
-            print(get_translation("Await time op set below zero. Change this option"))
-            cls._settings_instance.bot_settings.awating_times.await_seconds_when_opped = \
-                cls._ask_for_data(get_translation("Set await time for op (in seconds, int): "), try_int=True,
+            print(get_translation("Timeout for op set below 0. Change this option."))
+            cls._settings_instance.bot_settings.timeouts.await_seconds_when_opped = \
+                cls._ask_for_data(get_translation("Set timeout for op (in seconds, int): "), try_int=True,
                                   int_high_than=-1)
-        print(get_translation("Await time op set to {0} sec.")
-              .format(str(cls._settings_instance.bot_settings.awating_times.await_seconds_when_opped)))
-        if cls._settings_instance.bot_settings.awating_times.await_seconds_when_opped == 0:
+        print(get_translation("Timeout for op set to {0} sec.")
+              .format(str(cls._settings_instance.bot_settings.timeouts.await_seconds_when_opped)))
+        if cls._settings_instance.bot_settings.timeouts.await_seconds_when_opped == 0:
             print(get_translation("Limitation doesn't exist, padawan."))
 
-        # Await time to sleep while bot pinging server for info
-        if cls._settings_instance.bot_settings.awating_times.await_seconds_when_connecting_via_rcon < 0.05:
+        # Timeout to sleep while bot pinging server for info
+        if cls._settings_instance.bot_settings.timeouts.await_seconds_when_connecting_via_rcon < 0.05:
             cls._need_to_rewrite = True
-            print(get_translation("Await time while bot pinging server for info set below zero. Change this option"))
-            cls._settings_instance.bot_settings.awating_times.await_seconds_when_connecting_via_rcon = \
+            print(get_translation("Timeout while bot pinging server for info set below 0. Change this option."))
+            cls._settings_instance.bot_settings.timeouts.await_seconds_when_connecting_via_rcon = \
                 cls._ask_for_data(get_translation(
-                    "Set await time while bot pinging server for info (in seconds, float): "),
+                    "Set timeout while bot pinging server for info (in seconds, float): "),
                     try_float=True, float_hight_than=0.05)
-        print(get_translation("Await time while bot pinging server for info set to {0} sec.")
-              .format(str(cls._settings_instance.bot_settings.awating_times.await_seconds_when_connecting_via_rcon)))
-        if cls._settings_instance.bot_settings.awating_times.await_seconds_when_connecting_via_rcon == 0:
+        print(get_translation("Timeout while bot pinging server for info set to {0} sec.")
+              .format(str(cls._settings_instance.bot_settings.timeouts.await_seconds_when_connecting_via_rcon)))
+        if cls._settings_instance.bot_settings.timeouts.await_seconds_when_connecting_via_rcon == 0:
             print(get_translation("I'm fast as f*ck, boi!"))
 
-        # Await time before_message_deletion
-        if cls._settings_instance.bot_settings.awating_times.await_seconds_before_message_deletion < 1:
+        # Timeout before message deletion
+        if cls._settings_instance.bot_settings.timeouts.await_seconds_before_message_deletion < 1:
             cls._need_to_rewrite = True
             print(get_translation(
-                "Await time to delete message set below one. Change this option"))
-            cls._settings_instance.bot_settings.awating_times.await_seconds_before_message_deletion = \
-                cls._ask_for_data(get_translation("Set await time to delete message (in seconds, int): "), try_int=True,
+                "Timeout before message deletion is set below 1. Change this option."))
+            cls._settings_instance.bot_settings.timeouts.await_seconds_before_message_deletion = \
+                cls._ask_for_data(get_translation("Set timeout before message deletion (in seconds, int): "), try_int=True,
                                   int_high_than=0)
-        print(get_translation("Await time to delete message set to {0} sec.")
-              .format(str(cls._settings_instance.bot_settings.awating_times.await_seconds_before_message_deletion)))
+        print(get_translation("Timeout before message deletion is set to {0} sec.")
+              .format(str(cls._settings_instance.bot_settings.timeouts.await_seconds_before_message_deletion)))
 
     @classmethod
     def _setup_servers(cls):
@@ -719,16 +720,16 @@ class Config:
         if sys.platform == "linux" or sys.platform == "linux2":
             file_extension = ".sh"
             print(get_translation("Bot detected your operating system is Linux.\n"
-                                  "Bot will search for ***.sh file.\n"
+                                  "Bot will search for '***.sh' file.\n"
                                   "You need to enter file name {0}without{1} file extension!").format(BOLD, END))
         elif sys.platform == "win32":
             file_extension = ".bat"
             print(get_translation("Bot detected your operating system is Windows.\n"
-                                  "Bot will search for ***.bat file.\n"
+                                  "Bot will search for '***.bat' file.\n"
                                   "You need to enter file name {0}without{1} file extension!").format(BOLD, END))
         else:
             print(get_translation("Bot couldn't detect your operating system.\n"
-                                  "You need to enter file name {0}without{1} file extension!").format(BOLD, END))
+                                  "You need to enter file name {0}with{1} file extension!").format(BOLD, END))
         while True:
             start_file_name = cls._ask_for_data(get_translation("Enter server start file name: ")) + \
                               (file_extension if file_extension is not None else '')
@@ -776,7 +777,7 @@ class Config:
                 if cls._settings_instance.bot_settings.cross_platform_chat.number_of_lines_to_check_in_console_log < 1:
                     print(get_translation("Watcher's number of lines to check in server log doesn't set."))
                     cls._settings_instance.bot_settings.cross_platform_chat.number_of_lines_to_check_in_console_log = \
-                        cls._ask_for_data(get_translation("Set number of lines to check:"), try_int=True,
+                        cls._ask_for_data(get_translation("Set number of lines to check: "), try_int=True,
                                           int_high_than=0)
             else:
                 cls._settings_instance.bot_settings.cross_platform_chat.enable_cross_platform_chat = False

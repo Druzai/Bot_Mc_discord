@@ -306,7 +306,7 @@ async def server_checkups(bot, always=True):
                                                                           "Starting up server again!").format(
                                                datetime.now().strftime("%d/%m/%y, %H:%M:%S"))),
                                            is_reaction=True)
-                            await start_server(ctx=channel, bot=bot, shut_up=True)
+                            await start_server(ctx=channel, bot=bot, shut_up=True, is_reaction=True)
                             sent = True
                             break
         if Config.get_awaiting_times_settings().await_seconds_in_check_ups > 0 and always:
@@ -467,7 +467,8 @@ async def send_help_of_command(ctx, command):
     str_help, params = parse_params_for_help(command.clean_params, str_help, True)
 
     str_help += "\n\n" + get_translation("Description") + ":\n"
-    str_help += get_translation(f'help_{"_".join(str(command).split())}') + "\n\n"
+    str_help += get_translation(f'help_{"_".join(str(command).split())}') \
+                    .format(prefix=Config.get_settings().bot_settings.prefix) + "\n\n"
     if len(command.aliases):
         str_help += get_translation("Aliases") + ": " + ", ".join(command.aliases) + "\n\n"
 
@@ -478,7 +479,8 @@ async def send_help_of_command(ctx, command):
         str_help += get_translation("Parameters") + ":\n"
         for arg_name, arg_type in params.items():
             str_help += f"{arg_name}: {arg_type}\n" + \
-                        get_translation(f'help_{"_".join(str(command).split())}_{arg_name}') + "\n\n"
+                        get_translation(f'help_{"_".join(str(command).split())}_{arg_name}')\
+                            .format(prefix=Config.get_settings().bot_settings.prefix) + "\n\n"
     await ctx.send(add_quotes(f"\n{str_help}"))
 
 
@@ -606,7 +608,7 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
                        get_translation("this chat can't work! Cross-platform chat disabled!"), True)
     elif not BotVars.is_server_on:
         await send_msg(message.channel, f"{author_mention}\n" +
-                       add_quotes(get_translation("server offline!").capitalize()), True)
+                       add_quotes(get_translation("server offline").capitalize() + "!"), True)
     elif BotVars.is_restarting:
         await send_msg(message.channel, f"{author_mention}\n" +
                        add_quotes(get_translation("server is restarting!").capitalize()), True)

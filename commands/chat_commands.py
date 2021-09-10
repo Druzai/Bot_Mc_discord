@@ -36,7 +36,7 @@ class ChatCommands(commands.Cog):
         print("------")
         await self._bot.change_presence(activity=Activity(type=ActivityType.watching, name="nsfw"))
         print(get_translation("Bot is ready!"))
-        print(get_translation("Starting server check-ups"))
+        print(get_translation("Starting minecraft server check-ups"))
         BotVars.server_checkups_task = self._bot.loop.create_task(server_checkups(self._bot))
 
     """
@@ -99,7 +99,7 @@ class ChatCommands(commands.Cog):
         if len(set_language) > 0:
             if set_locale(set_language):
                 await ctx.send(add_quotes(get_translation("Bot doesn't have this language!\n"
-                                                          "Check list pf available languages via {0}language")
+                                                          "Check list of available languages via {0}language")
                                           .format(Config.get_settings().bot_settings.prefix)))
             else:
                 Config.get_settings().bot_settings.language = set_language.lower()
@@ -224,7 +224,7 @@ class ChatCommands(commands.Cog):
                               value=add_quotes("\n" + get_translation(f"help_brief_{c.name}")), inline=False)
             emb.set_footer(text=get_translation("Values in [square brackets] are optional.\n"
                                                 "Values in <angle brackets> have to be provided by you.\n"
-                                                "The | sign means one or the other.\n"  # Add subcommands
+                                                "The | sign means one or the other.\n"
                                                 "Use {prefix}help command for more info.\n"
                                                 "Or {prefix}command {arg_list} for short.")
                            .format(prefix=Config.get_settings().bot_settings.prefix,
