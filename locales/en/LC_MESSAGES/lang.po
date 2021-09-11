@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
 "POT-Creation-Date: 2021-09-11 01:04+0300\n"
-"PO-Revision-Date: 2021-09-11 13:25+0300\n"
+"PO-Revision-Date: 2021-09-11 14:04+0300\n"
 "Last-Translator: Druzai <astyn37@gmail.com>\n"
 "Language-Team: \n"
 "Language: en\n"
@@ -112,13 +112,11 @@ msgstr "Returns list of bot's available minecraft servers"
 
 #: ..\_frozen_translations.py:20
 msgid "help_brief_menu"
-msgstr "Creates menu-panel t(^ᴗ^t)"
+msgstr "Creates a server management menu t(^ᴗ^t)"
 
 #: ..\_frozen_translations.py:21
 msgid "help_menu"
-msgstr ""
-"Creates menu-panel (embed message) for easy management for frequently used "
-"commands"
+msgstr "Creates a server management menu for frequently used commands"
 
 #: ..\_frozen_translations.py:22
 msgid "help_brief_list"
@@ -139,7 +137,7 @@ msgstr "Sends a funny picture from Vk"
 
 #: ..\_frozen_translations.py:26
 msgid "help_brief_help"
-msgstr "Help of help (͡° ͜ʖ ͡°)"
+msgstr "Shows help of command/subcommand (͡° ͜ʖ ͡°)"
 
 #: ..\_frozen_translations.py:27
 msgid "help_help"

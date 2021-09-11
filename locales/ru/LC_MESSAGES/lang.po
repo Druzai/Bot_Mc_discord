@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
 "POT-Creation-Date: 2021-09-11 01:04+0300\n"
-"PO-Revision-Date: 2021-09-11 13:25+0300\n"
+"PO-Revision-Date: 2021-09-11 14:04+0300\n"
 "Last-Translator: Druzai <astyn37@gmail.com>\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -114,12 +114,11 @@ msgstr "Возвращает список доступных майнкрафт 
 
 #: ..\_frozen_translations.py:20
 msgid "help_brief_menu"
-msgstr "Создаёт меню-пульт t(^ᴗ^t)"
+msgstr "Создаёт меню управления сервером t(^ᴗ^t)"
 
 #: ..\_frozen_translations.py:21
 msgid "help_menu"
-msgstr ""
-"Создаёт меню-пульт для лёгкого управления часто используемыми командами"
+msgstr "Создаёт меню управления сервером для часто используемых командами"
 
 #: ..\_frozen_translations.py:22
 msgid "help_brief_list"
@@ -139,7 +138,7 @@ msgstr "Отправляет смешную картинку из вк"
 
 #: ..\_frozen_translations.py:26
 msgid "help_brief_help"
-msgstr "Справка справки (͡° ͜ʖ ͡°)"
+msgstr "Показывает справку по команде/подкоманде (͡° ͜ʖ ͡°)"
 
 #: ..\_frozen_translations.py:27
 msgid "help_help"
