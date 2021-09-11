@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
 "POT-Creation-Date: 2021-09-11 01:04+0300\n"
-"PO-Revision-Date: 2021-09-11 01:05+0300\n"
+"PO-Revision-Date: 2021-09-11 13:25+0300\n"
 "Last-Translator: Druzai <astyn37@gmail.com>\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -90,7 +90,7 @@ msgstr "Перезагружает whitelist"
 
 #: ..\_frozen_translations.py:14
 msgid "help_brief_servers"
-msgstr "Управление майнкрафт серверами бота"
+msgstr "Управление майнкрафт серверами бота (͠◉_◉᷅ )"
 
 #: ..\_frozen_translations.py:15
 msgid "help_servers"
@@ -114,7 +114,7 @@ msgstr "Возвращает список доступных майнкрафт 
 
 #: ..\_frozen_translations.py:20
 msgid "help_brief_menu"
-msgstr "Создаёт меню-пульт"
+msgstr "Создаёт меню-пульт t(^ᴗ^t)"
 
 #: ..\_frozen_translations.py:21
 msgid "help_menu"
@@ -131,7 +131,7 @@ msgstr "Возвращает количество игроков на серве
 
 #: ..\_frozen_translations.py:24
 msgid "help_brief_say"
-msgstr "Отправляет смешную (нет) картинку"
+msgstr "Отправляет смешную (нет (͡❛ ͜ʖ ͡❛)┌∩┐) картинку"
 
 #: ..\_frozen_translations.py:25
 msgid "help_say"
@@ -139,7 +139,7 @@ msgstr "Отправляет смешную картинку из вк"
 
 #: ..\_frozen_translations.py:26
 msgid "help_brief_help"
-msgstr "Справка справки. Узнай насколько глубока кроличья нора ( ͡° ͜ʖ ͡°)"
+msgstr "Справка справки (͡° ͜ʖ ͡°)"
 
 #: ..\_frozen_translations.py:27
 msgid "help_help"
@@ -250,7 +250,7 @@ msgstr "Время ожидания перед началом перезапус
 
 #: ..\_frozen_translations.py:48
 msgid "help_brief_op"
-msgstr "Даёт игроку оператора"
+msgstr "Даёт игроку оператора (͠≖ ͜ʖ͠≖)👌"
 
 #: ..\_frozen_translations.py:49
 msgid "help_op"
@@ -295,7 +295,7 @@ msgstr "Упоминание канала, типа '#канал' или id ка
 
 #: ..\_frozen_translations.py:57
 msgid "help_brief_clear"
-msgstr "Удаляет сообщения (ಠ ͜ʖಠ) ︻╦╤─ ֎"
+msgstr "Удаляет сообщения (ಠ ͜ʖಠ)︻╦╤─  ֎"
 
 #: ..\_frozen_translations.py:58
 msgid "help_clear"

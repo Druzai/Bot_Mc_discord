@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
 "POT-Creation-Date: 2021-09-11 01:04+0300\n"
-"PO-Revision-Date: 2021-09-11 01:05+0300\n"
+"PO-Revision-Date: 2021-09-11 13:25+0300\n"
 "Last-Translator: Druzai <astyn37@gmail.com>\n"
 "Language-Team: \n"
 "Language: en\n"
@@ -88,7 +88,7 @@ msgstr "Reloads whitelist"
 
 #: ..\_frozen_translations.py:14
 msgid "help_brief_servers"
-msgstr "Managing of bot's minecraft servers"
+msgstr "Managing of bot's minecraft servers (͠◉_◉᷅ )"
 
 #: ..\_frozen_translations.py:15
 msgid "help_servers"
@@ -112,7 +112,7 @@ msgstr "Returns list of bot's available minecraft servers"
 
 #: ..\_frozen_translations.py:20
 msgid "help_brief_menu"
-msgstr "Creates menu-panel"
+msgstr "Creates menu-panel t(^ᴗ^t)"
 
 #: ..\_frozen_translations.py:21
 msgid "help_menu"
@@ -131,7 +131,7 @@ msgstr ""
 
 #: ..\_frozen_translations.py:24
 msgid "help_brief_say"
-msgstr "Sends a funny (no) pic"
+msgstr "Sends a funny (no (͡❛ ͜ʖ ͡❛)┌∩┐) pic"
 
 #: ..\_frozen_translations.py:25
 msgid "help_say"
@@ -139,7 +139,7 @@ msgstr "Sends a funny picture from Vk"
 
 #: ..\_frozen_translations.py:26
 msgid "help_brief_help"
-msgstr "Help of help. Find out how deep the rabbit hole is ( ͡° ͜ʖ ͡°)"
+msgstr "Help of help (͡° ͜ʖ ͡°)"
 
 #: ..\_frozen_translations.py:27
 msgid "help_help"
@@ -246,7 +246,7 @@ msgstr "Timeout before restarting, in seconds"
 
 #: ..\_frozen_translations.py:48
 msgid "help_brief_op"
-msgstr "Gives player an operator"
+msgstr "Gives player an operator (͠≖ ͜ʖ͠≖)👌"
 
 #: ..\_frozen_translations.py:49
 msgid "help_op"
@@ -291,7 +291,7 @@ msgstr "Channel mention, like '#channel' or channel id if you're developer"
 
 #: ..\_frozen_translations.py:57
 msgid "help_brief_clear"
-msgstr "Deletes messages ( ಠ ͜ʖಠ) ︻╦╤─ ֎"
+msgstr "Deletes messages (ಠ ͜ʖಠ)︻╦╤─  ֎"
 
 #: ..\_frozen_translations.py:58
 msgid "help_clear"
