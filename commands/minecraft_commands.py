@@ -43,7 +43,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def stop(self, ctx, timeout=0):
+    async def stop(self, ctx, timeout: int = 0):
         """Stop server"""
         await bot_stop(ctx, timeout, self._bot)
 
@@ -51,7 +51,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def restart(self, ctx, timeout=0):
+    async def restart(self, ctx, timeout: int = 0):
         """Restart server"""
         await bot_restart(ctx, timeout, self._bot)
 

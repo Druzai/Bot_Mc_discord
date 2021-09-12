@@ -93,6 +93,7 @@ class Bot_settings:
     role: Optional[str] = None
     ip_address: str = ""
     local_address: str = ""
+    deletion_messages_limit_without_poll: int = -1
     menu_id: Optional[int] = None
     forceload: bool = False
     default_number_of_times_to_op: int = -1
@@ -400,6 +401,7 @@ class Config:
         cls._setup_bot_statuses()
         cls._setup_ip_address()
         cls._setup_local_address()
+        cls._setup_clear_delete_limit_without_poll()
         cls._setup_menu_id()
         cls._setup_default_number_of_times_to_op()
         cls._setup_vk_credentials()
@@ -547,6 +549,15 @@ class Config:
                 cls._ask_for_data(get_translation("Enter server's local address (default - 'localhost'): "))
 
     @classmethod
+    def _setup_clear_delete_limit_without_poll(cls):
+        if cls._settings_instance.bot_settings.deletion_messages_limit_without_poll < 0:
+            cls._need_to_rewrite = True
+            cls._settings_instance.bot_settings.deletion_messages_limit_without_poll = \
+                cls._ask_for_data(get_translation("Set limit for deletion messages "
+                                                  "without poll (0 - for disable poll) (int): "),
+                                  try_int=True, int_high_than=-1)
+
+    @classmethod
     def _setup_menu_id(cls):
         if cls._settings_instance.bot_settings.menu_id is None:
             if cls._ask_for_data(
@@ -599,8 +610,8 @@ class Config:
             cls._need_to_rewrite = True
             print(get_translation("Timeout for op set below 0. Change this option."))
             cls._settings_instance.bot_settings.timeouts.await_seconds_when_opped = \
-                cls._ask_for_data(get_translation("Set timeout for op (in seconds, int): "), try_int=True,
-                                  int_high_than=-1)
+                cls._ask_for_data(get_translation("Set timeout for op (0 - for unlimited timeout) (in seconds, int): "),
+                                  try_int=True, int_high_than=-1)
         print(get_translation("Timeout for op set to {0} sec.")
               .format(str(cls._settings_instance.bot_settings.timeouts.await_seconds_when_opped)))
         if cls._settings_instance.bot_settings.timeouts.await_seconds_when_opped == 0:
@@ -625,8 +636,8 @@ class Config:
             print(get_translation(
                 "Timeout before message deletion is set below 1. Change this option."))
             cls._settings_instance.bot_settings.timeouts.await_seconds_before_message_deletion = \
-                cls._ask_for_data(get_translation("Set timeout before message deletion (in seconds, int): "), try_int=True,
-                                  int_high_than=0)
+                cls._ask_for_data(get_translation("Set timeout before message deletion (in seconds, int): "),
+                                  try_int=True, int_high_than=0)
         print(get_translation("Timeout before message deletion is set to {0} sec.")
               .format(str(cls._settings_instance.bot_settings.timeouts.await_seconds_before_message_deletion)))
 

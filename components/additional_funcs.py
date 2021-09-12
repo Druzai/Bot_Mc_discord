@@ -21,6 +21,7 @@ from mcipc.rcon import Client as Client_r
 from psutil import process_iter, NoSuchProcess
 from requests import post as req_post
 
+from commands.poll import Poll
 from components.localization import get_translation
 from components.watcher_handle import create_watcher
 from config.init_config import Config, BotVars
@@ -421,6 +422,60 @@ async def bot_restart(ctx, command, bot, is_reaction=False):
         await send_status(ctx, is_reaction=is_reaction)
 
 
+async def bot_clear(ctx, poll: Poll, subcommand: str = None, count: int = None):
+    message_created = None
+    check_condition = None
+    mentions = set()
+    if len(ctx.message.role_mentions):
+        mentions.update(ctx.message.mentions)
+    if len(ctx.message.role_mentions):
+        for role in ctx.message.role_mentions:
+            mentions.update(role.members)
+    if len(mentions):
+        check_condition = lambda m: m.author in mentions
+    elif len(mentions) == 0 and len(ctx.message.channel_mentions):
+        await ctx.send(get_translation("You should mention ONLY members or roles of this server!"))
+        return
+    delete_limit = Config.get_settings().bot_settings.deletion_messages_limit_without_poll + 1
+
+    if subcommand is None:
+        if count > 0:
+            if delete_limit == 0 or len(await ctx.channel.history(limit=delete_limit + 1).flatten()) <= delete_limit:
+                await ctx.channel.purge(limit=1, bulk=False)
+                await ctx.channel.purge(limit=count, check=check_condition, bulk=False)
+                return
+        elif count < 0:
+            message_created = (await ctx.channel.history(limit=-count, oldest_first=True).flatten())[-1]
+            if delete_limit == 0 or len(await ctx.channel.history(limit=delete_limit + 1, after=message_created,
+                                                                  oldest_first=True).flatten()) <= delete_limit:
+                await ctx.channel.purge(limit=None, check=check_condition, after=message_created, bulk=False)
+                return
+        else:
+            await send_msg(ctx, get_translation("Nothing's done!"), True)
+            return
+    elif subcommand == "all":
+        if delete_limit == 0 or len(await ctx.channel.history(limit=delete_limit + 1).flatten()) <= delete_limit:
+            await ctx.channel.purge(limit=1, bulk=False)
+            await ctx.channel.purge(limit=None, check=check_condition, bulk=False)
+            return
+    elif subcommand == "reply":
+        message_created = ctx.message.reference.resolved
+        if delete_limit == 0 or len(await ctx.channel.history(limit=delete_limit + 1, after=message_created,
+                                                              oldest_first=True).flatten()) <= delete_limit:
+            await ctx.channel.purge(limit=None, check=check_condition, after=message_created, bulk=False)
+            return
+    if await poll.timer(ctx, 5):
+        if await poll.run(ctx=ctx,
+                          message=get_translation("this man {0} trying to delete some history"
+                                                  " of this channel. Will you let that happen?")
+                                  .format(ctx.author.mention),
+                          remove_logs_after=5):
+            if count < 0 or subcommand == "reply":
+                await ctx.channel.purge(limit=None, check=check_condition, after=message_created, bulk=False)
+            else:
+                await ctx.channel.purge(limit=count + 1, check=check_condition, bulk=False)
+
+
 def parse_params_for_help(command_params: dict, string_to_add: str, create_params_dict=False) -> Tuple[str, dict]:
     params = {}
     for arg_name, arg_data in command_params.items():
@@ -464,7 +519,9 @@ async def send_help_of_command(ctx, command):
     subcommands_names, subcommands = parse_subcommands_for_help(command, True)
     str_help = f"{Config.get_settings().bot_settings.prefix}{command}"
     str_help += " " + " | ".join(subcommands_names) if len(subcommands_names) else ""
-    str_help, params = parse_params_for_help(command.clean_params, str_help, True)
+    str_params, params = parse_params_for_help(command.clean_params, "", True)
+    if len(str_params):
+        str_help += " |" + str_params if len(subcommands_names) else str_params
 
     str_help += "\n\n" + get_translation("Description") + ":\n"
     str_help += get_translation(f'help_{"_".join(str(command).split())}') \
@@ -479,7 +536,7 @@ async def send_help_of_command(ctx, command):
         str_help += get_translation("Parameters") + ":\n"
         for arg_name, arg_type in params.items():
             str_help += f"{arg_name}: {arg_type}\n" + \
-                        get_translation(f'help_{"_".join(str(command).split())}_{arg_name}')\
+                        get_translation(f'help_{"_".join(str(command).split())}_{arg_name}') \
                             .format(prefix=Config.get_settings().bot_settings.prefix) + "\n\n"
     await ctx.send(add_quotes(f"\n{str_help}"))
 
@@ -659,7 +716,8 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
                                          f"@{message.author.display_name} -> @{nick if nick != '@a' else 'everyone'}",
                                          cl_r)
         else:
-            await send_msg(message.channel, f"{author_mention}, " + get_translation("No players on server!"), True)
+            await send_msg(message.channel, f"{author_mention}, " +
+                           get_translation("No players on server!").lower(), True)
 
     if delete_user_message and need_to_delete_on_error:
         await delete_after_by_msg_id(message, message.id)

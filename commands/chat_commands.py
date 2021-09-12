@@ -9,7 +9,7 @@ from vk_api import VkApi
 
 from commands.poll import Poll
 from components import decorators
-from components.additional_funcs import handle_message_for_chat, server_checkups, send_error, send_msg, add_quotes, \
+from components.additional_funcs import handle_message_for_chat, server_checkups, send_error, bot_clear, add_quotes, \
     parse_params_for_help, send_help_of_command, parse_subcommands_for_help, find_subcommand
 from components.localization import get_translation, get_locales, set_locale
 from config.init_config import BotVars, Config
@@ -20,6 +20,10 @@ def channel_mention(arg: str):
         return int(arg)
     except ValueError:
         return arg
+
+
+def discord_mentions(*args: str):
+    return args
 
 
 class ChatCommands(commands.Cog):
@@ -94,7 +98,7 @@ class ChatCommands(commands.Cog):
 
     @commands.command(pass_context=True, aliases=["lang"])
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    async def language(self, ctx, set_language=""):
+    async def language(self, ctx, set_language: str = ""):
         """Get/Select language"""
         if len(set_language) > 0:
             if set_locale(set_language):
@@ -240,39 +244,29 @@ class ChatCommands(commands.Cog):
                                    arg_list=str(Config.get_settings().bot_settings.help_arguments)))
             await ctx.send(embed=emb)
 
-    @commands.command(pass_context=True, aliases=["cls"])
+    @commands.group(pass_context=True, aliases=["cls"], invoke_without_command=True)
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, mention_everyone=True,
                                   embed_links=True, read_message_history=True, view_channel=True)
     @commands.guild_only()
-    async def clear(self, ctx, count=1):  # TODO: add arg all to clear all msgs in channel
-        message_created_time = ""
-        try:
-            int(str(count))
-        except ValueError:
-            await ctx.send(get_translation("{0}, this `{1}` isn't a number!").format(ctx.author.mention, str(count)))
-            count = 0
-        if count > 0:
-            if len(await ctx.channel.history(limit=count).flatten()) < 51:
-                await ctx.channel.purge(limit=count + 1, bulk=False)
-                return
-        elif count < 0:
-            message_created_time = (await ctx.channel.history(limit=-count, oldest_first=True).flatten())[-1].created_at
-            if len(await ctx.channel.history(limit=51, after=message_created_time, oldest_first=True).flatten()) != 51:
-                await ctx.channel.purge(limit=None, after=message_created_time, bulk=False)
-                return
+    async def clear(self, ctx, count: int = 1, *mentions: discord_mentions):
+        await bot_clear(ctx, self._IndPoll, count=count)
+
+    @clear.command(pass_context=True, name="all")
+    @commands.bot_has_permissions(manage_messages=True, send_messages=True, mention_everyone=True,
+                                  embed_links=True, read_message_history=True, view_channel=True)
+    @commands.guild_only()
+    async def c_all(self, ctx, *mentions: discord_mentions):
+        await bot_clear(ctx, self._IndPoll, subcommand="all")
+
+    @clear.command(pass_context=True, name="reply")
+    @commands.bot_has_permissions(manage_messages=True, send_messages=True, mention_everyone=True,
+                                  embed_links=True, read_message_history=True, view_channel=True)
+    @commands.guild_only()
+    async def c_reply(self, ctx, *mentions: discord_mentions):
+        if ctx.message.reference is not None:
+            await bot_clear(ctx, self._IndPoll, subcommand="reply")
         else:
-            await send_msg(ctx, get_translation("Nothing's done!"), True)
-            return
-        if await self._IndPoll.timer(ctx, 5):
-            if await self._IndPoll.run(ctx=ctx,
-                                       message=get_translation("this man {0} trying to delete some history"
-                                                               " of this channel. Will you let that happen?")
-                                               .format(ctx.author.mention),
-                                       remove_logs_after=5):
-                if count < 0:
-                    await ctx.channel.purge(limit=None, after=message_created_time, bulk=False)
-                else:
-                    await ctx.channel.purge(limit=count + 1, bulk=False)
+            await ctx.send(get_translation("You didn't provide reply in your message!"))
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
