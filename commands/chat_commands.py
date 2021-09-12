@@ -181,8 +181,17 @@ class ChatCommands(commands.Cog):
         # Check if user asks help on each command or subcommand
         tokens = ctx.message.content.split()
         if len(tokens) > 1 and tokens[-1] in Config.get_settings().bot_settings.help_arguments:
-            mess_command = tokens[-2].strip(Config.get_settings().bot_settings.prefix)
-            if mess_command.lower() == ctx.command.name.lower() or mess_command.lower() in ctx.command.aliases:
+            command, *subcommands = tokens
+            command = command.strip(Config.get_settings().bot_settings.prefix)
+            subcommands.pop()
+            for c in self._bot.commands:
+                if command.lower() == c.name or command.lower() in c.aliases:
+                    if len(subcommands):
+                        command = find_subcommand(subcommands, c, -1)
+                    else:
+                        command = c
+                    break
+            if command == ctx.command:
                 await send_help_of_command(ctx, ctx.command)
             else:
                 await ctx.send(add_quotes(get_translation("Bot doesn't have such subcommand!")))
