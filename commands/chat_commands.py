@@ -113,6 +113,28 @@ class ChatCommands(commands.Cog):
                                       .format(", ".join([ln.capitalize() for ln in get_locales()]))))
 
     @commands.command(pass_context=True)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    async def prefix(self, ctx, *, new_prefix: str = ""):
+        if not new_prefix:
+            await ctx.send(add_quotes(get_translation("Current prefix - '{0}'.")
+                                      .format(Config.get_settings().bot_settings.prefix)))
+        else:
+            if Config.get_settings().bot_settings.role != "" and \
+                    Config.get_settings().bot_settings.role not in (e.name for e in ctx.author.roles):
+                await send_error(ctx, self._bot,
+                                 commands.MissingRole(Config.get_settings().bot_settings.role))
+                return
+
+            if len(new_prefix.split()) > 1:
+                await ctx.send(add_quotes(get_translation("Prefix can't have spaces!")))
+            else:
+                check = Config.get_settings().bot_settings.prefix == new_prefix
+                Config.get_settings().bot_settings.prefix = new_prefix
+                Config.save_config()
+                await ctx.send(add_quotes(get_translation("Changed prefix to '{0}'.").format(new_prefix) +
+                                          (" ( ͡° ͜ʖ ͡°)" if check else "")))
+
+    @commands.command(pass_context=True)
     @commands.bot_has_permissions(send_messages=True, embed_links=True, view_channel=True)
     async def say(self, ctx):
         """Петросян"""

@@ -18,7 +18,6 @@ from config.init_config import Config, BotVars
 #  Continuously rewrite code in classes
 #  Сделать отправку об выключении/перезагрузке через tellraw тоже
 #  https://github.com/MyTheValentinus/minecraftTellrawGenerator
-#  Мб добавить команду смены префикса команд...
 #  При обратном отсчёте использовать tellraw или title в stop_server
 #  Сделать список из гуи дискорда для %servs select и комманда для музыки из майнкрафта
 #  Мб добавить вывод игрок подкл, откл и причина
@@ -57,12 +56,15 @@ def create_pot_lines(bot: commands.Bot):
         exit(0)
 
 
+def get_prefix(bot, msg):
+    return commands.when_mentioned(bot, msg) + [Config.get_settings().bot_settings.prefix]
+
+
 def main():
     Config.read_config()
     intents = Intents.default()
     intents.members = True
-    bot = commands.Bot(command_prefix=commands.when_mentioned_or(Config.get_settings().bot_settings.prefix),
-                       intents=intents)
+    bot = commands.Bot(command_prefix=get_prefix, intents=intents)
     bot.remove_command('help')
     cog_list = [ChatCommands, MinecraftCommands, Poll]
     for i in cog_list:
