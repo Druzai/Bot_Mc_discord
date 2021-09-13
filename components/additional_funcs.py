@@ -14,7 +14,7 @@ from re import search, split, findall
 from sys import platform, argv
 from typing import Tuple, List
 
-from discord import Activity, ActivityType
+from discord import Activity, ActivityType, TextChannel
 from discord.ext import commands
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r
@@ -252,68 +252,68 @@ def kill_server():
     BotVars.server_start_time = None
 
 
-async def server_checkups(bot, always=True):
-    while True:
-        try:
-            with connect_query() as cl_q:
-                info = cl_q.full_stats
-            if info.num_players != 0:
-                to_save = False
-                for player in info.players:
-                    if player not in [i.player_minecraft_nick for i in Config.get_server_config().seen_players]:
-                        Config.add_to_seen_players_list(player)
-                        to_save = True
-                if to_save:
-                    Config.save_server_config()
-            if not BotVars.is_server_on:
-                BotVars.is_server_on = True
-            if (BotVars.watcher_of_log_file is None or not BotVars.watcher_of_log_file.is_running()) and \
-                    Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
-                    Config.get_cross_platform_chat_settings().channel_id and \
-                    Config.get_cross_platform_chat_settings().webhook_url:
-                if BotVars.watcher_of_log_file is None:
-                    create_watcher()
-                BotVars.watcher_of_log_file.start()
-            number_match = findall(r", \d+", bot.guilds[0].get_member(bot.user.id).activities[0].name)
-            if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 0 or info.num_players != 0 or \
-                    (len(number_match) > 0 and number_match[0].split(" ")[-1] != 0):
-                await bot.change_presence(activity=Activity(type=ActivityType.playing,
-                                                            name=Config.get_settings().bot_settings.gaming_status +
-                                                                 ", " + str(info.num_players) +
-                                                                 get_translation(" player(s) online")))
-        except BaseException:
-            if len(get_list_of_processes()) == 0:
-                if BotVars.is_server_on:
-                    BotVars.is_server_on = False
-                if BotVars.watcher_of_log_file is not None and BotVars.watcher_of_log_file.is_running():
-                    BotVars.watcher_of_log_file.stop()
-            if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 2:
-                await bot.change_presence(activity=Activity(type=ActivityType.listening,
-                                                            name=Config.get_settings().bot_settings.idle_status +
-                                                                 (" 🤔" if len(
-                                                                     get_list_of_processes()) != 0 else "")))
-            if always and Config.get_settings().bot_settings.forceload and not BotVars.is_stopping \
-                    and not BotVars.is_loading and not BotVars.is_restarting:
-                sent = False
-                for guild in bot.guilds:
-                    if sent:
-                        break
-                    for channel in guild.channels:
-                        with suppress(BaseException):
+async def server_checkups(bot: commands.Bot):
+    try:
+        with connect_query() as cl_q:
+            info = cl_q.full_stats
+        if info.num_players != 0:
+            to_save = False
+            for player in info.players:
+                if player not in [i.player_minecraft_nick for i in Config.get_server_config().seen_players]:
+                    Config.add_to_seen_players_list(player)
+                    to_save = True
+            if to_save:
+                Config.save_server_config()
+        if not BotVars.is_server_on:
+            BotVars.is_server_on = True
+        if (BotVars.watcher_of_log_file is None or not BotVars.watcher_of_log_file.is_running()) and \
+                Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
+                Config.get_cross_platform_chat_settings().channel_id and \
+                Config.get_cross_platform_chat_settings().webhook_url:
+            if BotVars.watcher_of_log_file is None:
+                create_watcher()
+            BotVars.watcher_of_log_file.start()
+        number_match = findall(r", \d+", bot.guilds[0].get_member(bot.user.id).activities[0].name)
+        if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 0 or info.num_players != 0 or \
+                (len(number_match) > 0 and number_match[0].split(" ")[-1] != 0):
+            await bot.change_presence(activity=Activity(type=ActivityType.playing,
+                                                        name=Config.get_settings().bot_settings.gaming_status +
+                                                             ", " + str(info.num_players) +
+                                                             get_translation(" player(s) online")))
+    except BaseException:
+        if len(get_list_of_processes()) == 0:
+            if BotVars.is_server_on:
+                BotVars.is_server_on = False
+            if BotVars.watcher_of_log_file is not None and BotVars.watcher_of_log_file.is_running():
+                BotVars.watcher_of_log_file.stop()
+        if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 2:
+            await bot.change_presence(activity=Activity(type=ActivityType.listening,
+                                                        name=Config.get_settings().bot_settings.idle_status +
+                                                             (" 🤔" if len(
+                                                                 get_list_of_processes()) != 0 else "")))
+        if Config.get_settings().bot_settings.forceload and not BotVars.is_stopping \
+                and not BotVars.is_loading and not BotVars.is_restarting:
+            sent = False
+            for guild in bot.guilds:
+                if sent:
+                    break
+                for channel in guild.channels:
+                    if not isinstance(channel, TextChannel):
+                        continue
+                    with suppress(BaseException):
+                        if Config.get_settings().bot_settings.menu_id is not None:
                             await channel.fetch_message(Config.get_settings().bot_settings.menu_id)
-                            await send_msg(ctx=channel,
-                                           msg=add_quotes(get_translation("Bot detected: Server\'s offline!\n"
-                                                                          "Time: {0}\n"
-                                                                          "Starting up server again!").format(
-                                               datetime.now().strftime("%d/%m/%y, %H:%M:%S"))),
-                                           is_reaction=True)
-                            await start_server(ctx=channel, bot=bot, shut_up=True, is_reaction=True)
-                            sent = True
-                            break
-        if Config.get_awaiting_times_settings().await_seconds_in_check_ups > 0 and always:
-            await asleep(Config.get_awaiting_times_settings().await_seconds_in_check_ups)
-        if not always:
-            break
+                        await send_msg(ctx=channel,
+                                       msg=add_quotes(get_translation("Bot detected: Server\'s offline!\n"
+                                                                      "Time: {0}\n"
+                                                                      "Starting up server again!").format(
+                                           datetime.now().strftime("%d/%m/%y, %H:%M:%S"))),
+                                       is_reaction=True)
+                        await start_server(ctx=channel, bot=bot, shut_up=True, is_reaction=True)
+                        sent = True
+                        break
+    if Config.get_awaiting_times_settings().await_seconds_in_check_ups > 0:
+        await asleep(Config.get_awaiting_times_settings().await_seconds_in_check_ups)
 
 
 async def bot_status(ctx, is_reaction=False):

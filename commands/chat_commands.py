@@ -9,10 +9,10 @@ from vk_api import VkApi
 
 from commands.poll import Poll
 from components import decorators
-from components.additional_funcs import handle_message_for_chat, server_checkups, send_error, bot_clear, add_quotes, \
+from components.additional_funcs import handle_message_for_chat, send_error, bot_clear, add_quotes, \
     parse_params_for_help, send_help_of_command, parse_subcommands_for_help, find_subcommand
 from components.localization import get_translation, get_locales, set_locale
-from config.init_config import BotVars, Config
+from config.init_config import Config
 
 
 def channel_mention(arg: str):
@@ -40,8 +40,6 @@ class ChatCommands(commands.Cog):
         print("------")
         await self._bot.change_presence(activity=Activity(type=ActivityType.watching, name="nsfw"))
         print(get_translation("Bot is ready!"))
-        print(get_translation("Starting minecraft server check-ups"))
-        BotVars.server_checkups_task = self._bot.loop.create_task(server_checkups(self._bot))
 
     """
     @commands.command(pass_context=True)

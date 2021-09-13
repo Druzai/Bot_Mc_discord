@@ -1,10 +1,10 @@
-from asyncio import sleep as asleep, CancelledError
+from asyncio import sleep as asleep
 from contextlib import suppress
 from datetime import datetime
 from random import randint
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 from components import decorators
 from components.additional_funcs import *
@@ -18,6 +18,7 @@ class MinecraftCommands(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self._bot: commands.Bot = bot
+        self.checkups_task.start()
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
@@ -485,6 +486,15 @@ class MinecraftCommands(commands.Cog):
         for emote in self._emoji_symbols.values():
             await add_reactions_to.add_reaction(emote)
 
+    @tasks.loop()
+    async def checkups_task(self):
+        await server_checkups(self._bot)
+
+    @checkups_task.before_loop
+    async def before_checkups(self):
+        await self._bot.wait_until_ready()
+        print(get_translation("Starting minecraft server check-ups"))
+
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
         if payload.message_id == Config.get_settings().bot_settings.menu_id and payload.member.id != self._bot.user.id:
@@ -498,11 +508,8 @@ class MinecraftCommands(commands.Cog):
                 elif payload.emoji.name == self._emoji_symbols.get("list"):
                     await bot_list(channel, self._bot, is_reaction=True)
                 elif payload.emoji.name == self._emoji_symbols.get("update"):
-                    if BotVars.server_checkups_task is not None:
-                        BotVars.server_checkups_task.cancel()
-                        with suppress(CancelledError):
-                            await BotVars.server_checkups_task  # Await for task cancellation
-                    BotVars.server_checkups_task = self._bot.loop.create_task(server_checkups(self._bot))
+                    if self.checkups_task.is_running():
+                        self.checkups_task.restart()
                     return
                 else:
                     if Config.get_settings().bot_settings.role == "" or \
