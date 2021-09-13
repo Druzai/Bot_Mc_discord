@@ -424,7 +424,6 @@ async def bot_restart(ctx, command, bot, is_reaction=False):
 
 async def bot_clear(ctx, poll: Poll, subcommand: str = None, count: int = None):
     message_created = None
-    check_condition = None
     mentions = set()
     if len(ctx.message.role_mentions):
         mentions.update(ctx.message.mentions)
@@ -432,15 +431,17 @@ async def bot_clear(ctx, poll: Poll, subcommand: str = None, count: int = None):
         for role in ctx.message.role_mentions:
             mentions.update(role.members)
     if len(mentions):
-        check_condition = lambda m: m.author in mentions
-    elif len(mentions) == 0 and len(ctx.message.channel_mentions):
+        check_condition = lambda m: m.author in mentions and m.id not in poll.get_polls_msg_ids()
+    elif len(mentions) == 0 and not len(ctx.message.channel_mentions):
+        check_condition = lambda m: m.id not in poll.get_polls_msg_ids()
+    else:
         await ctx.send(get_translation("You should mention ONLY members or roles of this server!"))
         return
     delete_limit = Config.get_settings().bot_settings.deletion_messages_limit_without_poll + 1
 
     if subcommand is None:
         if count > 0:
-            if delete_limit == 0 or len(await ctx.channel.history(limit=delete_limit + 1).flatten()) <= delete_limit:
+            if delete_limit == 0 or len(await ctx.channel.history(limit=count + 1).flatten()) <= delete_limit:
                 await ctx.channel.purge(limit=1, bulk=False)
                 await ctx.channel.purge(limit=count, check=check_condition, bulk=False)
                 return

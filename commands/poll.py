@@ -87,6 +87,9 @@ class Poll(commands.Cog):
                            .format((datetime.now() - self._await_date).seconds))
             return False
 
+    def get_polls_msg_ids(self):
+        return list(self._polls.keys())
+
     class States(Enum):
         NONE = auto()
         GRANTED = auto()
