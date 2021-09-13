@@ -174,9 +174,9 @@ class Server_config:
 
 class Config:
     _current_bot_path: str = path.dirname(sys.argv[0])
-    _config_name = "bot_config.yaml"
+    _config_name = "bot_config.yml"
     _settings_instance: Settings = Settings()
-    _server_config_name = "server_config.yaml"
+    _server_config_name = "server_config.yml"
     _server_config_instance: Server_config = Server_config()
     _op_log_name = "op.log"
     _need_to_rewrite = False
