@@ -181,11 +181,16 @@ async def stop_server(ctx, bot, how_many_sec=10, is_restart=False, is_reaction=F
                             how_many_sec += 1
                             w = 1
                 if not is_restart:
-                    cl_r.say(get_translation("Server\'s shutting down in {0} seconds").format(str(how_many_sec)))
+                    bot_message = get_translation("Server\'s shutting down in {0} seconds").format(str(how_many_sec))
                 else:
-                    cl_r.say(get_translation("Server\'s restarting in {0} seconds").format(str(how_many_sec)))
+                    bot_message = get_translation("Server\'s restarting in {0} seconds").format(str(how_many_sec))
+
+                cl_r.tellraw("@a", ["", {"text": "<"}, {"text": bot.user.display_name, "color": "dark_gray"},
+                                    {"text": "> " + bot_message}])
                 for i in range(how_many_sec, -1, -w):
-                    cl_r.say(get_translation("{0} sec to go").format(str(i)))
+                    cl_r.tellraw("@a", ["", {"text": "<"},
+                                        {"text": bot.user.display_name, "color": "dark_gray"},
+                                        {"text": "> " + get_translation("{0} sec to go").format(str(i))}])
                     await asleep(w)
             cl_r.run("stop")
     except BaseException:
@@ -711,7 +716,7 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
             if len(nicks) > 0:
                 with suppress(BaseException):
                     with connect_rcon() as cl_r:
-                        with times(500, 2500, 1500, cl_r):
+                        with times(0, 60, 20, cl_r):
                             for nick in nicks:
                                 announce(nick,
                                          f"@{message.author.display_name} -> @{nick if nick != '@a' else 'everyone'}",
@@ -911,12 +916,12 @@ def times(fade_in, duration, fade_out, rcon_client):
     rcon_client.run("title @a reset")
 
 
-def announce(player, message, rcon_client):
-    if get_server_version() >= 1.11:
+def announce(player, message, rcon_client, subtitle=False):
+    if get_server_version() >= 1.11 and not subtitle:
         rcon_client.run(f'title {player} actionbar ' + '{' + f'"text":"{message}"' + ',"bold":true,"color":"gold"}')
     else:
-        rcon_client.run(f'title {player} title ' + '{"text":" "}')
         rcon_client.run(f'title {player} subtitle ' + '{' + f'"text":"{message}"' + ',"color":"gold"}')
+        rcon_client.run(f'title {player} title ' + '{"text":""}')
     rcon_client.run(play_sound(player, "minecraft:entity.arrow.hit_player", "player", 1, 0.75))
 
 
