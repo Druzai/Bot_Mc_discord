@@ -43,7 +43,8 @@ class MinecraftCommands(commands.Cog):
         await bot_start(ctx, self._bot)
 
     @commands.command(pass_context=True)
-    @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
+    @commands.bot_has_permissions(manage_messages=True, send_messages=True, mention_everyone=True, add_reactions=True,
+                                  embed_links=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
     async def stop(self, ctx, timeout: int = 0):
@@ -51,7 +52,8 @@ class MinecraftCommands(commands.Cog):
         await bot_stop(ctx, timeout, self._bot, self._IndPoll)
 
     @commands.command(pass_context=True)
-    @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
+    @commands.bot_has_permissions(manage_messages=True, send_messages=True, mention_everyone=True, add_reactions=True,
+                                  embed_links=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
     async def restart(self, ctx, timeout: int = 0):

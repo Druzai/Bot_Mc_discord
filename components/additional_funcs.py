@@ -125,9 +125,10 @@ async def start_server(ctx, bot, shut_up=False, is_reaction=False):
             output_bot = get_translation("Loading: ") + ((str(percentage) + "%") if percentage < 101 else "100%...")
         else:
             output_bot = get_translation("{0}, elapsed time: ") \
-                             .format(Config.get_settings().bot_settings.idle_status) + (
-                             str(timedelta_secs // 60) + ":" + f"{(timedelta_secs % 60):02d}" if timedelta_secs // 60 != 0 else str(
-                                 timedelta_secs % 60) + " sec")
+                             .format(Config.get_settings().bot_settings.idle_status) + \
+                         (str(timedelta_secs // 60) + ":" +
+                          f"{(timedelta_secs % 60):02d}" if timedelta_secs // 60 != 0 else str(timedelta_secs % 60) +
+                                                                                           " sec")
         await bot.change_presence(activity=Activity(type=ActivityType.listening, name=output_bot))
         await asleep(Config.get_awaiting_times_settings().await_seconds_when_connecting_via_rcon)
         with suppress(BaseException):
@@ -402,7 +403,7 @@ async def bot_list(ctx, bot, is_reaction=False):
                                                                                       ", ".join(info.players))),
                            is_reaction)
     except BaseException:
-        _, author_mention = get_author_and_mention(ctx, bot, is_reaction)
+        author_mention = get_author_and_mention(ctx, bot, is_reaction)[1]
         await send_msg(ctx, f"{author_mention}, " + get_translation("server offline"), is_reaction)
 
 
@@ -676,7 +677,7 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
             or message.channel.id != int(Config.get_cross_platform_chat_settings().channel_id):
         return
 
-    _, author_mention = get_author_and_mention(message, bot, False)
+    author_mention = get_author_and_mention(message, bot, False)[1]
     delete_user_message = True
 
     if not Config.get_cross_platform_chat_settings().channel_id or \
@@ -714,12 +715,9 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
             if on_edit:
                 result_before = _handle_custom_emojis(before_message)
                 result_before = _handle_urls_and_attachments_in_message(result_before, before_message, True)
-                if get_server_version() >= 1.16:
-                    res_obj.append({"text": "*", "color": "gold",
-                                    "hoverEvent": {"action": "show_text", "contents": result_before.get("content")}})
-                else:
-                    res_obj.append({"text": "*", "color": "gold",
-                                    "hoverEvent": {"action": "show_text", "value": result_before.get("content")}})
+                content_name = "contents" if get_server_version() >= 1.16 else "value"
+                res_obj.append({"text": "*", "color": "gold",
+                                "hoverEvent": {"action": "show_text", content_name: result_before.get("content")}})
             _build_if_urls_in_message(res_obj, result_msg.get("content"), None)
 
             with connect_rcon() as cl_r:

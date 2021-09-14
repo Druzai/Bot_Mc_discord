@@ -77,8 +77,7 @@ class Poll(commands.Cog):
             return
         channel = self._bot.get_channel(payload.channel_id)
         member = await self._bot.guilds[0].fetch_member(payload.user_id)
-        await current_poll.count_del_voice(channel, member,
-                                           payload.emoji.name == self._emoji_symbols["yes"])
+        await current_poll.count_del_voice(channel, member, payload.emoji.name == self._emoji_symbols["yes"])
 
     async def timer(self, ctx, seconds: int, command: str):
         if (datetime.now() - self._await_date[command]).seconds > seconds:  # Starting a poll
