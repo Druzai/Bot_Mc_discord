@@ -504,16 +504,16 @@ def parse_params_for_help(command_params: dict, string_to_add: str, create_param
 
 
 def parse_subcommands_for_help(command, all_params=False) -> Tuple[List[str], List[str]]:
-    if not hasattr(command, "all_commands") or len(command.all_commands) == 0:
+    if not hasattr(command, "commands") or len(command.commands) == 0:
         return [], []
 
     if not all_params:
-        return list(command.all_commands.keys()), []
+        return [c.name for c in command.commands], []
 
     subcommands = []
-    for name, subcommand in command.all_commands.items():
-        subcommands.append(parse_params_for_help(subcommand.clean_params, name)[0])
-    return list(command.all_commands.keys()), subcommands
+    for subcommand in command.commands:
+        subcommands.append(parse_params_for_help(subcommand.clean_params, subcommand.name)[0])
+    return [c.name for c in command.commands], subcommands
 
 
 async def send_help_of_command(ctx, command):

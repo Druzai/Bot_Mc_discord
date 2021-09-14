@@ -34,10 +34,10 @@ from config.init_config import Config, BotVars
 #  maybe add slash commands via separate `Slash` Cog
 
 def _create_pot_lines_for_subcommands(command, find_str: str):
-    if not hasattr(command, "all_commands") or len(command.all_commands) == 0:
+    if not hasattr(command, "commands") or len(command.commands) == 0:
         return
 
-    for subcommand in command.all_commands.values():
+    for subcommand in command.commands:
         RuntimeTextHandler.add_translation(f"{find_str}_{subcommand.name}")
         for arg in subcommand.clean_params.keys():
             RuntimeTextHandler.add_translation(f"{find_str}_{subcommand.name}_{arg}")
