@@ -162,14 +162,41 @@ async def start_server(ctx, bot, shut_up=False, is_reaction=False):
                                                 name=Config.get_settings().bot_settings.gaming_status))
 
 
-async def stop_server(ctx, bot, how_many_sec=10, is_restart=False, is_reaction=False):
-    BotVars.is_stopping = True
+async def stop_server(ctx, bot, poll, how_many_sec=10, is_restart=False, is_reaction=False):
     no_connection = False
-    print(get_translation("Stopping server"))
-    await send_msg(ctx, add_quotes(get_translation("Stopping server.......\nPlease wait {0} sec.")
-                                   .format(str(how_many_sec))), is_reaction)
+    players_count = 0
+
     try:
+        players_count = len(get_server_players())
+    except BaseException:
+        if len(get_list_of_processes()) == 0:
+            print(get_translation("Bot Exception: Couldn't connect to server, because it's stopped"))
+            await send_msg(ctx,
+                           add_quotes(get_translation("Couldn't connect to server to shut it down! Server stopped...")),
+                           is_reaction)
+            BotVars.is_stopping = False
+            BotVars.is_server_on = False
+            return
+        no_connection = True
+
+    if not no_connection:
+        if players_count > 0:
+            if await poll.timer(ctx, 5, "stop"):
+                if not await poll.run(ctx=ctx,
+                                      message=get_translation("this man {0} trying to stop the server with {1} "
+                                                              "player(s) on it. Will you let that happen?")
+                                              .format(get_author_and_mention(ctx, bot, is_reaction)[1], players_count),
+                                      remove_logs_after=5):
+                    return
+
+        BotVars.is_stopping = True
+        print(get_translation("Stopping server"))
+        await send_msg(ctx, add_quotes(get_translation("Stopping server.......\nPlease wait {0} sec.")
+                                       .format(str(how_many_sec))), is_reaction)
+
         with connect_rcon() as cl_r:
+            if players_count == 0:
+                how_many_sec = 0
             if how_many_sec != 0:
                 w = 1
                 if how_many_sec > 5:
@@ -188,23 +215,11 @@ async def stop_server(ctx, bot, how_many_sec=10, is_restart=False, is_reaction=F
                 cl_r.tellraw("@a", ["", {"text": "<"}, {"text": bot.user.display_name, "color": "dark_gray"},
                                     {"text": "> " + bot_message}])
                 for i in range(how_many_sec, -1, -w):
-                    cl_r.tellraw("@a", ["", {"text": "<"},
-                                        {"text": bot.user.display_name, "color": "dark_gray"},
+                    cl_r.tellraw("@a", ["", {"text": "<"}, {"text": bot.user.display_name, "color": "dark_gray"},
                                         {"text": "> " + get_translation("{0} sec to go").format(str(i))}])
                     await asleep(w)
             cl_r.run("stop")
-    except BaseException:
-        if len(get_list_of_processes()) == 0:
-            print(get_translation("Bot Exception: Couldn't connect to server, because it's stopped"))
-            await send_msg(ctx,
-                           add_quotes(get_translation("Couldn't connect to server to shut it down! Server stopped...")),
-                           is_reaction)
-            BotVars.is_stopping = False
-            BotVars.is_server_on = False
-            return
-        no_connection = True
 
-    if not no_connection:
         if BotVars.watcher_of_log_file.is_running():
             BotVars.watcher_of_log_file.stop()
         while True:
@@ -398,8 +413,7 @@ async def bot_start(ctx, bot, is_reaction=False):
         await send_status(ctx, is_reaction=is_reaction)
 
 
-# TODO: add poll when there's more than 0 player on server, add yes - no in reactions! Do this to make approval
-async def bot_stop(ctx, command, bot, is_reaction=False):
+async def bot_stop(ctx, command, bot, poll, is_reaction=False):
     if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading:
         if BotVars.is_doing_op:
             await send_msg(ctx, add_quotes(get_translation("Some player(s) still oped, waiting for them")),
@@ -408,12 +422,12 @@ async def bot_stop(ctx, command, bot, is_reaction=False):
         if Config.get_settings().bot_settings.forceload:
             Config.get_settings().bot_settings.forceload = False
             Config.save_config()
-        await stop_server(ctx, bot, int(command), is_reaction=is_reaction)
+        await stop_server(ctx, bot, poll, int(command), is_reaction=is_reaction)
     else:
         await send_status(ctx, is_reaction=is_reaction)
 
 
-async def bot_restart(ctx, command, bot, is_reaction=False):
+async def bot_restart(ctx, command, bot, poll, is_reaction=False):
     if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading:
         if BotVars.is_doing_op:
             await send_msg(ctx, add_quotes(get_translation("Some player(s) still oped, waiting for them")),
@@ -421,7 +435,7 @@ async def bot_restart(ctx, command, bot, is_reaction=False):
             return
         BotVars.is_restarting = True
         print(get_translation("Restarting server"))
-        await stop_server(ctx, bot, int(command), True, is_reaction=is_reaction)
+        await stop_server(ctx, bot, poll, int(command), True, is_reaction=is_reaction)
         await start_server(ctx, bot, is_reaction=is_reaction)
     else:
         await send_status(ctx, is_reaction=is_reaction)
@@ -470,7 +484,7 @@ async def bot_clear(ctx, poll: Poll, subcommand: str = None, count: int = None):
                                                               oldest_first=True).flatten()) <= delete_limit:
             await ctx.channel.purge(limit=None, check=check_condition, after=message_created, bulk=False)
             return
-    if await poll.timer(ctx, 5):
+    if await poll.timer(ctx, 5, "clear"):
         if await poll.run(ctx=ctx,
                           message=get_translation("this man {0} trying to delete some history"
                                                   " of this channel. Will you let that happen?")

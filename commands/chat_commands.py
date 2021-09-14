@@ -27,9 +27,9 @@ def discord_mentions(*args: str):
 
 
 class ChatCommands(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: commands.Bot, poll: Poll):
         self._bot: commands.Bot = bot
-        self._IndPoll: Poll = Poll(bot)
+        self._IndPoll: Poll = poll
 
     @commands.Cog.listener()
     async def on_ready(self):

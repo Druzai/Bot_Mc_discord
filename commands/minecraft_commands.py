@@ -6,6 +6,7 @@ from random import randint
 import discord
 from discord.ext import commands, tasks
 
+from commands.poll import Poll
 from components import decorators
 from components.additional_funcs import *
 from components.localization import get_translation
@@ -16,8 +17,9 @@ class MinecraftCommands(commands.Cog):
     _emoji_symbols = {"status": "🗨", "list": "📋", "start": "♿",
                       "stop 10": "⏹", "restart 10": "🔄", "update": "📶"}  # Symbols for menu
 
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: commands.Bot, poll: Poll):
         self._bot: commands.Bot = bot
+        self._IndPoll: Poll = poll
         self.checkups_task.start()
 
     @commands.command(pass_context=True)
@@ -46,7 +48,7 @@ class MinecraftCommands(commands.Cog):
     @decorators.has_role_or_default()
     async def stop(self, ctx, timeout: int = 0):
         """Stop server"""
-        await bot_stop(ctx, timeout, self._bot)
+        await bot_stop(ctx, timeout, self._bot, self._IndPoll)
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
@@ -54,7 +56,7 @@ class MinecraftCommands(commands.Cog):
     @decorators.has_role_or_default()
     async def restart(self, ctx, timeout: int = 0):
         """Restart server"""
-        await bot_restart(ctx, timeout, self._bot)
+        await bot_restart(ctx, timeout, self._bot, self._IndPoll)
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -517,9 +519,10 @@ class MinecraftCommands(commands.Cog):
                         if payload.emoji.name == self._emoji_symbols.get("start"):
                             await bot_start(channel, self._bot, is_reaction=True)
                         elif payload.emoji.name == self._emoji_symbols.get("stop 10"):
-                            await bot_stop(channel, command="10", bot=self._bot, is_reaction=True)
+                            await bot_stop(channel, command="10", bot=self._bot, poll=self._IndPoll, is_reaction=True)
                         elif payload.emoji.name == self._emoji_symbols.get("restart 10"):
-                            await bot_restart(channel, command="10", bot=self._bot, is_reaction=True)
+                            await bot_restart(channel, command="10", bot=self._bot,
+                                              poll=self._IndPoll, is_reaction=True)
                     else:
                         await send_error(channel, self._bot,
                                          commands.MissingRole(Config.get_settings().bot_settings.role),

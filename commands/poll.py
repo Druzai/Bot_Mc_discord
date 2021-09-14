@@ -11,10 +11,13 @@ from components.localization import get_translation
 class Poll(commands.Cog):
     _polls = {}
     _emoji_symbols = {"yes": "☑", "no": "❎"}
-    _await_date = datetime.now()
+    _await_date = {}
 
     def __init__(self, bot: commands.Bot):
         self._bot: commands.Bot = bot
+
+    def add_awaiting_command(self, command: str):
+        self._await_date[command] = datetime.now()
 
     async def run(self, ctx, message: str, need_for_voting=2, needed_role=None,
                   timeout=60 * 60, remove_logs_after=None):
@@ -77,14 +80,14 @@ class Poll(commands.Cog):
         await current_poll.count_del_voice(channel, member,
                                            payload.emoji.name == self._emoji_symbols["yes"])
 
-    async def timer(self, ctx, seconds: int):
-        if (datetime.now() - self._await_date).seconds > seconds:  # Starting a poll
-            self._await_date = datetime.now()
+    async def timer(self, ctx, seconds: int, command: str):
+        if (datetime.now() - self._await_date[command]).seconds > seconds:  # Starting a poll
+            self._await_date[command] = datetime.now()
             return True
         else:
             await ctx.send(f"{ctx.author.mention}, " +
                            get_translation("what are you doing? Time hasn't passed yet. Waiting {0} sec...")
-                           .format((datetime.now() - self._await_date).seconds))
+                           .format((datetime.now() - self._await_date[command]).seconds))
             return False
 
     def get_polls_msg_ids(self):

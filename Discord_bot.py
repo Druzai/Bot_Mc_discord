@@ -47,9 +47,13 @@ def main():
     intents.members = True
     bot = commands.Bot(command_prefix=get_prefix, intents=intents)
     bot.remove_command('help')
-    cog_list = [ChatCommands, MinecraftCommands, Poll]
+    cog_list = [ChatCommands, MinecraftCommands]
+    poll = Poll(bot)
+    for command in ["clear", "stop"]:
+        poll.add_awaiting_command(command)
     for i in cog_list:
-        bot.add_cog(i(bot))
+        bot.add_cog(i(bot, poll))
+    bot.add_cog(poll)
 
     create_pot_lines(bot)
 
