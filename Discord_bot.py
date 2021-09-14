@@ -14,25 +14,6 @@ from components.rss_feed_handle import create_feed_webhook, check_on_rss_feed
 from config.init_config import Config, BotVars
 
 
-# TODO: features
-#  Continuously rewrite code in classes
-#  Сделать отправку об выключении/перезагрузке через tellraw тоже
-#  https://github.com/MyTheValentinus/minecraftTellrawGenerator
-#  При обратном отсчёте использовать tellraw или title в stop_server
-#  Сделать список из гуи дискорда для %servs select и комманда для музыки из майнкрафта
-#  Мб добавить вывод игрок подкл, откл и причина
-# [23:53:40] [Server thread/INFO]: jokobaba lost connection: Timed out
-# [23:53:40] [Server thread/INFO]: jokobaba left the game
-# [23:53:55] [Server thread/INFO]: jokobaba joined the game
-# [23:55:07] [Server thread/INFO]: Dedicated407 has completed the challenge [Cover Me in Debris]
-
-# TODO: wait for discord.py 2.0.0 (archived), (move to python 3.9 or 3.10)
-#  to rewrite webhooks
-#  + add webhook creating/modifying (channel_id in https://discord.com/developers/docs/resources/webhook#modify-webhook)
-#  replace reactions with buttons in menu and poll
-#  https://github.com/Rapptz/discord.py/blob/master/examples/views/persistent.py
-#  maybe add slash commands via separate `Slash` Cog
-
 def _create_pot_lines_for_subcommands(command, find_str: str):
     if not hasattr(command, "commands") or len(command.commands) == 0:
         return
