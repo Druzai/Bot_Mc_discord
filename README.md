@@ -6,6 +6,8 @@
    Bot for minecraft server in discord
 </h1>
 
+[![Build with pyinstaller and release](https://github.com/Druzai/Bot_Mc_discord/actions/workflows/pyinstaller_build.yml/badge.svg?branch=master)](https://github.com/Druzai/Bot_Mc_discord/actions/workflows/pyinstaller_build.yml)
+
 ### Commands
 
 If you want to see help on all bot's commands use `help` command when bot is running.
