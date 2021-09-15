@@ -66,8 +66,8 @@ jobs:
       - name: Install gettext
         if: matrix.os != 'windows-latest'
         run: |
-          apt-get update
-          apt-get install gettext
+          sudo apt-get update
+          sudo apt-get install gettext
 
       - name: Lint with flake8
         run: |
