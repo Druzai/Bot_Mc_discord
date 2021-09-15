@@ -16,7 +16,8 @@ Note: these commands will require custom role if you set it in bot configuration
 `start`, `stop`, `restart`, `menu`, `forceload`, `whitelist`, `servers`, `op`, `ops`, `chat`.
 
 Also, to enable cross-platform chat you need to enter in bot setup channel id (or use `chat` command) and webhook url!
-[How to create webhook and get url](https://github.com/Akizo96/de.isekaidev.discord.wbbBridge/wiki/How-to-get-Webhook-ID-&-Token).
+[How to create webhook and get url](https://github.com/Akizo96/de.isekaidev.discord.wbbBridge/wiki/How-to-get-Webhook-ID-&-Token)
+.
 
 For cross-platform chat to work properly you have to have argument `-Dfile.encoding=UTF-8` when you're
 executing `***.bat` or `***.sh` script (necessary for windows).
@@ -30,7 +31,7 @@ Supported 2 languages:
 
 ### Requirements
 
-* [Python 3.5-3.8](https://www.python.org/downloads/)
+* [Python 3.8-3.9](https://www.python.org/downloads/)
 * For Linux required [screen](https://linuxize.com/post/how-to-use-linux-screen/) command
 * Minecraft server not lower than version 1.0.0
 
@@ -68,7 +69,7 @@ Firstly, you have to install pyinstaller via `pip install pyinstaller==4.0`.
 
 Type in command prompt `make` in root directory of the project to build it.
 
-Executable file will be in `/build_dist`
+Executable file will be in `/build_dist`.
 
 ### Run
 
@@ -124,14 +125,15 @@ java -Xmx${ask_int} -Xms${ask_int} ${java_parameters} -Dfile.encoding=UTF-8 -jar
 
 ### Localization
 
-If you want to fix or add translations, you need to generate `*.pot` file running
-script [generate_pot.py](locales/generate_pot.py).
+For adding or updating/fixing translations:
 
-After you need yourself update existing `*.po` file for required language or create new one in this
-path: `/locales/%language_code%/LC_MESSAGES/lang.po`.
-
-For translations to be updated you also need generate updated `*.mo` file running
-script [generate_mo.py](locales/generate_mo.py).
+* If you want to add translations, you need to generate `*.pot` file running
+  script [generate_pot.py](locales/generate_pot.py) after you added them. Otherwise, if you want to fix them, then skip
+  this step.
+* Then you need to update existing `*.po` file yourself for required language or create new one in this
+  path: `/locales/%language_code%/LC_MESSAGES/lang.po`.
+* For translations to be updated you also need generate updated `*.mo` file running
+  script [generate_mo.py](locales/generate_mo.py).
 
 ### Tested Platforms
 
