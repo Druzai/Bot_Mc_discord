@@ -1,17 +1,23 @@
 import gettext
-from os import path
+import sys
+from os import path, listdir
 from pathlib import Path
 from sys import argv
 from typing import Optional
 
-_locales = ["en", "ru"]
+_locales_path = "."
+if getattr(sys, 'frozen', False):
+    _locales_path = sys._MEIPASS
+_locales_path = Path(_locales_path + "/locales").as_posix()
+
+_locales = [d for d in listdir(_locales_path) if path.isdir(path.join(_locales_path, d))]
 _translation = None
 
 
 def set_locale(locale: str, set_eng_if_error=False) -> Optional[str]:
     global _translation
     if locale.lower() in _locales or set_eng_if_error:
-        _translation = gettext.translation("lang", localedir="locales",
+        _translation = gettext.translation("lang", localedir=_locales_path,
                                            languages=["en" if set_eng_if_error else locale.lower()])
     else:
         return locale

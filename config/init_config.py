@@ -642,7 +642,7 @@ class Config:
 
     @classmethod
     def _setup_servers(cls):
-        if not 0 < cls._settings_instance.selected_server_number < len(cls._settings_instance.servers_list):
+        if not 0 < cls._settings_instance.selected_server_number <= len(cls._settings_instance.servers_list):
             cls._settings_instance.selected_server_number = 1
             print(get_translation("Selected minecraft server number is out of range! Bot set it to '1'."))
             cls._need_to_rewrite = True
