@@ -633,10 +633,19 @@ async def send_error(ctx, bot, error, is_reaction=False):
                        is_reaction)
     elif isinstance(error, commands.MissingPermissions):
         print(get_translation("{0} don't have some permissions to run command").format(author))
-        missing_perms = [perm.replace('_', ' ').replace('guild', 'server').title() for perm in error.missing_perms]
+        missing_perms = [get_translation(perm.replace('_', ' ')
+                                         .replace('guild', 'server').title()) for perm in error.missing_perms]
         await send_msg(ctx, f"{author_mention}\n" +
-                       add_quotes(get_translation("to run this command you don't have these permissions: {0}")
-                                  .capitalize().format(author_mention, ", ".join(missing_perms))),
+                       add_quotes(get_translation("to run this command you don't have these permissions:")
+                                  .capitalize() + "\n- " + "\n- ".join(missing_perms)),
+                       is_reaction)
+    elif isinstance(error, commands.BotMissingPermissions):
+        print(get_translation("Bot doesn't have some permissions"))
+        missing_perms = [get_translation(perm.replace('_', ' ')
+                                         .replace('guild', 'server').title()) for perm in error.missing_perms]
+        await send_msg(ctx, f"{author_mention}\n" +
+                       add_quotes(get_translation("to run this command bot don't have these permissions:")
+                                  .capitalize() + "\n- " + "\n- ".join(missing_perms)),
                        is_reaction)
     elif isinstance(error, commands.MissingRole):
         print(get_translation("{0} don't have role '{1}' to run command").format(author, error.missing_role))

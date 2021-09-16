@@ -2,7 +2,7 @@ from os import system
 from sys import platform, exit, argv
 from traceback import print_exc
 
-from discord import Intents
+from discord import Intents, Permissions
 from discord.errors import LoginFailure
 from discord.ext import commands
 
@@ -33,6 +33,8 @@ def create_pot_lines(bot: commands.Bot):
             for arg in command.clean_params.keys():
                 RuntimeTextHandler.add_translation(f"help_{command.name}_{arg}")
             _create_pot_lines_for_subcommands(command, f"help_{command.name}")
+        for perm in Permissions.VALID_FLAGS.keys():
+            RuntimeTextHandler.add_translation(perm.replace('_', ' ').replace('guild', 'server').title())
         RuntimeTextHandler.freeze_translation()
         exit(0)
 
