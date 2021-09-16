@@ -10,8 +10,8 @@ from vk_api import VkApi
 from commands.poll import Poll
 from components import decorators
 from components.additional_funcs import handle_message_for_chat, send_error, bot_clear, add_quotes, \
-    parse_params_for_help, send_help_of_command, parse_subcommands_for_help, find_subcommand
-from components.localization import get_translation, get_locales, set_locale
+    parse_params_for_help, send_help_of_command, parse_subcommands_for_help, find_subcommand, make_underscored_line
+from components.localization import get_translation, get_locales, set_locale, get_current_locale
 from config.init_config import Config
 
 
@@ -109,9 +109,13 @@ class ChatCommands(commands.Cog):
                 await ctx.send(add_quotes(get_translation("Language switched successfully!")))
 
         else:
-            await ctx.send(add_quotes(get_translation("Available languages:") + "\n- " +
-                                      "\n- ".join([f"{ln.capitalize()} ({get_translation(ln)})"
-                                                   for ln in get_locales()])))
+            langs = []
+            for lang in get_locales():
+                lang_code = lang.capitalize()
+                if get_current_locale() == lang:
+                    lang_code = make_underscored_line(lang_code)
+                langs.append(f"{lang_code} ({get_translation(lang)})")
+            await ctx.send(add_quotes(get_translation("Available languages:") + "\n- " + "\n- ".join(langs)))
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)

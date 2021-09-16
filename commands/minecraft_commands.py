@@ -469,7 +469,9 @@ class MinecraftCommands(commands.Cog):
     async def s_list(self, ctx):
         send_ = "```" + get_translation("List of servers") + ":"
         for i in range(len(Config.get_settings().servers_list)):
-            send_ += "\n[" + str(i + 1) + "] " + Config.get_settings().servers_list[i].server_name
+            send_ += "\n[" + (make_underscored_line(i + 1)
+                              if i + 1 == Config.get_settings().selected_server_number else str(i + 1)) + "] " + \
+                     Config.get_settings().servers_list[i].server_name
         send_ += "```"
         await ctx.send(send_)
 

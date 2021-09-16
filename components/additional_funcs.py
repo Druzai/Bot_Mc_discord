@@ -32,7 +32,8 @@ if platform == "win32":
 __all__ = [
     "server_checkups", "send_error", "send_msg", "send_status", "stop_server", "start_server",
     "get_author_and_mention", "save_to_whitelist_json", "get_whitelist_entry", "get_server_online_mode",
-    "get_server_players", "add_quotes", "bot_status", "bot_list", "bot_start", "bot_stop", "bot_restart", "connect_rcon"
+    "get_server_players", "add_quotes", "bot_status", "bot_list", "bot_start", "bot_stop", "bot_restart",
+    "connect_rcon", "make_underscored_line"
 ]
 
 
@@ -571,6 +572,15 @@ def find_subcommand(subcommands, command, pos: int):
                     return subcomm
                 else:
                     return find_subcommand(subcommands, subcomm, pos)
+
+
+def make_underscored_line(line):
+    """This func underscores int, float or strings without spaces!"""
+    underscore = "\u0332"
+    if isinstance(line, int) or isinstance(line, float):
+        return underscore + underscore.join(str(line))
+    elif isinstance(line, str):
+        return underscore.join(line) + underscore
 
 
 @contextmanager
