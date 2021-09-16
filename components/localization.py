@@ -11,14 +11,16 @@ if getattr(sys, 'frozen', False):
 _locales_path = Path(_locales_path + "/locales").as_posix()
 
 _locales = [d for d in listdir(_locales_path) if path.isdir(path.join(_locales_path, d))]
+_current_locale = ""
 _translation = None
 
 
 def set_locale(locale: str, set_eng_if_error=False) -> Optional[str]:
-    global _translation
+    global _translation, _current_locale
     if locale.lower() in _locales or set_eng_if_error:
         _translation = gettext.translation("lang", localedir=_locales_path,
                                            languages=["en" if set_eng_if_error else locale.lower()])
+        _current_locale = "en" if set_eng_if_error else locale.lower()
     else:
         return locale
 
@@ -29,6 +31,10 @@ def get_translation(text: str) -> str:
 
 def get_locales():
     return _locales
+
+
+def get_current_locale():
+    return _current_locale
 
 
 class RuntimeTextHandler:
@@ -43,3 +49,8 @@ class RuntimeTextHandler:
     @classmethod
     def add_translation(cls, text: str):
         cls._translations.append(f"get_translation(\"{text}\")")
+
+
+if len(argv) > 1 and argv[1] == "-g":
+    for lang in _locales:
+        RuntimeTextHandler.add_translation(lang)

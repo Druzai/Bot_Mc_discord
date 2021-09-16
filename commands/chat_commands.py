@@ -109,8 +109,9 @@ class ChatCommands(commands.Cog):
                 await ctx.send(add_quotes(get_translation("Language switched successfully!")))
 
         else:
-            await ctx.send(add_quotes(get_translation("Available languages:\n{0}")
-                                      .format(", ".join([ln.capitalize() for ln in get_locales()]))))
+            await ctx.send(add_quotes(get_translation("Available languages:") + "\n- " +
+                                      "\n- ".join([f"{ln.capitalize()} ({get_translation(ln)})"
+                                                   for ln in get_locales()])))
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
