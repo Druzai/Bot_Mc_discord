@@ -8,37 +8,61 @@
 
 [![Build with pyinstaller and release](https://github.com/Druzai/Bot_Mc_discord/actions/workflows/pyinstaller_build.yml/badge.svg?branch=master)](https://github.com/Druzai/Bot_Mc_discord/actions/workflows/pyinstaller_build.yml)
 
-### Commands
+## Main features
+
+* Managing minecraft server via discord bot:
+    * Start the server
+    * Stop the server
+    * Restart the server
+    * Get info about players on the server
+    * Work with server whitelist
+    * Autoload if the minecraft server crashes
+    * Make yourself an operator for limited amount of time if your discord account has association with minecraft nick
+* Changing minecraft servers in bot's config on the go
+* Setting an optional role. If set then the bot commands for managing the minecraft server will require this role from
+  the member
+* Creating optional cross-platform chat between discord text channel and minecraft server via bot and webhook
+    * Supported mentions in discord and minecraft (also for better recognition you can create list of associations
+      between discord member and minecraft nick)
+    * Supported discord reply in message
+    * Supported url links (shortens if link longer than 256 symbols)
+    * Supported attached files to message in discord
+    * Half supported emojis
+        * Custom emojis are converted to text with their own text name
+        * Most of the standard unicode emojis are not processed by the vanilla minecraft server
+* Setting up optional rss feed. Bot will send new items of feed to discord text channel via webhook
+
+## Commands
 
 If you want to see help on all bot's commands use `help` command when bot is running.
 
-Note: these commands will require custom role if you set it in bot configuration file:
+Note: these commands will require custom optional role if you set it in bot config:
 `start`, `stop`, `restart`, `menu`, `forceload`, `whitelist`, `servers`, `op`, `ops`, `chat`.
 
 Also, to enable cross-platform chat you need to enter in bot setup channel id (or use `chat` command) and webhook url!
-[How to create webhook and get url](https://github.com/Akizo96/de.isekaidev.discord.wbbBridge/wiki/How-to-get-Webhook-ID-&-Token)
-.
+[How to create webhook and get url.](https://github.com/Akizo96/de.isekaidev.discord.wbbBridge/wiki/How-to-get-Webhook-ID-&-Token)
 
-For cross-platform chat to work properly you have to have argument `-Dfile.encoding=UTF-8` when you're
-executing `***.bat` or `***.sh` script (necessary for windows).
+For minecraft server version lower than `1.17` for cross-platform chat to work properly you have to have
+argument `-Dfile.encoding=UTF-8` when you're executing `*.bat` or `*.sh` script (necessary for Windows).
 
-### Languages
+## Languages
 
 Supported 2 languages:
 
 * English
 * Russian
 
-### Requirements
+## Requirements
 
 * [Python 3.8-3.9](https://www.python.org/downloads/)
 * For Linux required [screen](https://linuxize.com/post/how-to-use-linux-screen/) command
 * Minecraft server not lower than version 1.0.0
+    * Enable query and rcon in server.properties
 
-#### Required Bot Permissions
+### Required bot permissions
 
 * Enable the `Server Members Intent` in section `Privileged Gateway Intents` on the Bot tab of your bot's page on the
-  Discord developer's portal.
+  [Discord developer's portal](https://discord.com/developers/applications).
 
 ____________
 > Libraries for Python:
@@ -55,7 +79,7 @@ ____________
 * [jsons](https://github.com/ramonhagenaars/jsons) - lib to serialize class from dictionary
 * [omegaconf](https://github.com/omry/omegaconf) - lib to deserialize and serialize class to yaml file
 
-### Lib installation
+## Lib installation
 
 Type in command prompt, you must have [requirements.txt](requirements.txt) in root folder of the project.
 
@@ -63,7 +87,7 @@ Type in command prompt, you must have [requirements.txt](requirements.txt) in ro
 pip install -r requirements.txt
 ```
 
-### Build
+## Build
 
 Firstly, you have to install pyinstaller via `pip install pyinstaller==4.0`.
 
@@ -71,59 +95,58 @@ Type in command prompt `make` in root directory of the project to build it.
 
 Executable file will be in `/build_dist`.
 
-### Run
+## Run
 
-* Windows
+### Windows
 
-You have to start bot file from folder located in your root minecraft server directory! Example:
+Just start bot executable file.
 
-```
-%your_minecraft_server_dir%\%bot_folder%\bot_executable_file
-```
-
-And for the bot to properly work you have to have `***.bat` (in bot setting you can set name for this script) in your
-root minecraft server directory! Example of file:
+For the bot to properly start the minecraft server you have to have `*.bat` (in bot setting you can set name for this
+script) in your root minecraft server directory! Example of file:
 
 ```batch
-rem ask_int - consists how many GB you're allocating for server on start up
+rem min_ram, max_ram - consists how many min and max GB you're allocating for server on start up
 rem your_jar_file - jar file that starts up your server. It can be for vanilla: standart server.jar or for modded server: spigot.jar, forge.jar
 rem java_parameters - parameters for minecraft server
 @echo off
-SET ask_int=3
+SET min_ram=1
+SET max_ram=3
 SET your_jar_file=server.jar
 SET java_parameters=-d64 -server -XX:+AggressiveOpts
-rem ... and so on :)
+rem                                                  ... and so on :)
 chcp 65001
 cls
-title Minecraft Server Console (%ask_int%Gb RAM)
-echo java -Xmx%ask_int%G -Xms%ask_int%G %java_parameters% -jar %your_jar_file% nogui
-java -Xmx%ask_int%G -Xms%ask_int%G %java_parameters% -Dfile.encoding=UTF-8 -jar %your_jar_file% nogui
+title Minecraft Server Console (%max_ram%Gb RAM)
+echo java -Xms%min_ram%G -Xmx%max_ram%G %java_parameters% -jar %your_jar_file% nogui
+java -Xms%min_ram%G -Xmx%max_ram%G %java_parameters% -Dfile.encoding=UTF-8 -jar %your_jar_file% nogui
 exit /b
 ```
 
-* Linux
+### Linux
 
-You have to execute bot file using terminal from folder located in your root minecraft server directory with screen
-command! Example:
+On the desktop version of linux just start bot executable file.
+
+On the server version of linux you have to start bot executable file using terminal with screen command! Example:
 
 ```
-screen -dmS %your_session_name% %your_minecraft_server_dir%\%bot_folder%\bot_executable_file
+screen -dmS %your_session_name% %path_to_bot%/bot_executable_file
 ```
 
-And for the bot to properly work you have to have `***.sh` (in bot setting you can set name for this script) in your
-root minecraft server directory! Example of file:
+For the bot to properly start the minecraft server you have to have `*.sh` (in bot setting you can set name for this
+script) in your root minecraft server directory! Example of file:
 
 ```shell
-# ask_int - consists how many GB you're allocating for server on start up
+# min_ram, max_ram - consists how many min and max GB you're allocating for server on start up
 # your_jar_file - jar file that starts up your server. It can be for vanilla: standart server.jar or for modded server: spigot.jar, forge.jar
 # java_parameters - parameters for minecraft server
-ask_int='3G'
+min_ram='1G'
+max_ram='3G'
 your_jar_file='server.jar'
 java_parameters='-d64 -server -XX:+AggressiveOpts' # ... and so on :)
-java -Xmx${ask_int} -Xms${ask_int} ${java_parameters} -Dfile.encoding=UTF-8 -jar ${your_jar_file} nogui
+java -Xms${min_ram} -Xmx${max_ram} ${java_parameters} -Dfile.encoding=UTF-8 -jar ${your_jar_file} nogui
 ```
 
-### Localization
+## Localization
 
 For adding or updating/fixing translations:
 
@@ -135,7 +158,7 @@ For adding or updating/fixing translations:
 * For translations to be updated you also need generate updated `*.mo` file running
   script [generate_mo.py](locales/generate_mo.py).
 
-### Tested Platforms
+## Tested platforms
 
 * Windows 7 or higher (32/64 bit)
 * Linux (Ubuntu/Debian/CentOS)
