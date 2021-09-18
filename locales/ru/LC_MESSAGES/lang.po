@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
-"POT-Creation-Date: 2021-09-18 16:09+0300\n"
-"PO-Revision-Date: 2021-09-18 16:12+0300\n"
+"POT-Creation-Date: 2021-09-18 17:29+0300\n"
+"PO-Revision-Date: 2021-09-18 17:31+0300\n"
 "Last-Translator: Druzai <astyn37@gmail.com>\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -618,7 +618,7 @@ msgstr "Вы не прикрепили ответ к вашему сообщен
 msgid "Starting rss feed check"
 msgstr "Запускаем проверку rss-канала"
 
-#: ..\commands\minecraft_commands.py:75 ..\components\additional_funcs.py:401
+#: ..\commands\minecraft_commands.py:75 ..\components\additional_funcs.py:414
 msgid "There are no players on the server"
 msgstr "На сервере нет игроков"
 
@@ -778,8 +778,8 @@ msgstr "Не удалось подключиться к серверу, попр
 #: ..\commands\minecraft_commands.py:333 ..\commands\minecraft_commands.py:348
 #: ..\commands\minecraft_commands.py:371 ..\commands\minecraft_commands.py:386
 #: ..\commands\minecraft_commands.py:401 ..\commands\minecraft_commands.py:416
-#: ..\components\additional_funcs.py:387 ..\components\additional_funcs.py:409
-#: ..\components\additional_funcs.py:716
+#: ..\components\additional_funcs.py:400 ..\components\additional_funcs.py:422
+#: ..\components\additional_funcs.py:738
 msgid "server offline"
 msgstr "сервер не в сети"
 
@@ -852,75 +852,75 @@ msgstr "Список команд через реакции"
 msgid "Starting minecraft server check-ups"
 msgstr "Запускаем проверки майнкрафт сервера"
 
-#: ..\commands\poll.py:25
+#: ..\commands\poll.py:26
 msgid "To win the poll needed {0} votes!"
 msgstr "Для победы в опросе необходимо {0} голосов!"
 
-#: ..\commands\poll.py:39
+#: ..\commands\poll.py:40
 msgid "Poll result: canceled!"
 msgstr "Результат опроса: отменён!"
 
-#: ..\commands\poll.py:41
+#: ..\commands\poll.py:42
 msgid "granted"
 msgstr "получено"
 
-#: ..\commands\poll.py:42
+#: ..\commands\poll.py:43
 msgid "refused"
 msgstr "отказано"
 
-#: ..\commands\poll.py:43
+#: ..\commands\poll.py:44
 msgid "Poll result: permission {0}!"
 msgstr "Результат опроса: разрешение {0}!"
 
-#: ..\commands\poll.py:48
+#: ..\commands\poll.py:49
 msgid "Survey. Voting!"
 msgstr "Опрос. ГолосовалОЧКА!"
 
-#: ..\commands\poll.py:50
+#: ..\commands\poll.py:51
 msgid "yes"
 msgstr "да"
 
-#: ..\commands\poll.py:51
+#: ..\commands\poll.py:52
 msgid "no"
 msgstr "нет"
 
-#: ..\commands\poll.py:88
+#: ..\commands\poll.py:89
 msgid "what are you doing? Time hasn't passed yet. Waiting {0} sec..."
 msgstr "что вы делаете? Время ещё не прошло. Ждём {0} сек..."
 
-#: ..\commands\poll.py:114 ..\commands\poll.py:139
+#: ..\commands\poll.py:117 ..\commands\poll.py:142
 msgid "poll've already finished!"
 msgstr "опрос уже завершён!"
 
-#: ..\commands\poll.py:118
+#: ..\commands\poll.py:121
 msgid "you've already voted!"
 msgstr "вы уже проголосовали!"
 
-#: ..\commands\poll.py:123 ..\commands\poll.py:144
+#: ..\commands\poll.py:126 ..\commands\poll.py:147
 msgid "you don't have needed '{0}' role"
 msgstr "у вас нету нужной роли '{0}'"
 
-#: ..\components\additional_funcs.py:75
+#: ..\components\additional_funcs.py:77
 msgid "server have already started!"
 msgstr "сервер уже запущен!"
 
-#: ..\components\additional_funcs.py:78 ..\components\additional_funcs.py:725
+#: ..\components\additional_funcs.py:80 ..\components\additional_funcs.py:747
 msgid "server is loading!"
 msgstr "сервер загружается!"
 
-#: ..\components\additional_funcs.py:80 ..\components\additional_funcs.py:722
+#: ..\components\additional_funcs.py:82 ..\components\additional_funcs.py:744
 msgid "server is stopping!"
 msgstr "сервер останавливается!"
 
-#: ..\components\additional_funcs.py:82
+#: ..\components\additional_funcs.py:84
 msgid "server have already been stopped!"
 msgstr "сервер уже был остановлен!"
 
-#: ..\components\additional_funcs.py:88
+#: ..\components\additional_funcs.py:90
 msgid "Loading server"
 msgstr "Загружаем сервер"
 
-#: ..\components\additional_funcs.py:90
+#: ..\components\additional_funcs.py:92
 msgid ""
 "Loading server.......\n"
 "Please wait)"
@@ -928,49 +928,53 @@ msgstr ""
 "Загружаем сервер.......\n"
 "Пожалуйста, ожидайте)"
 
-#: ..\components\additional_funcs.py:104
+#: ..\components\additional_funcs.py:106
 msgid "Couldn't open script! Check naming and extension of the script!"
 msgstr "Не смог открыть скрипт! Проверьте имя и расширение скрипта!"
 
-#: ..\components\additional_funcs.py:105
+#: ..\components\additional_funcs.py:107
 msgid "Couldn't open script because of naming! Retreating..."
 msgstr "Не смог открыть скрипт из-за названия! Отбой..."
 
-#: ..\components\additional_funcs.py:116
+#: ..\components\additional_funcs.py:118
 msgid "Error while loading server! Retreating..."
 msgstr "Ошибка пока загружается сервер! Отбой..."
 
-#: ..\components\additional_funcs.py:127
+#: ..\components\additional_funcs.py:129
 msgid "Loading: "
 msgstr "Загрузка: "
 
-#: ..\components\additional_funcs.py:129
+#: ..\components\additional_funcs.py:131
 msgid "{0}, elapsed time: "
 msgstr "{0}, прошедшее время: "
 
-#: ..\components\additional_funcs.py:153
+#: ..\components\additional_funcs.py:155
 msgid "Server's on now"
 msgstr "Сервер сейчас запущен"
 
-#: ..\components\additional_funcs.py:154
+#: ..\components\additional_funcs.py:156
 msgid "Server on!"
 msgstr "Сервер запущен!"
 
-#: ..\components\additional_funcs.py:156
+#: ..\components\additional_funcs.py:158
 msgid "Kept you waiting, huh?"
 msgstr "Заставил тебя ждать, а?"
 
-#: ..\components\additional_funcs.py:176
+#: ..\components\additional_funcs.py:177
+msgid "{0}, bot already has poll on stop/restart command!"
+msgstr "{0}, у бота уже есть опрос по команде stop/restart!"
+
+#: ..\components\additional_funcs.py:186
 msgid "Bot Exception: Couldn't connect to server, because it's stopped"
 msgstr ""
 "Исключение бота: Не удалось подключиться к серверу, потому что он остановлен"
 
-#: ..\components\additional_funcs.py:178
+#: ..\components\additional_funcs.py:188
 msgid "Couldn't connect to server to shut it down! Server stopped..."
 msgstr ""
 "Не удалось подключиться к серверу, чтобы выключить его! Сервер остановлен..."
 
-#: ..\components\additional_funcs.py:189
+#: ..\components\additional_funcs.py:199
 msgid ""
 "this man {0} trying to stop the server with {1} player(s) on it. Will you "
 "let that happen?"
@@ -978,11 +982,11 @@ msgstr ""
 "этот человек {0} пытается остановить сервер с {1} игрок(ами) на нём. Дадите "
 "ли вы этому произойти?"
 
-#: ..\components\additional_funcs.py:196
+#: ..\components\additional_funcs.py:209
 msgid "Stopping server"
 msgstr "Останавливаем сервер"
 
-#: ..\components\additional_funcs.py:197
+#: ..\components\additional_funcs.py:210
 msgid ""
 "Stopping server.......\n"
 "Please wait {0} sec."
@@ -990,39 +994,39 @@ msgstr ""
 "Останавливаем сервер.......\n"
 "Пожалуйста, ожидайте {0} сек."
 
-#: ..\components\additional_funcs.py:214
+#: ..\components\additional_funcs.py:227
 msgid "Server's shutting down in {0} seconds"
 msgstr "Сервер выключается через {0} секунд"
 
-#: ..\components\additional_funcs.py:216
+#: ..\components\additional_funcs.py:229
 msgid "Server's restarting in {0} seconds"
 msgstr "Сервер перезагружается через {0} секунд"
 
-#: ..\components\additional_funcs.py:222
+#: ..\components\additional_funcs.py:235
 msgid "{0} sec to go"
 msgstr "Осталось {0} сек"
 
-#: ..\components\additional_funcs.py:236
+#: ..\components\additional_funcs.py:249
 msgid "Bot Exception: Couldn't connect to server, so killing it now..."
 msgstr ""
 "Исключение бота: Не удалось подключиться к серверу, поэтому насильно его "
 "сейчас выключаем..."
 
-#: ..\components\additional_funcs.py:238
+#: ..\components\additional_funcs.py:251
 msgid "Couldn't connect to server to shut it down! Killing it now..."
 msgstr ""
 "Не удалось подключиться к серверу, чтобы выключить его! Насильно его сейчас "
 "выключаем..."
 
-#: ..\components\additional_funcs.py:244 ..\components\additional_funcs.py:245
+#: ..\components\additional_funcs.py:257 ..\components\additional_funcs.py:258
 msgid "Server's off now"
 msgstr "Сервер сейчас остановлен"
 
-#: ..\components\additional_funcs.py:305
+#: ..\components\additional_funcs.py:318
 msgid " player(s) online"
 msgstr " игрок(ов) в сети"
 
-#: ..\components\additional_funcs.py:330
+#: ..\components\additional_funcs.py:343
 msgid ""
 "Bot detected: Server's offline!\n"
 "Time: {0}\n"
@@ -1032,57 +1036,57 @@ msgstr ""
 "Время: {0}\n"
 "Снова запускаем сервер!"
 
-#: ..\components\additional_funcs.py:346
+#: ..\components\additional_funcs.py:359
 msgid "Server has been started at {0}, by {1}"
 msgstr "Сервер был запущен пользователем {1} в {0}"
 
-#: ..\components\additional_funcs.py:350
+#: ..\components\additional_funcs.py:363
 msgid "Server has been stopped at {0}, by {1}"
 msgstr "Сервер был остановлен пользователем {1} в {0}"
 
-#: ..\components\additional_funcs.py:359
+#: ..\components\additional_funcs.py:372
 msgid "Time in minecraft: "
 msgstr "Время в майнкрафте: "
 
-#: ..\components\additional_funcs.py:361
+#: ..\components\additional_funcs.py:374
 msgid "Day, "
 msgstr "День, "
 
-#: ..\components\additional_funcs.py:363
+#: ..\components\additional_funcs.py:376
 msgid "Sunset, "
 msgstr "Закат, "
 
-#: ..\components\additional_funcs.py:365
+#: ..\components\additional_funcs.py:378
 msgid "Night, "
 msgstr "Ночь, "
 
-#: ..\components\additional_funcs.py:367
+#: ..\components\additional_funcs.py:380
 msgid "Sunrise, "
 msgstr "Восход, "
 
-#: ..\components\additional_funcs.py:368 ..\components\additional_funcs.py:378
+#: ..\components\additional_funcs.py:381 ..\components\additional_funcs.py:391
 msgid "server online"
 msgstr "сервер в сети"
 
-#: ..\components\additional_funcs.py:369 ..\components\additional_funcs.py:379
-#: ..\components\additional_funcs.py:388
+#: ..\components\additional_funcs.py:382 ..\components\additional_funcs.py:392
+#: ..\components\additional_funcs.py:401
 msgid "Server address: "
 msgstr "Адрес сервера: "
 
-#: ..\components\additional_funcs.py:373 ..\components\additional_funcs.py:382
-#: ..\components\additional_funcs.py:390
+#: ..\components\additional_funcs.py:386 ..\components\additional_funcs.py:395
+#: ..\components\additional_funcs.py:403
 msgid "Selected server: "
 msgstr "Выбранный сервер: "
 
-#: ..\components\additional_funcs.py:381
+#: ..\components\additional_funcs.py:394
 msgid "Server thinking..."
 msgstr "Сервер думает..."
 
-#: ..\components\additional_funcs.py:385
+#: ..\components\additional_funcs.py:398
 msgid "Server's down via rcon"
 msgstr "Сервер упал по rcon'у"
 
-#: ..\components\additional_funcs.py:403
+#: ..\components\additional_funcs.py:416
 msgid ""
 "There are {0} player(s)\n"
 "Player(s): {1}"
@@ -1090,23 +1094,27 @@ msgstr ""
 "Игрок(ов): {0}\n"
 "Игрок(и): {1}"
 
-#: ..\components\additional_funcs.py:422 ..\components\additional_funcs.py:436
+#: ..\components\additional_funcs.py:435 ..\components\additional_funcs.py:449
 msgid "Some player(s) still oped, waiting for them"
 msgstr "Некоторые игроки всё ещё op'нуты, ожидаем их"
 
-#: ..\components\additional_funcs.py:440
+#: ..\components\additional_funcs.py:453
 msgid "Restarting server"
 msgstr "Перезагружаем сервер"
 
-#: ..\components\additional_funcs.py:460
+#: ..\components\additional_funcs.py:473
 msgid "You should mention ONLY members or roles of this server!"
 msgstr "Вы можете упоминать ТОЛЬКО пользователей и роли этого сервера!"
 
-#: ..\components\additional_funcs.py:477
+#: ..\components\additional_funcs.py:490
 msgid "Nothing's done!"
 msgstr "Ничего не сделано!"
 
-#: ..\components\additional_funcs.py:492
+#: ..\components\additional_funcs.py:506
+msgid "{0}, bot already has poll on clear command for this channel!"
+msgstr "{0}, у бота уже есть опрос по команде clear для данного канала!"
+
+#: ..\components\additional_funcs.py:511
 msgid ""
 "this man {0} trying to delete some history of this channel. Will you let "
 "that happen?"
@@ -1114,99 +1122,99 @@ msgstr ""
 "этот человек {0} пытается удалить часть истории этого канала. Дадите ли вы "
 "этому произойти?"
 
-#: ..\components\additional_funcs.py:556
+#: ..\components\additional_funcs.py:578
 msgid "Description"
 msgstr "Описание"
 
-#: ..\components\additional_funcs.py:560
+#: ..\components\additional_funcs.py:582
 msgid "Aliases"
 msgstr "Псевдонимы"
 
-#: ..\components\additional_funcs.py:563
+#: ..\components\additional_funcs.py:585
 msgid "Subcommands"
 msgstr "Подкоманды"
 
-#: ..\components\additional_funcs.py:566
+#: ..\components\additional_funcs.py:588
 msgid "Parameters"
 msgstr "Параметры"
 
-#: ..\components\additional_funcs.py:638
+#: ..\components\additional_funcs.py:660
 msgid "File '{0}' doesn't exist!"
 msgstr "Файл '{0}' не существует!"
 
-#: ..\components\additional_funcs.py:649
+#: ..\components\additional_funcs.py:671
 msgid "{0} didn't input the argument"
 msgstr "{0} не ввёл аргумент"
 
-#: ..\components\additional_funcs.py:650
+#: ..\components\additional_funcs.py:672
 msgid "enter all arguments"
 msgstr "введите все аргументы"
 
-#: ..\components\additional_funcs.py:653
+#: ..\components\additional_funcs.py:675
 msgid "{0} don't have some permissions to run command"
 msgstr "{0} не имеет некоторых прав доступа чтобы использовать команду"
 
-#: ..\components\additional_funcs.py:657
+#: ..\components\additional_funcs.py:679
 msgid "to run this command you don't have these permissions:"
 msgstr "чтобы использовать эту команду у вас нету этих прав доступа:"
 
-#: ..\components\additional_funcs.py:661
+#: ..\components\additional_funcs.py:683
 msgid "Bot doesn't have some permissions"
 msgstr "Бот не имеет некоторых прав доступа"
 
-#: ..\components\additional_funcs.py:665
+#: ..\components\additional_funcs.py:687
 msgid "to run this command bot don't have these permissions:"
 msgstr "чтобы использовать эту команду у бота нету этих прав доступа:"
 
-#: ..\components\additional_funcs.py:669
+#: ..\components\additional_funcs.py:691
 msgid "{0} don't have role '{1}' to run command"
 msgstr "{0} не имеет роли '{1}' для использования команды"
 
-#: ..\components\additional_funcs.py:671
+#: ..\components\additional_funcs.py:693
 msgid "you don't have role '{0}' to run this command"
 msgstr "вы не имеете роли '{0}' для использования этой команды"
 
-#: ..\components\additional_funcs.py:675
+#: ..\components\additional_funcs.py:697
 msgid "{0} entered non-existent command"
 msgstr "{0} ввёл несуществующую команду"
 
-#: ..\components\additional_funcs.py:677
+#: ..\components\additional_funcs.py:699
 msgid "you entered non-existent command"
 msgstr "вы ввели несуществующую команду"
 
-#: ..\components\additional_funcs.py:680
+#: ..\components\additional_funcs.py:702
 msgid "{0} entered wrong argument(s) of command"
 msgstr "{0} неверно ввёл аргумент(ы) команды"
 
-#: ..\components\additional_funcs.py:682
+#: ..\components\additional_funcs.py:704
 msgid "you entered wrong argument(s) of this command"
 msgstr "вы неверно ввели аргумент(ы) этой команды"
 
-#: ..\components\additional_funcs.py:685
+#: ..\components\additional_funcs.py:707
 msgid "{0} entered disabled command"
 msgstr "{0} ввёл отключенную команду"
 
-#: ..\components\additional_funcs.py:687
+#: ..\components\additional_funcs.py:709
 msgid "you entered disabled command"
 msgstr "вы ввели отключенную команду"
 
-#: ..\components\additional_funcs.py:690
+#: ..\components\additional_funcs.py:712
 msgid "{0} entered a command that only works in the guild"
 msgstr "{0} ввёл команду, которая работает только в гильдии"
 
-#: ..\components\additional_funcs.py:692
+#: ..\components\additional_funcs.py:714
 msgid "this command only works on server"
 msgstr "эта команда работает только на сервере"
 
-#: ..\components\additional_funcs.py:713
+#: ..\components\additional_funcs.py:735
 msgid "this chat can't work! Cross-platform chat disabled!"
 msgstr "этот чат не может работать! Кроссплатформенный чат отключён!"
 
-#: ..\components\additional_funcs.py:719
+#: ..\components\additional_funcs.py:741
 msgid "server is restarting!"
 msgstr "сервер перезагружается!"
 
-#: ..\components\additional_funcs.py:765
+#: ..\components\additional_funcs.py:787
 msgid "No players on server!"
 msgstr "На сервере нет игроков!"
 

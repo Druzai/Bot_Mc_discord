@@ -6,6 +6,7 @@ from discord import Color, Embed
 from discord.ext import commands
 
 from components.localization import get_translation
+from config.init_config import Config
 
 
 class Poll(commands.Cog):
@@ -19,12 +20,12 @@ class Poll(commands.Cog):
     def add_awaiting_command(self, command: str):
         self._await_date[command] = datetime.now()
 
-    async def run(self, ctx, message: str, need_for_voting=2, needed_role=None,
+    async def run(self, ctx, message: str, command: str, need_for_voting=2, needed_role=None,
                   timeout=60 * 60, remove_logs_after=None):
         start_msg = await ctx.send("@everyone, " + message + " " +
                                    get_translation("To win the poll needed {0} votes!").format(str(need_for_voting)))
         poll_msg = await self.make_embed(ctx)
-        current_poll = Poll.PollContent(ctx, need_for_voting, needed_role, remove_logs_after)
+        current_poll = Poll.PollContent(ctx, command, need_for_voting, needed_role, remove_logs_after)
         self._polls[poll_msg.id] = current_poll
         seconds = 0
         while current_poll.state == Poll.States.NONE:
@@ -86,11 +87,12 @@ class Poll(commands.Cog):
         else:
             await ctx.send(f"{ctx.author.mention}, " +
                            get_translation("what are you doing? Time hasn't passed yet. Waiting {0} sec...")
-                           .format((datetime.now() - self._await_date[command]).seconds))
+                           .format((datetime.now() - self._await_date[command]).seconds),
+                           delete_after=Config.get_awaiting_times_settings().await_seconds_before_message_deletion)
             return False
 
-    def get_polls_msg_ids(self):
-        return list(self._polls.keys())
+    def get_polls(self):
+        return self._polls
 
     class States(Enum):
         NONE = auto()
@@ -99,7 +101,7 @@ class Poll(commands.Cog):
         CANCELED = auto()
 
     class PollContent:
-        def __init__(self, ctx, need_for_voting=2, needed_role=None, remove_logs_after=0):
+        def __init__(self, ctx, command: str, need_for_voting=2, needed_role=None, remove_logs_after=0):
             self.poll_yes = 0
             self.poll_no = 0
             self.poll_voted_uniq = {}
@@ -108,6 +110,7 @@ class Poll(commands.Cog):
             self.NR = needed_role
             self.RLA = remove_logs_after
             self.state = Poll.States.NONE
+            self.command = command
 
         async def count_add_voice(self, channel, user, emoji, to_left):
             if self.state is not Poll.States.NONE:

@@ -14,7 +14,7 @@ from re import search, split, findall
 from sys import platform, argv
 from typing import Tuple, List
 
-from discord import Activity, ActivityType, TextChannel
+from discord import Activity, ActivityType, TextChannel, Message
 from discord.ext import commands
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r
@@ -50,10 +50,12 @@ def add_quotes(msg: str) -> str:
     return f"```{msg}```"
 
 
-async def delete_after_by_msg_id(ctx, message_id):
-    await asleep(Config.get_awaiting_times_settings().await_seconds_before_message_deletion)
-    msg = await ctx.channel.fetch_message(message_id)
-    await msg.delete()
+async def delete_after_by_msg(message, ctx=None):
+    if isinstance(message, Message):
+        await message.delete(delay=Config.get_awaiting_times_settings().await_seconds_before_message_deletion)
+    elif isinstance(message, int):
+        await (await ctx.channel.fetch_message(message)) \
+            .delete(delay=Config.get_awaiting_times_settings().await_seconds_before_message_deletion)
 
 
 def get_author_and_mention(ctx, bot, is_reaction=False):
@@ -169,6 +171,14 @@ async def stop_server(ctx, bot, poll, how_many_sec=10, is_restart=False, is_reac
     no_connection = False
     players_count = 0
 
+    if "stop" in [p.command for p in poll.get_polls().values()]:
+        if not is_reaction:
+            await delete_after_by_msg(ctx.message)
+        await ctx.send(get_translation("{0}, bot already has poll on stop/restart command!")
+                       .format(ctx.author.mention),
+                       delete_after=Config.get_awaiting_times_settings().await_seconds_before_message_deletion)
+        return
+
     try:
         players_count = len(get_server_players())
     except BaseException:
@@ -189,8 +199,11 @@ async def stop_server(ctx, bot, poll, how_many_sec=10, is_restart=False, is_reac
                                       message=get_translation("this man {0} trying to stop the server with {1} "
                                                               "player(s) on it. Will you let that happen?")
                                               .format(get_author_and_mention(ctx, bot, is_reaction)[1], players_count),
+                                      command="stop",
                                       remove_logs_after=5):
                     return
+            else:
+                await delete_after_by_msg(ctx.message)
 
         BotVars.is_stopping = True
         print(get_translation("Stopping server"))
@@ -453,9 +466,9 @@ async def bot_clear(ctx, poll: Poll, subcommand: str = None, count: int = None):
         for role in ctx.message.role_mentions:
             mentions.update(role.members)
     if len(mentions):
-        check_condition = lambda m: m.author in mentions and m.id not in poll.get_polls_msg_ids()
+        check_condition = lambda m: m.author in mentions and m.id not in poll.get_polls().keys()
     elif len(mentions) == 0 and not len(ctx.message.channel_mentions):
-        check_condition = lambda m: m.id not in poll.get_polls_msg_ids()
+        check_condition = lambda m: m.id not in poll.get_polls().keys()
     else:
         await ctx.send(get_translation("You should mention ONLY members or roles of this server!"))
         return
@@ -463,7 +476,7 @@ async def bot_clear(ctx, poll: Poll, subcommand: str = None, count: int = None):
 
     if subcommand is None:
         if count > 0:
-            if delete_limit == 0 or len(await ctx.channel.history(limit=count + 1).flatten()) <= delete_limit:
+            if delete_limit == 0 or len(await ctx.channel.history(limit=delete_limit + 1).flatten()) <= delete_limit:
                 await ctx.channel.purge(limit=1, bulk=False)
                 await ctx.channel.purge(limit=count, check=check_condition, bulk=False)
                 return
@@ -488,15 +501,24 @@ async def bot_clear(ctx, poll: Poll, subcommand: str = None, count: int = None):
             await ctx.channel.purge(limit=None, check=check_condition, after=message_created, bulk=False)
             return
     if await poll.timer(ctx, 5, "clear"):
+        if ctx.channel in [p.ctx.channel for p in poll.get_polls().values() if p.command == "clear"]:
+            await delete_after_by_msg(ctx.message)
+            await ctx.send(get_translation("{0}, bot already has poll on clear command for this channel!")
+                           .format(ctx.author.mention),
+                           delete_after=Config.get_awaiting_times_settings().await_seconds_before_message_deletion)
+            return
         if await poll.run(ctx=ctx,
                           message=get_translation("this man {0} trying to delete some history"
                                                   " of this channel. Will you let that happen?")
                                   .format(ctx.author.mention),
+                          command="clear",
                           remove_logs_after=5):
             if count < 0 or subcommand == "reply":
                 await ctx.channel.purge(limit=None, check=check_condition, after=message_created, bulk=False)
             else:
                 await ctx.channel.purge(limit=count + 1, check=check_condition, bulk=False)
+    else:
+        await delete_after_by_msg(ctx.message)
 
 
 def parse_params_for_help(command_params: dict, string_to_add: str, create_params_dict=False) -> Tuple[str, dict]:
@@ -765,7 +787,7 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
                            get_translation("No players on server!").lower(), True)
 
     if delete_user_message and need_to_delete_on_error:
-        await delete_after_by_msg_id(message, message.id)
+        await delete_after_by_msg(message)
 
 
 def _handle_custom_emojis(message):
