@@ -4,15 +4,16 @@ from random import choice, randint
 
 import discord
 from discord import Activity, ActivityType
-from discord.ext import commands
+from discord.ext import commands, tasks
 from vk_api import VkApi
 
 from commands.poll import Poll
 from components import decorators
 from components.additional_funcs import handle_message_for_chat, send_error, bot_clear, add_quotes, \
-    parse_params_for_help, send_help_of_command, parse_subcommands_for_help, find_subcommand, make_underscored_line
+    parse_params_for_help, send_help_of_command, parse_subcommands_for_help, find_subcommand, make_underscored_line, \
+    create_webhooks
 from components.localization import get_translation, get_locales, set_locale, get_current_locale
-from config.init_config import Config
+from components.rss_feed_handle import *
 
 
 def channel_mention(arg: str):
@@ -39,6 +40,9 @@ class ChatCommands(commands.Cog):
         print(get_translation("Discord.py version"), discord.__version__)
         print("------")
         await self._bot.change_presence(activity=Activity(type=ActivityType.watching, name="nsfw"))
+        create_webhooks()
+        if Config.get_rss_feed_settings().enable_rss_feed:
+            self.rss_feed_task.start()
         print(get_translation("Bot is ready!"))
 
     """
@@ -292,6 +296,15 @@ class ChatCommands(commands.Cog):
             await bot_clear(ctx, self._IndPoll, subcommand="reply")
         else:
             await ctx.send(get_translation("You didn't provide reply in your message!"))
+
+    @tasks.loop()
+    async def rss_feed_task(self):
+        await check_on_rss_feed()
+
+    @rss_feed_task.before_loop
+    async def before_rss_feed(self):
+        await self._bot.wait_until_ready()
+        print(get_translation("Starting rss feed check"))
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):

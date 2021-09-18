@@ -75,10 +75,12 @@ def create_watcher():
     BotVars.watcher_of_log_file = Watcher(watch_file=Path(Config.get_selected_server_from_list().working_directory
                                                           + "/logs/latest.log"),
                                           call_func_on_change=_check_log_file)
-    if BotVars.webhook_chat is None:
-        BotVars.webhook_chat = \
-            Webhook.from_url(url=Config.get_cross_platform_chat_settings().webhook_url,
-                             adapter=RequestsWebhookAdapter())
+
+
+def create_chat_webhook():
+    if Config.get_cross_platform_chat_settings().webhook_url:
+        BotVars.webhook_chat = Webhook.from_url(url=Config.get_cross_platform_chat_settings().webhook_url,
+                                                adapter=RequestsWebhookAdapter())
 
 
 def _check_log_file(file: Path, last_line: str = None):
@@ -118,7 +120,7 @@ def _check_log_file(file: Path, last_line: str = None):
                     i += 2
                 player_message = "".join(split_arr)
 
-            BotVars.webhook_chat.send(rf"**{player_nick}** {player_message}")
+            BotVars.webhook_chat.send(f"**{player_nick}** {player_message}")
 
     return last_lines[-1]
 

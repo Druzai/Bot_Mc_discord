@@ -10,7 +10,6 @@ from commands.chat_commands import ChatCommands
 from commands.minecraft_commands import MinecraftCommands
 from commands.poll import Poll
 from components.localization import get_translation, RuntimeTextHandler
-from components.rss_feed_handle import create_feed_webhook, check_on_rss_feed
 from config.init_config import Config, BotVars
 
 
@@ -61,10 +60,6 @@ def main():
 
     Config.read_server_info()
     print(get_translation("Server info read!"))
-
-    if Config.get_rss_feed_settings().enable_rss_feed:
-        create_feed_webhook()
-        bot.loop.create_task(check_on_rss_feed())
 
     if Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
         BotVars.bot_for_webhooks = bot

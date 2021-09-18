@@ -23,7 +23,8 @@ from requests import post as req_post
 
 from commands.poll import Poll
 from components.localization import get_translation
-from components.watcher_handle import create_watcher
+from components.rss_feed_handle import create_feed_webhook
+from components.watcher_handle import create_watcher, create_chat_webhook
 from config.init_config import Config, BotVars
 
 if platform == "win32":
@@ -424,7 +425,7 @@ async def bot_stop(ctx, command, bot, poll, is_reaction=False):
         if Config.get_settings().bot_settings.forceload:
             Config.get_settings().bot_settings.forceload = False
             Config.save_config()
-        await stop_server(ctx, bot, poll, int(command), is_reaction=is_reaction)
+        await stop_server(ctx, bot, poll, command, is_reaction=is_reaction)
     else:
         await send_status(ctx, is_reaction=is_reaction)
 
@@ -437,7 +438,7 @@ async def bot_restart(ctx, command, bot, poll, is_reaction=False):
             return
         BotVars.is_restarting = True
         print(get_translation("Restarting server"))
-        await stop_server(ctx, bot, poll, int(command), True, is_reaction=is_reaction)
+        await stop_server(ctx, bot, poll, command, True, is_reaction=is_reaction)
         await start_server(ctx, bot, is_reaction=is_reaction)
     else:
         await send_status(ctx, is_reaction=is_reaction)
@@ -522,6 +523,13 @@ def parse_params_for_help(command_params: dict, string_to_add: str, create_param
         else:
             string_to_add += f" <{arg_name}>"
     return string_to_add, params
+
+
+def create_webhooks():
+    if Config.get_rss_feed_settings().enable_rss_feed:
+        create_feed_webhook()
+    if Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
+        create_chat_webhook()
 
 
 def parse_subcommands_for_help(command, all_params=False) -> Tuple[List[str], List[str]]:
