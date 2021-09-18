@@ -10,7 +10,7 @@ if getattr(sys, 'frozen', False):
     _locales_path = sys._MEIPASS
 _locales_path = Path(_locales_path + "/locales").as_posix()
 
-_locales = [d for d in listdir(_locales_path) if path.isdir(path.join(_locales_path, d))]
+_locales = sorted([d for d in listdir(_locales_path) if path.isdir(path.join(_locales_path, d))])
 _current_locale = ""
 _translation = None
 
