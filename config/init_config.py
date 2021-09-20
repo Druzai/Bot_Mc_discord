@@ -1,11 +1,13 @@
 import datetime as dt
 import sys
 from ast import literal_eval
+from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import datetime
 from glob import glob
 from json import load
 from locale import getdefaultlocale
+from os import mkdir, listdir, remove
 from os.path import isfile, isdir
 from pathlib import Path
 from secrets import choice as sec_choice
@@ -33,6 +35,9 @@ class BotVars:
     is_restarting: bool = False
     is_doing_op: bool = False
     is_voting: bool = False
+    is_backing_up: bool = False
+    is_restoring: bool = False
+    is_auto_backup_disable = False
     op_deop_list: List = []  # List of nicks of players to op and then to deop
     port_query: int = None
     port_rcon: int = None
@@ -68,6 +73,32 @@ class Timeouts:
     await_seconds_in_check_ups: int = -1
     await_seconds_when_opped: int = -1
     await_seconds_before_message_deletion: int = -1
+
+
+@dataclass
+class Backups:
+    automatic_backup: Optional[bool] = None
+    period_of_automatic_backups: Optional[int] = None
+    name_of_the_backups_folder: str = ""
+    size_limit_for_server: Optional[str] = ""
+    max_backups_limit_for_server: Optional[int] = -1
+    compression_method: Optional[str] = None
+
+    @property
+    def size_limit(self):
+        if self.size_limit_for_server is None:
+            return None
+        else:
+            if self.size_limit_for_server[-2:] == "MB":
+                return int(self.size_limit_for_server[:-2]) * 1024 * 1024
+            elif self.size_limit_for_server[-2:] == "GB":
+                return int(self.size_limit_for_server[:-2]) * 1024 * 1024 * 1024
+            elif self.size_limit_for_server[-2:] == "TB":
+                return int(self.size_limit_for_server[:-2]) * 1024 * 1024 * 1024 * 1024
+
+    @property
+    def supported_compression_methods(self):
+        return ["STORED", "DEFLATED", "BZIP2", "LZMA"]
 
 
 @dataclass
@@ -112,6 +143,7 @@ class Bot_settings:
 
     cross_platform_chat: Cross_platform_chat = Cross_platform_chat()
     rss_feed: Rss_feed = Rss_feed()
+    backups: Backups = Backups()
     timeouts: Timeouts = Timeouts()
 
     def __post_init__(self):
@@ -166,8 +198,20 @@ class Player:
 
 
 @dataclass
+class Backup_info:
+    file_name: str = ""
+    reason: Optional[str] = None
+    initiator: Optional[str] = None
+
+    @property
+    def file_creation_date(self):
+        return datetime.strptime(self.file_name, "%d-%m-%y-%H-%M-%S")
+
+
+@dataclass
 class Server_config:
     states: States = States()
+    backups: List[Backup_info] = field(default_factory=list)
     seen_players: List[Player] = field(default_factory=list)
 
 
@@ -184,13 +228,13 @@ class Config:
     def read_config(cls):
         file_exists = False
         if isfile(cls._config_name):
-            cls._settings_instance = cls._load_from_yaml(Path(cls._current_bot_path + "/" + cls._config_name), Settings)
+            cls._settings_instance = cls._load_from_yaml(Path(cls._current_bot_path, cls._config_name), Settings)
             file_exists = True
         cls._setup_config(file_exists)
 
     @classmethod
     def save_config(cls):
-        cls._save_to_yaml(cls._settings_instance, Path(cls._current_bot_path + "/" + cls._config_name))
+        cls._save_to_yaml(cls._settings_instance, Path(cls._current_bot_path, cls._config_name))
 
     @classmethod
     def get_inside_path(cls):
@@ -228,6 +272,10 @@ class Config:
         return cls._settings_instance.bot_settings.timeouts
 
     @classmethod
+    def get_backups_settings(cls) -> Backups:
+        return cls._settings_instance.bot_settings.backups
+
+    @classmethod
     def get_selected_server_from_list(cls) -> Server_settings:
         return cls._settings_instance.servers_list[cls._settings_instance.selected_server_number - 1]
 
@@ -259,17 +307,22 @@ class Config:
                 Config._server_config_instance.seen_players[p].number_of_times_to_op -= 1
 
     @classmethod
+    def add_backup_info(cls, file_name: str, reason: str = None, initiator: str = None):
+        cls._server_config_instance.backups.append(Backup_info(file_name=file_name, reason=reason, initiator=initiator))
+
+    @classmethod
     def read_server_config(cls):
-        if path.isfile(Path(cls.get_selected_server_from_list().working_directory + '/' + cls._server_config_name)):
-            cls._server_config_instance = cls._load_from_yaml(Path(cls.get_selected_server_from_list().working_directory
-                                                                   + '/' + cls._server_config_name), Server_config)
+        if path.isfile(Path(cls.get_selected_server_from_list().working_directory, cls._server_config_name)):
+            cls._server_config_instance = \
+                cls._load_from_yaml(Path(cls.get_selected_server_from_list().working_directory,
+                                         cls._server_config_name), Server_config)
         else:
             cls._server_config_instance = Server_config()
 
     @classmethod
     def save_server_config(cls):
         cls._save_to_yaml(cls._server_config_instance,
-                          Path(cls.get_selected_server_from_list().working_directory + '/' + cls._server_config_name))
+                          Path(cls.get_selected_server_from_list().working_directory, cls._server_config_name))
 
     @classmethod
     def get_server_config(cls):
@@ -278,6 +331,29 @@ class Config:
     @classmethod
     def read_server_info(cls):
         cls.read_server_config()
+        # Ensure we have backups folder
+        with suppress(FileExistsError):
+            mkdir(Path(cls.get_selected_server_from_list().working_directory,
+                       cls.get_backups_settings().name_of_the_backups_folder))
+        # Remove nonexistent backups from server config
+        list_to_remove = []
+        for backup in Config.get_server_config().backups:
+            if not isfile(Path(Config.get_selected_server_from_list().working_directory,
+                               Config.get_backups_settings().name_of_the_backups_folder,
+                               f"{backup.file_name}.zip")):
+                list_to_remove.append(backup)
+        for bc in list_to_remove:
+            Config.get_server_config().backups.remove(bc)
+        if len(list_to_remove) > 0:
+            Config.save_server_config()
+        # Remove nonexistent backups from server's backups folder
+        list_of_backups_names = [b.file_name for b in Config.get_server_config().backups]
+        for backup in listdir(Path(Config.get_selected_server_from_list().working_directory,
+                                   Config.get_backups_settings().name_of_the_backups_folder)):
+            if backup.rsplit(".", 1)[0] not in list_of_backups_names:
+                remove(Path(Config.get_selected_server_from_list().working_directory,
+                            Config.get_backups_settings().name_of_the_backups_folder, backup))
+
         filepath = Path(cls.get_selected_server_from_list().working_directory + "/server.properties")
         if not filepath.exists():
             raise RuntimeError(get_translation("File '{0}' doesn't exist! "
@@ -286,8 +362,8 @@ class Config:
         with open(filepath, "r", encoding="utf8") as f:
             lines = f.readlines()
             if len(lines) < 3:
-                raise RuntimeError(get_translation("File '{0}' doesn't have any parameters! "
-                                                   "Accept eula and run minecraft server manually to fill it with parameters!")
+                raise RuntimeError(get_translation("File '{0}' doesn't have any parameters! Accept eula and "
+                                                   "run minecraft server manually to fill it with parameters!")
                                    .format(filepath.as_posix()))
             for i in lines:
                 if i.find("enable-query") >= 0:
@@ -357,8 +433,8 @@ class Config:
         Conf.save(config=Conf.structured(class_instance), f=filepath)
 
     @staticmethod
-    def _ask_for_data(message: str, match_str=None,
-                      try_int=False, int_high_than=None, try_float=False, float_hight_than=None):
+    def _ask_for_data(message: str, match_str: Optional[str] = None, try_int=False, int_high_than: Optional[int] = None,
+                      try_float=False, float_high_than: Optional[float] = None):
         while True:
             answer = str(input(message))
             if answer != "":
@@ -373,10 +449,10 @@ class Config:
                     except ValueError:
                         print(get_translation("Your string doesn't contain an integer!"))
                         continue
-                if try_float or float_hight_than is not None:
+                if try_float or float_high_than is not None:
                     try:
-                        if float_hight_than is not None and float(answer) < float_hight_than:
-                            print(get_translation("Your number lower than {0}!").format(float_hight_than))
+                        if float_high_than is not None and float(answer) < float_high_than:
+                            print(get_translation("Your number lower than {0}!").format(float_high_than))
                             continue
                         return float(answer)
                     except ValueError:
@@ -408,6 +484,7 @@ class Config:
         cls._setup_rss_feed()
         cls._setup_timeouts()
         cls._setup_servers()
+        cls._setup_backups()
 
         if cls._need_to_rewrite:
             cls._need_to_rewrite = False
@@ -629,7 +706,7 @@ class Config:
             cls._settings_instance.bot_settings.timeouts.await_seconds_when_connecting_via_rcon = \
                 cls._ask_for_data(get_translation(
                     "Set timeout while bot pinging server for info (in seconds, float)") + "\n> ",
-                                  try_float=True, float_hight_than=0.05)
+                                  try_float=True, float_high_than=0.05)
         print(get_translation("Timeout while bot pinging server for info set to {0} sec.")
               .format(str(cls._settings_instance.bot_settings.timeouts.await_seconds_when_connecting_via_rcon)))
         if cls._settings_instance.bot_settings.timeouts.await_seconds_when_connecting_via_rcon == 0:
@@ -749,7 +826,7 @@ class Config:
         while True:
             start_file_name = cls._ask_for_data(get_translation("Enter server start file name") + "\n> ") + \
                               (file_extension if file_extension is not None else '')
-            if isfile(Path(working_directory + "/" + start_file_name)):
+            if isfile(Path(working_directory, start_file_name)):
                 return start_file_name
             else:
                 print(get_translation("This start file doesn't exist."))
@@ -785,10 +862,11 @@ class Config:
                 if cls._settings_instance.bot_settings.cross_platform_chat.refresh_delay_of_console_log <= 0.05:
                     print(get_translation("Watcher's delay to refresh doesn't set."))
                     print(get_translation("Note: If your machine has processor with frequency 2-2.5 GHz, "
-                                          "you have to set this option from '0.5' to '0.9' second for the bot to work properly."))
+                                          "you have to set this option from '0.5' to '0.9' second "
+                                          "for the bot to work properly."))
                     cls._settings_instance.bot_settings.cross_platform_chat.refresh_delay_of_console_log = \
                         cls._ask_for_data(get_translation("Set delay to refresh (in seconds, float)") + "\n> ",
-                                          try_float=True, float_hight_than=0.05)
+                                          try_float=True, float_high_than=0.05)
 
                 if cls._settings_instance.bot_settings.cross_platform_chat.number_of_lines_to_check_in_console_log < 1:
                     print(get_translation("Watcher's number of lines to check in server log doesn't set."))
@@ -812,9 +890,8 @@ class Config:
                 cls._settings_instance.bot_settings.rss_feed.enable_rss_feed = True
 
                 if cls._settings_instance.bot_settings.rss_feed.webhook_url is None:
-                    if cls._ask_for_data(
-                            get_translation("Webhook rss url not found. Would you like to enter it?") + " Y/n\n> ",
-                            "y"):
+                    if cls._ask_for_data(get_translation("Webhook rss url not found. Would you like to enter it?") +
+                                         " Y/n\n> ", "y"):
                         cls._settings_instance.bot_settings.rss_feed.webhook_url = \
                             cls._ask_for_data(get_translation("Enter webhook rss url") + "\n> ")
                     else:
@@ -844,3 +921,54 @@ class Config:
                 print(get_translation("Rss feed enabled."))
             else:
                 print(get_translation("Rss feed disabled."))
+
+    @classmethod
+    def _setup_backups(cls):
+        if cls._settings_instance.bot_settings.backups.automatic_backup is None:
+            cls._need_to_rewrite = True
+            cls._settings_instance.bot_settings.backups.automatic_backup = \
+                cls._ask_for_data(get_translation("Automatic backup isn't set. Would you like to enable them?") +
+                                  " Y/n\n> ", "y")
+        if cls._settings_instance.bot_settings.backups.period_of_automatic_backups is None:
+            cls._need_to_rewrite = True
+            cls._settings_instance.bot_settings.backups.period_of_automatic_backups = \
+                cls._ask_for_data(get_translation("Set period of automatic backups (in minutes, int)") + "\n> ",
+                                  try_int=True, int_high_than=0)
+        if not cls._settings_instance.bot_settings.backups.name_of_the_backups_folder:
+            cls._need_to_rewrite = True
+            cls._settings_instance.bot_settings.backups.name_of_the_backups_folder = \
+                cls._ask_for_data(get_translation("Enter name of the backups folder for each minecraft server") +
+                                  "\n> ")
+        if cls._settings_instance.bot_settings.backups.max_backups_limit_for_server == -1:
+            cls._need_to_rewrite = True
+            if cls._ask_for_data(get_translation("Max backups limit for server not found. Would you like to set it?") +
+                                 " Y/n\n> ", "y"):
+                cls._settings_instance.bot_settings.backups.max_backups_limit_for_server = \
+                    cls._ask_for_data(get_translation("Set max backups limit for server (int)") + "\n> ",
+                                      try_int=True, int_high_than=0)
+            else:
+                cls._settings_instance.bot_settings.backups.max_backups_limit_for_server = None
+        if cls._settings_instance.bot_settings.backups.size_limit_for_server == "":
+            cls._need_to_rewrite = True
+            if cls._ask_for_data(get_translation("Size limit for server not found. Would you like to set it?") +
+                                 " Y/n\n> ", "y"):
+                while True:
+                    unit_of_bytes = cls._ask_for_data(get_translation("Enter in what unit of measure "
+                                                                      "you will set the limit") +
+                                                      " (MB, GB, TB)" + "\n> ").strip()
+                    if unit_of_bytes.upper() not in ["MB", "GB", "TB"]:
+                        print(get_translation("You have entered the wrong unit of measure!"))
+                    else:
+                        break
+                size = cls._ask_for_data(get_translation("Size limit for server in {0} (int)").format(unit_of_bytes) +
+                                         "\n> ", try_int=True, int_high_than=0)
+                cls._settings_instance.bot_settings.backups.size_limit_for_server = f"{size}{unit_of_bytes}"
+            else:
+                cls._settings_instance.bot_settings.backups.size_limit_for_server = None
+        if cls._settings_instance.bot_settings.backups.compression_method is None:
+            cls._need_to_rewrite = True
+            cls._settings_instance.bot_settings.backups.compression_method = \
+                cls._settings_instance.bot_settings.backups.supported_compression_methods[1]
+
+        print(get_translation("Name of the backups folder in which bot will store backups - '{0}'.")
+              .format(cls._settings_instance.bot_settings.backups.name_of_the_backups_folder))

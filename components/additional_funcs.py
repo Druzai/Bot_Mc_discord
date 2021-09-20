@@ -6,19 +6,21 @@ from datetime import datetime
 from hashlib import md5
 from itertools import chain
 from json import load, dump, JSONDecodeError
-from os import chdir, system
-from os.path import basename
+from os import chdir, system, walk, mkdir, remove
+from os.path import basename, join as p_join, getsize
 from pathlib import Path
 from random import randint
 from re import search, split, findall
+from shutil import rmtree
 from sys import platform, argv
-from typing import Tuple, List
+from typing import Tuple, List, Union
+from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 
 from discord import Activity, ActivityType, TextChannel, Message
 from discord.ext import commands
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r
-from psutil import process_iter, NoSuchProcess
+from psutil import process_iter, NoSuchProcess, disk_usage
 from requests import post as req_post
 
 from commands.poll import Poll
@@ -32,9 +34,11 @@ if platform == "win32":
 
 __all__ = [
     "server_checkups", "send_error", "send_msg", "send_status", "stop_server", "start_server",
-    "get_author_and_mention", "save_to_whitelist_json", "get_whitelist_entry", "get_server_online_mode",
+    "get_author_and_mention", "save_to_whitelist_json", "get_whitelist_entry", "get_from_server_properties",
     "get_server_players", "add_quotes", "bot_status", "bot_list", "bot_start", "bot_stop", "bot_restart",
-    "connect_rcon", "make_underscored_line"
+    "connect_rcon", "make_underscored_line", "server_auto_backups", "get_human_readable_size",
+    "calculate_space_for_current_server", "create_zip_archive", "restore_from_zip_archive", "get_file_size",
+    "send_message_of_deleted_backup", "handle_backups_limit_and_size"
 ]
 
 
@@ -74,9 +78,16 @@ def get_author_and_mention(ctx, bot, is_reaction=False):
 
 async def send_status(ctx, is_reaction=False):
     if BotVars.is_server_on:
-        await send_msg(ctx, add_quotes(get_translation("server have already started!").capitalize()), is_reaction)
+        if BotVars.is_backing_up:
+            await send_msg(ctx, add_quotes(get_translation("Bot is backing up server!").capitalize()), is_reaction)
+        else:
+            await send_msg(ctx, add_quotes(get_translation("server have already started!").capitalize()), is_reaction)
     else:
-        if BotVars.is_loading:
+        if BotVars.is_backing_up:
+            await send_msg(ctx, add_quotes(get_translation("Bot is backing up server!").capitalize()), is_reaction)
+        elif BotVars.is_restoring:
+            await send_msg(ctx, add_quotes(get_translation("Bot is restoring server!").capitalize()), is_reaction)
+        elif BotVars.is_loading:
             await send_msg(ctx, add_quotes(get_translation("server is loading!").capitalize()), is_reaction)
         elif BotVars.is_stopping:
             await send_msg(ctx, add_quotes(get_translation("server is stopping!").capitalize()), is_reaction)
@@ -132,7 +143,7 @@ async def start_server(ctx, bot, shut_up=False, is_reaction=False):
                              .format(Config.get_settings().bot_settings.idle_status) + \
                          (str(timedelta_secs // 60) + ":" +
                           f"{(timedelta_secs % 60):02d}" if timedelta_secs // 60 != 0 else str(timedelta_secs % 60) +
-                                                                                           " sec")
+                                                                                           get_translation(" sec"))
         await bot.change_presence(activity=Activity(type=ActivityType.listening, name=output_bot))
         await asleep(Config.get_awaiting_times_settings().await_seconds_when_connecting_via_rcon)
         with suppress(BaseException):
@@ -161,7 +172,7 @@ async def start_server(ctx, bot, shut_up=False, is_reaction=False):
     if BotVars.is_restarting:
         BotVars.is_restarting = False
     Config.get_server_config().states.started_info.set_state_info(str(author),
-                                                                  datetime.now().strftime("%d/%m/%y, %H:%M:%S"))
+                                                                  datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
     Config.save_server_config()
     await bot.change_presence(activity=Activity(type=ActivityType.playing,
                                                 name=Config.get_settings().bot_settings.gaming_status))
@@ -204,6 +215,8 @@ async def stop_server(ctx, bot, poll, how_many_sec=10, is_restart=False, is_reac
                     return
             else:
                 await delete_after_by_msg(ctx.message)
+        if players_count == 0:
+            how_many_sec = 0
 
         BotVars.is_stopping = True
         print(get_translation("Stopping server"))
@@ -211,8 +224,6 @@ async def stop_server(ctx, bot, poll, how_many_sec=10, is_restart=False, is_reac
                                        .format(str(how_many_sec))), is_reaction)
 
         with connect_rcon() as cl_r:
-            if players_count == 0:
-                how_many_sec = 0
             if how_many_sec != 0:
                 w = 1
                 if how_many_sec > 5:
@@ -257,7 +268,7 @@ async def stop_server(ctx, bot, poll, how_many_sec=10, is_restart=False, is_reac
     print(get_translation("Server's off now"))
     await send_msg(ctx, author_mention + "\n" + add_quotes(get_translation("Server's off now")), is_reaction)
     Config.get_server_config().states.stopped_info.set_state_info(str(author),
-                                                                  datetime.now().strftime("%d/%m/%y, %H:%M:%S"))
+                                                                  datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
     Config.save_server_config()
     await bot.change_presence(activity=Activity(type=ActivityType.listening,
                                                 name=Config.get_settings().bot_settings.idle_status))
@@ -286,6 +297,254 @@ def kill_server():
             with suppress(NoSuchProcess):
                 p.kill()
     BotVars.server_start_time = None
+
+
+async def server_auto_backups(bot):
+    await asleep(Config.get_backups_settings().period_of_automatic_backups * 60)
+    if not BotVars.is_backing_up and not BotVars.is_restoring and Config.get_backups_settings().automatic_backup:
+        print(get_translation("Starting auto backup"))
+        if BotVars.is_loading or BotVars.is_stopping or BotVars.is_restarting:
+            while True:
+                await asleep(Config.get_awaiting_times_settings().await_seconds_when_connecting_via_rcon)
+                if not BotVars.is_loading and not BotVars.is_stopping and not BotVars.is_restarting:
+                    break
+
+        players_count = 0
+        if BotVars.is_server_on:
+            with suppress(BaseException):
+                players_count = len(get_server_players())
+            if players_count != 0:
+                if BotVars.is_auto_backup_disable:
+                    BotVars.is_auto_backup_disable = False
+
+        if not BotVars.is_auto_backup_disable:
+            handle_backups_limit_and_size(bot, auto_backups=True)
+
+            # Creating auto backup
+            file_name = datetime.now().strftime("%d-%m-%y-%H-%M-%S")
+            await create_zip_archive(None, bot, file_name,
+                                     Path(Config.get_selected_server_from_list().working_directory,
+                                          Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
+                                     Path(Config.get_selected_server_from_list().working_directory,
+                                          get_from_server_properties("level-name")).as_posix(),
+                                     Config.get_backups_settings().compression_method)
+            Config.add_backup_info(file_name=file_name)
+            Config.save_server_config()
+
+        if BotVars.is_server_on and players_count == 0:
+            if not BotVars.is_auto_backup_disable:
+                BotVars.is_auto_backup_disable = True
+
+        if not BotVars.is_server_on:
+            if not BotVars.is_auto_backup_disable:
+                BotVars.is_auto_backup_disable = True
+
+
+async def create_zip_archive(message: Union[Message, None], bot, zip_name: str, zip_path: str, dir_path: str,
+                             compression, forced=False, user=None):
+    """
+    recursively .zip a directory
+    """
+    BotVars.is_backing_up = True
+    comp = None
+    if compression == "STORED":
+        comp = ZIP_STORED
+    elif compression == "DEFLATED":
+        comp = ZIP_DEFLATED
+    elif compression == "BZIP2":
+        comp = ZIP_BZIP2
+    elif compression == "LZMA":
+        comp = ZIP_LZMA
+    total = 0
+    dt = datetime.now()
+    # Count size of all files in directory
+    for root, _, files in walk(dir_path):
+        for fname in files:
+            total += getsize(p_join(root, fname))
+
+    current = 0
+    use_rcon = False
+    if BotVars.is_server_on:
+        with suppress(BaseException):
+            with connect_query() as cl_q:
+                if cl_q.full_stats:
+                    use_rcon = True
+
+    if use_rcon:
+        tellraw = ["", {"text": "<"}, {"text": bot.user.display_name, "color": "dark_gray"}, {"text": "> "}]
+        if forced:
+            tellraw.append({"text": get_translation("Starting forced backup triggered by {0}...")
+                           .format(f"{user.display_name}#{user.discriminator}"), "color": "yellow"})
+        else:
+            tellraw.append({"text": get_translation("Starting automatic backup..."), "color": "aqua"})
+        with connect_rcon() as cl_r:
+            cl_r.tellraw("@a", tellraw)
+    # Create zip file with output of percents
+    with ZipFile(Path(f"{zip_path}/{zip_name}.zip"), mode="w", compression=comp) as z:
+        for root, _, files in walk(dir_path):
+            for file in files:
+                if file == "session.lock":
+                    continue
+
+                fn = Path(root, file)
+                afn = fn.relative_to(dir_path)
+                if message is not None:
+                    timedelta_secs = (datetime.now() - dt).seconds
+                    if timedelta_secs % 4 == 0:
+                        percent = round(100 * current / total)
+                        if timedelta_secs // 60 != 0:
+                            date_t = str(timedelta_secs // 60) + ":" + f"{(timedelta_secs % 60):02d}"
+                        else:
+                            date_t = str(timedelta_secs % 60) + get_translation(" sec")
+                        await message.edit(content=add_quotes(f"diff\n{percent}% {date_t} '{afn}'\n"
+                                                              f"- |{'█' * (percent // 5)}{' ' * (20 - percent // 5)}|"))
+                tries = 0
+                while tries < 3:
+                    with suppress(PermissionError):
+                        with open(fn, mode="rb") as f:
+                            f.read(1)
+                        z.write(fn, arcname=afn)
+                        break
+                    tries += 1
+                    await asleep(1)
+                current += getsize(fn)
+
+    if message is not None:
+        timedelta_secs = (datetime.now() - dt).seconds
+        if timedelta_secs // 60 != 0:
+            date_t = str(timedelta_secs // 60) + ":" + f"{(timedelta_secs % 60):02d}"
+        else:
+            date_t = str(timedelta_secs % 60) + get_translation(" sec")
+        await message.edit(content=add_quotes(get_translation("Done in {0}, method: {1}!").format(date_t, compression)))
+    if use_rcon:
+        with connect_rcon() as cl_r:
+            cl_r.tellraw("@a",
+                         ["", {"text": "<"}, {"text": bot.user.display_name, "color": "dark_gray"}, {"text": "> "},
+                          {"text": get_translation("Backup completed!"), "color": "green"}])
+    BotVars.is_backing_up = False
+
+
+def restore_from_zip_archive(zip_name: str, zip_path: str, dir_path: str):
+    BotVars.is_restoring = True
+    rmtree(dir_path, ignore_errors=True)
+    mkdir(dir_path)
+
+    with ZipFile(Path(f"{zip_path}/{zip_name}.zip"), mode="r") as z:
+        z.extractall(dir_path)
+    BotVars.is_restoring = False
+
+
+def calculate_space_for_current_server():
+    """Get sizes
+    Return
+    ----------
+    free_space: int
+        free space of drive
+    used_space: int
+        used space by backups
+    """
+    disk_bytes_free = disk_usage(Config.get_selected_server_from_list().working_directory).free
+    bc_folder_bytes = get_folder_size(Config.get_selected_server_from_list().working_directory,
+                                      Config.get_backups_settings().name_of_the_backups_folder)
+    limit = Config.get_backups_settings().size_limit
+    if limit is not None:
+        return limit - bc_folder_bytes, bc_folder_bytes
+    else:
+        return disk_bytes_free, bc_folder_bytes
+
+
+def delete_oldest_auto_backup_if_exists(reason: str, bot):
+    backup = None
+    for bc in Config.get_server_config().backups:
+        if bc.initiator is None:
+            backup = bc
+            break
+    if backup is None:
+        backup = Config.get_server_config().backups[0]
+    remove(Path(Config.get_selected_server_from_list().working_directory,
+                Config.get_backups_settings().name_of_the_backups_folder, f"{backup.file_name}.zip"))
+    send_message_of_deleted_backup(bot, reason, backup.file_name)
+    Config.get_server_config().backups.remove(backup)
+
+
+def send_message_of_deleted_backup(bot, reason: str, backup_file_name: str = None):
+    if backup_file_name is not None:
+        msg = get_translation("Deleted backup {0}.zip because of {1}").format(backup_file_name, reason)
+    else:
+        msg = get_translation("Deleted all backups because of {0}").format(reason)
+    with suppress(BaseException):
+        with connect_rcon() as cl_r:
+            cl_r.tellraw("@a",
+                         ["", {"text": "<"}, {"text": bot.user.display_name, "color": "dark_gray"}, {"text": "> "},
+                          {"text": msg, "color": "red"}])
+    print(msg)
+    return msg
+
+
+def handle_backups_limit_and_size(bot, auto_backups=False):
+    # If limit is exceeded
+    is_rewritten = False
+    while True:
+        if Config.get_backups_settings().max_backups_limit_for_server is not None and \
+                Config.get_backups_settings().max_backups_limit_for_server <= \
+                len(Config.get_server_config().backups):
+            if not auto_backups:
+                return get_translation("backups limit")
+            delete_oldest_auto_backup_if_exists(get_translation("backups limit"), bot)
+            is_rewritten = True
+            continue
+        break
+    if is_rewritten:
+        Config.save_server_config()
+
+    is_rewritten = False
+    max_backup_size = 0
+    for backup in Config.get_server_config().backups:
+        backup_size = get_file_size(Config.get_selected_server_from_list().working_directory,
+                                    Config.get_backups_settings().name_of_the_backups_folder,
+                                    f"{backup.file_name}.zip")
+        if max_backup_size < backup_size:
+            max_backup_size = backup_size
+    # If not enough free space
+    while True:
+        free, used = calculate_space_for_current_server()
+        if max_backup_size < free:
+            break
+        if Config.get_backups_settings().size_limit is not None and \
+                Config.get_backups_settings().size_limit > used + max_backup_size:
+            break
+        if not auto_backups:
+            return get_translation("lack of space")
+        delete_oldest_auto_backup_if_exists(get_translation("lack of space"), bot)
+        is_rewritten = True
+    if is_rewritten:
+        Config.save_server_config()
+
+
+def get_folder_size(*path: str) -> int:
+    return sum(p.stat().st_size for p in Path(*path).rglob('*'))
+
+
+def get_file_size(*path: str) -> int:
+    return Path(*path).stat().st_size
+
+
+def get_human_readable_size(size):
+    B = get_translation("B")
+    KB = get_translation("KB")
+    MB = get_translation("MB")
+    GB = get_translation("GB")
+    TB = get_translation("TB")
+    PB = get_translation("PB")
+    units = [B, KB, MB, GB, TB, PB]
+    human_radix = 1024.
+
+    for u in units[:-1]:
+        if size < human_radix:
+            return f"{size:.2f} {u}"
+        size /= human_radix
+
+    return f"{size:.2f} {units[-1]}"
 
 
 async def server_checkups(bot: commands.Bot):
@@ -354,6 +613,7 @@ async def server_checkups(bot: commands.Bot):
 
 async def bot_status(ctx, is_reaction=False):
     states = ""
+    bot_message = ""
     states_info = Config.get_server_config().states
     if states_info.started_info.date is not None and states_info.started_info.user is not None:
         states += get_translation("Server has been started at {0}, by {1}").format(states_info.started_info.date,
@@ -364,8 +624,14 @@ async def bot_status(ctx, is_reaction=False):
                                                                                    states_info.stopped_info.user) \
                   + "\n"
     states = states.strip("\n")
+    bot_message += get_translation("Server address: ") + Config.get_settings().bot_settings.ip_address + "\n"
+    if BotVars.is_backing_up:
+        bot_message += get_translation("Server is backing up") + "\n"
+    if BotVars.is_restoring:
+        bot_message += get_translation("Server is restoring") + "\n"
     if BotVars.is_server_on:
         try:
+            bot_message = get_translation("server online").capitalize() + "\n" + bot_message
             with connect_rcon() as cl_r:
                 """rcon check daytime cycle"""
                 time_ticks = int(cl_r.run("time query daytime").split(" ")[-1])
@@ -378,32 +644,20 @@ async def bot_status(ctx, is_reaction=False):
                 message += get_translation("Night, ")
             else:
                 message += get_translation("Sunrise, ")
-            await send_msg(ctx, add_quotes(get_translation("server online").capitalize() + "\n" +
-                                           get_translation("Server address: ") +
-                                           Config.get_settings().bot_settings.ip_address + "\n"
-                                           + message + str((6 + time_ticks // 1000) % 24) + ":"
-                                           + f"{((time_ticks % 1000) * 60 // 1000):02d}"
-                                           + "\n" + get_translation("Selected server: ") +
-                                           Config.get_selected_server_from_list().server_name + "\n" + states),
-                           is_reaction)
+            message += str((6 + time_ticks // 1000) % 24) + ":" + f"{((time_ticks % 1000) * 60 // 1000):02d}\n"
+            bot_message += message + get_translation("Selected server: ") + \
+                           Config.get_selected_server_from_list().server_name + "\n" + states
+            await send_msg(ctx, add_quotes(bot_message), is_reaction)
         except BaseException:
-            await send_msg(ctx,
-                           add_quotes(get_translation("server online").capitalize() + "\n" +
-                                      get_translation("Server address: ") +
-                                      Config.get_settings().bot_settings.ip_address +
-                                      "\n" + get_translation("Server thinking...") +
-                                      "\n" + get_translation("Selected server: ") +
-                                      Config.get_selected_server_from_list().server_name + "\n" + states),
-                           is_reaction)
+            bot_message += get_translation("Server thinking...") + "\n" + get_translation("Selected server: ") + \
+                           Config.get_selected_server_from_list().server_name + "\n" + states
+            await send_msg(ctx, add_quotes(bot_message), is_reaction)
             print(get_translation("Server's down via rcon"))
     else:
-        await send_msg(ctx, add_quotes(get_translation("server offline").capitalize() + "\n" +
-                                       get_translation("Server address: ") +
-                                       Config.get_settings().bot_settings.ip_address +
-                                       "\n" + get_translation("Selected server: ") +
-                                       Config.get_selected_server_from_list().server_name +
-                                       "\n" + states),
-                       is_reaction)
+        bot_message = get_translation("server offline").capitalize() + "\n" + bot_message
+        bot_message += get_translation("Selected server: ") + Config.get_selected_server_from_list().server_name + \
+                       "\n" + states
+        await send_msg(ctx, add_quotes(bot_message), is_reaction)
 
 
 async def bot_list(ctx, bot, is_reaction=False):
@@ -423,14 +677,16 @@ async def bot_list(ctx, bot, is_reaction=False):
 
 
 async def bot_start(ctx, bot, is_reaction=False):
-    if not BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading:
+    if not BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and \
+            not BotVars.is_backing_up and not BotVars.is_restoring:
         await start_server(ctx, bot=bot, is_reaction=is_reaction)
     else:
         await send_status(ctx, is_reaction=is_reaction)
 
 
 async def bot_stop(ctx, command, bot, poll, is_reaction=False):
-    if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading:
+    if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and \
+            not BotVars.is_backing_up and not BotVars.is_restoring:
         if BotVars.is_doing_op:
             await send_msg(ctx, add_quotes(get_translation("Some player(s) still oped, waiting for them")),
                            is_reaction)
@@ -444,7 +700,8 @@ async def bot_stop(ctx, command, bot, poll, is_reaction=False):
 
 
 async def bot_restart(ctx, command, bot, poll, is_reaction=False):
-    if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading:
+    if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and \
+            not BotVars.is_backing_up and not BotVars.is_restoring:
         if BotVars.is_doing_op:
             await send_msg(ctx, add_quotes(get_translation("Some player(s) still oped, waiting for them")),
                            is_reaction)
@@ -476,7 +733,8 @@ async def bot_clear(ctx, poll: Poll, subcommand: str = None, count: int = None):
 
     if subcommand is None:
         if count > 0:
-            if delete_limit == 0 or len(await ctx.channel.history(limit=delete_limit + 1).flatten()) <= delete_limit:
+            lim = count if count < delete_limit else delete_limit + 1
+            if delete_limit == 0 or len(await ctx.channel.history(limit=lim).flatten()) <= delete_limit:
                 await ctx.channel.purge(limit=1, bulk=False)
                 await ctx.channel.purge(limit=count, check=check_condition, bulk=False)
                 return
@@ -559,12 +817,20 @@ def parse_subcommands_for_help(command, all_params=False) -> Tuple[List[str], Li
         return [], []
 
     if not all_params:
-        return [c.name for c in command.commands], []
+        return [c.name for c in sorted(command.commands, key=lambda c: c.name)], []
 
     subcommands = []
-    for subcommand in command.commands:
-        subcommands.append(parse_params_for_help(subcommand.clean_params, subcommand.name)[0])
-    return [c.name for c in command.commands], subcommands
+    for subcommand in sorted(command.commands, key=lambda c: c.name):
+        sub_sub_commands_line = parse_subcommands_for_help(subcommand)[0]
+        if sub_sub_commands_line:
+            sub_sub_commands_line = " " + " | ".join(sub_sub_commands_line) if len(sub_sub_commands_line) else ""
+            sub_command, *sub_command_params = \
+                parse_params_for_help(subcommand.clean_params, subcommand.name)[0].split()
+            subcommands.append(sub_command + sub_sub_commands_line + (" | " if len(sub_sub_commands_line) > 0 else "") +
+                               " ".join(sub_command_params))
+        else:
+            subcommands.append(parse_params_for_help(subcommand.clean_params, subcommand.name)[0])
+    return [c.name for c in sorted(command.commands, key=lambda c: c.name)], subcommands
 
 
 async def send_help_of_command(ctx, command):
@@ -654,14 +920,23 @@ def save_to_whitelist_json(entry: dict):
         dump(whitelist, file)
 
 
-def get_server_online_mode():
+def get_from_server_properties(setting: str):
+    """
+    Parameters
+    ----------
+    setting : str
+        can be "online-mode" or "level-name"
+    """
     filepath = Path(Config.get_selected_server_from_list().working_directory + "/server.properties")
     if not filepath.exists():
         raise RuntimeError(get_translation("File '{0}' doesn't exist!").format(filepath.as_posix()))
     with open(filepath, "r") as f:
         for i in f.readlines():
-            if i.find("online-mode") >= 0:
-                return literal_eval(i.split("=")[1].capitalize())
+            if i.find(setting) >= 0:
+                if setting == "online-mode":
+                    return literal_eval(i.split("=")[1].capitalize())
+                elif setting == "level-name":
+                    return i.split("=")[1].strip(" \n")
 
 
 # Handling errors
@@ -709,15 +984,25 @@ async def send_error(ctx, bot, error, is_reaction=False):
                        add_quotes(get_translation("you entered disabled command").capitalize()),
                        is_reaction)
     elif isinstance(error, commands.NoPrivateMessage):
-        print(get_translation("{0} entered a command that only works in the guild"))
+        print(get_translation("{0} entered a command that only works in the guild").format(author))
         await send_msg(ctx, f"{author_mention}\n" +
                        add_quotes(get_translation("this command only works on server").capitalize()),
                        is_reaction)
+    elif isinstance(error, commands.CommandOnCooldown):
+        print(get_translation("{0} triggered a command more than {1} time(s) per {2} sec").format(author,
+                                                                                                  error.cooldown.rate,
+                                                                                                  error.cooldown.per))
+        await send_msg(ctx, f"{author_mention}\n" +
+                       add_quotes(get_translation("You triggered this command more than {0} time(s) per {1} sec\n"
+                                                  "Try again in {2} sec").format(error.cooldown.rate,
+                                                                              int(error.cooldown.per),
+                                                                              int(error.retry_after))))
     elif isinstance(error, commands.CheckFailure):
         pass
     else:
         print(", ".join(error.args))
-        await send_msg(ctx, f"{author_mention}\n" + add_quotes(", ".join(error.original.args)), is_reaction)
+        await send_msg(ctx, f"{author_mention}\n" +
+                       add_quotes(", ".join([str(a) for a in error.original.args])), is_reaction)
 
 
 async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, on_edit=False, before_message=None):
