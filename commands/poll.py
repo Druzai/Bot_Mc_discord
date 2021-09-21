@@ -22,6 +22,9 @@ class Poll(commands.Cog):
 
     async def run(self, ctx, message: str, command: str, need_for_voting=2, needed_role=None,
                   timeout=60 * 60, remove_logs_after=None):
+        members_count = len([m for m in self._bot.guilds[0].members if not m.bot])
+        if members_count < need_for_voting:
+            need_for_voting = members_count
         start_msg = await ctx.send("@everyone, " + message + " " +
                                    get_translation("To win the poll needed {0} votes!").format(str(need_for_voting)))
         poll_msg = await self.make_embed(ctx)

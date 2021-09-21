@@ -16,7 +16,7 @@ from config.init_config import BotVars, Config
 
 
 class MinecraftCommands(commands.Cog):
-    _emoji_symbols = {"status": "🗨", "list": "📋", "start": "♿",
+    _emoji_symbols = {"status": "🗨", "list": "📋", "backup": "💾", "start": "♿",
                       "stop 10": "⏹", "restart 10": "🔄", "update": "📶"}  # Symbols for menu
 
     def __init__(self, bot: commands.Bot, poll: Poll):
@@ -487,33 +487,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     async def backup(self, ctx):
-        bot_message = get_translation("Automatic backups ") + \
-                      (get_translation("enabled" if Config.get_backups_settings()
-                                       .automatic_backup else get_translation("disabled"))) + "\n"
-        bot_message += get_translation("Automatic backups period set to {0} min").format(Config.get_backups_settings()
-                                                                                         .period_of_automatic_backups)
-        bot_message += "\n" + get_translation("Max backups limit for server - {0}") \
-            .format(Config.get_backups_settings().max_backups_limit_for_server)
-        bot_message += "\n" + get_translation("Current compression method - {0}").format(Config.get_backups_settings()
-                                                                                         .compression_method) + "\n\n"
-
-        bc_free_bytes, bc_used_bytes = calculate_space_for_current_server()
-        bot_message += get_translation("Backups folder info for '{0}' server:") \
-                           .format(Config.get_selected_server_from_list().server_name) + "\n" + \
-                       get_translation("Used - {0}").format(get_human_readable_size(bc_used_bytes)) + "\n" + \
-                       get_translation("Free - {0}").format(get_human_readable_size(bc_free_bytes))
-
-        if len(Config.get_server_config().backups) > 0:
-            backup = Config.get_server_config().backups[-1]
-            bot_message += "\n\n" + get_translation("Last backup: ") + \
-                           backup.file_creation_date.strftime("%d/%m/%Y %H:%M:%S")
-            if backup.reason is None and backup.initiator is None:
-                bot_message += "\n\t" + get_translation("Reason: ") + get_translation("Automatic backup")
-            else:
-                bot_message += "\n\t" + get_translation("Reason: ") + \
-                               (backup.reason if backup.reason else get_translation("Not stated"))
-                bot_message += "\n\t" + get_translation("Initiator: ") + backup.initiator
-        await ctx.send(add_quotes(bot_message))
+        await bot_backup(ctx)
 
     @backup.command(pass_context=True, name="on")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -527,7 +501,7 @@ class MinecraftCommands(commands.Cog):
             if len(Config.get_server_config().backups) > 0 \
                     and handle_backups_limit_and_size(self._bot) is not None \
                     and all([b.initiator for b in Config.get_server_config().backups]):
-                await ctx.send(get_translation("For '{0}' server bot has backups only from members, "
+                await ctx.send(get_translation("Bot has backups only from members for '{0}' server, "
                                                "so keep in mind, that bot will delete oldest backup "
                                                "on next auto backup!")
                                .format(Config.get_selected_server_from_list().server_name))
@@ -600,13 +574,13 @@ class MinecraftCommands(commands.Cog):
                 if len(Config.get_server_config().backups) > 0 and \
                         handle_backups_limit_and_size(self._bot) is not None and \
                         all([b.initiator for b in Config.get_server_config().backups]):
-                    await ctx.send(get_translation("For '{0}' server bot has backups only from members, "
+                    await ctx.send(get_translation("Bot has backups only from members for '{0}' server, "
                                                    "so keep in mind, that bot will delete oldest backup "
                                                    "on next auto backup!")
                                    .format(Config.get_selected_server_from_list().server_name))
 
             msg = await ctx.send(add_quotes(get_translation("Starting backup...")))
-            file_name = datetime.now().strftime("%d-%m-%y-%H-%M-%S")
+            file_name = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
             await create_zip_archive(msg, self._bot, file_name,
                                      Path(Config.get_selected_server_from_list().working_directory,
                                           Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
@@ -646,13 +620,41 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def b_del(self, ctx, backup_number: int):  # TODO: pass list of integers and check it, Add poll
+    async def b_del(self, ctx, backup_number: int):
         if 0 < backup_number <= len(Config.get_server_config().backups):
+            if Config.get_server_config().backups[backup_number - 1].initiator is not None:
+                if "backup_del" in [p.command for p in self._IndPoll.get_polls().values()]:
+                    await delete_after_by_msg(ctx.message)
+                    await ctx.send(get_translation("{0}, bot already has poll on `backup del` command!")
+                                   .format(ctx.author.mention),
+                                   delete_after=Config.get_awaiting_times_settings()
+                                   .await_seconds_before_message_deletion)
+                    return
+
+                if await self._IndPoll.timer(ctx, 5, "backup_del"):
+                    if not await self._IndPoll.run(ctx=ctx,
+                                                   message=get_translation(
+                                                       "this man {0} trying to delete {1} backup by {2} of '{3}' "
+                                                       "server. Will you let that happen?")
+                                                           .format(ctx.author.mention,
+                                                                   Config.get_server_config().backups[
+                                                                       backup_number - 1].file_name + ".zip",
+                                                                   Config.get_server_config().backups[
+                                                                       backup_number - 1].initiator,
+                                                                   Config.get_selected_server_from_list().server_name),
+                                                   command="backup_del",
+                                                   needed_role=Config.get_settings().bot_settings.role,
+                                                   need_for_voting=get_half_members_count_with_role(self._bot),
+                                                   remove_logs_after=5):
+                        return
+                else:
+                    await delete_after_by_msg(ctx.message)
+
             backup = Config.get_server_config().backups[backup_number - 1]
             remove(Path(Config.get_selected_server_from_list().working_directory,
                         Config.get_backups_settings().name_of_the_backups_folder, f"{backup.file_name}.zip"))
             send_message_of_deleted_backup(self._bot,
-                                           f"{ctx.author.display_name}#{ctx.author.discriminator}", backup.file_name)
+                                           f"{ctx.author.display_name}#{ctx.author.discriminator}", backup)
             Config.get_server_config().backups.remove(backup)
             Config.save_server_config()
             await ctx.send(add_quotes(get_translation("Deleted backup {0}.zip of '{1}' server")
@@ -665,7 +667,29 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def b_d_all(self, ctx):  # TODO: Add poll
+    async def b_d_all(self, ctx):
+        if "backup_del_all" in [p.command for p in self._IndPoll.get_polls().values()]:
+            await delete_after_by_msg(ctx.message)
+            await ctx.send(get_translation("{0}, bot already has poll on `backup del all` command!")
+                           .format(ctx.author.mention),
+                           delete_after=Config.get_awaiting_times_settings().await_seconds_before_message_deletion)
+            return
+
+        if await self._IndPoll.timer(ctx, 5, "backup_del_all"):
+            if not await self._IndPoll.run(ctx=ctx,
+                                           message=get_translation(
+                                               "this man {0} trying to delete all backups of '{1}' server. "
+                                               "Will you let that happen?")
+                                                   .format(ctx.author.mention,
+                                                           Config.get_selected_server_from_list().server_name),
+                                           command="backup_del_all",
+                                           needed_role=Config.get_settings().bot_settings.role,
+                                           need_for_voting=get_half_members_count_with_role(self._bot),
+                                           remove_logs_after=5):
+                return
+        else:
+            await delete_after_by_msg(ctx.message)
+
         for backup in Config.get_server_config().backups:
             remove(Path(Config.get_selected_server_from_list().working_directory,
                         Config.get_backups_settings().name_of_the_backups_folder, f"{backup.file_name}.zip"))
@@ -679,31 +703,36 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     async def b_list(self, ctx):
-        message = get_translation("List of backups for '{0}' server:") \
-                      .format(Config.get_selected_server_from_list().server_name) + "\n"
-        i = 1
-        for backup in Config.get_server_config().backups:
-            message += f"[{i}] " + get_translation("Date: ") + backup.file_creation_date.strftime("%d/%m/%Y %H:%M:%S")
-            # message += "\n\t" + get_translation("Backup name: ") + f"'{backup.file_name}'"
-            message += "\n\t" + get_translation("Backup size: ") + \
-                       get_human_readable_size(get_file_size(Config.get_selected_server_from_list().working_directory,
-                                                             Config.get_backups_settings().name_of_the_backups_folder,
-                                                             f"{backup.file_name}.zip"))
-            if backup.reason is None and backup.initiator is None:
-                message += "\n\t" + get_translation("Reason: ") + get_translation("Automatic backup") + "\n"
-            else:
-                message += "\n\t" + get_translation("Reason: ") + \
-                           (backup.reason if backup.reason else get_translation("Not stated"))
-                message += "\n\t" + get_translation("Initiator: ") + backup.initiator + "\n"
-            i += 1
-        await ctx.send(add_quotes(message))
+        if len(Config.get_server_config().backups) > 0:
+            message = get_translation("List of backups for '{0}' server:") \
+                          .format(Config.get_selected_server_from_list().server_name) + "\n"
+            i = 1
+            for backup in Config.get_server_config().backups:
+                message += f"[{i}] " + get_translation("Date: ") + \
+                           backup.file_creation_date.strftime("%d/%m/%Y %H:%M:%S")
+                message += "\n\t" + get_translation("Backup size: ") + \
+                           get_human_readable_size(
+                               get_file_size(Config.get_selected_server_from_list().working_directory,
+                                             Config.get_backups_settings().name_of_the_backups_folder,
+                                             f"{backup.file_name}.zip"))
+                if backup.reason is None and backup.initiator is None:
+                    message += "\n\t" + get_translation("Reason: ") + get_translation("Automatic backup") + "\n"
+                else:
+                    message += "\n\t" + get_translation("Reason: ") + \
+                               (backup.reason if backup.reason else get_translation("Not stated"))
+                    message += "\n\t" + get_translation("Initiator: ") + backup.initiator + "\n"
+                i += 1
+            await ctx.send(add_quotes(message))
+        else:
+            await ctx.send(add_quotes(get_translation("There are no backups for '{0}' server!")
+                                      .format(Config.get_selected_server_from_list().server_name)))
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(manage_messages=True, send_messages=True,
                                   embed_links=True, add_reactions=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def menu(self, ctx):  # TODO: Add %backup to reaction row! feature
+    async def menu(self, ctx):
         await ctx.channel.purge(limit=1)
         emb = discord.Embed(title=get_translation("List of commands via reactions"),
                             color=discord.Color.teal())
@@ -744,6 +773,8 @@ class MinecraftCommands(commands.Cog):
                     await bot_status(channel, is_reaction=True)
                 elif payload.emoji.name == self._emoji_symbols.get("list"):
                     await bot_list(channel, self._bot, is_reaction=True)
+                elif payload.emoji.name == self._emoji_symbols.get("backup"):
+                    await bot_backup(channel, is_reaction=True)
                 elif payload.emoji.name == self._emoji_symbols.get("update"):
                     if self.checkups_task.is_running():
                         self.checkups_task.restart()

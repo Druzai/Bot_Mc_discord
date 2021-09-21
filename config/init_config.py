@@ -939,7 +939,7 @@ class Config:
             cls._settings_instance.bot_settings.backups.name_of_the_backups_folder = \
                 cls._ask_for_data(get_translation("Enter name of the backups folder for each minecraft server") +
                                   "\n> ")
-        if cls._settings_instance.bot_settings.backups.max_backups_limit_for_server == -1:
+        if cls._settings_instance.bot_settings.backups.max_backups_limit_for_server < 1:
             cls._need_to_rewrite = True
             if cls._ask_for_data(get_translation("Max backups limit for server not found. Would you like to set it?") +
                                  " Y/n\n> ", "y"):

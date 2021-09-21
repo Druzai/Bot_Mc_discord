@@ -38,7 +38,8 @@ __all__ = [
     "get_server_players", "add_quotes", "bot_status", "bot_list", "bot_start", "bot_stop", "bot_restart",
     "connect_rcon", "make_underscored_line", "server_auto_backups", "get_human_readable_size",
     "calculate_space_for_current_server", "create_zip_archive", "restore_from_zip_archive", "get_file_size",
-    "send_message_of_deleted_backup", "handle_backups_limit_and_size"
+    "send_message_of_deleted_backup", "handle_backups_limit_and_size", "bot_backup", "delete_after_by_msg",
+    "get_half_members_count_with_role"
 ]
 
 
@@ -185,7 +186,7 @@ async def stop_server(ctx, bot, poll, how_many_sec=10, is_restart=False, is_reac
     if "stop" in [p.command for p in poll.get_polls().values()]:
         if not is_reaction:
             await delete_after_by_msg(ctx.message)
-        await ctx.send(get_translation("{0}, bot already has poll on stop/restart command!")
+        await ctx.send(get_translation("{0}, bot already has poll on `stop`/`restart` command!")
                        .format(ctx.author.mention),
                        delete_after=Config.get_awaiting_times_settings().await_seconds_before_message_deletion)
         return
@@ -211,6 +212,7 @@ async def stop_server(ctx, bot, poll, how_many_sec=10, is_restart=False, is_reac
                                                               "player(s) on it. Will you let that happen?")
                                               .format(get_author_and_mention(ctx, bot, is_reaction)[1], players_count),
                                       command="stop",
+                                      needed_role=Config.get_settings().bot_settings.role,
                                       remove_logs_after=5):
                     return
             else:
@@ -321,7 +323,7 @@ async def server_auto_backups(bot):
             handle_backups_limit_and_size(bot, auto_backups=True)
 
             # Creating auto backup
-            file_name = datetime.now().strftime("%d-%m-%y-%H-%M-%S")
+            file_name = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
             await create_zip_archive(None, bot, file_name,
                                      Path(Config.get_selected_server_from_list().working_directory,
                                           Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
@@ -463,13 +465,18 @@ def delete_oldest_auto_backup_if_exists(reason: str, bot):
         backup = Config.get_server_config().backups[0]
     remove(Path(Config.get_selected_server_from_list().working_directory,
                 Config.get_backups_settings().name_of_the_backups_folder, f"{backup.file_name}.zip"))
-    send_message_of_deleted_backup(bot, reason, backup.file_name)
+    send_message_of_deleted_backup(bot, reason, backup)
     Config.get_server_config().backups.remove(backup)
 
 
-def send_message_of_deleted_backup(bot, reason: str, backup_file_name: str = None):
-    if backup_file_name is not None:
-        msg = get_translation("Deleted backup {0}.zip because of {1}").format(backup_file_name, reason)
+def send_message_of_deleted_backup(bot, reason: str, backup=None):
+    if backup is not None:
+        if backup.initiator is None:
+            msg = get_translation("Deleted auto backup '{0}.zip' because of {1}").format(backup.file_name, reason)
+        else:
+            msg = get_translation("Deleted backup '{0}.zip' made by {1} because of {2}").format(backup.file_name,
+                                                                                                backup.initiator,
+                                                                                                reason)
     else:
         msg = get_translation("Deleted all backups because of {0}").format(reason)
     with suppress(BaseException):
@@ -478,7 +485,6 @@ def send_message_of_deleted_backup(bot, reason: str, backup_file_name: str = Non
                          ["", {"text": "<"}, {"text": bot.user.display_name, "color": "dark_gray"}, {"text": "> "},
                           {"text": msg, "color": "red"}])
     print(msg)
-    return msg
 
 
 def handle_backups_limit_and_size(bot, auto_backups=False):
@@ -545,6 +551,20 @@ def get_human_readable_size(size):
         size /= human_radix
 
     return f"{size:.2f} {units[-1]}"
+
+
+def get_half_members_count_with_role(bot: commands.Bot):
+    count = 0
+    for m in bot.guilds[0].members:
+        if not m.bot:
+            if Config.get_settings().bot_settings.role:
+                if Config.get_settings().bot_settings.role in (e.name for e in m.roles):
+                    count += 1
+            else:
+                count += 1
+    if count < 2:
+        return count
+    return count // 2
 
 
 async def server_checkups(bot: commands.Bot):
@@ -761,7 +781,7 @@ async def bot_clear(ctx, poll: Poll, subcommand: str = None, count: int = None):
     if await poll.timer(ctx, 5, "clear"):
         if ctx.channel in [p.ctx.channel for p in poll.get_polls().values() if p.command == "clear"]:
             await delete_after_by_msg(ctx.message)
-            await ctx.send(get_translation("{0}, bot already has poll on clear command for this channel!")
+            await ctx.send(get_translation("{0}, bot already has poll on `clear` command for this channel!")
                            .format(ctx.author.mention),
                            delete_after=Config.get_awaiting_times_settings().await_seconds_before_message_deletion)
             return
@@ -774,9 +794,44 @@ async def bot_clear(ctx, poll: Poll, subcommand: str = None, count: int = None):
             if count < 0 or subcommand == "reply":
                 await ctx.channel.purge(limit=None, check=check_condition, after=message_created, bulk=False)
             else:
-                await ctx.channel.purge(limit=count + 1, check=check_condition, bulk=False)
+                await ctx.channel.purge(limit=1, bulk=False)
+                await ctx.channel.purge(limit=count, check=check_condition, bulk=False)
     else:
         await delete_after_by_msg(ctx.message)
+
+
+async def bot_backup(ctx, is_reaction=False):
+    bot_message = get_translation("Automatic backups ") + \
+                  (get_translation("enabled" if Config.get_backups_settings()
+                                   .automatic_backup else get_translation("disabled"))) + "\n"
+    bot_message += get_translation("Automatic backups period set to {0} min").format(Config.get_backups_settings()
+                                                                                     .period_of_automatic_backups)
+    if Config.get_backups_settings().max_backups_limit_for_server is not None:
+        bot_message += "\n" + get_translation("Max backups limit for server - {0}") \
+            .format(Config.get_backups_settings().max_backups_limit_for_server)
+    if Config.get_backups_settings().size_limit is not None:
+        bot_message += "\n" + get_translation("Max size limit for server - {0}") \
+            .format(get_human_readable_size(Config.get_backups_settings().size_limit))
+    bot_message += "\n" + get_translation("Current compression method - {0}").format(Config.get_backups_settings()
+                                                                                     .compression_method) + "\n\n"
+
+    bc_free_bytes, bc_used_bytes = calculate_space_for_current_server()
+    bot_message += get_translation("Backups folder info for '{0}' server:") \
+                       .format(Config.get_selected_server_from_list().server_name) + "\n" + \
+                   get_translation("Used - {0}").format(get_human_readable_size(bc_used_bytes)) + "\n" + \
+                   get_translation("Free - {0}").format(get_human_readable_size(bc_free_bytes))
+
+    if len(Config.get_server_config().backups) > 0:
+        backup = Config.get_server_config().backups[-1]
+        bot_message += "\n\n" + get_translation("Last backup: ") + \
+                       backup.file_creation_date.strftime("%d/%m/%Y %H:%M:%S")
+        if backup.reason is None and backup.initiator is None:
+            bot_message += "\n\t" + get_translation("Reason: ") + get_translation("Automatic backup")
+        else:
+            bot_message += "\n\t" + get_translation("Reason: ") + \
+                           (backup.reason if backup.reason else get_translation("Not stated"))
+            bot_message += "\n\t" + get_translation("Initiator: ") + backup.initiator
+    await send_msg(ctx, add_quotes(bot_message), is_reaction)
 
 
 def parse_params_for_help(command_params: dict, string_to_add: str, create_params_dict=False) -> Tuple[str, dict]:
@@ -995,8 +1050,8 @@ async def send_error(ctx, bot, error, is_reaction=False):
         await send_msg(ctx, f"{author_mention}\n" +
                        add_quotes(get_translation("You triggered this command more than {0} time(s) per {1} sec\n"
                                                   "Try again in {2} sec").format(error.cooldown.rate,
-                                                                              int(error.cooldown.per),
-                                                                              int(error.retry_after))))
+                                                                                 int(error.cooldown.per),
+                                                                                 int(error.retry_after))))
     elif isinstance(error, commands.CheckFailure):
         pass
     else:
