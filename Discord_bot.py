@@ -12,6 +12,8 @@ from commands.poll import Poll
 from components.localization import get_translation, RuntimeTextHandler
 from config.init_config import Config, BotVars
 
+version = "1.0.1"
+
 
 def _create_pot_lines_for_subcommands(command, find_str: str):
     if not hasattr(command, "commands") or len(command.commands) == 0:
@@ -43,6 +45,9 @@ def get_prefix(bot, msg):
 
 
 def main():
+    if len(argv) > 1 and (argv[1] == "-v" or argv[1] == "--version"):
+        print(version)
+        exit(0)
     Config.read_config()
     intents = Intents.default()
     intents.members = True
