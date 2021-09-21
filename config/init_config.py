@@ -205,7 +205,7 @@ class Backup_info:
 
     @property
     def file_creation_date(self):
-        return datetime.strptime(self.file_name, "%d-%m-%y-%H-%M-%S")
+        return datetime.strptime(self.file_name, "%d-%m-%Y-%H-%M-%S")
 
 
 @dataclass

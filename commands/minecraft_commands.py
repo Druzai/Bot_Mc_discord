@@ -157,8 +157,8 @@ class MinecraftCommands(commands.Cog):
                         break
                 Config.append_to_op_log(
                     datetime.now().strftime("%d/%m/%Y, %H:%M:%S") + " || " + get_translation("Deopped all ") +
-                    (str("|| Note: " + str(len(BotVars.op_deop_list)) +
-                         " people deoped in belated list") if len(BotVars.op_deop_list) > 1 else ""))
+                    (str(get_translation("|| Note: ") + str(len(BotVars.op_deop_list)) +
+                         get_translation(" people deoped in belated list")) if len(BotVars.op_deop_list) > 1 else ""))
                 await ctx.send(get_translation("Well, {0}, your time is over... and not only yours...\n"
                                                "As they say \"Cheeki breeki i v damké!\"").format(ctx.author.mention))
                 BotVars.op_deop_list.clear()

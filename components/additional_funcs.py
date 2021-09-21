@@ -43,7 +43,7 @@ __all__ = [
 ]
 
 
-async def send_msg(ctx, msg, is_reaction=False):
+async def send_msg(ctx, msg: str, is_reaction=False):
     if is_reaction:
         await ctx.send(content=msg,
                        delete_after=Config.get_awaiting_times_settings().await_seconds_before_message_deletion)
@@ -63,7 +63,7 @@ async def delete_after_by_msg(message, ctx=None):
             .delete(delay=Config.get_awaiting_times_settings().await_seconds_before_message_deletion)
 
 
-def get_author_and_mention(ctx, bot, is_reaction=False):
+def get_author_and_mention(ctx, bot: commands.Bot, is_reaction=False):
     if is_reaction:
         author_mention = BotVars.react_auth.mention
         author = BotVars.react_auth
@@ -97,7 +97,7 @@ async def send_status(ctx, is_reaction=False):
                            is_reaction)
 
 
-async def start_server(ctx, bot, shut_up=False, is_reaction=False):
+async def start_server(ctx, bot: commands.Bot, shut_up=False, is_reaction=False):
     BotVars.is_loading = True
     print(get_translation("Loading server"))
     if ctx and not shut_up:
@@ -179,7 +179,7 @@ async def start_server(ctx, bot, shut_up=False, is_reaction=False):
                                                 name=Config.get_settings().bot_settings.gaming_status))
 
 
-async def stop_server(ctx, bot, poll, how_many_sec=10, is_restart=False, is_reaction=False):
+async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_restart=False, is_reaction=False):
     no_connection = False
     players_count = 0
 
@@ -301,7 +301,7 @@ def kill_server():
     BotVars.server_start_time = None
 
 
-async def server_auto_backups(bot):
+async def server_auto_backups(bot: commands.Bot):
     await asleep(Config.get_backups_settings().period_of_automatic_backups * 60)
     if not BotVars.is_backing_up and not BotVars.is_restoring and Config.get_backups_settings().automatic_backup:
         print(get_translation("Starting auto backup"))
@@ -342,8 +342,8 @@ async def server_auto_backups(bot):
                 BotVars.is_auto_backup_disable = True
 
 
-async def create_zip_archive(message: Union[Message, None], bot, zip_name: str, zip_path: str, dir_path: str,
-                             compression, forced=False, user=None):
+async def create_zip_archive(message: Union[Message, None], bot: commands.Bot, zip_name: str, zip_path: str,
+                             dir_path: str, compression, forced=False, user=None):
     """
     recursively .zip a directory
     """
@@ -455,7 +455,7 @@ def calculate_space_for_current_server():
         return disk_bytes_free, bc_folder_bytes
 
 
-def delete_oldest_auto_backup_if_exists(reason: str, bot):
+def delete_oldest_auto_backup_if_exists(reason: str, bot: commands.Bot):
     backup = None
     for bc in Config.get_server_config().backups:
         if bc.initiator is None:
@@ -469,7 +469,7 @@ def delete_oldest_auto_backup_if_exists(reason: str, bot):
     Config.get_server_config().backups.remove(backup)
 
 
-def send_message_of_deleted_backup(bot, reason: str, backup=None):
+def send_message_of_deleted_backup(bot: commands.Bot, reason: str, backup=None):
     if backup is not None:
         if backup.initiator is None:
             msg = get_translation("Deleted auto backup '{0}.zip' because of {1}").format(backup.file_name, reason)
@@ -487,7 +487,7 @@ def send_message_of_deleted_backup(bot, reason: str, backup=None):
     print(msg)
 
 
-def handle_backups_limit_and_size(bot, auto_backups=False):
+def handle_backups_limit_and_size(bot: commands.Bot, auto_backups=False):
     # If limit is exceeded
     is_rewritten = False
     while True:
@@ -622,7 +622,7 @@ async def server_checkups(bot: commands.Bot):
                                        msg=add_quotes(get_translation("Bot detected: Server\'s offline!\n"
                                                                       "Time: {0}\n"
                                                                       "Starting up server again!").format(
-                                           datetime.now().strftime("%d/%m/%y, %H:%M:%S"))),
+                                           datetime.now().strftime("%d/%m/%Y %H:%M:%S"))),
                                        is_reaction=True)
                         await start_server(ctx=channel, bot=bot, shut_up=True, is_reaction=True)
                         sent = True
@@ -680,7 +680,7 @@ async def bot_status(ctx, is_reaction=False):
         await send_msg(ctx, add_quotes(bot_message), is_reaction)
 
 
-async def bot_list(ctx, bot, is_reaction=False):
+async def bot_list(ctx, bot: commands.Bot, is_reaction=False):
     try:
         with connect_query() as cl_q:
             info = cl_q.full_stats
@@ -696,7 +696,7 @@ async def bot_list(ctx, bot, is_reaction=False):
         await send_msg(ctx, f"{author_mention}, " + get_translation("server offline"), is_reaction)
 
 
-async def bot_start(ctx, bot, is_reaction=False):
+async def bot_start(ctx, bot: commands.Bot, is_reaction=False):
     if not BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and \
             not BotVars.is_backing_up and not BotVars.is_restoring:
         await start_server(ctx, bot=bot, is_reaction=is_reaction)
@@ -704,7 +704,7 @@ async def bot_start(ctx, bot, is_reaction=False):
         await send_status(ctx, is_reaction=is_reaction)
 
 
-async def bot_stop(ctx, command, bot, poll, is_reaction=False):
+async def bot_stop(ctx, command, bot: commands.Bot, poll: Poll, is_reaction=False):
     if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and \
             not BotVars.is_backing_up and not BotVars.is_restoring:
         if BotVars.is_doing_op:
@@ -719,7 +719,7 @@ async def bot_stop(ctx, command, bot, poll, is_reaction=False):
         await send_status(ctx, is_reaction=is_reaction)
 
 
-async def bot_restart(ctx, command, bot, poll, is_reaction=False):
+async def bot_restart(ctx, command, bot: commands.Bot, poll: Poll, is_reaction=False):
     if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and \
             not BotVars.is_backing_up and not BotVars.is_restoring:
         if BotVars.is_doing_op:
@@ -1044,9 +1044,8 @@ async def send_error(ctx, bot, error, is_reaction=False):
                        add_quotes(get_translation("this command only works on server").capitalize()),
                        is_reaction)
     elif isinstance(error, commands.CommandOnCooldown):
-        print(get_translation("{0} triggered a command more than {1} time(s) per {2} sec").format(author,
-                                                                                                  error.cooldown.rate,
-                                                                                                  error.cooldown.per))
+        print(get_translation("{0} triggered a command more than {1} time(s) per {2} sec")
+              .format(author, error.cooldown.rate, int(error.cooldown.per)))
         await send_msg(ctx, f"{author_mention}\n" +
                        add_quotes(get_translation("You triggered this command more than {0} time(s) per {1} sec\n"
                                                   "Try again in {2} sec").format(error.cooldown.rate,
