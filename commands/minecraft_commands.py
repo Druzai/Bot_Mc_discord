@@ -4,6 +4,7 @@ from datetime import datetime
 from os import remove
 from pathlib import Path
 from random import randint
+from sys import argv
 
 import discord
 from discord.ext import commands, tasks
@@ -23,7 +24,9 @@ class MinecraftCommands(commands.Cog):
         self._bot: commands.Bot = bot
         self._IndPoll: Poll = poll
         self.checkups_task.start()
-        self.backups_task.start()
+        self._backups_thread = BackupsThread(self._bot)
+        if len(argv) == 1:
+            self._backups_thread.start()
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
@@ -497,14 +500,7 @@ class MinecraftCommands(commands.Cog):
         if not Config.get_backups_settings().automatic_backup:
             Config.get_backups_settings().automatic_backup = True
             Config.save_config()
-        if Config.get_backups_settings().automatic_backup:
-            if len(Config.get_server_config().backups) > 0 \
-                    and handle_backups_limit_and_size(self._bot) is not None \
-                    and all([b.initiator for b in Config.get_server_config().backups]):
-                await ctx.send(get_translation("Bot has backups only from members for '{0}' server, "
-                                               "so keep in mind, that bot will delete oldest backup "
-                                               "on next auto backup!")
-                               .format(Config.get_selected_server_from_list().server_name))
+        await warn_about_auto_backups(ctx, self._bot)
         await ctx.send(add_quotes(get_translation("Automatic backups on")))
 
     @backup.command(pass_context=True, name="off")
@@ -569,28 +565,22 @@ class MinecraftCommands(commands.Cog):
                 await ctx.send(add_quotes(get_translation("Can't create backup because of {0}\n"
                                                           "Delete some backup to proceed!").format(b_reason)))
                 return
-
-            if Config.get_backups_settings().automatic_backup:
-                if len(Config.get_server_config().backups) > 0 and \
-                        handle_backups_limit_and_size(self._bot) is not None and \
-                        all([b.initiator for b in Config.get_server_config().backups]):
-                    await ctx.send(get_translation("Bot has backups only from members for '{0}' server, "
-                                                   "so keep in mind, that bot will delete oldest backup "
-                                                   "on next auto backup!")
-                                   .format(Config.get_selected_server_from_list().server_name))
+            await warn_about_auto_backups(ctx, self._bot)
 
             msg = await ctx.send(add_quotes(get_translation("Starting backup...")))
             file_name = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
-            await create_zip_archive(msg, self._bot, file_name,
-                                     Path(Config.get_selected_server_from_list().working_directory,
-                                          Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
-                                     Path(Config.get_selected_server_from_list().working_directory,
-                                          get_from_server_properties("level-name")).as_posix(),
-                                     Config.get_backups_settings().compression_method, forced=True, user=ctx.author)
+            for string in create_zip_archive(self._bot, file_name,
+                                             Path(Config.get_selected_server_from_list().working_directory,
+                                                  Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
+                                             Path(Config.get_selected_server_from_list().working_directory,
+                                                  get_from_server_properties("level-name")).as_posix(),
+                                             Config.get_backups_settings().compression_method, forced=True,
+                                             user=ctx.author):
+                await msg.edit(content=string)
             Config.add_backup_info(file_name=file_name, reason=reason,
                                    initiator=f"{ctx.author.display_name}#{ctx.author.discriminator}")
             Config.save_server_config()
-            self.backups_task.restart()
+            self._backups_thread.skip()
         else:
             await send_status(ctx)
 
@@ -609,7 +599,7 @@ class MinecraftCommands(commands.Cog):
                                          Path(Config.get_selected_server_from_list().working_directory,
                                               get_from_server_properties("level-name")).as_posix())
                 await ctx.send(add_quotes(get_translation("Done!")))
-                self.backups_task.restart()
+                self._backups_thread.skip()
             else:
                 await ctx.send(add_quotes(get_translation("Bot doesn't have backup with that number "
                                                           "in backups list for current server!")))
@@ -752,14 +742,6 @@ class MinecraftCommands(commands.Cog):
     async def before_checkups(self):
         await self._bot.wait_until_ready()
         print(get_translation("Starting minecraft server check-ups"))
-
-    @tasks.loop()
-    async def backups_task(self):
-        await server_auto_backups(self._bot)
-
-    @backups_task.before_loop
-    async def before_backups(self):
-        await self._bot.wait_until_ready()
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):

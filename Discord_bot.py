@@ -45,6 +45,9 @@ def get_prefix(bot, msg):
 
 
 def main():
+    if len(argv) > 1 and argv[1] not in ["-v", "--version", "-g"]:
+        print("Bot doesn't have this command line argument!")
+        exit(0)
     if len(argv) > 1 and (argv[1] == "-v" or argv[1] == "--version"):
         print(version)
         exit(0)

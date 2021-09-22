@@ -13,7 +13,9 @@ from random import randint
 from re import search, split, findall
 from shutil import rmtree
 from sys import platform, argv
-from typing import Tuple, List, Union
+from threading import Thread, Event
+from time import sleep
+from typing import Tuple, List
 from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 
 from discord import Activity, ActivityType, TextChannel, Message
@@ -36,11 +38,19 @@ __all__ = [
     "server_checkups", "send_error", "send_msg", "send_status", "stop_server", "start_server",
     "get_author_and_mention", "save_to_whitelist_json", "get_whitelist_entry", "get_from_server_properties",
     "get_server_players", "add_quotes", "bot_status", "bot_list", "bot_start", "bot_stop", "bot_restart",
-    "connect_rcon", "make_underscored_line", "server_auto_backups", "get_human_readable_size",
-    "calculate_space_for_current_server", "create_zip_archive", "restore_from_zip_archive", "get_file_size",
+    "connect_rcon", "make_underscored_line", "get_human_readable_size", "calculate_space_for_current_server",
+    "create_zip_archive", "restore_from_zip_archive", "get_file_size", "BackupsThread",
     "send_message_of_deleted_backup", "handle_backups_limit_and_size", "bot_backup", "delete_after_by_msg",
-    "get_half_members_count_with_role"
+    "get_half_members_count_with_role", "warn_about_auto_backups"
 ]
+
+UNITS = ("B", "KB", "MB", "GB", "TB", "PB")
+
+if len(argv) > 1 and argv[1] == "-g":
+    from components.localization import RuntimeTextHandler
+
+    for un in UNITS:
+        RuntimeTextHandler.add_translation(un)
 
 
 async def send_msg(ctx, msg: str, is_reaction=False):
@@ -301,49 +311,63 @@ def kill_server():
     BotVars.server_start_time = None
 
 
-async def server_auto_backups(bot: commands.Bot):
-    await asleep(Config.get_backups_settings().period_of_automatic_backups * 60)
-    if not BotVars.is_backing_up and not BotVars.is_restoring and Config.get_backups_settings().automatic_backup:
-        print(get_translation("Starting auto backup"))
-        if BotVars.is_loading or BotVars.is_stopping or BotVars.is_restarting:
-            while True:
-                await asleep(Config.get_awaiting_times_settings().await_seconds_when_connecting_via_rcon)
-                if not BotVars.is_loading and not BotVars.is_stopping and not BotVars.is_restarting:
-                    break
+class BackupsThread(Thread):
+    def __init__(self, bot):
+        super().__init__()
+        self._skip = Event()
+        self._bot = bot
 
-        players_count = 0
-        if BotVars.is_server_on:
-            with suppress(BaseException):
-                players_count = len(get_server_players())
-            if players_count != 0:
-                if BotVars.is_auto_backup_disable:
-                    BotVars.is_auto_backup_disable = False
+    def run(self):
+        while True:
+            is_skipped = self._skip.wait(Config.get_backups_settings().period_of_automatic_backups * 60)
+            if is_skipped:
+                self._skip.clear()
+                continue
 
-        if not BotVars.is_auto_backup_disable:
-            handle_backups_limit_and_size(bot, auto_backups=True)
+            if not BotVars.is_backing_up and not BotVars.is_restoring and Config.get_backups_settings().automatic_backup:
+                print(get_translation("Starting auto backup"))
+                if BotVars.is_loading or BotVars.is_stopping or BotVars.is_restarting:
+                    while True:
+                        sleep(Config.get_backups_settings().period_of_automatic_backups * 60)
+                        if not BotVars.is_loading and not BotVars.is_stopping and not BotVars.is_restarting:
+                            break
 
-            # Creating auto backup
-            file_name = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
-            await create_zip_archive(None, bot, file_name,
-                                     Path(Config.get_selected_server_from_list().working_directory,
-                                          Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
-                                     Path(Config.get_selected_server_from_list().working_directory,
-                                          get_from_server_properties("level-name")).as_posix(),
-                                     Config.get_backups_settings().compression_method)
-            Config.add_backup_info(file_name=file_name)
-            Config.save_server_config()
+                players_count = 0
+                if BotVars.is_server_on:
+                    with suppress(BaseException):
+                        players_count = len(get_server_players())
+                    if players_count != 0:
+                        if BotVars.is_auto_backup_disable:
+                            BotVars.is_auto_backup_disable = False
 
-        if BotVars.is_server_on and players_count == 0:
-            if not BotVars.is_auto_backup_disable:
-                BotVars.is_auto_backup_disable = True
+                if not BotVars.is_auto_backup_disable:
+                    handle_backups_limit_and_size(self._bot, auto_backups=True)
 
-        if not BotVars.is_server_on:
-            if not BotVars.is_auto_backup_disable:
-                BotVars.is_auto_backup_disable = True
+                    # Creating auto backup
+                    file_name = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
+                    next(create_zip_archive(self._bot, file_name,
+                                            Path(Config.get_selected_server_from_list().working_directory,
+                                                 Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
+                                            Path(Config.get_selected_server_from_list().working_directory,
+                                                 get_from_server_properties("level-name")).as_posix(),
+                                            Config.get_backups_settings().compression_method), None)
+                    Config.add_backup_info(file_name=file_name)
+                    Config.save_server_config()
+
+                if BotVars.is_server_on and players_count == 0:
+                    if not BotVars.is_auto_backup_disable:
+                        BotVars.is_auto_backup_disable = True
+
+                if not BotVars.is_server_on:
+                    if not BotVars.is_auto_backup_disable:
+                        BotVars.is_auto_backup_disable = True
+
+    def skip(self):
+        self._skip.set()
 
 
-async def create_zip_archive(message: Union[Message, None], bot: commands.Bot, zip_name: str, zip_path: str,
-                             dir_path: str, compression, forced=False, user=None):
+def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path: str, compression,
+                       forced=False, user=None):
     """
     recursively .zip a directory
     """
@@ -390,7 +414,7 @@ async def create_zip_archive(message: Union[Message, None], bot: commands.Bot, z
 
                 fn = Path(root, file)
                 afn = fn.relative_to(dir_path)
-                if message is not None:
+                if forced:
                     timedelta_secs = (datetime.now() - dt).seconds
                     if timedelta_secs % 4 == 0:
                         percent = round(100 * current / total)
@@ -398,26 +422,26 @@ async def create_zip_archive(message: Union[Message, None], bot: commands.Bot, z
                             date_t = str(timedelta_secs // 60) + ":" + f"{(timedelta_secs % 60):02d}"
                         else:
                             date_t = str(timedelta_secs % 60) + get_translation(" sec")
-                        await message.edit(content=add_quotes(f"diff\n{percent}% {date_t} '{afn}'\n"
-                                                              f"- |{'█' * (percent // 5)}{' ' * (20 - percent // 5)}|"))
+                        yield add_quotes(f"diff\n{percent}% {date_t} '{afn}'\n"
+                                         f"- |{'█' * (percent // 5)}{' ' * (20 - percent // 5)}|")
                 tries = 0
-                while tries < 3:
+                while tries < 5:
                     with suppress(PermissionError):
                         with open(fn, mode="rb") as f:
                             f.read(1)
                         z.write(fn, arcname=afn)
                         break
                     tries += 1
-                    await asleep(1)
+                    sleep(1)
                 current += getsize(fn)
 
-    if message is not None:
+    if forced:
         timedelta_secs = (datetime.now() - dt).seconds
         if timedelta_secs // 60 != 0:
             date_t = str(timedelta_secs // 60) + ":" + f"{(timedelta_secs % 60):02d}"
         else:
             date_t = str(timedelta_secs % 60) + get_translation(" sec")
-        await message.edit(content=add_quotes(get_translation("Done in {0}, method: {1}!").format(date_t, compression)))
+        yield add_quotes(get_translation("Done in {0}, method: {1}!").format(date_t, compression))
     if use_rcon:
         with connect_rcon() as cl_r:
             cl_r.tellraw("@a",
@@ -536,21 +560,24 @@ def get_file_size(*path: str) -> int:
 
 
 def get_human_readable_size(size):
-    B = get_translation("B")
-    KB = get_translation("KB")
-    MB = get_translation("MB")
-    GB = get_translation("GB")
-    TB = get_translation("TB")
-    PB = get_translation("PB")
-    units = [B, KB, MB, GB, TB, PB]
     human_radix = 1024.
-
-    for u in units[:-1]:
+    for u in UNITS[:-1]:
         if size < human_radix:
-            return f"{size:.2f} {u}"
+            return f"{size:.2f} {get_translation(u)}"
         size /= human_radix
 
-    return f"{size:.2f} {units[-1]}"
+    return f"{size:.2f} {get_translation(UNITS[-1])}"
+
+
+async def warn_about_auto_backups(ctx, bot: commands.Bot):
+    if Config.get_backups_settings().automatic_backup:
+        if len(Config.get_server_config().backups) > 0 \
+                and handle_backups_limit_and_size(bot) is not None \
+                and all([b.initiator for b in Config.get_server_config().backups]):
+            await ctx.send(get_translation("Bot has backups only from members for '{0}' server, "
+                                           "so keep in mind, that bot will delete oldest backup "
+                                           "on next auto backup!")
+                           .format(Config.get_selected_server_from_list().server_name))
 
 
 def get_half_members_count_with_role(bot: commands.Bot):
@@ -802,8 +829,8 @@ async def bot_clear(ctx, poll: Poll, subcommand: str = None, count: int = None):
 
 async def bot_backup(ctx, is_reaction=False):
     bot_message = get_translation("Automatic backups ") + \
-                  (get_translation("enabled" if Config.get_backups_settings()
-                                   .automatic_backup else get_translation("disabled"))) + "\n"
+                  (get_translation("enabled") if Config.get_backups_settings()
+                   .automatic_backup else get_translation("disabled")) + "\n"
     bot_message += get_translation("Automatic backups period set to {0} min").format(Config.get_backups_settings()
                                                                                      .period_of_automatic_backups)
     if Config.get_backups_settings().max_backups_limit_for_server is not None:
