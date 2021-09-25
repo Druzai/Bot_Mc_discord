@@ -71,7 +71,7 @@ Supported 2 languages:
 
 ### Required bot permissions
 
-* Enable the `Server Members Intent` in section `Privileged Gateway Intents` on the Bot tab of your bot's page on the
+* Enable the `Server Members Intent` and the `Presence Intent` in section `Privileged Gateway Intents` on the Bot tab of your bot's page on the
   [Discord developer's portal](https://discord.com/developers/applications).
 
 ____________

@@ -52,8 +52,7 @@ def main():
         print(VERSION)
         exit(0)
     Config.read_config()
-    intents = Intents.default()
-    intents.members = True
+    intents = Intents.all()
     bot = commands.Bot(command_prefix=get_prefix, intents=intents)
     bot.remove_command('help')
     cog_list = [ChatCommands, MinecraftCommands]

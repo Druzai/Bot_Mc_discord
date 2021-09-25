@@ -2,7 +2,7 @@ from asyncio import sleep as asleep
 from datetime import datetime
 from enum import Enum, auto
 
-from discord import Color, Embed
+from discord import Color, Embed, Status
 from discord.ext import commands
 
 from components.localization import get_translation
@@ -22,7 +22,7 @@ class Poll(commands.Cog):
 
     async def run(self, ctx, message: str, command: str, need_for_voting=2, needed_role=None,
                   timeout=60 * 60, remove_logs_after=None):
-        members_count = len([m for m in self._bot.guilds[0].members if not m.bot])
+        members_count = len([m for m in self._bot.guilds[0].members if not m.bot and m.status != Status.offline])
         if members_count < need_for_voting:
             need_for_voting = members_count
         start_msg = await ctx.send("@everyone, " + message + " " +

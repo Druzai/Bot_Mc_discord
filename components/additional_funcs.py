@@ -18,7 +18,7 @@ from time import sleep
 from typing import Tuple, List
 from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 
-from discord import Activity, ActivityType, TextChannel, Message
+from discord import Activity, ActivityType, TextChannel, Message, Status
 from discord.ext import commands
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r
@@ -589,7 +589,7 @@ async def warn_about_auto_backups(ctx, bot: commands.Bot):
 def get_half_members_count_with_role(bot: commands.Bot):
     count = 0
     for m in bot.guilds[0].members:
-        if not m.bot:
+        if not m.bot and m.status != Status.offline:
             if Config.get_settings().bot_settings.role:
                 if Config.get_settings().bot_settings.role in (e.name for e in m.roles):
                     count += 1
