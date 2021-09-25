@@ -15,9 +15,6 @@ jobs:
       - name: Clone repository
         uses: actions/checkout@v2
 
-      - name: Make read_version executable
-        run: chmod +x ./.github/workflows/read_version.sh
-
       - name: Get commit tag
         id: commit
         run: echo "::set-output name=SOURCE_TAG::$(python3 Discord_bot.py -v)"

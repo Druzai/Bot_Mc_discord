@@ -12,7 +12,7 @@ from commands.poll import Poll
 from components.localization import get_translation, RuntimeTextHandler
 from config.init_config import Config, BotVars
 
-version = "1.0.1"
+VERSION = "1.0.1"
 
 
 def _create_pot_lines_for_subcommands(command, find_str: str):
@@ -49,7 +49,7 @@ def main():
         print("Bot doesn't have this command line argument!")
         exit(0)
     if len(argv) > 1 and (argv[1] == "-v" or argv[1] == "--version"):
-        print(version)
+        print(VERSION)
         exit(0)
     Config.read_config()
     intents = Intents.default()

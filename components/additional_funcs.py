@@ -328,7 +328,7 @@ class BackupsThread(Thread):
                 print(get_translation("Starting auto backup"))
                 if BotVars.is_loading or BotVars.is_stopping or BotVars.is_restarting:
                     while True:
-                        sleep(Config.get_backups_settings().period_of_automatic_backups * 60)
+                        sleep(Config.get_awaiting_times_settings().await_seconds_when_connecting_via_rcon)
                         if not BotVars.is_loading and not BotVars.is_stopping and not BotVars.is_restarting:
                             break
 
@@ -425,7 +425,7 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
                         yield add_quotes(f"diff\n{percent}% {date_t} '{afn}'\n"
                                          f"- |{'█' * (percent // 5)}{' ' * (20 - percent // 5)}|")
                 tries = 0
-                while tries < 5:
+                while tries < 3:
                     with suppress(PermissionError):
                         with open(fn, mode="rb") as f:
                             f.read(1)
@@ -919,12 +919,13 @@ def create_webhooks():
 def parse_subcommands_for_help(command, all_params=False) -> Tuple[List[str], List[str]]:
     if not hasattr(command, "commands") or len(command.commands) == 0:
         return [], []
+    command_commands = sorted(command.commands, key=lambda c: c.name)
 
     if not all_params:
-        return [c.name for c in sorted(command.commands, key=lambda c: c.name)], []
+        return [c.name for c in command_commands], []
 
     subcommands = []
-    for subcommand in sorted(command.commands, key=lambda c: c.name):
+    for subcommand in command_commands:
         sub_sub_commands_line = parse_subcommands_for_help(subcommand)[0]
         if sub_sub_commands_line:
             sub_sub_commands_line = " " + " | ".join(sub_sub_commands_line) if len(sub_sub_commands_line) else ""
@@ -934,7 +935,7 @@ def parse_subcommands_for_help(command, all_params=False) -> Tuple[List[str], Li
                                " ".join(sub_command_params))
         else:
             subcommands.append(parse_params_for_help(subcommand.clean_params, subcommand.name)[0])
-    return [c.name for c in sorted(command.commands, key=lambda c: c.name)], subcommands
+    return [c.name for c in command_commands], subcommands
 
 
 async def send_help_of_command(ctx, command):
