@@ -10,6 +10,8 @@
 
 ## Main features
 
+**Attention! This bot designed to work only on 1 discord server!**
+
 * Managing minecraft server via discord bot:
     * Start the server
     * Stop the server
@@ -17,8 +19,10 @@
     * Get info about players on the server
     * Work with server whitelist
     * Autoload if the minecraft server crashes
+    * Auto backup at specified intervals and forced backup by member
+        * Auto deleting backup(s) if backup's limit or space exceeded
     * Make yourself an operator for limited amount of time if your discord account has association with minecraft nick
-* Changing minecraft servers in bot's config on the go
+* Changing minecraft servers on the go while server is down
 * Setting an optional role. If set then the bot commands for managing the minecraft server will require this role from
   the member
 * Creating optional cross-platform chat between discord text channel and minecraft server via bot and webhook
@@ -37,13 +41,18 @@
 If you want to see help on all bot's commands use `help` command when bot is running.
 
 Note: these commands will require custom optional role if you set it in bot config:
-`start`, `stop`, `restart`, `menu`, `forceload`, `whitelist`, `servers`, `op`, `ops`, `chat`.
+`start`, `stop`, `restart`, `menu`, `forceload`, `whitelist`, `servers`, `op`, `ops`, `backup`, `chat`.
 
-Also, to enable cross-platform chat you need to enter in bot setup channel id (or use `chat` command) and webhook url!
-[How to create webhook and get url.](https://github.com/Akizo96/de.isekaidev.discord.wbbBridge/wiki/How-to-get-Webhook-ID-&-Token)
+To enable cross-platform chat you need to enter in bot setup channel id (or use `chat` command) and webhook url!
+And to enable rss feed you also need webhook url!
+
+[How to create webhook and get its url.](https://github.com/Akizo96/de.isekaidev.discord.wbbBridge/wiki/How-to-get-Webhook-ID-&-Token)
 
 For minecraft server version lower than `1.17` for cross-platform chat to work properly you have to have
 argument `-Dfile.encoding=UTF-8` when you're executing `*.bat` or `*.sh` script (necessary for Windows).
+
+**For backups: remember that if there are files in backups dir that not in server config, they will be deleted! And vice
+versa!**
 
 ## Languages
 
@@ -57,7 +66,8 @@ Supported 2 languages:
 * [Python 3.8-3.9](https://www.python.org/downloads/)
 * For Linux required [screen](https://linuxize.com/post/how-to-use-linux-screen/) command
 * Minecraft server not lower than version 1.0.0
-    * Enable query and rcon in server.properties
+    * Run server 2 times to accept eula and generate server.properties
+    * Enable query and rcon in `server.properties` (unnecessary, bot can enable it if file `server.properties` exists)
 
 ### Required bot permissions
 
