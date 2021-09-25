@@ -951,8 +951,8 @@ class Config:
                 cls._settings_instance.bot_settings.backups.max_backups_limit_for_server = None
         if cls._settings_instance.bot_settings.backups.size_limit_for_server == "":
             cls._need_to_rewrite = True
-            if cls._ask_for_data(get_translation("Size limit for server not found. Would you like to set it?") +
-                                 " Y/n\n> ", "y"):
+            if cls._ask_for_data(get_translation("Backups' size limit for server not found. Would you like to set it?")
+                                 + " Y/n\n> ", "y"):
                 while True:
                     unit_of_bytes = cls._ask_for_data(get_translation("Enter in what unit of measure "
                                                                       "you will set the limit") +
@@ -961,8 +961,8 @@ class Config:
                         print(get_translation("You have entered the wrong unit of measure!"))
                     else:
                         break
-                size = cls._ask_for_data(get_translation("Size limit for server in {0} (int)").format(unit_of_bytes) +
-                                         "\n> ", try_int=True, int_high_than=0)
+                size = cls._ask_for_data(get_translation("Backups' size limit for server in {0} (int)")
+                                         .format(unit_of_bytes) + "\n> ", try_int=True, int_high_than=0)
                 cls._settings_instance.bot_settings.backups.size_limit_for_server = f"{size}{unit_of_bytes}"
             else:
                 cls._settings_instance.bot_settings.backups.size_limit_for_server = None

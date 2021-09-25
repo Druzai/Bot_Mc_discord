@@ -563,7 +563,7 @@ class MinecraftCommands(commands.Cog):
             b_reason = handle_backups_limit_and_size(self._bot)
             if b_reason:
                 await ctx.send(add_quotes(get_translation("Can't create backup because of {0}\n"
-                                                          "Delete some backup to proceed!").format(b_reason)))
+                                                          "Delete some backups to proceed!").format(b_reason)))
                 return
             await warn_about_auto_backups(ctx, self._bot)
 
@@ -592,7 +592,7 @@ class MinecraftCommands(commands.Cog):
         if not BotVars.is_server_on and not BotVars.is_loading and not BotVars.is_stopping and \
                 not BotVars.is_restarting and not BotVars.is_backing_up:
             if 0 < backup_number <= len(Config.get_server_config().backups):
-                await ctx.send(add_quotes(get_translation("Starting restore...")))
+                await ctx.send(add_quotes(get_translation("Starting restore from backup...")))
                 restore_from_zip_archive(Config.get_server_config().backups[backup_number - 1].file_name,
                                          Path(Config.get_selected_server_from_list().working_directory,
                                               Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
@@ -601,16 +601,21 @@ class MinecraftCommands(commands.Cog):
                 await ctx.send(add_quotes(get_translation("Done!")))
                 self._backups_thread.skip()
             else:
-                await ctx.send(add_quotes(get_translation("Bot doesn't have backup with that number "
+                await ctx.send(add_quotes(get_translation("Bot doesn't have backup with this number "
                                                           "in backups list for current server!")))
         else:
             await send_status(ctx)
 
-    @backup.group(pass_context=True, name="del")
+    @backup.group(pass_context=True, name="del", invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
     async def b_del(self, ctx, backup_number: int):
+        if len(Config.get_server_config().backups) == 0:
+            await ctx.send(add_quotes(get_translation("There are no backups for '{0}' server!")
+                                      .format(Config.get_selected_server_from_list().server_name)))
+            return
+
         if 0 < backup_number <= len(Config.get_server_config().backups):
             if Config.get_server_config().backups[backup_number - 1].initiator is not None:
                 if "backup_del" in [p.command for p in self._IndPoll.get_polls().values()]:
@@ -650,7 +655,7 @@ class MinecraftCommands(commands.Cog):
             await ctx.send(add_quotes(get_translation("Deleted backup {0}.zip of '{1}' server")
                                       .format(backup.file_name, Config.get_selected_server_from_list().server_name)))
         else:
-            await ctx.send(add_quotes(get_translation("Bot doesn't have backup with that number "
+            await ctx.send(add_quotes(get_translation("Bot doesn't have backup with this number "
                                                       "in backups list for current server!")))
 
     @b_del.command(pass_context=True, name="all")
@@ -658,6 +663,11 @@ class MinecraftCommands(commands.Cog):
     @commands.guild_only()
     @decorators.has_role_or_default()
     async def b_d_all(self, ctx):
+        if len(Config.get_server_config().backups) == 0:
+            await ctx.send(add_quotes(get_translation("There are no backups for '{0}' server!")
+                                      .format(Config.get_selected_server_from_list().server_name)))
+            return
+
         if "backup_del_all" in [p.command for p in self._IndPoll.get_polls().values()]:
             await delete_after_by_msg(ctx.message)
             await ctx.send(get_translation("{0}, bot already has poll on `backup del all` command!")

@@ -97,7 +97,8 @@ async def send_status(ctx, is_reaction=False):
         if BotVars.is_backing_up:
             await send_msg(ctx, add_quotes(get_translation("Bot is backing up server!").capitalize()), is_reaction)
         elif BotVars.is_restoring:
-            await send_msg(ctx, add_quotes(get_translation("Bot is restoring server!").capitalize()), is_reaction)
+            await send_msg(ctx, add_quotes(get_translation("Bot is restoring server from backup!").capitalize()),
+                           is_reaction)
         elif BotVars.is_loading:
             await send_msg(ctx, add_quotes(get_translation("server is loading!").capitalize()), is_reaction)
         elif BotVars.is_stopping:
@@ -681,7 +682,7 @@ async def bot_status(ctx, is_reaction=False):
     if BotVars.is_backing_up:
         bot_message += get_translation("Server is backing up") + "\n"
     if BotVars.is_restoring:
-        bot_message += get_translation("Server is restoring") + "\n"
+        bot_message += get_translation("Server is restoring from backup") + "\n"
     if BotVars.is_server_on:
         try:
             bot_message = get_translation("server online").capitalize() + "\n" + bot_message
@@ -843,7 +844,7 @@ async def bot_backup(ctx, is_reaction=False):
         bot_message += "\n" + get_translation("Max backups limit for server - {0}") \
             .format(Config.get_backups_settings().max_backups_limit_for_server)
     if Config.get_backups_settings().size_limit is not None:
-        bot_message += "\n" + get_translation("Max size limit for server - {0}") \
+        bot_message += "\n" + get_translation("Max backups' size limit for server - {0}") \
             .format(get_human_readable_size(Config.get_backups_settings().size_limit))
     bot_message += "\n" + get_translation("Current compression method - {0}").format(Config.get_backups_settings()
                                                                                      .compression_method) + "\n\n"
