@@ -528,20 +528,14 @@ def handle_backups_limit_and_size(bot: commands.Bot, auto_backups=False):
         Config.save_server_config()
 
     is_rewritten = False
-    max_backup_size = 0
-    for backup in Config.get_server_config().backups:
-        backup_size = get_file_size(Config.get_selected_server_from_list().working_directory,
-                                    Config.get_backups_settings().name_of_the_backups_folder,
-                                    f"{backup.file_name}.zip")
-        if max_backup_size < backup_size:
-            max_backup_size = backup_size
+    average_backup_size = get_average_backup_size()
     # If not enough free space
     while True:
         free, used = calculate_space_for_current_server()
-        if max_backup_size < free:
+        if average_backup_size < free:
             break
         if Config.get_backups_settings().size_limit is not None and \
-                Config.get_backups_settings().size_limit > used + max_backup_size:
+                Config.get_backups_settings().size_limit > used + average_backup_size:
             break
         if not auto_backups:
             return get_translation("lack of space")
@@ -549,6 +543,18 @@ def handle_backups_limit_and_size(bot: commands.Bot, auto_backups=False):
         is_rewritten = True
     if is_rewritten:
         Config.save_server_config()
+
+
+def get_average_backup_size():
+    average_backup_size = 0
+    for backup in Config.get_server_config().backups[:-3:-1]:
+        backup_size = get_file_size(Config.get_selected_server_from_list().working_directory,
+                                    Config.get_backups_settings().name_of_the_backups_folder,
+                                    f"{backup.file_name}.zip")
+        average_backup_size += backup_size
+    if len(Config.get_server_config().backups) != 0:
+        average_backup_size //= len(Config.get_server_config().backups[:-3:-1])
+    return average_backup_size
 
 
 def get_folder_size(*path: str) -> int:
@@ -847,17 +853,33 @@ async def bot_backup(ctx, is_reaction=False):
                        .format(Config.get_selected_server_from_list().server_name) + "\n" + \
                    get_translation("Used - {0}").format(get_human_readable_size(bc_used_bytes)) + "\n" + \
                    get_translation("Free - {0}").format(get_human_readable_size(bc_free_bytes))
+    average_backup_size = get_average_backup_size()
+    max_backups = None
+    if average_backup_size != 0:
+        max_backups = bc_free_bytes // average_backup_size
+    if Config.get_backups_settings().max_backups_limit_for_server is not None:
+        if (max_backups is not None and max_backups > Config.get_backups_settings().max_backups_limit_for_server) or \
+                max_backups is None:
+            max_backups = Config.get_backups_settings().max_backups_limit_for_server - \
+                          len(Config.get_server_config().backups)
+    bot_message += "\n" + get_translation("Stored backups count - {0}").format(len(Config.get_server_config().backups))
+    bot_message += "\n" + get_translation("Approximate remaining backups count - {0}") \
+        .format(max_backups if max_backups is not None else "∞")
 
     if len(Config.get_server_config().backups) > 0:
         backup = Config.get_server_config().backups[-1]
         bot_message += "\n\n" + get_translation("Last backup: ") + \
                        backup.file_creation_date.strftime("%d/%m/%Y %H:%M:%S")
+        bot_message += "\n" + get_translation("Backup size: ") + \
+                       get_human_readable_size(get_file_size(Config.get_selected_server_from_list().working_directory,
+                                                             Config.get_backups_settings().name_of_the_backups_folder,
+                                                             f"{backup.file_name}.zip"))
         if backup.reason is None and backup.initiator is None:
-            bot_message += "\n\t" + get_translation("Reason: ") + get_translation("Automatic backup")
+            bot_message += "\n" + get_translation("Reason: ") + get_translation("Automatic backup")
         else:
-            bot_message += "\n\t" + get_translation("Reason: ") + \
+            bot_message += "\n" + get_translation("Reason: ") + \
                            (backup.reason if backup.reason else get_translation("Not stated"))
-            bot_message += "\n\t" + get_translation("Initiator: ") + backup.initiator
+            bot_message += "\n" + get_translation("Initiator: ") + backup.initiator
     await send_msg(ctx, add_quotes(bot_message), is_reaction)
 
 
