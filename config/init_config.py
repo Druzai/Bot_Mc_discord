@@ -942,10 +942,11 @@ class Config:
         if cls._settings_instance.bot_settings.backups.max_backups_limit_for_server is not None and \
                 cls._settings_instance.bot_settings.backups.max_backups_limit_for_server < 1:
             cls._need_to_rewrite = True
-            if cls._ask_for_data(get_translation("Max backups limit for server not found. Would you like to set it?") +
-                                 " Y/n\n> ", "y"):
+            if cls._ask_for_data(
+                    get_translation("Max backups' count limit for server not found. Would you like to set it?") +
+                    " Y/n\n> ", "y"):
                 cls._settings_instance.bot_settings.backups.max_backups_limit_for_server = \
-                    cls._ask_for_data(get_translation("Set max backups limit for server (int)") + "\n> ",
+                    cls._ask_for_data(get_translation("Set max backups' count limit for server (int)") + "\n> ",
                                       try_int=True, int_high_than=0)
             else:
                 cls._settings_instance.bot_settings.backups.max_backups_limit_for_server = None
@@ -971,5 +972,5 @@ class Config:
             cls._settings_instance.bot_settings.backups.compression_method = \
                 cls._settings_instance.bot_settings.backups.supported_compression_methods[1]
 
-        print(get_translation("Name of the backups folder in which bot will store backups - '{0}'.")
+        print(get_translation("Name of the backups folder in which bot will store them - '{0}'.")
               .format(cls._settings_instance.bot_settings.backups.name_of_the_backups_folder))

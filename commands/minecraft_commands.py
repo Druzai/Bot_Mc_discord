@@ -501,7 +501,7 @@ class MinecraftCommands(commands.Cog):
             Config.get_backups_settings().automatic_backup = True
             Config.save_config()
         await warn_about_auto_backups(ctx, self._bot)
-        await ctx.send(add_quotes(get_translation("Automatic backups on")))
+        await ctx.send(add_quotes(get_translation("Automatic backups enabled")))
 
     @backup.command(pass_context=True, name="off")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -511,7 +511,7 @@ class MinecraftCommands(commands.Cog):
         if Config.get_backups_settings().automatic_backup:
             Config.get_backups_settings().automatic_backup = False
             Config.save_config()
-        await ctx.send(add_quotes(get_translation("Automatic backups off")))
+        await ctx.send(add_quotes(get_translation("Automatic backups disabled")))
 
     @backup.command(pass_context=True, name="period")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)

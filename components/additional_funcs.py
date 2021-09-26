@@ -442,7 +442,17 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
             date_t = str(timedelta_secs // 60) + ":" + f"{(timedelta_secs % 60):02d}"
         else:
             date_t = str(timedelta_secs % 60) + get_translation(" sec")
-        yield add_quotes(get_translation("Done in {0}, method: {1}!").format(date_t, compression))
+        backup_size = get_file_size(f"{zip_path}/{zip_name}.zip")
+        backup_size_str = get_human_readable_size(backup_size, round=True)
+        world_folder_size = get_folder_size(Config.get_selected_server_from_list().working_directory,
+                                            get_from_server_properties("level-name"))
+        world_folder_size_str = get_human_readable_size(world_folder_size, stop_unit=backup_size_str.split(" ")[-1],
+                                                        round=True)
+        yield add_quotes(get_translation("Done in {0}\nCompression method: {1}").format(date_t, compression) +
+                         f"\n{world_folder_size_str} -> {backup_size_str} " +
+                         (f"(x{world_folder_size // backup_size})"
+                          if round(world_folder_size / backup_size, 1).is_integer()
+                          else f"(x{world_folder_size / backup_size:.1f})"))
     if use_rcon:
         with connect_rcon() as cl_r:
             cl_r.tellraw("@a",
@@ -520,8 +530,8 @@ def handle_backups_limit_and_size(bot: commands.Bot, auto_backups=False):
                 Config.get_backups_settings().max_backups_limit_for_server <= \
                 len(Config.get_server_config().backups):
             if not auto_backups:
-                return get_translation("backups limit")
-            delete_oldest_auto_backup_if_exists(get_translation("backups limit"), bot)
+                return get_translation("backups' count limit")
+            delete_oldest_auto_backup_if_exists(get_translation("backups' count limit"), bot)
             is_rewritten = True
             continue
         break
@@ -566,14 +576,20 @@ def get_file_size(*path: str) -> int:
     return Path(*path).stat().st_size
 
 
-def get_human_readable_size(size):
+def get_human_readable_size(size, stop_unit=None, round=False):
     human_radix = 1024.
     for u in UNITS[:-1]:
-        if size < human_radix:
-            return f"{size:.2f} {get_translation(u)}"
+        if size < human_radix or stop_unit == get_translation(u):
+            if round:
+                return f"{int(size)} {get_translation(u)}"
+            else:
+                return f"{size:.2f} {get_translation(u)}"
         size /= human_radix
 
-    return f"{size:.2f} {get_translation(UNITS[-1])}"
+    if round:
+        return f"{int(size)} {get_translation(UNITS[-1])}"
+    else:
+        return f"{size:.2f} {get_translation(UNITS[-1])}"
 
 
 async def warn_about_auto_backups(ctx, bot: commands.Bot):
@@ -771,7 +787,7 @@ async def bot_restart(ctx, command, bot: commands.Bot, poll: Poll, is_reaction=F
 async def bot_clear(ctx, poll: Poll, subcommand: str = None, count: int = None):
     message_created = None
     mentions = set()
-    if len(ctx.message.role_mentions):
+    if len(ctx.message.mentions):
         mentions.update(ctx.message.mentions)
     if len(ctx.message.role_mentions):
         for role in ctx.message.role_mentions:
@@ -835,13 +851,12 @@ async def bot_clear(ctx, poll: Poll, subcommand: str = None, count: int = None):
 
 
 async def bot_backup(ctx, is_reaction=False):
-    bot_message = get_translation("Automatic backups ") + \
-                  (get_translation("enabled") if Config.get_backups_settings()
-                   .automatic_backup else get_translation("disabled")) + "\n"
+    bot_message = (get_translation("Automatic backups enabled") if Config.get_backups_settings()
+                   .automatic_backup else get_translation("Automatic backups disabled")) + "\n"
     bot_message += get_translation("Automatic backups period set to {0} min").format(Config.get_backups_settings()
                                                                                      .period_of_automatic_backups)
     if Config.get_backups_settings().max_backups_limit_for_server is not None:
-        bot_message += "\n" + get_translation("Max backups limit for server - {0}") \
+        bot_message += "\n" + get_translation("Max backups' count limit for server - {0}") \
             .format(Config.get_backups_settings().max_backups_limit_for_server)
     if Config.get_backups_settings().size_limit is not None:
         bot_message += "\n" + get_translation("Max backups' size limit for server - {0}") \
