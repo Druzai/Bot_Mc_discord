@@ -201,6 +201,7 @@ class Player:
 class Backup_info:
     file_name: str = ""
     reason: Optional[str] = None
+    restored_from: bool = False
     initiator: Optional[str] = None
 
     @property

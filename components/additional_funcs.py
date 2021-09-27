@@ -39,9 +39,9 @@ __all__ = [
     "get_author_and_mention", "save_to_whitelist_json", "get_whitelist_entry", "get_from_server_properties",
     "get_server_players", "add_quotes", "bot_status", "bot_list", "bot_start", "bot_stop", "bot_restart",
     "connect_rcon", "make_underscored_line", "get_human_readable_size", "calculate_space_for_current_server",
-    "create_zip_archive", "restore_from_zip_archive", "get_file_size", "BackupsThread",
+    "create_zip_archive", "restore_from_zip_archive", "get_file_size", "BackupsThread", "get_folder_size",
     "send_message_of_deleted_backup", "handle_backups_limit_and_size", "bot_backup", "delete_after_by_msg",
-    "get_half_members_count_with_role", "warn_about_auto_backups"
+    "get_half_members_count_with_role", "warn_about_auto_backups", "get_archive_uncompressed_size"
 ]
 
 UNITS = ("B", "KB", "MB", "GB", "TB", "PB")
@@ -400,7 +400,7 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
     if use_rcon:
         tellraw = ["", {"text": "<"}, {"text": bot.user.display_name, "color": "dark_gray"}, {"text": "> "}]
         if forced:
-            tellraw.append({"text": get_translation("Starting forced backup triggered by {0}...")
+            tellraw.append({"text": get_translation("Starting backup triggered by {0}...")
                            .format(f"{user.display_name}#{user.discriminator}"), "color": "yellow"})
         else:
             tellraw.append({"text": get_translation("Starting automatic backup..."), "color": "aqua"})
@@ -574,6 +574,14 @@ def get_folder_size(*path: str) -> int:
 
 def get_file_size(*path: str) -> int:
     return Path(*path).stat().st_size
+
+
+def get_archive_uncompressed_size(*path: str):
+    total_uncompressed = 0
+    with ZipFile(Path(*path)) as z:
+        for info in z.infolist():
+            total_uncompressed += info.file_size
+    return total_uncompressed
 
 
 def get_human_readable_size(size, stop_unit=None, round=False):
@@ -896,6 +904,8 @@ async def bot_backup(ctx, is_reaction=False):
             bot_message += "\n" + get_translation("Reason: ") + \
                            (backup.reason if backup.reason else get_translation("Not stated"))
             bot_message += "\n" + get_translation("Initiator: ") + backup.initiator
+        if backup.restored_from:
+            bot_message += "\n\t" + get_translation("The world of the server was restored from this backup")
     await send_msg(ctx, add_quotes(bot_message), is_reaction)
 
 

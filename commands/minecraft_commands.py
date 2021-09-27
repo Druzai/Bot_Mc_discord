@@ -8,6 +8,7 @@ from sys import argv
 
 import discord
 from discord.ext import commands, tasks
+from psutil import disk_usage
 
 from commands.poll import Poll
 from components import decorators
@@ -592,12 +593,32 @@ class MinecraftCommands(commands.Cog):
         if not BotVars.is_server_on and not BotVars.is_loading and not BotVars.is_stopping and \
                 not BotVars.is_restarting and not BotVars.is_backing_up:
             if 0 < backup_number <= len(Config.get_server_config().backups):
+                free_space = disk_usage(Config.get_selected_server_from_list().working_directory).free
+                bc_folder_bytes = get_folder_size(Config.get_selected_server_from_list().working_directory,
+                                                  get_from_server_properties("level-name"))
+                uncompressed_size = get_archive_uncompressed_size(
+                    Config.get_selected_server_from_list().working_directory,
+                    Config.get_backups_settings().name_of_the_backups_folder,
+                    f"{Config.get_server_config().backups[backup_number - 1].file_name}.zip")
+                if free_space + bc_folder_bytes <= uncompressed_size:
+                    await ctx.send(
+                        add_quotes(get_translation("There are not enough space on disk to restore from backup!"
+                                                   "\nFree - {0}\nRequired at least - {1}"
+                                                   "\nDelete some backups to proceed!")
+                                   .format(get_human_readable_size(free_space + bc_folder_bytes),
+                                           get_human_readable_size(uncompressed_size))))
+                    return
                 await ctx.send(add_quotes(get_translation("Starting restore from backup...")))
                 restore_from_zip_archive(Config.get_server_config().backups[backup_number - 1].file_name,
                                          Path(Config.get_selected_server_from_list().working_directory,
                                               Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
                                          Path(Config.get_selected_server_from_list().working_directory,
                                               get_from_server_properties("level-name")).as_posix())
+                for backup in Config.get_server_config().backups:
+                    if backup.restored_from:
+                        backup.restored_from = False
+                Config.get_server_config().backups[backup_number - 1].restored_from = True
+                Config.save_server_config()
                 await ctx.send(add_quotes(get_translation("Done!")))
                 self._backups_thread.skip()
             else:
@@ -716,11 +737,15 @@ class MinecraftCommands(commands.Cog):
                                              Config.get_backups_settings().name_of_the_backups_folder,
                                              f"{backup.file_name}.zip"))
                 if backup.reason is None and backup.initiator is None:
-                    message += "\n\t" + get_translation("Reason: ") + get_translation("Automatic backup") + "\n"
+                    message += "\n\t" + get_translation("Reason: ") + get_translation("Automatic backup")
                 else:
                     message += "\n\t" + get_translation("Reason: ") + \
                                (backup.reason if backup.reason else get_translation("Not stated"))
-                    message += "\n\t" + get_translation("Initiator: ") + backup.initiator + "\n"
+                    message += "\n\t" + get_translation("Initiator: ") + backup.initiator
+                message += "\n"
+                if backup.restored_from:
+                    message += "\t" + \
+                               get_translation("The world of the server was restored from this backup") + "\n"
                 i += 1
             await ctx.send(add_quotes(message))
         else:
