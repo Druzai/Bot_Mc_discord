@@ -802,9 +802,9 @@ class MinecraftCommands(commands.Cog):
                         if payload.emoji.name == self._emoji_symbols.get("start"):
                             await bot_start(channel, self._bot, is_reaction=True)
                         elif payload.emoji.name == self._emoji_symbols.get("stop 10"):
-                            await bot_stop(channel, command="10", bot=self._bot, poll=self._IndPoll, is_reaction=True)
+                            await bot_stop(channel, command=10, bot=self._bot, poll=self._IndPoll, is_reaction=True)
                         elif payload.emoji.name == self._emoji_symbols.get("restart 10"):
-                            await bot_restart(channel, command="10", bot=self._bot,
+                            await bot_restart(channel, command=10, bot=self._bot,
                                               poll=self._IndPoll, is_reaction=True)
                     else:
                         await send_error(channel, self._bot,

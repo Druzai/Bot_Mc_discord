@@ -12,7 +12,7 @@ from commands.poll import Poll
 from components.localization import get_translation, RuntimeTextHandler
 from config.init_config import Config, BotVars
 
-VERSION = "1.1.0"
+VERSION = "1.1.1"
 
 
 def _create_pot_lines_for_subcommands(command, find_str: str):
