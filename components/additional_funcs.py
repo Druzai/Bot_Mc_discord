@@ -252,10 +252,11 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_re
                 else:
                     bot_message = get_translation("Server\'s restarting in {0} seconds").format(str(how_many_sec))
 
-                cl_r.tellraw("@a", ["", {"text": "<"}, {"text": bot.user.display_name, "color": "dark_gray"},
+                bot_display_name = get_bot_display_name(bot)
+                cl_r.tellraw("@a", ["", {"text": "<"}, {"text": bot_display_name, "color": "dark_gray"},
                                     {"text": "> " + bot_message}])
                 for i in range(how_many_sec, -1, -w):
-                    cl_r.tellraw("@a", ["", {"text": "<"}, {"text": bot.user.display_name, "color": "dark_gray"},
+                    cl_r.tellraw("@a", ["", {"text": "<"}, {"text": bot_display_name, "color": "dark_gray"},
                                         {"text": "> " + get_translation("{0} sec to go").format(str(i))}])
                     await asleep(w)
             cl_r.run("stop")
@@ -310,6 +311,13 @@ def kill_server():
             with suppress(NoSuchProcess):
                 p.kill()
     BotVars.server_start_time = None
+
+
+def get_bot_display_name(bot: commands.Bot):
+    for member in bot.guilds[0].members:
+        if member.id == bot.user.id:
+            return member.display_name
+    return bot.user.display_name
 
 
 class BackupsThread(Thread):
@@ -396,9 +404,11 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
             with connect_query() as cl_q:
                 if cl_q.full_stats:
                     use_rcon = True
+    if use_rcon:
+        bot_display_name = get_bot_display_name(bot)
 
     if use_rcon:
-        tellraw = ["", {"text": "<"}, {"text": bot.user.display_name, "color": "dark_gray"}, {"text": "> "}]
+        tellraw = ["", {"text": "<"}, {"text": bot_display_name, "color": "dark_gray"}, {"text": "> "}]
         if forced:
             tellraw.append({"text": get_translation("Starting backup triggered by {0}...")
                            .format(f"{user.display_name}#{user.discriminator}"), "color": "yellow"})
@@ -456,7 +466,7 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
     if use_rcon:
         with connect_rcon() as cl_r:
             cl_r.tellraw("@a",
-                         ["", {"text": "<"}, {"text": bot.user.display_name, "color": "dark_gray"}, {"text": "> "},
+                         ["", {"text": "<"}, {"text": bot_display_name, "color": "dark_gray"}, {"text": "> "},
                           {"text": get_translation("Backup completed!"), "color": "green"}])
     BotVars.is_backing_up = False
 
@@ -517,7 +527,7 @@ def send_message_of_deleted_backup(bot: commands.Bot, reason: str, backup=None):
     with suppress(BaseException):
         with connect_rcon() as cl_r:
             cl_r.tellraw("@a",
-                         ["", {"text": "<"}, {"text": bot.user.display_name, "color": "dark_gray"}, {"text": "> "},
+                         ["", {"text": "<"}, {"text": get_bot_display_name(bot), "color": "dark_gray"}, {"text": "> "},
                           {"text": msg, "color": "red"}])
     print(msg)
 
@@ -1229,11 +1239,11 @@ async def _handle_reply_in_message(message, result_msg):
         if reply_msg.author.discriminator == "0000":
             # reply to minecraft player
             cnt = cnt.replace("**<", "<").replace(">**", ">")
-            result_msg["reply"] = f"\n -> {cnt}\n"
+            result_msg["reply"] = f"\n -> {cnt}"
         else:
             # Reply to discord user
             nick = (await message.guild.fetch_member(reply_msg.author.id)).display_name
-            result_msg["reply"] = ["\n -> <", nick, f"> {cnt}\n"]
+            result_msg["reply"] = ["\n -> <", nick, f"> {cnt}"]
     return result_msg
 
 
@@ -1266,13 +1276,17 @@ def _handle_urls_and_attachments_in_message(result_msg, message, only_replace_li
 
         if attachments.get(key, None) is not None and len(attachments[key]) > 0:
             for i in attachments[key]:
-                if (key == "content" and len("".join(temp_split)) != 0) or \
-                        (key == "reply" and "".join(temp_split) != "> "):
+                t_string = [t[0] if isinstance(t, tuple) else t for t in temp_split]
+                if (key == "content" and len("".join(t_string)) != 0) or \
+                        (key == "reply" and "".join(t_string) != "> "):
                     temp_split.append(" ")
                 if only_replace_links:
                     temp_split.append(i[0])
                 else:
                     temp_split.append(i)
+
+        if key == "reply":
+            temp_split.append("\n")
 
         if isinstance(ms, list):
             result_msg[key] = [ms[0], ms[1], "".join(temp_split) if only_replace_links else temp_split]

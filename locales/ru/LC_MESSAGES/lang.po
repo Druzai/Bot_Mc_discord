@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
 "POT-Creation-Date: 2021-09-27 19:56+0300\n"
-"PO-Revision-Date: 2021-09-27 19:57+0300\n"
+"PO-Revision-Date: 2021-10-03 10:24+0300\n"
 "Last-Translator: Druzai <astyn37@gmail.com>\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -1299,7 +1299,7 @@ msgstr "Запуск резервного копирования по требо
 
 #: ..\components\additional_funcs.py:406
 msgid "Starting automatic backup..."
-msgstr "Запуск автоматического резервного копирования,.."
+msgstr "Запуск автоматического резервного копирования..."
 
 #: ..\components\additional_funcs.py:451
 msgid ""
