@@ -108,7 +108,7 @@ async def send_status(ctx, is_reaction=False):
                            is_reaction)
 
 
-async def start_server(ctx, bot: commands.Bot, shut_up=False, is_reaction=False):
+async def start_server(ctx, bot: commands.Bot, backups_thread, shut_up=False, is_reaction=False):
     BotVars.is_loading = True
     print(get_translation("Loading server"))
     if ctx and not shut_up:
@@ -179,6 +179,7 @@ async def start_server(ctx, bot: commands.Bot, shut_up=False, is_reaction=False)
         print(get_translation("Server on!"))
         if randint(0, 8) == 0:
             await send_msg(ctx, get_translation("Kept you waiting, huh?"), is_reaction)
+    backups_thread.skip()
     BotVars.is_loading = False
     BotVars.is_server_on = True
     if BotVars.is_restarting:
@@ -647,6 +648,8 @@ async def server_checkups(bot: commands.Bot):
                     to_save = True
             if to_save:
                 Config.save_server_config()
+            if BotVars.is_auto_backup_disable:
+                BotVars.is_auto_backup_disable = False
         if not BotVars.is_server_on:
             BotVars.is_server_on = True
         if (BotVars.watcher_of_log_file is None or not BotVars.watcher_of_log_file.is_running()) and \
@@ -764,10 +767,10 @@ async def bot_list(ctx, bot: commands.Bot, is_reaction=False):
         await send_msg(ctx, f"{author_mention}, " + get_translation("server offline"), is_reaction)
 
 
-async def bot_start(ctx, bot: commands.Bot, is_reaction=False):
+async def bot_start(ctx, bot: commands.Bot, backups_thread, is_reaction=False):
     if not BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and \
             not BotVars.is_backing_up and not BotVars.is_restoring:
-        await start_server(ctx, bot=bot, is_reaction=is_reaction)
+        await start_server(ctx, bot=bot, backups_thread=backups_thread, is_reaction=is_reaction)
     else:
         await send_status(ctx, is_reaction=is_reaction)
 
@@ -787,7 +790,7 @@ async def bot_stop(ctx, command, bot: commands.Bot, poll: Poll, is_reaction=Fals
         await send_status(ctx, is_reaction=is_reaction)
 
 
-async def bot_restart(ctx, command, bot: commands.Bot, poll: Poll, is_reaction=False):
+async def bot_restart(ctx, command, bot: commands.Bot, poll: Poll, backups_thread: BackupsThread, is_reaction=False):
     if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and \
             not BotVars.is_backing_up and not BotVars.is_restoring:
         if BotVars.is_doing_op:
@@ -797,7 +800,7 @@ async def bot_restart(ctx, command, bot: commands.Bot, poll: Poll, is_reaction=F
         BotVars.is_restarting = True
         print(get_translation("Restarting server"))
         await stop_server(ctx, bot, poll, command, True, is_reaction=is_reaction)
-        await start_server(ctx, bot, is_reaction=is_reaction)
+        await start_server(ctx, bot, backups_thread, is_reaction=is_reaction)
     else:
         await send_status(ctx, is_reaction=is_reaction)
 

@@ -47,7 +47,7 @@ class MinecraftCommands(commands.Cog):
     @decorators.has_role_or_default()
     async def start(self, ctx):
         """Start server"""
-        await bot_start(ctx, self._bot)
+        await bot_start(ctx, self._bot, self._backups_thread)
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, mention_everyone=True, add_reactions=True,
@@ -65,7 +65,7 @@ class MinecraftCommands(commands.Cog):
     @decorators.has_role_or_default()
     async def restart(self, ctx, timeout: int = 0):
         """Restart server"""
-        await bot_restart(ctx, timeout, self._bot, self._IndPoll)
+        await bot_restart(ctx, timeout, self._bot, self._IndPoll, self._backups_thread)
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -800,12 +800,12 @@ class MinecraftCommands(commands.Cog):
                     if Config.get_settings().bot_settings.role == "" or \
                             Config.get_settings().bot_settings.role in (e.name for e in payload.member.roles):
                         if payload.emoji.name == self._emoji_symbols.get("start"):
-                            await bot_start(channel, self._bot, is_reaction=True)
+                            await bot_start(channel, self._bot, self._backups_thread, is_reaction=True)
                         elif payload.emoji.name == self._emoji_symbols.get("stop 10"):
                             await bot_stop(channel, command=10, bot=self._bot, poll=self._IndPoll, is_reaction=True)
                         elif payload.emoji.name == self._emoji_symbols.get("restart 10"):
-                            await bot_restart(channel, command=10, bot=self._bot,
-                                              poll=self._IndPoll, is_reaction=True)
+                            await bot_restart(channel, command=10, bot=self._bot, poll=self._IndPoll,
+                                              backups_thread=self._backups_thread, is_reaction=True)
                     else:
                         await send_error(channel, self._bot,
                                          commands.MissingRole(Config.get_settings().bot_settings.role),
