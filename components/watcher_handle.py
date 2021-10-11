@@ -103,20 +103,36 @@ def _check_log_file(file: Path, last_line: str = None):
             if search(r"@.+", player_message):
                 split_arr = split(r"@[^\s]+", player_message)
                 mentions = {i[1:].lower(): None for i in findall(r"@[^\s]+", player_message)}
-                for guild in BotVars.bot_for_webhooks.guilds:
-                    # Check mention on user mention
-                    for member in guild.members:
-                        if member.name.lower() in mentions.keys():
-                            mentions[member.name.lower()] = member
-                        elif member.display_name.lower() in mentions.keys():
-                            mentions[member.display_name.lower()] = member
-                    # Check mention on role mention
-                    for role in guild.roles:
-                        if role.name.lower() in mentions.keys():
-                            mentions[role.name.lower()] = role
+                # Check mention on user mention
+                for member in BotVars.bot_for_webhooks.guilds[0].members:
+                    if member.name.lower() in mentions.keys():
+                        mentions[member.name.lower()] = member
+                    elif member.display_name.lower() in mentions.keys():
+                        mentions[member.display_name.lower()] = member
+                # Check mention on role mention
+                for role in BotVars.bot_for_webhooks.guilds[0].roles:
+                    if role.name.lower() in mentions.keys():
+                        mentions[role.name.lower()] = role
+                # Check mention on minecraft nick mention
+                if not all(mentions.values()):
+                    for user in Config.get_settings().known_users:
+                        if user.user_minecraft_nick.lower() in mentions.keys():
+                            if mentions[user.user_minecraft_nick.lower()] is None:
+                                mentions[user.user_minecraft_nick.lower()] = []
+                            if isinstance(mentions[user.user_minecraft_nick.lower()], list):
+                                mentions[user.user_minecraft_nick.lower()] += \
+                                    [m for m in BotVars.bot_for_webhooks.guilds[0].members
+                                     if m.id == user.user_discord_id]
                 i = 1
                 for name, mention_obj in mentions.items():
-                    split_arr.insert(i, mention_obj.mention if mention_obj is not None else f"@{name}")
+                    if (name == "a" or name == "e") and mention_obj is None:
+                        split_arr.insert(i, f"@everyone")
+                    elif name == "p" and mention_obj is None:
+                        split_arr.insert(i, f"@here")
+                    elif isinstance(mention_obj, list):
+                        split_arr.insert(i, f"@{name} ({', '.join([mn.mention for mn in mention_obj])})")
+                    else:
+                        split_arr.insert(i, mention_obj.mention if mention_obj is not None else f"@{name}")
                     i += 2
                 player_message = "".join(split_arr)
 

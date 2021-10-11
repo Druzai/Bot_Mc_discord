@@ -75,18 +75,19 @@ class MinecraftCommands(commands.Cog):
         """
         Op command
         :param reasons: comment"""
+        doing_opping = BotVars.is_doing_op
         BotVars.is_doing_op = True
         if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and not BotVars.is_restarting:
             if len(get_server_players()) == 0:
                 await ctx.send(f"{ctx.author.mention}, " +
                                get_translation("There are no players on the server").lower() + "!")
-                BotVars.is_doing_op = False
+                BotVars.is_doing_op = doing_opping
                 return
 
             if minecraft_nick not in [p.player_minecraft_nick for p in Config.get_server_config().seen_players]:
                 await ctx.send(get_translation("{0}, I didn't see this nick on server, son! "
                                                "Go to the server via this nick before...").format(ctx.author.mention))
-                BotVars.is_doing_op = False
+                BotVars.is_doing_op = doing_opping
                 return
 
             if minecraft_nick not in [u.user_minecraft_nick for u in Config.get_known_users_list()] or \
@@ -94,7 +95,7 @@ class MinecraftCommands(commands.Cog):
                                           if u.user_minecraft_nick == minecraft_nick]:
                 await ctx.send(get_translation("{0}, this nick isn't bound to you, use {1}assoc first...")
                                .format(ctx.author.mention, Config.get_settings().bot_settings.prefix))
-                BotVars.is_doing_op = False
+                BotVars.is_doing_op = doing_opping
                 return
 
             if minecraft_nick in [p.player_minecraft_nick for p in Config.get_server_config().seen_players] and \
@@ -102,13 +103,18 @@ class MinecraftCommands(commands.Cog):
                      if p.player_minecraft_nick == minecraft_nick][0] == 0:
                 await ctx.send(get_translation("{0}, you had run out of attempts to get opped for `{1}` nick!")
                                .format(ctx.author.mention, minecraft_nick))
-                BotVars.is_doing_op = False
+                BotVars.is_doing_op = doing_opping
                 return
 
             if minecraft_nick not in get_server_players():
                 await ctx.send(get_translation("{0}, I didn't see this nick `{1}` online!")
                                .format(ctx.author.mention, minecraft_nick))
-                BotVars.is_doing_op = False
+                BotVars.is_doing_op = doing_opping
+                return
+
+            if minecraft_nick in BotVars.op_deop_list:
+                await ctx.send(get_translation("{0}, you've already been opped!").format(ctx.author.mention))
+                BotVars.is_doing_op = doing_opping
                 return
 
             BotVars.op_deop_list.append(minecraft_nick)
@@ -116,12 +122,15 @@ class MinecraftCommands(commands.Cog):
                                     minecraft_nick + " || " + get_translation("Reason: ") +
                                     (reasons if reasons else "None"))
             await_time_op = Config.get_awaiting_times_settings().await_seconds_when_opped
+            bot_display_name = get_bot_display_name(self._bot)
             try:
                 with connect_rcon() as cl_r:
-                    cl_r.say(minecraft_nick + get_translation(" you've opped for") + (
-                        "" if await_time_op // 60 == 0 else " " + str(await_time_op // 60) + get_translation(" min")) +
-                             ("." if await_time_op % 60 == 0 else " " + str(await_time_op % 60) +
-                                                                  get_translation(" sec") + "."))
+                    bot_message = f"{minecraft_nick}," + get_translation(" you've opped for") + (
+                        "" if await_time_op // 60 == 0 else " " + str(await_time_op // 60) + get_translation(" min")) \
+                                  + ("." if await_time_op % 60 == 0 else " " + str(await_time_op % 60) +
+                                                                         get_translation(" sec") + ".")
+                    cl_r.tellraw("@a", ["", {"text": "<"}, {"text": bot_display_name, "color": "dark_gray"},
+                                        {"text": "> " + bot_message}])
                     cl_r.mkop(minecraft_nick)
                 Config.decrease_number_to_op_for_player(minecraft_nick)
                 Config.save_server_config()
@@ -129,7 +138,8 @@ class MinecraftCommands(commands.Cog):
                 await ctx.send(get_translation("{0}, server isn't working (at least I've tried), try again later...")
                                .format(ctx.author.mention))
                 return
-            await ctx.send(add_quotes(get_translation("Bot has given you an operator")))
+            await ctx.send(add_quotes(get_translation("Now {0} is an operator!")
+                                      .format(f"{ctx.author.display_name}#{ctx.author.discriminator}")))
             if await_time_op > 0:
                 if randint(0, 2) == 1:
                     await ctx.send(
@@ -152,7 +162,9 @@ class MinecraftCommands(commands.Cog):
                         Config.get_awaiting_times_settings().await_seconds_when_connecting_via_rcon)
                     with suppress(BaseException):
                         with connect_rcon() as cl_r:
-                            cl_r.say(minecraft_nick + get_translation(" you all will be deoped now."))
+                            bot_message = f"{minecraft_nick}," + get_translation(" you all will be deoped now.")
+                            cl_r.tellraw("@a", ["", {"text": "<"}, {"text": bot_display_name, "color": "dark_gray"},
+                                                {"text": "> " + bot_message}])
                             for player in to_delete_ops:
                                 cl_r.deop(player)
                             list = cl_r.run("list").split(":")[1].split(", ")
@@ -480,9 +492,9 @@ class MinecraftCommands(commands.Cog):
     @decorators.has_role_or_default()
     async def s_list(self, ctx):
         send_ = "```" + get_translation("List of servers") + ":"
-        for i in range(len(Config.get_settings().servers_list)):
-            send_ += "\n[" + (make_underscored_line(i + 1)
-                              if i + 1 == Config.get_settings().selected_server_number else str(i + 1)) + "] " + \
+        for i in range(1, len(Config.get_settings().servers_list) + 1):
+            send_ += "\n[" + (make_underscored_line(i)
+                              if i == Config.get_settings().selected_server_number else str(i)) + "] " + \
                      Config.get_settings().servers_list[i].server_name
         send_ += "```"
         await ctx.send(send_)

@@ -10,7 +10,7 @@ from os import chdir, system, walk, mkdir, remove
 from os.path import basename, join as p_join, getsize
 from pathlib import Path
 from random import randint
-from re import search, split, findall
+from re import search, split, findall, sub
 from shutil import rmtree
 from sys import platform, argv
 from threading import Thread, Event
@@ -18,7 +18,7 @@ from time import sleep
 from typing import Tuple, List
 from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 
-from discord import Activity, ActivityType, TextChannel, Message, Status
+from discord import Activity, ActivityType, TextChannel, Message, Status, Member, Role
 from discord.ext import commands
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r
@@ -41,7 +41,8 @@ __all__ = [
     "connect_rcon", "make_underscored_line", "get_human_readable_size", "calculate_space_for_current_server",
     "create_zip_archive", "restore_from_zip_archive", "get_file_size", "BackupsThread", "get_folder_size",
     "send_message_of_deleted_backup", "handle_backups_limit_and_size", "bot_backup", "delete_after_by_msg",
-    "get_half_members_count_with_role", "warn_about_auto_backups", "get_archive_uncompressed_size"
+    "get_half_members_count_with_role", "warn_about_auto_backups", "get_archive_uncompressed_size",
+    "get_bot_display_name"
 ]
 
 UNITS = ("B", "KB", "MB", "GB", "TB", "PB")
@@ -108,7 +109,7 @@ async def send_status(ctx, is_reaction=False):
                            is_reaction)
 
 
-async def start_server(ctx, bot: commands.Bot, backups_thread, shut_up=False, is_reaction=False):
+async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=False, is_reaction=False):
     BotVars.is_loading = True
     print(get_translation("Loading server"))
     if ctx and not shut_up:
@@ -179,7 +180,8 @@ async def start_server(ctx, bot: commands.Bot, backups_thread, shut_up=False, is
         print(get_translation("Server on!"))
         if randint(0, 8) == 0:
             await send_msg(ctx, get_translation("Kept you waiting, huh?"), is_reaction)
-    backups_thread.skip()
+    if backups_thread is not None:
+        backups_thread.skip()
     BotVars.is_loading = False
     BotVars.is_server_on = True
     if BotVars.is_restarting:
@@ -659,45 +661,36 @@ async def server_checkups(bot: commands.Bot):
             if BotVars.watcher_of_log_file is None:
                 create_watcher()
             BotVars.watcher_of_log_file.start()
-        number_match = findall(r", \d+", bot.guilds[0].get_member(bot.user.id).activities[0].name)
-        if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 0 or info.num_players != 0 or \
-                (len(number_match) > 0 and number_match[0].split(" ")[-1] != 0):
-            await bot.change_presence(activity=Activity(type=ActivityType.playing,
-                                                        name=Config.get_settings().bot_settings.gaming_status +
-                                                             ", " + str(info.num_players) +
-                                                             get_translation(" player(s) online")))
+        await bot.change_presence(activity=Activity(type=ActivityType.playing,
+                                                    name=Config.get_settings().bot_settings.gaming_status +
+                                                         ", " + str(info.num_players) +
+                                                         get_translation(" player(s) online")))
     except BaseException:
         if len(get_list_of_processes()) == 0:
             if BotVars.is_server_on:
                 BotVars.is_server_on = False
             if BotVars.watcher_of_log_file is not None and BotVars.watcher_of_log_file.is_running():
                 BotVars.watcher_of_log_file.stop()
-        if bot.guilds[0].get_member(bot.user.id).activities[0].type.value != 2:
-            await bot.change_presence(activity=Activity(type=ActivityType.listening,
-                                                        name=Config.get_settings().bot_settings.idle_status +
-                                                             (" 🤔" if len(
-                                                                 get_list_of_processes()) != 0 else "")))
+        await bot.change_presence(activity=Activity(type=ActivityType.listening,
+                                                    name=Config.get_settings().bot_settings.idle_status +
+                                                         (" 🤔" if len(
+                                                             get_list_of_processes()) != 0 else "")))
         if Config.get_settings().bot_settings.forceload and not BotVars.is_stopping \
                 and not BotVars.is_loading and not BotVars.is_restarting:
-            sent = False
-            for guild in bot.guilds:
-                if sent:
+            for channel in bot.guilds[0].channels:
+                if not isinstance(channel, TextChannel):
+                    continue
+                with suppress(BaseException):
+                    if Config.get_settings().bot_settings.menu_id is not None:
+                        await channel.fetch_message(Config.get_settings().bot_settings.menu_id)
+                    await send_msg(ctx=channel,
+                                   msg=add_quotes(get_translation("Bot detected: Server\'s offline!\n"
+                                                                  "Time: {0}\n"
+                                                                  "Starting up server again!").format(
+                                       datetime.now().strftime("%d/%m/%Y %H:%M:%S"))),
+                                   is_reaction=True)
+                    await start_server(ctx=channel, bot=bot, shut_up=True, is_reaction=True)
                     break
-                for channel in guild.channels:
-                    if not isinstance(channel, TextChannel):
-                        continue
-                    with suppress(BaseException):
-                        if Config.get_settings().bot_settings.menu_id is not None:
-                            await channel.fetch_message(Config.get_settings().bot_settings.menu_id)
-                        await send_msg(ctx=channel,
-                                       msg=add_quotes(get_translation("Bot detected: Server\'s offline!\n"
-                                                                      "Time: {0}\n"
-                                                                      "Starting up server again!").format(
-                                           datetime.now().strftime("%d/%m/%Y %H:%M:%S"))),
-                                       is_reaction=True)
-                        await start_server(ctx=channel, bot=bot, shut_up=True, is_reaction=True)
-                        sent = True
-                        break
     if Config.get_awaiting_times_settings().await_seconds_in_check_ups > 0:
         await asleep(Config.get_awaiting_times_settings().await_seconds_in_check_ups)
 
@@ -805,14 +798,15 @@ async def bot_restart(ctx, command, bot: commands.Bot, poll: Poll, backups_threa
         await send_status(ctx, is_reaction=is_reaction)
 
 
-async def bot_clear(ctx, poll: Poll, subcommand: str = None, count: int = None):
+async def bot_clear(ctx, poll: Poll, subcommand: str = None, count: int = None, discord_mentions=None):
     message_created = None
     mentions = set()
-    if len(ctx.message.mentions):
-        mentions.update(ctx.message.mentions)
-    if len(ctx.message.role_mentions):
-        for role in ctx.message.role_mentions:
-            mentions.update(role.members)
+    if discord_mentions is not None:
+        for mention in discord_mentions:
+            if isinstance(mention, Member):
+                mentions.add(mention)
+            elif isinstance(mention, Role):
+                mentions.update(mention.members)
     if len(mentions):
         check_condition = lambda m: m.author in mentions and m.id not in poll.get_polls().keys()
     elif len(mentions) == 0 and not len(ctx.message.channel_mentions):
@@ -929,8 +923,10 @@ def parse_params_for_help(command_params: dict, string_to_add: str, create_param
             if arg_data.annotation != inspect._empty:
                 if not getattr(arg_data.annotation, '__name__', None) is None:
                     params[arg_name] = getattr(arg_data.annotation, '__name__', None)
+                elif getattr(arg_data.annotation, 'converter'):
+                    params[arg_name] = sub(r"\w*?\.", "", str(arg_data.annotation.converter))
                 else:
-                    params[arg_name] = str(arg_data.annotation).replace("typing.", "")
+                    params[arg_name] = sub(r"\w*?\.", "", str(arg_data.annotation))
             elif arg_data.annotation == inspect._empty and arg_data.default != inspect._empty:
                 params[arg_name] = type(arg_data.default).__name__
             else:
@@ -942,7 +938,8 @@ def parse_params_for_help(command_params: dict, string_to_add: str, create_param
                 add_data = f"'{arg_data.default}'" if isinstance(arg_data.default, str) else str(
                     arg_data.default)
             string_to_add += f" [{arg_name}" + (f" = {add_data}" if add_data else "") + \
-                             ("..." if arg_data.kind == arg_data.VAR_POSITIONAL else "") + "]"
+                             ("..." if arg_data.kind == arg_data.VAR_POSITIONAL
+                                       or arg_data.kind == arg_data.POSITIONAL_OR_KEYWORD else "") + "]"
         else:
             string_to_add += f" <{arg_name}>"
     return string_to_add, params
@@ -1057,7 +1054,7 @@ def save_to_whitelist_json(entry: dict):
         try:
             with open(filepath, "r", encoding="utf8") as file:
                 whitelist = load(file)
-                whitelist.append(entry)
+            whitelist.append(entry)
         except JSONDecodeError:
             pass
     with open(filepath, "w", encoding="utf8") as file:
