@@ -283,23 +283,23 @@ class ChatCommands(commands.Cog):
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, mention_everyone=True, add_reactions=True,
                                   embed_links=True, read_message_history=True, view_channel=True)
     @commands.guild_only()
-    async def clear(self, ctx, count: int = 1, discord_mentions: commands.Greedy[Union[Member, Role]] = None):
-        await bot_clear(ctx, self._IndPoll, count=count, discord_mentions=discord_mentions)
+    async def clear(self, ctx, count: int = 1, mentions: commands.Greedy[Union[Member, Role]] = None):
+        await bot_clear(ctx, self._IndPoll, count=count, discord_mentions=mentions)
 
     @clear.command(pass_context=True, name="all")
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, mention_everyone=True, add_reactions=True,
                                   embed_links=True, read_message_history=True, view_channel=True)
     @commands.guild_only()
-    async def c_all(self, ctx, discord_mentions: commands.Greedy[Union[Member, Role]] = None):
-        await bot_clear(ctx, self._IndPoll, subcommand="all", discord_mentions=discord_mentions)
+    async def c_all(self, ctx, mentions: commands.Greedy[Union[Member, Role]] = None):
+        await bot_clear(ctx, self._IndPoll, subcommand="all", discord_mentions=mentions)
 
     @clear.command(pass_context=True, name="reply")
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, mention_everyone=True, add_reactions=True,
                                   embed_links=True, read_message_history=True, view_channel=True)
     @commands.guild_only()
-    async def c_reply(self, ctx, discord_mentions: commands.Greedy[Union[Member, Role]] = None):
+    async def c_reply(self, ctx, mentions: commands.Greedy[Union[Member, Role]] = None):
         if ctx.message.reference is not None:
-            await bot_clear(ctx, self._IndPoll, subcommand="reply", discord_mentions=discord_mentions)
+            await bot_clear(ctx, self._IndPoll, subcommand="reply", discord_mentions=mentions)
         else:
             await ctx.send(get_translation("You didn't provide reply in your message!"))
 
