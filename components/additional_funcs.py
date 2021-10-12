@@ -236,8 +236,9 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_re
 
         BotVars.is_stopping = True
         print(get_translation("Stopping server"))
-        await send_msg(ctx, add_quotes(get_translation("Stopping server.......\nPlease wait {0} sec.")
-                                       .format(str(how_many_sec))), is_reaction)
+        await send_msg(ctx, add_quotes(get_translation("Stopping server") + "......." +
+                                       ("\n" + get_translation("Please wait {0} sec.").format(str(how_many_sec))
+                                        if how_many_sec > 0 else "")), is_reaction)
 
         with connect_rcon() as cl_r:
             if how_many_sec != 0:
@@ -889,8 +890,8 @@ async def bot_backup(ctx, is_reaction=False):
     if average_backup_size != 0:
         max_backups = bc_free_bytes // average_backup_size
     if Config.get_backups_settings().max_backups_limit_for_server is not None:
-        if (max_backups is not None and max_backups > Config.get_backups_settings().max_backups_limit_for_server) or \
-                max_backups is None:
+        if max_backups is None or (max_backups + len(Config.get_server_config().backups)) > Config \
+                .get_backups_settings().max_backups_limit_for_server:
             max_backups = Config.get_backups_settings().max_backups_limit_for_server - \
                           len(Config.get_server_config().backups)
     bot_message += "\n" + get_translation("Stored backups count - {0}").format(len(Config.get_server_config().backups))
