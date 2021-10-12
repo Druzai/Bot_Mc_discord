@@ -37,7 +37,7 @@ class BotVars:
     is_voting: bool = False
     is_backing_up: bool = False
     is_restoring: bool = False
-    is_auto_backup_disable = False
+    is_auto_backup_disable: bool = False
     op_deop_list: List = []  # List of nicks of players to op and then to deop
     port_query: int = None
     port_rcon: int = None
@@ -814,12 +814,12 @@ class Config:
         if sys.platform == "linux" or sys.platform == "linux2":
             file_extension = ".sh"
             print(get_translation("Bot detected your operating system is Linux.\n"
-                                  "Bot will search for '***.sh' file.\n"
+                                  "Bot will search for '*.sh' file.\n"
                                   "You need to enter file name {0}without{1} file extension!").format(BOLD, END))
         elif sys.platform == "win32":
             file_extension = ".bat"
             print(get_translation("Bot detected your operating system is Windows.\n"
-                                  "Bot will search for '***.bat' file.\n"
+                                  "Bot will search for '*.bat' file.\n"
                                   "You need to enter file name {0}without{1} file extension!").format(BOLD, END))
         else:
             print(get_translation("Bot couldn't detect your operating system.\n"

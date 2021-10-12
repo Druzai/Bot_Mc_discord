@@ -141,8 +141,8 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
         if len(get_list_of_processes()) == 0:
             await send_msg(ctx, add_quotes(get_translation("Error while loading server! Retreating...")),
                            is_reaction)
-            await bot.change_presence(activity=Activity(type=ActivityType.listening,
-                                                        name=Config.get_settings().bot_settings.idle_status))
+            bot.loop.create_task(bot.change_presence(activity=Activity(type=ActivityType.listening,
+                                                                       name=Config.get_settings().bot_settings.idle_status)))
             BotVars.is_loading = False
             if BotVars.is_restarting:
                 BotVars.is_restarting = False
@@ -189,8 +189,8 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
     Config.get_server_config().states.started_info.set_state_info(str(author),
                                                                   datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
     Config.save_server_config()
-    await bot.change_presence(activity=Activity(type=ActivityType.playing,
-                                                name=Config.get_settings().bot_settings.gaming_status))
+    bot.loop.create_task(bot.change_presence(activity=Activity(type=ActivityType.playing,
+                                                               name=Config.get_settings().bot_settings.gaming_status)))
 
 
 async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_restart=False, is_reaction=False):
@@ -303,7 +303,8 @@ def get_list_of_processes() -> list:
             if process_name in proc.name() and ("screen" in parents_name_list or
                                                 basename_of_executable in parents_name_list or
                                                 "python.exe" in parents_name_list) \
-                    and abs(int(proc.create_time()) - BotVars.server_start_time) < 5:
+                    and (BotVars.server_start_time is None or
+                         abs(int(proc.create_time()) - BotVars.server_start_time) < 5):
                 list_proc.append(proc)
     return list_proc
 
@@ -662,20 +663,20 @@ async def server_checkups(bot: commands.Bot):
             if BotVars.watcher_of_log_file is None:
                 create_watcher()
             BotVars.watcher_of_log_file.start()
-        await bot.change_presence(activity=Activity(type=ActivityType.playing,
-                                                    name=Config.get_settings().bot_settings.gaming_status +
-                                                         ", " + str(info.num_players) +
-                                                         get_translation(" player(s) online")))
+        bot.loop.create_task(bot.change_presence(activity=Activity(type=ActivityType.playing,
+                                                                   name=Config.get_settings().bot_settings.gaming_status
+                                                                        + ", " + str(info.num_players) +
+                                                                        get_translation(" player(s) online"))))
     except BaseException:
         if len(get_list_of_processes()) == 0:
             if BotVars.is_server_on:
                 BotVars.is_server_on = False
             if BotVars.watcher_of_log_file is not None and BotVars.watcher_of_log_file.is_running():
                 BotVars.watcher_of_log_file.stop()
-        await bot.change_presence(activity=Activity(type=ActivityType.listening,
-                                                    name=Config.get_settings().bot_settings.idle_status +
-                                                         (" 🤔" if len(
-                                                             get_list_of_processes()) != 0 else "")))
+        bot.loop.create_task(bot.change_presence(activity=Activity(type=ActivityType.listening,
+                                                                   name=Config.get_settings().bot_settings.idle_status +
+                                                                        (" 🤔" if len(
+                                                                            get_list_of_processes()) != 0 else ""))))
         if Config.get_settings().bot_settings.forceload and not BotVars.is_stopping \
                 and not BotVars.is_loading and not BotVars.is_restarting:
             for channel in bot.guilds[0].channels:

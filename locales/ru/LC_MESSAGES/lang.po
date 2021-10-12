@@ -1987,21 +1987,21 @@ msgstr "Эта рабочая директория - неправильная."
 #: ..\config\init_config.py:816
 msgid ""
 "Bot detected your operating system is Linux.\n"
-"Bot will search for '***.sh' file.\n"
+"Bot will search for '*.sh' file.\n"
 "You need to enter file name {0}without{1} file extension!"
 msgstr ""
 "Бот обнаружил, что ваша операционная система - Linux.\n"
-"Бот будет искать файл '***. sh'.\n"
+"Бот будет искать файл '*.sh'.\n"
 "Вам необходимо ввести имя файла {0}без{1} расширения файла!"
 
 #: ..\config\init_config.py:821
 msgid ""
 "Bot detected your operating system is Windows.\n"
-"Bot will search for '***.bat' file.\n"
+"Bot will search for '*.bat' file.\n"
 "You need to enter file name {0}without{1} file extension!"
 msgstr ""
 "Бот обнаружил, что ваша операционная система - Windows.\n"
-"Бот будет искать файл '***. bat'.\n"
+"Бот будет искать файл '*.bat'.\n"
 "Вам необходимо ввести имя файла {0}без{1} расширения файла!"
 
 #: ..\config\init_config.py:825
