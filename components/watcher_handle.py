@@ -1,3 +1,4 @@
+from contextlib import suppress
 from os import SEEK_END, stat, linesep
 from pathlib import Path
 from re import search, split, findall
@@ -124,17 +125,34 @@ def _check_log_file(file: Path, last_line: str = None):
                                     [m for m in BotVars.bot_for_webhooks.guilds[0].members
                                      if m.id == user.user_discord_id]
                 i = 1
+                mention_nicks = []
                 for name, mention_obj in mentions.items():
                     if (name == "a" or name == "e") and mention_obj is None:
                         split_arr.insert(i, f"@everyone")
+                        if "@a" not in mention_nicks:
+                            mention_nicks.append("@a")
                     elif name == "p" and mention_obj is None:
                         split_arr.insert(i, f"@here")
+                        if "@a" not in mention_nicks:
+                            mention_nicks.append("@a")
                     elif isinstance(mention_obj, list):
                         split_arr.insert(i, f"@{name} ({', '.join([mn.mention for mn in mention_obj])})")
+                        if "@a" not in mention_nicks:
+                            mention_nicks.append(name)
                     else:
                         split_arr.insert(i, mention_obj.mention if mention_obj is not None else f"@{name}")
                     i += 2
                 player_message = "".join(split_arr)
+
+                if len(mention_nicks) > 0:
+                    from components.additional_funcs import announce, connect_rcon, times
+
+                    with suppress(BaseException):
+                        with connect_rcon() as cl_r:
+                            with times(0, 60, 20, cl_r):
+                                for nick in mention_nicks:
+                                    announce(nick, f"@{player_nick[1:-1]} -> @{nick if nick != '@a' else 'everyone'}",
+                                             cl_r)
 
             BotVars.webhook_chat.send(f"**{player_nick}** {player_message}")
 
