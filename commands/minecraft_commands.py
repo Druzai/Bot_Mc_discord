@@ -120,7 +120,7 @@ class MinecraftCommands(commands.Cog):
             BotVars.op_deop_list.append(minecraft_nick)
             Config.append_to_op_log(datetime.now().strftime("%d/%m/%Y, %H:%M:%S") + " || " + get_translation("Opped ") +
                                     minecraft_nick + " || " + get_translation("Reason: ") +
-                                    (reasons if reasons else "None"))
+                                    (reasons if reasons else get_translation("None")))
             await_time_op = Config.get_awaiting_times_settings().await_seconds_when_opped
             bot_display_name = get_bot_display_name(self._bot)
             try:
