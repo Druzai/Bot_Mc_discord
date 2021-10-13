@@ -95,53 +95,138 @@ def _check_log_file(file: Path, last_line: str = None):
         return last_line
 
     if last_line is None:
-        last_lines = last_lines[-1]
+        last_lines = last_lines[-1:]
+
+    mention_max_words = 5
+    mention_max_right_symbols = 5
 
     for line in last_lines:
         if search(r"\[Server thread/INFO]", line) and search(r"<([^>]*)> (.*)", line) and ": <" in line:
             player_nick, player_message = search(r"<([^>]*)>", line)[0], \
                                           split(r"<([^>]*)>", line, maxsplit=1)[-1].strip()
-            if search(r"@.+", player_message):
+            if search(r"@[^\s]+", player_message):
                 split_arr = split(r"@[^\s]+", player_message)
-                mentions = {i[1:].lower(): None for i in findall(r"@[^\s]+", player_message)}
-                # Check mention on user mention
-                for member in BotVars.bot_for_webhooks.guilds[0].members:
-                    if member.name.lower() in mentions.keys():
-                        mentions[member.name.lower()] = member
-                    elif member.display_name.lower() in mentions.keys():
-                        mentions[member.display_name.lower()] = member
-                # Check mention on role mention
-                for role in BotVars.bot_for_webhooks.guilds[0].roles:
-                    if role.name.lower() in mentions.keys():
-                        mentions[role.name.lower()] = role
-                # Check mention on minecraft nick mention
-                if not all(mentions.values()):
-                    for user in Config.get_settings().known_users:
-                        if user.user_minecraft_nick.lower() in mentions.keys():
-                            if mentions[user.user_minecraft_nick.lower()] is None:
-                                mentions[user.user_minecraft_nick.lower()] = []
-                            if isinstance(mentions[user.user_minecraft_nick.lower()], list):
-                                mentions[user.user_minecraft_nick.lower()] += \
-                                    [m for m in BotVars.bot_for_webhooks.guilds[0].members
-                                     if m.id == user.user_discord_id]
-                i = 1
+                mentions = [[i[1:]] for i in findall(r"@[^\s]+", player_message)]
+                for i_mention in range(len(mentions)):
+                    for words_number in range(mention_max_words + 1):
+                        add_string = " ".join(split_arr[1 + i_mention].lstrip(" ").split(" ")[:words_number]) \
+                            if words_number > 0 else ""
+                        for symbols_number in range(mention_max_right_symbols + 1):
+                            mention = f"{mentions[i_mention][0]} {add_string}".lower() \
+                                if len(add_string) > 0 else mentions[i_mention][0].lower()
+                            cut_right_string = None
+                            if symbols_number > 0:
+                                cut_right_string = mention[-symbols_number:]
+                                mention = mention[:-symbols_number]
+                            found = False
+                            # Check mention of everyone and here
+                            for mention_pattern in ["a", "e", "everyone", "p", "here"]:
+                                if mention_pattern == mention:
+                                    mentions[i_mention] = [mention_pattern]
+                                    if cut_right_string is not None:
+                                        mentions[i_mention].extend([None, cut_right_string])
+                                    found = True
+                                    break
+
+                            # Check mention on user mention
+                            for member in BotVars.bot_for_webhooks.guilds[0].members:
+                                if member.name.lower() == mention:
+                                    mentions[i_mention] = [member.name if len(add_string) == 0
+                                                           else [member.name, add_string], member]
+                                    if cut_right_string is not None:
+                                        mentions[i_mention].append(cut_right_string)
+                                    found = True
+                                    break
+                                elif member.display_name.lower() == mention:
+                                    mentions[i_mention] = [member.display_name if len(add_string) == 0
+                                                           else [member.display_name, add_string], member]
+                                    if cut_right_string is not None:
+                                        mentions[i_mention].append(cut_right_string)
+                                    found = True
+                                    break
+                            if found:
+                                break
+
+                            # Check mention on role mention
+                            for role in BotVars.bot_for_webhooks.guilds[0].roles:
+                                if role.name.lower() == mention:
+                                    mentions[i_mention] = [role.name if len(add_string) == 0
+                                                           else [role.name, add_string], role]
+                                    if cut_right_string is not None:
+                                        mentions[i_mention].append(cut_right_string)
+                                    found = True
+                                    break
+                            if found:
+                                break
+
+                            # Check mention on minecraft nick mention
+                            for user in Config.get_settings().known_users:
+                                if user.user_minecraft_nick.lower() == mention:
+                                    if len(mentions[i_mention]) == 1:
+                                        mentions[i_mention] = [user.user_minecraft_nick if len(add_string) == 0
+                                                               else [user.user_minecraft_nick, add_string], []]
+                                        if cut_right_string is not None:
+                                            mentions[i_mention].append(cut_right_string)
+                                    if isinstance(mentions[i_mention][1], list):
+                                        mentions[i_mention][1] += [m for m in BotVars.bot_for_webhooks.guilds[0].members
+                                                                   if m.id == user.user_discord_id]
+                                        found = True
+                            if found:
+                                break
+                        if found:
+                            break
+
+                insert_numb = 1
                 mention_nicks = []
-                for name, mention_obj in mentions.items():
-                    if (name == "a" or name == "e") and mention_obj is None:
-                        split_arr.insert(i, f"@everyone")
-                        if "@a" not in mention_nicks:
-                            mention_nicks.append("@a")
-                    elif name == "p" and mention_obj is None:
-                        split_arr.insert(i, f"@here")
-                        if "@a" not in mention_nicks:
-                            mention_nicks.append("@a")
-                    elif isinstance(mention_obj, list):
-                        split_arr.insert(i, f"@{name} ({', '.join([mn.mention for mn in mention_obj])})")
-                        if "@a" not in mention_nicks:
-                            mention_nicks.append(name)
+                for mention in mentions:
+                    if isinstance(mention[0], str):
+                        is_list = False
+                    elif isinstance(mention[0], list):
+                        is_list = True
                     else:
-                        split_arr.insert(i, mention_obj.mention if mention_obj is not None else f"@{name}")
-                    i += 2
+                        raise ValueError("mention[0] is not string or list!")
+
+                    if (mention[0] if not is_list else mention[0][0]) in ["a", "e", "everyone"]:
+                        if len(mention) == 3:
+                            split_arr[insert_numb] = f"{mention[2]}{split_arr[insert_numb]}"
+                        split_arr.insert(insert_numb, f"@everyone")
+                        if "@a" not in mention_nicks:
+                            mention_nicks.append("@a")
+                    elif (mention[0] if not is_list else mention[0][0]) in ["p", "here"]:
+                        if len(mention) == 3:
+                            split_arr[insert_numb] = f"{mention[2]}{split_arr[insert_numb]}"
+                        split_arr.insert(insert_numb, f"@here")
+                        if "@a" not in mention_nicks:
+                            mention_nicks.append("@a")
+                    elif len(mention) > 1 and isinstance(mention[1], list):
+                        if not is_list:
+                            if len(mention) == 3:
+                                split_arr[insert_numb] = f"{mention[2]}{split_arr[insert_numb]}"
+                            split_arr.insert(insert_numb,
+                                             f"@{mention[0]} ({', '.join([mn.mention for mn in mention[1]])})")
+                        else:
+                            split_arr[insert_numb] = split_arr[insert_numb][1:].lstrip(mention[0][1])
+                            if len(mention) == 3:
+                                split_arr[insert_numb] = f"{mention[2]}{split_arr[insert_numb]}"
+                            split_arr.insert(insert_numb,
+                                             f"@{mention[0][0]} ({', '.join([mn.mention for mn in mention[1]])})")
+                        if "@a" not in mention_nicks:
+                            mention_nicks.append(mention[0] if not is_list else mention[0][0])
+                    else:
+                        if not is_list:
+                            if len(mention) == 3:
+                                split_arr[insert_numb] = f"{mention[2]}{split_arr[insert_numb]}"
+                            split_arr.insert(insert_numb,
+                                             mention[1].mention if len(mention) > 1 and
+                                                                   mention[1] is not None else f"@{mention[0]}")
+                        else:
+                            split_arr[insert_numb] = split_arr[insert_numb][1:].lstrip(mention[0][1])
+                            if len(mention) == 3:
+                                split_arr[insert_numb] = f"{mention[2]}{split_arr[insert_numb]}"
+                            split_arr.insert(insert_numb,
+                                             mention[1].mention if len(mention) > 1 and
+                                                                   mention[1] is not None else f"@{mention[0][0]}")
+                    insert_numb += 2
                 player_message = "".join(split_arr)
 
                 if len(mention_nicks) > 0:
