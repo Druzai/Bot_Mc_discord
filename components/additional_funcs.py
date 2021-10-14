@@ -34,17 +34,6 @@ from config.init_config import Config, BotVars
 if platform == "win32":
     from os import startfile
 
-__all__ = [
-    "server_checkups", "send_error", "send_msg", "send_status", "stop_server", "start_server",
-    "get_author_and_mention", "save_to_whitelist_json", "get_whitelist_entry", "get_from_server_properties",
-    "get_server_players", "add_quotes", "bot_status", "bot_list", "bot_start", "bot_stop", "bot_restart",
-    "connect_rcon", "make_underscored_line", "get_human_readable_size", "calculate_space_for_current_server",
-    "create_zip_archive", "restore_from_zip_archive", "get_file_size", "BackupsThread", "get_folder_size",
-    "send_message_of_deleted_backup", "handle_backups_limit_and_size", "bot_backup", "delete_after_by_msg",
-    "get_half_members_count_with_role", "warn_about_auto_backups", "get_archive_uncompressed_size",
-    "get_bot_display_name"
-]
-
 UNITS = ("B", "KB", "MB", "GB", "TB", "PB")
 
 if len(argv) > 1 and argv[1] == "-g":
@@ -339,7 +328,6 @@ class BackupsThread(Thread):
                 continue
 
             if not BotVars.is_backing_up and not BotVars.is_restoring and Config.get_backups_settings().automatic_backup:
-                print(get_translation("Starting auto backup"))
                 if BotVars.is_loading or BotVars.is_stopping or BotVars.is_restarting:
                     while True:
                         sleep(Config.get_awaiting_times_settings().await_seconds_when_connecting_via_rcon)
@@ -355,6 +343,7 @@ class BackupsThread(Thread):
                             BotVars.is_auto_backup_disable = False
 
                 if not BotVars.is_auto_backup_disable:
+                    print(get_translation("Starting auto backup"))
                     handle_backups_limit_and_size(self._bot, auto_backups=True)
 
                     # Creating auto backup
@@ -703,12 +692,10 @@ async def bot_status(ctx, is_reaction=False):
     states_info = Config.get_server_config().states
     if states_info.started_info.date is not None and states_info.started_info.user is not None:
         states += get_translation("Server has been started at {0}, by {1}").format(states_info.started_info.date,
-                                                                                   states_info.started_info.user) \
-                  + "\n"
+                                                                                   states_info.started_info.user) + "\n"
     if states_info.stopped_info.date is not None and states_info.stopped_info.user is not None:
         states += get_translation("Server has been stopped at {0}, by {1}").format(states_info.stopped_info.date,
-                                                                                   states_info.stopped_info.user) \
-                  + "\n"
+                                                                                   states_info.stopped_info.user) + "\n"
     states = states.strip("\n")
     bot_message += get_translation("Server address: ") + Config.get_settings().bot_settings.ip_address + "\n"
     if BotVars.is_backing_up:

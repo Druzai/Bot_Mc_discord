@@ -10,9 +10,10 @@ from vk_api import VkApi
 
 from commands.poll import Poll
 from components import decorators
-from components.additional_funcs import handle_message_for_chat, send_error, bot_clear, add_quotes, \
-    parse_params_for_help, send_help_of_command, parse_subcommands_for_help, find_subcommand, make_underscored_line, \
-    create_webhooks
+from components.additional_funcs import (
+    handle_message_for_chat, send_error, bot_clear, add_quotes, parse_params_for_help, send_help_of_command,
+    parse_subcommands_for_help, find_subcommand, make_underscored_line, create_webhooks
+)
 from components.localization import get_translation, get_locales, set_locale, get_current_locale
 from components.rss_feed_handle import *
 

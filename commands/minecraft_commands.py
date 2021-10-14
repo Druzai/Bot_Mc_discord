@@ -12,7 +12,14 @@ from psutil import disk_usage
 
 from commands.poll import Poll
 from components import decorators
-from components.additional_funcs import *
+from components.additional_funcs import (
+    server_checkups, send_error, send_status, save_to_whitelist_json, get_whitelist_entry, get_from_server_properties,
+    get_server_players, add_quotes, bot_status, bot_list, bot_start, bot_stop, bot_restart, connect_rcon,
+    make_underscored_line, get_human_readable_size, create_zip_archive, restore_from_zip_archive, get_file_size,
+    BackupsThread, get_folder_size, send_message_of_deleted_backup, handle_backups_limit_and_size, bot_backup,
+    delete_after_by_msg, get_half_members_count_with_role, warn_about_auto_backups, get_archive_uncompressed_size,
+    get_bot_display_name
+)
 from components.localization import get_translation
 from config.init_config import BotVars, Config
 
