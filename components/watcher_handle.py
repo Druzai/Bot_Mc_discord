@@ -45,7 +45,7 @@ class Watcher:
                 sleep(self._refresh_delay_secs)
                 self.look()
             except FileNotFoundError:
-                print(get_translation("Watcher Error: File '{0}' wasn't found!").format(self._filename))
+                print(get_translation("Watcher Error: File '{0}' wasn't found!").format(self._filename.as_posix()))
             except UnicodeDecodeError:
                 print(get_translation("Watcher Error: Can't decode strings from file '{0}'"
                                       ", check that minecraft server saves it in utf-8 encoding!\n"
@@ -109,6 +109,9 @@ def _check_log_file(file: Path, last_line: str = None):
                 mentions = [[i[1:]] for i in findall(r"@[^\s]+", player_message)]
                 for i_mention in range(len(mentions)):
                     for words_number in range(mention_max_words + 1):
+                        if len(split_arr[1 + i_mention]) < words_number:
+                            break
+                        found = False
                         add_string = " ".join(split_arr[1 + i_mention].lstrip(" ").split(" ")[:words_number]) \
                             if words_number > 0 else ""
                         for symbols_number in range(mention_max_right_symbols + 1):
@@ -127,7 +130,6 @@ def _check_log_file(file: Path, last_line: str = None):
                                         mentions[i_mention].extend([None, cut_right_string])
                                     found = True
                                     break
-
                             # Check mention on user mention
                             for member in BotVars.bot_for_webhooks.guilds[0].members:
                                 if member.name.lower() == mention:
@@ -146,7 +148,6 @@ def _check_log_file(file: Path, last_line: str = None):
                                     break
                             if found:
                                 break
-
                             # Check mention on role mention
                             for role in BotVars.bot_for_webhooks.guilds[0].roles:
                                 if role.name.lower() == mention:
@@ -158,7 +159,6 @@ def _check_log_file(file: Path, last_line: str = None):
                                     break
                             if found:
                                 break
-
                             # Check mention on minecraft nick mention
                             for user in Config.get_settings().known_users:
                                 if user.user_minecraft_nick.lower() == mention:
@@ -175,7 +175,6 @@ def _check_log_file(file: Path, last_line: str = None):
                                 break
                         if found:
                             break
-
                 insert_numb = 1
                 mention_nicks = []
                 for mention in mentions:
