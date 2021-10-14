@@ -97,6 +97,7 @@ class ChatCommands(commands.Cog):
 
     @commands.command(pass_context=True, aliases=["lang"])
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
     async def language(self, ctx, set_language: str = ""):
         """Get/Select language"""
         if len(set_language) > 0:
@@ -120,6 +121,8 @@ class ChatCommands(commands.Cog):
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_role_or_default()
     async def prefix(self, ctx, *, new_prefix: str = ""):
         if not new_prefix:
             await ctx.send(add_quotes(get_translation("Current prefix - '{0}'.")
