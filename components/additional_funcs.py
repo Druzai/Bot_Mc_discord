@@ -375,7 +375,6 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
     recursively .zip a directory
     """
     BotVars.is_backing_up = True
-    comp = None
     if compression == "STORED":
         comp = ZIP_STORED
     elif compression == "DEFLATED":
@@ -384,6 +383,8 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
         comp = ZIP_BZIP2
     elif compression == "LZMA":
         comp = ZIP_LZMA
+    else:
+        comp = ZIP_DEFLATED
     total = 0
     dt = datetime.now()
     # Count size of all files in directory
@@ -652,20 +653,22 @@ async def server_checkups(bot: commands.Bot):
             if BotVars.watcher_of_log_file is None:
                 create_watcher()
             BotVars.watcher_of_log_file.start()
-        bot.loop.create_task(bot.change_presence(activity=Activity(type=ActivityType.playing,
-                                                                   name=Config.get_settings().bot_settings.gaming_status
-                                                                        + ", " + str(info.num_players) +
-                                                                        get_translation(" player(s) online"))))
+        if not BotVars.is_loading and not BotVars.is_stopping and not BotVars.is_restarting:
+            bot.loop.create_task(bot.change_presence(activity=Activity(type=ActivityType.playing,
+                                                                       name=Config.get_settings().bot_settings.gaming_status
+                                                                            + ", " + str(info.num_players) +
+                                                                            get_translation(" player(s) online"))))
     except BaseException:
         if len(get_list_of_processes()) == 0:
             if BotVars.is_server_on:
                 BotVars.is_server_on = False
             if BotVars.watcher_of_log_file is not None and BotVars.watcher_of_log_file.is_running():
                 BotVars.watcher_of_log_file.stop()
-        bot.loop.create_task(bot.change_presence(activity=Activity(type=ActivityType.listening,
-                                                                   name=Config.get_settings().bot_settings.idle_status +
-                                                                        (" 🤔" if len(
-                                                                            get_list_of_processes()) != 0 else ""))))
+        if not BotVars.is_loading and not BotVars.is_stopping and not BotVars.is_restarting:
+            bot.loop.create_task(bot.change_presence(activity=Activity(type=ActivityType.listening,
+                                                                       name=Config.get_settings().bot_settings.idle_status +
+                                                                            (" 🤔" if len(
+                                                                                get_list_of_processes()) != 0 else ""))))
         if Config.get_settings().bot_settings.forceload and not BotVars.is_stopping \
                 and not BotVars.is_loading and not BotVars.is_restarting:
             for channel in bot.guilds[0].channels:
@@ -907,12 +910,15 @@ async def bot_backup(ctx, is_reaction=False):
 
 def parse_params_for_help(command_params: dict, string_to_add: str, create_params_dict=False) -> Tuple[str, dict]:
     params = {}
+    converter = False
     for arg_name, arg_data in command_params.items():
+        if arg_data.annotation != inspect._empty and hasattr(arg_data.annotation, 'converter'):
+            converter = True
         if create_params_dict:
             if arg_data.annotation != inspect._empty:
                 if not getattr(arg_data.annotation, '__name__', None) is None:
                     params[arg_name] = getattr(arg_data.annotation, '__name__', None)
-                elif getattr(arg_data.annotation, 'converter'):
+                elif hasattr(arg_data.annotation, 'converter'):
                     params[arg_name] = sub(r"\w*?\.", "", str(arg_data.annotation.converter))
                 else:
                     params[arg_name] = sub(r"\w*?\.", "", str(arg_data.annotation))
@@ -927,8 +933,7 @@ def parse_params_for_help(command_params: dict, string_to_add: str, create_param
                 add_data = f"'{arg_data.default}'" if isinstance(arg_data.default, str) else str(
                     arg_data.default)
             string_to_add += f" [{arg_name}" + (f" = {add_data}" if add_data else "") + \
-                             ("..." if arg_data.kind == arg_data.VAR_POSITIONAL
-                                       or arg_data.kind == arg_data.POSITIONAL_OR_KEYWORD else "") + "]"
+                             ("..." if arg_data.kind == arg_data.VAR_POSITIONAL or converter else "") + "]"
         else:
             string_to_add += f" <{arg_name}>"
     return string_to_add, params

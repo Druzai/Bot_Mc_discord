@@ -125,9 +125,9 @@ class MinecraftCommands(commands.Cog):
                 return
 
             BotVars.op_deop_list.append(minecraft_nick)
-            Config.append_to_op_log(datetime.now().strftime("%d/%m/%Y, %H:%M:%S") + " || " + get_translation("Opped ") +
-                                    minecraft_nick + " || " + get_translation("Reason: ") +
-                                    (reasons if reasons else get_translation("None")))
+            Config.append_to_op_log(datetime.now().strftime("%d/%m/%Y %H:%M:%S") + " || " + get_translation("Opped ") +
+                                    minecraft_nick + (" || " + get_translation("Reason: ") + reasons
+                                                      if reasons else ""))
             await_time_op = Config.get_awaiting_times_settings().await_seconds_when_opped
             bot_display_name = get_bot_display_name(self._bot)
             try:
@@ -179,7 +179,7 @@ class MinecraftCommands(commands.Cog):
                                 cl_r.run(f"gamemode 0 {player}")
                         break
                 Config.append_to_op_log(
-                    datetime.now().strftime("%d/%m/%Y, %H:%M:%S") + " || " + get_translation("Deopped all ") +
+                    datetime.now().strftime("%d/%m/%Y %H:%M:%S") + " || " + get_translation("Deopped all ") +
                     (str(get_translation("|| Note: ") + str(len(BotVars.op_deop_list)) +
                          get_translation(" people deoped in belated list")) if len(BotVars.op_deop_list) > 1 else ""))
                 await ctx.send(get_translation("Well, {0}, your time is over... and not only yours...\n"
@@ -238,7 +238,7 @@ class MinecraftCommands(commands.Cog):
         else:
             await ctx.send(get_translation("Wrong 1-st argument! You can mention ONLY members of this server."))
 
-    @commands.command(pass_context=True)
+    @commands.group(pass_context=True, invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
@@ -308,6 +308,32 @@ class MinecraftCommands(commands.Cog):
             message += "-----"
         message += "```"
         await ctx.send(message)
+
+    @ops.command(pass_context=True, aliases=["hist"], name="history")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_role_or_default()
+    async def o_history(self, ctx, messages_from_end: int = 0):
+        if messages_from_end < 0:
+            await ctx.send(get_translation("Wrong 1-st argument used!") + " " +
+                           get_translation("Integer must be above 0!"))
+            return
+        log = Config.get_op_log() if messages_from_end < 1 else Config.get_op_log()[-messages_from_end:]
+        log = [l for l in log if not l.split("||")[1].lstrip().startswith("Deop")]
+        for line in range(len(log)):
+            arr = log[line].split("||")
+            log[line] = f"{arr[0]}<{' '.join(arr[1].strip().split()[1:])}>" + \
+                        (f": {' '.join(arr[2].strip().split()[1:])}" if len(arr) == 3 else "") + "\n"
+        if len("".join(log)) + 6 > 2000:
+            limit = 1
+            while True:
+                if len("".join(log[:-limit])) + 6 <= 2000:
+                    break
+                limit += 1
+            await ctx.send(add_quotes("".join(log[:-limit])))
+            await ctx.send(add_quotes("".join(log[-limit:])))
+        else:
+            await ctx.send(add_quotes("".join(log)))
 
     @commands.group(pass_context=True, aliases=["fl"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)

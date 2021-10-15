@@ -423,6 +423,11 @@ class Config:
             f.write(f"{message_line}\n")
 
     @classmethod
+    def get_op_log(cls):
+        with open(Path(cls.get_bot_config_path() + f'/{cls._op_log_name}'), 'r', encoding='utf8') as f:
+            return f.readlines()
+
+    @classmethod
     def _load_from_yaml(cls, filepath: Path, baseclass):
         try:
             return sload(json_obj=Conf.to_object(Conf.load(filepath)), cls=baseclass)
