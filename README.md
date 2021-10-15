@@ -88,6 +88,7 @@ ____________
 * [feedparser](https://github.com/kurtmckee/feedparser) - lib to parse RSS feed files
 * [jsons](https://github.com/ramonhagenaars/jsons) - lib to serialize class from dictionary
 * [omegaconf](https://github.com/omry/omegaconf) - lib to deserialize and serialize class to yaml file
+* [colorama](https://github.com/tartley/colorama) - lib to make ANSI escape character sequences work under Windows
 
 ## Lib installation
 

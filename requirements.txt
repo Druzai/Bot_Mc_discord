@@ -6,3 +6,4 @@ psutil==5.8.0
 feedparser==6.0.8
 jsons==1.5.0
 omegaconf==2.1.0
+colorama==0.4.4

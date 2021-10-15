@@ -12,6 +12,9 @@ from commands.poll import Poll
 from components.localization import get_translation, RuntimeTextHandler
 from config.init_config import Config, BotVars
 
+if platform == "win32":
+    from colorama import init
+
 VERSION = "1.1.1"
 
 
@@ -45,6 +48,8 @@ def get_prefix(bot, msg):
 
 
 def main():
+    if platform == "win32":
+        init(autoreset=True)
     if len(argv) > 1 and argv[1] not in ["-v", "--version", "-g"]:
         print("Bot doesn't have this command line argument!")
         exit(0)
