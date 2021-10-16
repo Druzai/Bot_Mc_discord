@@ -5,8 +5,9 @@ from re import search, split, findall
 from sys import exc_info
 from threading import Thread
 from time import sleep
-from traceback import print_exc
+from traceback import format_exc
 
+from colorama import Fore, Style
 from discord import Webhook, RequestsWebhookAdapter
 
 from components.localization import get_translation
@@ -52,8 +53,9 @@ class Watcher:
                                       "(Ensure you have '-Dfile.encoding=UTF-8' as one of the arguments "
                                       "to start the server in start script)").format(self._filename.as_posix()))
             except BaseException:
-                print(get_translation("Watcher Unhandled Error: {0}").format(exc_info()[0]))
-                print_exc()
+                exc = format_exc().rstrip("\n")
+                print(get_translation("Watcher Unhandled Error: {0}").format(exc_info()[0]) +
+                      f"\n{Style.DIM}{Fore.RED}{exc}{Style.RESET_ALL}")
 
     def start(self):
         self._thread = Thread(target=self.watch, daemon=True)

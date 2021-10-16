@@ -1,4 +1,5 @@
 import inspect
+import sys
 from ast import literal_eval
 from asyncio import sleep as asleep
 from contextlib import contextmanager, suppress
@@ -10,7 +11,7 @@ from os import chdir, system, walk, mkdir, remove
 from os.path import basename, join as p_join, getsize
 from pathlib import Path
 from random import randint
-from re import search, split, findall, sub
+from re import search, split, findall, sub, compile
 from shutil import rmtree
 from sys import platform, argv
 from threading import Thread, Event
@@ -1419,3 +1420,36 @@ def play_music(name, sound):
 
 def stop_music(sound, name="@a"):
     return f"/stopsound {name} music {sound}"
+
+
+class Print_file_handler:
+    def __init__(self):
+        if Config.get_settings().bot_settings.log_bot_messages:
+            self.file = open(Config.get_bot_log_name(), "a", encoding="utf8")
+        else:
+            self.file = None
+        self.stdout = sys.stdout
+        sys.stdout = self
+
+    def __del__(self):
+        sys.stdout = self.stdout
+        self.file.close()
+
+    def write(self, data, **kwargs):
+        if data != "\n":
+            if self.file is not None:
+                ansi_escape = compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+                self.file.write(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] "
+                                f"{ansi_escape.sub('', ''.join(data))}")
+            self.stdout.write(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] {data}")
+        else:
+            if self.file is not None:
+                self.file.write(data)
+            self.stdout.write(data)
+        self.flush()
+        if kwargs.pop('flush', False):
+            self.stdout.flush()
+
+    def flush(self):
+        if self.file is not None:
+            self.file.flush()

@@ -1,7 +1,8 @@
 from os import system
 from sys import platform, exit, argv
-from traceback import print_exc
+from traceback import format_exc
 
+from colorama import Fore, Style
 from discord import Intents, Permissions
 from discord.errors import LoginFailure
 from discord.ext import commands
@@ -9,6 +10,7 @@ from discord.ext import commands
 from commands.chat_commands import ChatCommands
 from commands.minecraft_commands import MinecraftCommands
 from commands.poll import Poll
+from components.additional_funcs import Print_file_handler
 from components.localization import get_translation, RuntimeTextHandler
 from config.init_config import Config, BotVars
 
@@ -77,12 +79,14 @@ def main():
         BotVars.bot_for_webhooks = bot
 
     try:
+        Print_file_handler()
         bot.run(Config.get_settings().bot_settings.token)
     except LoginFailure:
         print(get_translation("Bot/Discord Error: Your token is wrong."))
     except BaseException:
-        print(get_translation("Bot/Discord Error: Something went wrong") + " ( ͡° ͜ʖ ͡°)")
-        print_exc()
+        exc = format_exc().rstrip("\n")
+        print(get_translation("Bot/Discord Error: Something went wrong") + " ( ͡° ͜ʖ ͡°)" +
+              f"\n{Style.DIM}{Fore.RED}{exc}{Style.RESET_ALL}")
     finally:
         if platform == "linux" or platform == "linux2":
             system("read")

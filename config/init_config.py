@@ -123,6 +123,7 @@ class Bot_settings:
     role: Optional[str] = None
     ip_address: str = ""
     local_address: str = ""
+    log_bot_messages: bool = None
     deletion_messages_limit_without_poll: int = -1
     menu_id: Optional[int] = None
     forceload: bool = False
@@ -223,6 +224,7 @@ class Config:
     _server_config_name = "server_config.yml"
     _server_config_instance: Server_config = Server_config()
     _op_log_name = "op.log"
+    _bot_log_name = "bot.log"
     _need_to_rewrite = False
 
     @classmethod
@@ -428,6 +430,10 @@ class Config:
             return f.readlines()
 
     @classmethod
+    def get_bot_log_name(cls):
+        return cls._bot_log_name
+
+    @classmethod
     def _load_from_yaml(cls, filepath: Path, baseclass):
         try:
             return sload(json_obj=Conf.to_object(Conf.load(filepath)), cls=baseclass)
@@ -482,6 +488,7 @@ class Config:
         cls._setup_bot_statuses()
         cls._setup_ip_address()
         cls._setup_local_address()
+        cls._setup_log_bot_messages()
         cls._setup_clear_delete_limit_without_poll()
         cls._setup_menu_id()
         cls._setup_default_number_of_times_to_op()
@@ -634,6 +641,14 @@ class Config:
             cls._need_to_rewrite = True
             cls._settings_instance.bot_settings.local_address = \
                 cls._ask_for_data(get_translation("Enter server's local address (default - 'localhost')") + "\n> ")
+
+    @classmethod
+    def _setup_log_bot_messages(cls):
+        if cls._settings_instance.bot_settings.log_bot_messages is None:
+            cls._need_to_rewrite = True
+            cls._settings_instance.bot_settings.log_bot_messages = \
+                cls._ask_for_data(get_translation("Do you want bot to log messages to '{0}' file?")
+                                  .format(cls._bot_log_name) + " Y/n\n> ", "y")
 
     @classmethod
     def _setup_clear_delete_limit_without_poll(cls):

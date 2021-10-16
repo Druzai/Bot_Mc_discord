@@ -35,7 +35,7 @@ class ChatCommands(commands.Cog):
         print("------")
         print(get_translation("Logged in discord as"))
         print(f"{self._bot.user.name}#{self._bot.user.discriminator}")
-        print(get_translation("Discord.py version"), discord.__version__)
+        print(get_translation('Version of discord.py') + " - " + discord.__version__)
         print("------")
         await self._bot.change_presence(activity=Activity(type=ActivityType.watching, name="nsfw"))
         create_webhooks()
