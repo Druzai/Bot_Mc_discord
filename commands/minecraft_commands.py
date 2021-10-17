@@ -1,3 +1,4 @@
+import socket
 from asyncio import sleep as asleep
 from contextlib import suppress
 from datetime import datetime
@@ -141,7 +142,7 @@ class MinecraftCommands(commands.Cog):
                     cl_r.mkop(minecraft_nick)
                 Config.decrease_number_to_op_for_player(minecraft_nick)
                 Config.save_server_config()
-            except BaseException:
+            except (ConnectionError, socket.error):
                 await ctx.send(get_translation("{0}, server isn't working (at least I've tried), try again later...")
                                .format(ctx.author.mention))
                 return
@@ -167,7 +168,7 @@ class MinecraftCommands(commands.Cog):
                 while True:
                     await asleep(
                         Config.get_awaiting_times_settings().await_seconds_when_connecting_via_rcon)
-                    with suppress(BaseException):
+                    with suppress(ConnectionError, socket.error):
                         with connect_rcon() as cl_r:
                             bot_message = f"{minecraft_nick}," + get_translation(" you all will be deoped now.")
                             cl_r.tellraw("@a", ["", {"text": "<"}, {"text": bot_display_name, "color": "dark_gray"},
@@ -208,7 +209,7 @@ class MinecraftCommands(commands.Cog):
             need_to_save = False
             try:
                 discord_id = int(discord_mention[3:-1])
-            except BaseException:
+            except ValueError:
                 await ctx.send(get_translation("Wrong 1-st argument used!"))
                 return
             if assoc_command == comm_operators[0]:
@@ -386,7 +387,7 @@ class MinecraftCommands(commands.Cog):
                     save_to_whitelist_json(get_whitelist_entry(minecraft_nick))
                     cl_r.run("whitelist reload")
                 await ctx.send(add_quotes(get_translation("Added {0} to the whitelist").format(minecraft_nick)))
-        except BaseException:
+        except (ConnectionError, socket.error):
             if BotVars.is_server_on:
                 await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
             else:
@@ -401,7 +402,7 @@ class MinecraftCommands(commands.Cog):
             with connect_rcon() as cl_r:
                 cl_r.run("whitelist remove", minecraft_nick)
                 await ctx.send(add_quotes(get_translation("Removed {0} from the whitelist").format(minecraft_nick)))
-        except BaseException:
+        except (ConnectionError, socket.error):
             if BotVars.is_server_on:
                 await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
             else:
@@ -424,7 +425,7 @@ class MinecraftCommands(commands.Cog):
                                               .format(len(players), ", ".join(players))))
                 else:
                     await ctx.send(add_quotes(get_translation("There are no whitelisted players")))
-        except BaseException:
+        except (ConnectionError, socket.error):
             if BotVars.is_server_on:
                 await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
             else:
@@ -439,7 +440,7 @@ class MinecraftCommands(commands.Cog):
             with connect_rcon() as cl_r:
                 cl_r.run("whitelist on")
                 await ctx.send(add_quotes(get_translation("Turned on the whitelist")))
-        except BaseException:
+        except (ConnectionError, socket.error):
             if BotVars.is_server_on:
                 await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
             else:
@@ -454,7 +455,7 @@ class MinecraftCommands(commands.Cog):
             with connect_rcon() as cl_r:
                 cl_r.run("whitelist off")
                 await ctx.send(add_quotes(get_translation("Turned off the whitelist")))
-        except BaseException:
+        except (ConnectionError, socket.error):
             if BotVars.is_server_on:
                 await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
             else:
@@ -469,7 +470,7 @@ class MinecraftCommands(commands.Cog):
             with connect_rcon() as cl_r:
                 cl_r.run("whitelist reload")
                 await ctx.send(add_quotes(get_translation("Reloaded the whitelist")))
-        except BaseException:
+        except (ConnectionError, socket.error):
             if BotVars.is_server_on:
                 await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
             else:

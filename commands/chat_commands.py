@@ -7,6 +7,7 @@ import discord
 from discord import Activity, ActivityType, Role, Member
 from discord.ext import commands, tasks
 from vk_api import VkApi
+from vk_api.exceptions import ApiError
 
 from commands.poll import Poll
 from components import decorators
@@ -204,7 +205,7 @@ class ChatCommands(commands.Cog):
                                       color=discord.Color.from_rgb(randint(0, 255), randint(0, 255), randint(0, 255)))
                     e.set_image(url=photo_url)
                     await ctx.send(embed=e)
-                except BaseException:
+                except ApiError:
                     e = discord.Embed(title=get_translation("Vk Error: Something went wrong"),
                                       color=discord.Color.red())
                     file = discord.File(Path(Config.get_inside_path(), "images/sad_dog.jpg"), filename="image.jpg")

@@ -1,4 +1,5 @@
 import inspect
+import socket
 import sys
 from ast import literal_eval
 from asyncio import sleep as asleep
@@ -20,6 +21,7 @@ from typing import Tuple, List
 from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 
 from discord import Activity, ActivityType, TextChannel, Message, Status, Member, Role
+from discord.errors import NotFound, Forbidden, HTTPException
 from discord.ext import commands
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r
@@ -116,7 +118,7 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
                 raise NameError()
             startfile(Config.get_selected_server_from_list().start_file_name)
         BotVars.server_start_time = int(datetime.now().timestamp())
-    except BaseException:
+    except (NameError, ValueError):
         print(get_translation("Couldn't open script! Check naming and extension of the script!"))
         await send_msg(ctx, add_quotes(get_translation("Couldn't open script because of naming! Retreating...")),
                        is_reaction)
@@ -149,7 +151,7 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
                                                                                            get_translation(" sec"))
         await bot.change_presence(activity=Activity(type=ActivityType.listening, name=output_bot))
         await asleep(Config.get_awaiting_times_settings().await_seconds_when_connecting_via_rcon)
-        with suppress(BaseException):
+        with suppress(ConnectionError, socket.error):
             with connect_query() as cl_q:
                 _ = cl_q.basic_stats
             break
@@ -197,7 +199,7 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_re
 
     try:
         players_count = len(get_server_players())
-    except BaseException:
+    except (ConnectionError, socket.error):
         if len(get_list_of_processes()) == 0:
             print(get_translation("Bot Exception: Couldn't connect to server, because it's stopped"))
             await send_msg(ctx,
@@ -262,7 +264,7 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_re
             try:
                 with connect_query() as cl_q:
                     _ = cl_q.basic_stats
-            except BaseException:
+            except (ConnectionError, socket.error):
                 break
     else:
         print(get_translation("Bot Exception: Couldn't connect to server, so killing it now..."))
@@ -337,7 +339,7 @@ class BackupsThread(Thread):
 
                 players_count = 0
                 if BotVars.is_server_on:
-                    with suppress(BaseException):
+                    with suppress(ConnectionError, socket.error):
                         players_count = len(get_server_players())
                     if players_count != 0:
                         if BotVars.is_auto_backup_disable:
@@ -396,7 +398,7 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
     current = 0
     use_rcon = False
     if BotVars.is_server_on:
-        with suppress(BaseException):
+        with suppress(ConnectionError, socket.error):
             with connect_query() as cl_q:
                 if cl_q.full_stats:
                     use_rcon = True
@@ -520,7 +522,7 @@ def send_message_of_deleted_backup(bot: commands.Bot, reason: str, backup=None):
                                                                                                 reason)
     else:
         msg = get_translation("Deleted all backups because of {0}").format(reason)
-    with suppress(BaseException):
+    with suppress(ConnectionError, socket.error):
         with connect_rcon() as cl_r:
             cl_r.tellraw("@a",
                          ["", {"text": "<"}, {"text": get_bot_display_name(bot), "color": "dark_gray"}, {"text": "> "},
@@ -659,7 +661,7 @@ async def server_checkups(bot: commands.Bot):
                                                                        name=Config.get_settings().bot_settings.gaming_status
                                                                             + ", " + str(info.num_players) +
                                                                             get_translation(" player(s) online"))))
-    except BaseException:
+    except (ConnectionError, socket.error):
         if len(get_list_of_processes()) == 0:
             if BotVars.is_server_on:
                 BotVars.is_server_on = False
@@ -675,7 +677,7 @@ async def server_checkups(bot: commands.Bot):
             for channel in bot.guilds[0].channels:
                 if not isinstance(channel, TextChannel):
                     continue
-                with suppress(BaseException):
+                with suppress(NotFound, Forbidden, HTTPException):
                     if Config.get_settings().bot_settings.menu_id is not None:
                         await channel.fetch_message(Config.get_settings().bot_settings.menu_id)
                     await send_msg(ctx=channel,
@@ -725,7 +727,7 @@ async def bot_status(ctx, is_reaction=False):
             bot_message += message + get_translation("Selected server: ") + \
                            Config.get_selected_server_from_list().server_name + "\n" + states
             await send_msg(ctx, add_quotes(bot_message), is_reaction)
-        except BaseException:
+        except (ConnectionError, socket.error):
             bot_message += get_translation("Server thinking...") + "\n" + get_translation("Selected server: ") + \
                            Config.get_selected_server_from_list().server_name + "\n" + states
             await send_msg(ctx, add_quotes(bot_message), is_reaction)
@@ -748,7 +750,7 @@ async def bot_list(ctx, bot: commands.Bot, is_reaction=False):
                                                            "\nPlayer(s): {1}").format(info.num_players,
                                                                                       ", ".join(info.players))),
                            is_reaction)
-    except BaseException:
+    except (ConnectionError, socket.error):
         author_mention = get_author_and_mention(ctx, bot, is_reaction)[1]
         await send_msg(ctx, f"{author_mention}, " + get_translation("server offline"), is_reaction)
 
@@ -1195,7 +1197,7 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
             delete_user_message = False
             nicks = _search_mentions_in_message(message)
             if len(nicks) > 0:
-                with suppress(BaseException):
+                with suppress(ConnectionError, socket.error):
                     with connect_rcon() as cl_r:
                         with times(0, 60, 20, cl_r):
                             for nick in nicks:
@@ -1440,7 +1442,7 @@ class Print_file_handler:
             if self.file is not None:
                 ansi_escape = compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
                 self.file.write(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] "
-                                f"{ansi_escape.sub('', ''.join(data))}")
+                                f"{ansi_escape.sub('', data)}")
             self.stdout.write(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] {data}")
         else:
             if self.file is not None:

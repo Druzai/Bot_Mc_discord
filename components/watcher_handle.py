@@ -1,3 +1,4 @@
+import socket
 from contextlib import suppress
 from os import SEEK_END, stat, linesep
 from pathlib import Path
@@ -233,7 +234,7 @@ def _check_log_file(file: Path, last_line: str = None):
                 if len(mention_nicks) > 0:
                     from components.additional_funcs import announce, connect_rcon, times
 
-                    with suppress(BaseException):
+                    with suppress(ConnectionError, socket.error):
                         with connect_rcon() as cl_r:
                             with times(0, 60, 20, cl_r):
                                 for nick in mention_nicks:
