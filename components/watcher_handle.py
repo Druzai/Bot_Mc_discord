@@ -94,6 +94,7 @@ def _check_log_file(file: Path, last_line: str = None):
     last_lines = _get_last_n_lines(file,
                                    Config.get_cross_platform_chat_settings().number_of_lines_to_check_in_console_log,
                                    last_line)
+    last_lines.remove("")
     if len(last_lines) == 0:
         return last_line
 
