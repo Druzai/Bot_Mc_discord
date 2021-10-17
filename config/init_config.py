@@ -426,8 +426,11 @@ class Config:
 
     @classmethod
     def get_op_log(cls):
-        with open(Path(cls.get_bot_config_path() + f'/{cls._op_log_name}'), 'r', encoding='utf8') as f:
-            return f.readlines()
+        try:
+            with open(Path(cls.get_bot_config_path() + f'/{cls._op_log_name}'), 'r', encoding='utf8') as f:
+                return f.readlines()
+        except FileNotFoundError:
+            return []
 
     @classmethod
     def get_bot_log_name(cls):

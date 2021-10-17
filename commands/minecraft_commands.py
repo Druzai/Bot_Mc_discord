@@ -319,6 +319,9 @@ class MinecraftCommands(commands.Cog):
                            get_translation("Integer must be above 0!"))
             return
         log = Config.get_op_log() if messages_from_end < 1 else Config.get_op_log()[-messages_from_end:]
+        if "".join(log) == "":
+            await ctx.send(add_quotes(get_translation("There is no ops' history yet...")))
+            return
         log = [l for l in log if not l.split("||")[1].lstrip().startswith("Deop")]
         for line in range(len(log)):
             arr = log[line].split("||")
