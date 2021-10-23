@@ -1,6 +1,6 @@
 import socket
 from contextlib import suppress
-from os import SEEK_END, stat, linesep
+from os import SEEK_END, stat
 from pathlib import Path
 from re import search, split, findall
 from sys import exc_info
@@ -94,7 +94,6 @@ def _check_log_file(file: Path, last_line: str = None):
     last_lines = _get_last_n_lines(file,
                                    Config.get_cross_platform_chat_settings().number_of_lines_to_check_in_console_log,
                                    last_line)
-    last_lines.remove("")
     if len(last_lines) == 0:
         return last_line
 
@@ -250,7 +249,7 @@ def _check_log_file(file: Path, last_line: str = None):
 def _get_last_n_lines(file, number_of_lines, last_line):
     list_of_lines = []
     with open(file, 'rb') as read_obj:
-        read_obj.seek(-len(linesep), SEEK_END)
+        read_obj.seek(-2, SEEK_END)
         buffer = bytearray()
         pointer_location = read_obj.tell()
         while pointer_location >= 0:
