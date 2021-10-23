@@ -18,6 +18,7 @@ from discord import Webhook, Member
 from discord.ext.commands import Bot
 from jsons import load as sload, DeserializationError
 from omegaconf import OmegaConf as Conf
+from vk_api.exceptions import Captcha
 
 from components.localization import get_translation, get_locales, set_locale
 from config.crypt_wrapper import *
@@ -38,6 +39,7 @@ class BotVars:
     is_backing_up: bool = False
     is_restoring: bool = False
     is_auto_backup_disable: bool = False
+    vk_captcha: Captcha = None
     op_deop_list: List = []  # List of nicks of players to op and then to deop
     port_query: int = None
     port_rcon: int = None
