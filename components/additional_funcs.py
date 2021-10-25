@@ -320,12 +320,17 @@ def get_bot_display_name(bot: commands.Bot):
 class BackupsThread(Thread):
     def __init__(self, bot):
         super().__init__()
+        self.name = "BackupsThread"
+        self.daemon = True
         self._skip = Event()
         self._bot = bot
+        self._terminate = False
 
     def run(self):
         while True:
             is_skipped = self._skip.wait(Config.get_backups_settings().period_of_automatic_backups * 60)
+            if self._terminate:
+                break
             if is_skipped:
                 self._skip.clear()
                 continue
@@ -370,6 +375,11 @@ class BackupsThread(Thread):
 
     def skip(self):
         self._skip.set()
+
+    def join(self, timeout=None):
+        self._terminate = True
+        self.skip()
+        sleep(0.5)
 
 
 def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path: str, compression,
@@ -1177,7 +1187,7 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
             res_obj = ["", {"text": "<"}, {"text": message.author.display_name, "color": "dark_gray"},
                        {"text": "> "}]
             if result_msg.get("reply", None) is not None:
-                if isinstance(result_msg.get("reply"), list) and isinstance(result_msg.get("reply")[1], str):
+                if len(result_msg.get("reply")) == 3:
                     res_obj.extend([{"text": result_msg.get("reply")[0], "color": "gray"},
                                     {"text": result_msg.get("reply")[1], "color": "dark_gray"}])
                     _build_if_urls_in_message(res_obj, result_msg.get("reply")[2], "gray")
@@ -1435,7 +1445,8 @@ class Print_file_handler:
 
     def __del__(self):
         sys.stdout = self.stdout
-        self.file.close()
+        if self.file is not None:
+            self.file.close()
 
     def write(self, data, **kwargs):
         if data != "\n":

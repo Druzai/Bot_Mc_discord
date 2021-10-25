@@ -1,5 +1,6 @@
 from os import system
 from sys import platform, exit, argv
+from threading import enumerate as threads
 from traceback import format_exc
 
 from colorama import Fore, Style
@@ -89,6 +90,9 @@ def main():
         print(get_translation("Bot/Discord Error: Something went wrong") + " ( ͡° ͜ʖ ͡°)" +
               f"\n{Style.DIM}{Fore.RED}{exc}{Style.RESET_ALL}")
     finally:
+        for thread in threads():
+            if thread.getName() == "BackupsThread":
+                thread.join()
         if platform == "linux" or platform == "linux2":
             system("read")
         elif platform == "win32":
