@@ -1184,8 +1184,7 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
             result_msg = _handle_urls_and_attachments_in_message(result_msg, message)
 
             # Building object for tellraw
-            res_obj = ["", {"text": "<"}, {"text": message.author.display_name, "color": "dark_gray"},
-                       {"text": "> "}]
+            res_obj = [""]
             if result_msg.get("reply", None) is not None:
                 if len(result_msg.get("reply")) == 3:
                     res_obj.extend([{"text": result_msg.get("reply")[0], "color": "gray"},
@@ -1193,6 +1192,7 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
                     _build_if_urls_in_message(res_obj, result_msg.get("reply")[2], "gray")
                 else:
                     _build_if_urls_in_message(res_obj, result_msg.get("reply"), "gray")
+            res_obj += [{"text": "<"}, {"text": message.author.display_name, "color": "dark_gray"}, {"text": "> "}]
             if on_edit:
                 result_before = _handle_custom_emojis(before_message)
                 result_before = _handle_urls_and_attachments_in_message(result_before, before_message, True)
