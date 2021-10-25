@@ -58,7 +58,8 @@ def main():
     if len(argv) > 1 and (argv[1] == "-v" or argv[1] == "--version"):
         print(VERSION)
         exit(0)
-    Config.read_config()
+    if len(argv) == 1:
+        Config.read_config()
     intents = Intents.all()
     bot = commands.Bot(command_prefix=get_prefix, intents=intents)
     bot.remove_command('help')
@@ -72,6 +73,7 @@ def main():
 
     create_pot_lines(bot)
 
+    Print_file_handler()
     Config.read_server_info()
     print(get_translation("Server info read!"))
 
@@ -79,7 +81,6 @@ def main():
         BotVars.bot_for_webhooks = bot
 
     try:
-        Print_file_handler()
         bot.run(Config.get_settings().bot_settings.token)
     except LoginFailure:
         print(get_translation("Bot/Discord Error: Your token is wrong."))

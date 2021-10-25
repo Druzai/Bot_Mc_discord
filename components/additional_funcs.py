@@ -980,7 +980,7 @@ async def send_help_of_command(ctx, command):
         str_help += " |" + str_params if len(subcommands_names) else str_params
 
     str_help += "\n\n" + get_translation("Description") + ":\n"
-    str_help += get_translation(f'help_{"_".join(str(command).split())}') \
+    str_help += get_translation(f'help_{str(command).replace(" ", "_")}') \
                     .format(prefix=Config.get_settings().bot_settings.prefix) + "\n\n"
     if len(command.aliases):
         str_help += get_translation("Aliases") + ": " + ", ".join(command.aliases) + "\n\n"
@@ -992,7 +992,7 @@ async def send_help_of_command(ctx, command):
         str_help += get_translation("Parameters") + ":\n"
         for arg_name, arg_type in params.items():
             str_help += f"{arg_name}: {arg_type}\n" + \
-                        get_translation(f'help_{"_".join(str(command).split())}_{arg_name}') \
+                        get_translation(f'help_{str(command).replace(" ", "_")}_{arg_name}') \
                             .format(prefix=Config.get_settings().bot_settings.prefix) + "\n\n"
     await ctx.send(add_quotes(f"\n{str_help}"))
 

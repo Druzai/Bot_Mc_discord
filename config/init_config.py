@@ -11,6 +11,7 @@ from os import mkdir, listdir, remove
 from os.path import isfile, isdir
 from pathlib import Path
 from secrets import choice as sec_choice
+from shutil import rmtree
 from string import ascii_letters, digits
 from typing import List, Optional, TYPE_CHECKING
 
@@ -91,11 +92,11 @@ class Backups:
         if self.size_limit_for_server is None:
             return None
         else:
-            if self.size_limit_for_server[-2:] == "MB":
+            if self.size_limit_for_server[-2:].upper() == "MB":
                 return int(self.size_limit_for_server[:-2]) * 1024 * 1024
-            elif self.size_limit_for_server[-2:] == "GB":
+            elif self.size_limit_for_server[-2:].upper() == "GB":
                 return int(self.size_limit_for_server[:-2]) * 1024 * 1024 * 1024
-            elif self.size_limit_for_server[-2:] == "TB":
+            elif self.size_limit_for_server[-2:].upper() == "TB":
                 return int(self.size_limit_for_server[:-2]) * 1024 * 1024 * 1024 * 1024
 
     @property
@@ -303,13 +304,13 @@ class Config:
     @classmethod
     def add_to_seen_players_list(cls, player_minecraft_nick: str):
         cls._server_config_instance.seen_players.append(
-            Player(player_minecraft_nick, Config._settings_instance.bot_settings.default_number_of_times_to_op))
+            Player(player_minecraft_nick, cls._settings_instance.bot_settings.default_number_of_times_to_op))
 
     @classmethod
     def decrease_number_to_op_for_player(cls, player_minecraft_nick: str):
-        for p in range(len(Config._server_config_instance.seen_players)):
-            if Config._server_config_instance.seen_players[p].player_minecraft_nick == player_minecraft_nick:
-                Config._server_config_instance.seen_players[p].number_of_times_to_op -= 1
+        for p in range(len(cls._server_config_instance.seen_players)):
+            if cls._server_config_instance.seen_players[p].player_minecraft_nick == player_minecraft_nick:
+                cls._server_config_instance.seen_players[p].number_of_times_to_op -= 1
 
     @classmethod
     def add_backup_info(cls, file_name: str, reason: str = None, initiator: str = None):
@@ -317,7 +318,7 @@ class Config:
 
     @classmethod
     def read_server_config(cls):
-        if path.isfile(Path(cls.get_selected_server_from_list().working_directory, cls._server_config_name)):
+        if Path(cls.get_selected_server_from_list().working_directory, cls._server_config_name).is_file():
             cls._server_config_instance = \
                 cls._load_from_yaml(Path(cls.get_selected_server_from_list().working_directory,
                                          cls._server_config_name), Server_config)
@@ -342,24 +343,40 @@ class Config:
                        cls.get_backups_settings().name_of_the_backups_folder))
         # Remove nonexistent backups from server config
         list_to_remove = []
-        for backup in Config.get_server_config().backups:
-            if not isfile(Path(Config.get_selected_server_from_list().working_directory,
-                               Config.get_backups_settings().name_of_the_backups_folder,
-                               f"{backup.file_name}.zip")):
+        for backup in cls.get_server_config().backups:
+            if not Path(cls.get_selected_server_from_list().working_directory,
+                        cls.get_backups_settings().name_of_the_backups_folder,
+                        f"{backup.file_name}.zip").is_file():
                 list_to_remove.append(backup)
-        for bc in list_to_remove:
-            Config.get_server_config().backups.remove(bc)
         if len(list_to_remove) > 0:
-            Config.save_server_config()
+            print(get_translation("There are some mismatched backups entries in '{0}':")
+                  .format(Path(cls.get_selected_server_from_list().working_directory,
+                               cls._server_config_name).as_posix()))
+        for bc in list_to_remove:
+            cls.get_server_config().backups.remove(bc)
+            print(get_translation("Deleted backup entry named '{0}'").format(bc.file_name))
+        if len(list_to_remove) > 0:
+            cls.save_server_config()
         # Remove nonexistent backups from server's backups folder
-        list_of_backups_names = [b.file_name for b in Config.get_server_config().backups]
-        for backup in listdir(Path(Config.get_selected_server_from_list().working_directory,
-                                   Config.get_backups_settings().name_of_the_backups_folder)):
-            if backup.rsplit(".", 1)[0] not in list_of_backups_names:
-                remove(Path(Config.get_selected_server_from_list().working_directory,
-                            Config.get_backups_settings().name_of_the_backups_folder, backup))
+        print(get_translation("Starting checking backups folder '{0}' for nonexistent files and folder by using '{1}'")
+              .format(Path(cls.get_selected_server_from_list().working_directory,
+                           cls.get_backups_settings().name_of_the_backups_folder).as_posix(), cls._server_config_name))
+        list_of_backups_names = [b.file_name for b in cls.get_server_config().backups]
+        for backup in listdir(Path(cls.get_selected_server_from_list().working_directory,
+                                   cls.get_backups_settings().name_of_the_backups_folder)):
+            file_path = Path(cls.get_selected_server_from_list().working_directory,
+                             cls.get_backups_settings().name_of_the_backups_folder, backup)
+            if file_path.is_file():
+                if backup.rsplit(".", 1)[0] not in list_of_backups_names:
+                    remove(Path(cls.get_selected_server_from_list().working_directory,
+                                cls.get_backups_settings().name_of_the_backups_folder, backup))
+                    print(get_translation("Deleted file in path '{0}'").format(file_path.as_posix()))
+            else:
+                rmtree(file_path, ignore_errors=True)
+                print(get_translation("Deleted folder in path '{0}'").format(file_path.as_posix()))
+        print(get_translation("Done!"))
 
-        filepath = Path(cls.get_selected_server_from_list().working_directory + "/server.properties")
+        filepath = Path(cls.get_selected_server_from_list().working_directory, "server.properties")
         if not filepath.exists():
             raise RuntimeError(get_translation("File '{0}' doesn't exist! "
                                                "Run minecraft server manually to create one and accept eula!")
@@ -403,12 +420,12 @@ class Config:
                     properties_file[i] = f"rcon.password={BotVars.rcon_pass}\n"
             if BotVars.port_query is None:
                 BotVars.port_query = 25565
-                properties_file.append(f"query.port={str(BotVars.port_query)}\n")
-                changed_parameters.append(f"query.port={str(BotVars.port_query)}")
+                properties_file.append(f"query.port={BotVars.port_query}\n")
+                changed_parameters.append(f"query.port={BotVars.port_query}")
             if BotVars.port_rcon is None:
                 BotVars.port_rcon = 25575
-                properties_file.append(f"rcon.port={str(BotVars.port_rcon)}\n")
-                changed_parameters.append(f"rcon.port={str(BotVars.port_rcon)}")
+                properties_file.append(f"rcon.port={BotVars.port_rcon}\n")
+                changed_parameters.append(f"rcon.port={BotVars.port_rcon}")
             if not rewritten_rcon_pass:
                 properties_file.append(f"rcon.password={BotVars.rcon_pass}\n")
             with open(filepath, "w", encoding="utf8") as f:
@@ -852,7 +869,7 @@ class Config:
         while True:
             start_file_name = cls._ask_for_data(get_translation("Enter server start file name") + "\n> ") + \
                               (file_extension if file_extension is not None else '')
-            if isfile(Path(working_directory, start_file_name)):
+            if Path(working_directory, start_file_name).is_file():
                 return start_file_name
             else:
                 print(get_translation("This start file doesn't exist."))
@@ -976,6 +993,11 @@ class Config:
                                       try_int=True, int_high_than=0)
             else:
                 cls._settings_instance.bot_settings.backups.max_backups_limit_for_server = None
+        if cls._settings_instance.bot_settings.backups.size_limit_for_server is not None and \
+                len(cls._settings_instance.bot_settings.backups.size_limit_for_server) > 0 and \
+                cls._settings_instance.bot_settings.backups \
+                        .size_limit_for_server[-2:].upper() not in ["MB", "GB", "TB"]:
+            cls._settings_instance.bot_settings.backups.size_limit_for_server = ""
         if cls._settings_instance.bot_settings.backups.size_limit_for_server == "":
             cls._need_to_rewrite = True
             if cls._ask_for_data(get_translation("Backups' size limit for server not found. Would you like to set it?")

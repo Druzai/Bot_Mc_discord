@@ -517,8 +517,10 @@ class MinecraftCommands(commands.Cog):
             await ctx.send(add_quotes(get_translation("Selected server") + ": " +
                                       Config.get_selected_server_from_list().server_name +
                                       f" [{str(Config.get_settings().selected_server_number)}]"))
+            print(get_translation("Selected server") + f" - '{Config.get_selected_server_from_list().server_name}'")
             Config.read_server_info()
             await ctx.send(add_quotes(get_translation("Server properties read!")))
+            print(get_translation("Server info read!"))
         else:
             await ctx.send(add_quotes(get_translation("Use server list, there's no such "
                                                       "server number on the list!")))
@@ -532,7 +534,7 @@ class MinecraftCommands(commands.Cog):
         for i in range(1, len(Config.get_settings().servers_list) + 1):
             send_ += "\n[" + (make_underscored_line(i)
                               if i == Config.get_settings().selected_server_number else str(i)) + "] " + \
-                     Config.get_settings().servers_list[i].server_name
+                     Config.get_settings().servers_list[i - 1].server_name
         send_ += "```"
         await ctx.send(send_)
 
