@@ -29,6 +29,7 @@ from psutil import process_iter, NoSuchProcess, disk_usage
 from requests import post as req_post
 
 from commands.poll import Poll
+from components.decorators import MissingAdminPermissions
 from components.localization import get_translation
 from components.rss_feed_handle import create_feed_webhook
 from components.watcher_handle import create_watcher, create_chat_webhook
@@ -1146,6 +1147,10 @@ async def send_error(ctx, bot, error, is_reaction=False):
                                                                                  int(error.retry_after))))
     elif isinstance(error, commands.CheckFailure):
         pass
+    elif isinstance(error, MissingAdminPermissions):
+        if Config.get_settings().bot_settings.admin_role != "":
+            await send_error(ctx, bot, commands.MissingRole(Config.get_settings().bot_settings.admin_role), is_reaction)
+        await send_error(ctx, bot, commands.MissingPermissions(['administrator']), is_reaction)
     else:
         print(", ".join(error.args))
         await send_msg(ctx, f"{author_mention}\n" +

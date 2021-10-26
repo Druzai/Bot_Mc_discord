@@ -198,7 +198,7 @@ class MinecraftCommands(commands.Cog):
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
-    @commands.has_permissions(administrator=True)
+    @decorators.has_admin_role()
     async def assoc(self, ctx, discord_mention: str, assoc_command: str, minecraft_nick: str):
         """
         Associates discord user with nick in minecraft
@@ -277,8 +277,7 @@ class MinecraftCommands(commands.Cog):
             for k, v in user_players_data.items():
                 message += f"{k}: {str(v) if v >= 0 else get_translation('not seen on server')}\n"
         elif for_who == "everyone":
-            if not ctx.author.guild_permissions.administrator:
-                raise commands.MissingPermissions(['administrator'])
+            decorators.is_admin(ctx)
 
             users_to_nicks = {}
             for user in Config.get_known_users_list():

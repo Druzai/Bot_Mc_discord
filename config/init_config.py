@@ -124,6 +124,7 @@ class Bot_settings:
     gaming_status: str = ""
     idle_status: str = ""
     role: Optional[str] = None
+    admin_role: Optional[str] = None
     ip_address: str = ""
     local_address: str = ""
     log_bot_messages: bool = None
@@ -508,7 +509,7 @@ class Config:
         cls._setup_token()
         cls._setup_prefix()
         cls._setup_help_arguments()
-        cls._setup_role()
+        cls._setup_roles()
         cls._setup_bot_statuses()
         cls._setup_ip_address()
         cls._setup_local_address()
@@ -590,7 +591,7 @@ class Config:
               .format(str(cls._settings_instance.bot_settings.help_arguments).strip("[]")))
 
     @classmethod
-    def _setup_role(cls):
+    def _setup_roles(cls):
         if cls._settings_instance.bot_settings.role is not None:
             command_role = cls._settings_instance.bot_settings.role
             if command_role:
@@ -606,6 +607,20 @@ class Config:
                         "Set discord role for some specific commands such as start, stop, etc.") + "\n> ")
             else:
                 cls._settings_instance.bot_settings.role = ""
+        if cls._settings_instance.bot_settings.admin_role is not None:
+            command_role = cls._settings_instance.bot_settings.admin_role
+            if command_role:
+                print(get_translation("Admin role for bot is '{0}'.").format(command_role))
+            else:
+                print(get_translation("Admin role for bot doesn't stated. "
+                                      "Bot will check if member has 'Administrator' permission."))
+        else:
+            cls._need_to_rewrite = True
+            if cls._ask_for_data(get_translation("Do you want to set admin role for bot?") + " Y/n\n> ", "y"):
+                cls._settings_instance.bot_settings.admin_role = \
+                    cls._ask_for_data(get_translation("Set discord admin role for bot") + "\n> ")
+            else:
+                cls._settings_instance.bot_settings.admin_role = ""
 
     @classmethod
     def _setup_vk_credentials(cls):
