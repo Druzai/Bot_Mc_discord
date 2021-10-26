@@ -18,7 +18,7 @@ from config.init_config import Config, BotVars
 if platform == "win32":
     from colorama import init
 
-VERSION = "1.1.3"
+VERSION = "1.1.4"
 
 
 def _create_pot_lines_for_subcommands(command, find_str: str):
