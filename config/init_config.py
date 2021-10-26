@@ -382,6 +382,9 @@ class Config:
             raise RuntimeError(get_translation("File '{0}' doesn't exist! "
                                                "Run minecraft server manually to create one and accept eula!")
                                .format(filepath.as_posix()))
+        BotVars.port_query = None
+        BotVars.port_rcon = None
+        BotVars.rcon_pass = None
         with open(filepath, "r", encoding="utf8") as f:
             lines = f.readlines()
             if len(lines) < 3:
