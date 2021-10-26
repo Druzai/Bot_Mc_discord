@@ -104,7 +104,8 @@ def _check_log_file(file: Path, last_line: str = None):
     mention_max_right_symbols = 5
 
     for line in last_lines:
-        if search(r"\[Server thread/INFO]", line) and search(r"<([^>]*)> (.*)", line) and ": <" in line:
+        if search(r"\[Server thread/INFO]", line) and "*" not in split(r"<([^>]*)>", line, maxsplit=1)[0] and \
+                search(r"<([^>]*)> (.*)", line):
             player_nick, player_message = search(r"<([^>]*)>", line)[0], \
                                           split(r"<([^>]*)>", line, maxsplit=1)[-1].strip()
             if search(r"@[^\s]+", player_message):

@@ -43,6 +43,7 @@ class ChatCommands(commands.Cog):
         if Config.get_rss_feed_settings().enable_rss_feed:
             self.rss_feed_task.start()
         print(get_translation("Bot is ready!"))
+        print(get_translation("To stop the bot, press Ctrl + C"))
 
     """
     @commands.command(pass_context=True)

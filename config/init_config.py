@@ -407,8 +407,8 @@ class Config:
                 changed_parameters.append("enable-rcon=true")
             if not BotVars.rcon_pass:
                 BotVars.rcon_pass = "".join(sec_choice(ascii_letters + digits) for _ in range(20))
-                changed_parameters.append(f"rcon.password={BotVars.rcon_pass}\n" +
-                                          get_translation("Reminder: For better security "
+                changed_parameters.append(f"rcon.password={BotVars.rcon_pass}")
+                changed_parameters.append(get_translation("Reminder: For better security "
                                                           "you have to change this password for a more secure one."))
             with open(filepath, "r", encoding="utf8") as f:
                 properties_file = f.readlines()
@@ -430,9 +430,11 @@ class Config:
                 properties_file.append(f"rcon.password={BotVars.rcon_pass}\n")
             with open(filepath, "w", encoding="utf8") as f:
                 f.writelines(properties_file)
-            print("\n" + get_translation("Note: In '{0}' bot set these parameters:").format(
-                filepath.as_posix()) + "\n" +
-                  "\n".join(changed_parameters) + "\n")
+            print("------")
+            print(get_translation("Note: In '{0}' bot set these parameters:").format(filepath.as_posix()))
+            for line in changed_parameters:
+                print(line)
+            print("------")
 
     @classmethod
     def get_ops_json(cls):

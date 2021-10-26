@@ -51,6 +51,8 @@ And to enable rss feed you also need webhook url!
 For minecraft server version lower than `1.17` for cross-platform chat to work properly you have to have
 argument `-Dfile.encoding=UTF-8` when you're executing `*.bat` or `*.sh` script (necessary for Windows).
 
+For minecraft server version lower than `1.7` cross-platform chat currently doesn't work!
+
 **For backups: remember that if there are files in backups dir that not in server config, they will be deleted! And vice
 versa!**
 
@@ -65,14 +67,14 @@ Supported 2 languages:
 
 * [Python 3.8-3.9](https://www.python.org/downloads/)
 * For Linux required [screen](https://linuxize.com/post/how-to-use-linux-screen/) command
-* Minecraft server not lower than version 1.0.0
+* Minecraft server not lower than version `1.0.0`
     * Run server 2 times to accept eula and generate server.properties
     * Enable query and rcon in `server.properties` (unnecessary, bot can enable it if file `server.properties` exists)
 
 ### Required bot permissions
 
-* Enable the `Server Members Intent` and the `Presence Intent` in section `Privileged Gateway Intents` on the Bot tab of your bot's page on the
-  [Discord developer's portal](https://discord.com/developers/applications).
+* Enable the `Server Members Intent` and the `Presence Intent` in section `Privileged Gateway Intents` on the Bot tab of
+  your bot's page on the [Discord developer's portal](https://discord.com/developers/applications).
 
 ____________
 > Libraries for Python:
@@ -156,6 +158,9 @@ your_jar_file='server.jar'
 java_parameters='-d64 -server -XX:+AggressiveOpts' # ... and so on :)
 java -Xms${min_ram} -Xmx${max_ram} ${java_parameters} -Dfile.encoding=UTF-8 -jar ${your_jar_file} nogui
 ```
+
+For server process bot will start virtual terminal session via `screen` command. You can connect to it
+via `screen -r %server_name%`. Server name you can find in list of virtual sessions - `screen -ls`.
 
 ## Localization
 

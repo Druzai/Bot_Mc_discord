@@ -61,8 +61,7 @@ def main():
         exit(0)
     if len(argv) == 1:
         Config.read_config()
-    intents = Intents.all()
-    bot = commands.Bot(command_prefix=get_prefix, intents=intents)
+    bot = commands.Bot(command_prefix=get_prefix, intents=Intents.all())
     bot.remove_command('help')
     cog_list = [ChatCommands, MinecraftCommands]
     poll = Poll(bot)
@@ -74,17 +73,18 @@ def main():
 
     create_pot_lines(bot)
 
-    Print_file_handler()
-    Config.read_server_info()
-    print(get_translation("Server info read!"))
-
     if Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
         BotVars.bot_for_webhooks = bot
 
     try:
+        Print_file_handler()
+        Config.read_server_info()
+        print(get_translation("Server info read!"))
         bot.run(Config.get_settings().bot_settings.token)
     except LoginFailure:
-        print(get_translation("Bot/Discord Error: Your token is wrong."))
+        print(get_translation("Bot/Discord Error: Your token is wrong"))
+    except RuntimeError as e:
+        print(get_translation("Bot Error: {0}").format("".join(e.args)))
     except BaseException:
         exc = format_exc().rstrip("\n")
         print(get_translation("Bot/Discord Error: Something went wrong") + " ( ͡° ͜ʖ ͡°)" +
