@@ -48,10 +48,12 @@ And to enable rss feed you also need webhook url!
 
 [How to create webhook and get its url.](https://github.com/Akizo96/de.isekaidev.discord.wbbBridge/wiki/How-to-get-Webhook-ID-&-Token)
 
-For minecraft server version lower than `1.17` for cross-platform chat to work properly you have to have
+For minecraft server version lower than `1.17.*` for cross-platform chat to work properly you have to have
 argument `-Dfile.encoding=UTF-8` when you're executing `*.bat` or `*.sh` script (necessary for Windows).
 
-For minecraft server version lower than `1.7` cross-platform chat currently doesn't work!
+For minecraft server version lower than `1.7.*` cross-platform chat currently work only from minecraft to discord!
+
+Known problem that in `1.7.*` symbol `\n` doesn't render properly. This problem lies in the client.
 
 **For backups: remember that if there are files in backups dir that not in server config, they will be deleted! And vice
 versa!**

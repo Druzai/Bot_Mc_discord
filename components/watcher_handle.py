@@ -76,8 +76,17 @@ def create_watcher():
     if BotVars.watcher_of_log_file is not None and BotVars.watcher_of_log_file.is_running():
         BotVars.watcher_of_log_file.stop()
 
-    BotVars.watcher_of_log_file = Watcher(watch_file=Path(Config.get_selected_server_from_list().working_directory
-                                                          + "/logs/latest.log"),
+    from components.additional_funcs import get_server_version
+    server_version = get_server_version()
+    if 7 <= server_version:
+        path_to_server_log = "logs/latest.log"
+    elif 0 <= server_version < 7:
+        path_to_server_log = "server.log"
+    else:
+        return
+
+    BotVars.watcher_of_log_file = Watcher(watch_file=Path(Config.get_selected_server_from_list().working_directory,
+                                                          path_to_server_log),
                                           call_func_on_change=_check_log_file)
 
 
@@ -104,7 +113,7 @@ def _check_log_file(file: Path, last_line: str = None):
     mention_max_right_symbols = 5
 
     for line in last_lines:
-        if search(r"\[Server thread/INFO]", line) and "*" not in split(r"<([^>]*)>", line, maxsplit=1)[0] and \
+        if search(r"INFO", line) and "*" not in split(r"<([^>]*)>", line, maxsplit=1)[0] and \
                 search(r"<([^>]*)> (.*)", line):
             player_nick, player_message = search(r"<([^>]*)>", line)[0], \
                                           split(r"<([^>]*)>", line, maxsplit=1)[-1].strip()

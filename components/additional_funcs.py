@@ -1201,7 +1201,7 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
             if on_edit:
                 result_before = _handle_custom_emojis(before_message)
                 result_before = _handle_urls_and_attachments_in_message(result_before, before_message, True)
-                content_name = "contents" if get_server_version() >= 1.16 else "value"
+                content_name = "contents" if get_server_version() >= 16 else "value"
                 res_obj.append({"text": "*", "color": "gold",
                                 "hoverEvent": {"action": "show_text", content_name: result_before.get("content")}})
             _build_if_urls_in_message(res_obj, result_msg.get("content"), None)
@@ -1384,14 +1384,12 @@ def _search_mentions_in_message(message) -> list:
     return set(nicks)
 
 
-def get_server_version() -> float:
+def get_server_version() -> int:
+    """Gets minor version of server"""
     with connect_query() as cl_q:
         version = cl_q.full_stats.version
-    if search(r"\d+\.\d+\.\d+", version):
-        matches = findall(r"\d+", version)
-        return float(f"{matches[0]}.{matches[1]}")
-    elif search(r"\d+\.\d+", version):
-        return float(version)
+    matches = findall(r"\d+", version)
+    return int(matches[1])
 
 
 def get_server_players() -> tuple:
@@ -1419,7 +1417,7 @@ def times(fade_in, duration, fade_out, rcon_client):
 
 
 def announce(player, message, rcon_client, subtitle=False):
-    if get_server_version() >= 1.11 and not subtitle:
+    if get_server_version() >= 11 and not subtitle:
         rcon_client.run(f'title {player} actionbar ' + '{' + f'"text":"{message}"' + ',"bold":true,"color":"gold"}')
     else:
         rcon_client.run(f'title {player} subtitle ' + '{' + f'"text":"{message}"' + ',"color":"gold"}')
