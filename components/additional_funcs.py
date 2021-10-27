@@ -1183,7 +1183,13 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
         await send_msg(message.channel, f"{author_mention}\n" +
                        add_quotes(get_translation("server is loading!").capitalize()), True)
     else:
-        if len(get_server_players()) > 0:
+        server_version = get_server_version()
+        if server_version < 7:
+            await send_msg(message.channel, f"{author_mention}, " +
+                           get_translation("version of your minecraft server is lower than `1.7.2` "
+                                           "so bot can't send messages from discord to minecraft!"),
+                           is_reaction=True)
+        elif len(get_server_players()) > 0:
             result_msg = _handle_custom_emojis(message)
             result_msg = await _handle_reply_in_message(message, result_msg)
             result_msg = _handle_urls_and_attachments_in_message(result_msg, message)
@@ -1201,13 +1207,34 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
             if on_edit:
                 result_before = _handle_custom_emojis(before_message)
                 result_before = _handle_urls_and_attachments_in_message(result_before, before_message, True)
-                content_name = "contents" if get_server_version() >= 16 else "value"
+                content_name = "contents" if server_version >= 16 else "value"
                 res_obj.append({"text": "*", "color": "gold",
                                 "hoverEvent": {"action": "show_text", content_name: result_before.get("content")}})
             _build_if_urls_in_message(res_obj, result_msg.get("content"), None)
 
             with connect_rcon() as cl_r:
-                cl_r.tellraw("@a", res_obj)
+                if server_version > 7:
+                    cl_r.tellraw("@a", res_obj)
+                else:
+                    res = []
+                    for elem in res_obj:
+                        if elem == "":
+                            res += [[""]]
+                        elif isinstance(elem, dict):
+                            if elem["text"] != "*" and "\n" in elem["text"]:
+                                first_elem = True
+                                for split_str in elem["text"].split("\n"):
+                                    split_elem = elem.copy()
+                                    split_elem["text"] = split_str
+                                    if first_elem:
+                                        res[-1] += [split_elem]
+                                        first_elem = False
+                                    else:
+                                        res += [["", split_elem]]
+                            else:
+                                res[-1] += [elem]
+                    for tellraw in res:
+                        cl_r.tellraw("@a", tellraw)
 
             delete_user_message = False
             nicks = _search_mentions_in_message(message)
