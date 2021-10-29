@@ -1203,11 +1203,19 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
                     _build_if_urls_in_message(res_obj, result_msg.get("reply")[2], "gray")
                 else:
                     _build_if_urls_in_message(res_obj, result_msg.get("reply"), "gray")
-            res_obj += [{"text": "<"}, {"text": message.author.display_name, "color": "dark_gray"}, {"text": "> "}]
+            content_name = "contents" if server_version >= 16 else "value"
+            hover_string = ["", {"text": f"{message.author.display_name}\n"
+                                         f"{message.author.name}#{message.author.discriminator}"}]
+            if server_version > 11:
+                hover_string += [{"text": "\nShift + "}, {"keybind": "key.attack"}]
+            res_obj += [{"text": "<"},
+                        {"text": message.author.display_name, "color": "dark_gray",
+                         "insertion": f"@{message.author.display_name}",
+                         "hoverEvent": {"action": "show_text", content_name: hover_string}},
+                        {"text": "> "}]
             if on_edit:
                 result_before = _handle_custom_emojis(before_message)
                 result_before = _handle_urls_and_attachments_in_message(result_before, before_message, True)
-                content_name = "contents" if server_version >= 16 else "value"
                 res_obj.append({"text": "*", "color": "gold",
                                 "hoverEvent": {"action": "show_text", content_name: result_before.get("content")}})
             _build_if_urls_in_message(res_obj, result_msg.get("content"), None)
