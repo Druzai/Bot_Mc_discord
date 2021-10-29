@@ -115,7 +115,7 @@ def _check_log_file(file: Path, last_line: str = None):
     for line in last_lines:
         if search(r"INFO", line) and "*" not in split(r"<([^>]*)>", line, maxsplit=1)[0] and \
                 search(r"<([^>]*)> (.*)", line):
-            player_nick, player_message = search(r"<([^>]*)>", line)[0], \
+            player_nick, player_message = search(r"<([^>]*)>", line)[0][1:-1], \
                                           split(r"<([^>]*)>", line, maxsplit=1)[-1].strip()
             if search(r"@[^\s]+", player_message):
                 split_arr = split(r"@[^\s]+", player_message)
@@ -248,10 +248,19 @@ def _check_log_file(file: Path, last_line: str = None):
                         with connect_rcon() as cl_r:
                             with times(0, 60, 20, cl_r):
                                 for nick in mention_nicks:
-                                    announce(nick, f"@{player_nick[1:-1]} -> @{nick if nick != '@a' else 'everyone'}",
+                                    announce(nick, f"@{player_nick} -> @{nick if nick != '@a' else 'everyone'}",
                                              cl_r)
 
-            BotVars.webhook_chat.send(f"**{player_nick}** {player_message}")
+            player_url_pic = None
+            for user in Config.get_settings().known_users:
+                if user.user_minecraft_nick.lower() == player_nick.lower():
+                    possible_users = [m for m in BotVars.bot_for_webhooks.guilds[0].members
+                                      if m.id == user.user_discord_id]
+                    if len(possible_users) > 0:
+                        player_url_pic = possible_users[0].avatar_url
+                        break
+
+            BotVars.webhook_chat.send(player_message, username=player_nick, avatar_url=player_url_pic)
 
     return last_lines[-1]
 

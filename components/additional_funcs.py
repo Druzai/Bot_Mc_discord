@@ -1277,8 +1277,7 @@ async def _handle_reply_in_message(message, result_msg):
         cnt = cnt.replace("​", "")
         if reply_msg.author.discriminator == "0000":
             # reply to minecraft player
-            cnt = cnt.replace("**<", "<").replace(">**", ">")
-            result_msg["reply"] = f"\n -> {cnt}"
+            result_msg["reply"] = f"\n -> <{reply_msg.author.display_name}> {cnt}"
         else:
             # Reply to discord user
             nick = (await message.guild.fetch_member(reply_msg.author.id)).display_name
