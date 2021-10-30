@@ -177,13 +177,13 @@ msgid "help_brief_chat"
 msgstr "Сохраняет текстовый канал для кроссплатформенного чата"
 
 #: ..\_frozen_translations.py:32
-msgid "help_chat"
+msgid "help_channel_chat"
 msgstr ""
 "Сохраняет текстовый канал для кроссплатформенного чата\n"
 "Без аргументов сохраняет текстовый канал, из которого была вызвана команда"
 
 #: ..\_frozen_translations.py:33
-msgid "help_chat_channel_id"
+msgid "help_channel_chat_channel_id"
 msgstr "Упоминание канала, типа '#канал' или id канала, если вы разработчик"
 
 #: ..\_frozen_translations.py:34

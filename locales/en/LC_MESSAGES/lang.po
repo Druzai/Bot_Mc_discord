@@ -172,13 +172,13 @@ msgid "help_brief_chat"
 msgstr "Saves text channel for cross-platform chat"
 
 #: ..\_frozen_translations.py:32
-msgid "help_chat"
+msgid "help_channel_chat"
 msgstr ""
 "Saves text channel for cross-platform chat\n"
 "Without arguments saves text channel from which it was launched"
 
 #: ..\_frozen_translations.py:33
-msgid "help_chat_channel_id"
+msgid "help_channel_chat_channel_id"
 msgstr "Channel mention, like '#channel' or channel id if you're developer"
 
 #: ..\_frozen_translations.py:34

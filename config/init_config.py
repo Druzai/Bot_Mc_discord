@@ -130,6 +130,7 @@ class Bot_settings:
     log_bot_messages: bool = None
     deletion_messages_limit_without_poll: int = -1
     menu_id: Optional[int] = None
+    commands_channel_id: Optional[int] = None
     forceload: bool = False
     default_number_of_times_to_op: int = -1
     vk_ask_credentials: bool = True
@@ -519,6 +520,7 @@ class Config:
         cls._setup_log_bot_messages()
         cls._setup_clear_delete_limit_without_poll()
         cls._setup_menu_id()
+        cls._setup_commands_channel_id()
         cls._setup_default_number_of_times_to_op()
         cls._setup_vk_credentials()
         cls._setup_cross_platform_chat()
@@ -714,6 +716,20 @@ class Config:
                 print(get_translation("Menu via reactions wouldn't work. To make it work type "
                                       "'{0}menu' to create new menu and its id.").format(
                     cls._settings_instance.bot_settings.prefix))
+
+    @classmethod
+    def _setup_commands_channel_id(cls):
+        if cls._settings_instance.bot_settings.commands_channel_id is None:
+            if cls._ask_for_data(
+                    get_translation("Commands' channel id not found. Would you like to enter it?") + " Y/n\n> ", "y"):
+                cls._need_to_rewrite = True
+                cls._settings_instance.bot_settings.commands_channel_id = \
+                    cls._ask_for_data(get_translation("Enter commands' channel id") + "\n> ",
+                                      try_int=True, int_high_than=1)
+            else:
+                print(get_translation("Bot send some push events to the channel it can post. To make it work rigth type"
+                                      " '{0}channel commands' to create a link.")
+                      .format(cls._settings_instance.bot_settings.prefix))
 
     @classmethod
     def _setup_bot_statuses(cls):

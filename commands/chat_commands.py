@@ -4,7 +4,7 @@ from random import choice, randint
 from typing import Union
 
 import discord
-from discord import Activity, ActivityType, Role, Member
+from discord import Activity, ActivityType, Role, Member, InvalidData, HTTPException, NotFound, Forbidden
 from discord.ext import commands, tasks
 from vk_api import VkApi
 from vk_api.exceptions import ApiError, Captcha
@@ -52,11 +52,30 @@ class ChatCommands(commands.Cog):
                        + "\nIsStopping: " + str(IsStopping) + "\nIsRestarting: " + str(IsRestarting))
     """
 
-    @commands.command(pass_context=True)
+    @commands.group(pass_context=True, aliases=["chn"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def chat(self, ctx, channel_id: channel_mention = None):
+    async def channel(self, ctx):
+        try:
+            msg = get_translation("Channel `{0}` set to minecraft cross-platform chat!") \
+                .format((await self._bot.fetch_channel(Config.get_cross_platform_chat_settings().channel_id)).name)
+        except (InvalidData, HTTPException, NotFound, Forbidden):
+            msg = get_translation("Channel for minecraft cross-platform chat is not found or unreachable!")
+        msg += "\n"
+        try:
+            msg += get_translation("Channel `{0}` set as commands' channel for bot!") \
+                .format((await self._bot.fetch_channel(Config.get_settings()
+                                                       .bot_settings.commands_channel_id)).name)
+        except (InvalidData, HTTPException, NotFound, Forbidden):
+            msg += get_translation("Channel for bot commands is not found or unreachable!")
+        await ctx.channel.send(add_quotes(msg))
+
+    @channel.command(pass_context=True, name="chat")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_role_or_default()
+    async def c_chat(self, ctx, channel_id: channel_mention = None):
         if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
             await ctx.channel.send(get_translation("Cross-platform chat is disabled in bot config!"))
             return
@@ -81,6 +100,34 @@ class ChatCommands(commands.Cog):
             await ctx.channel.send(
                 get_translation("Channel `{0}` set to minecraft cross-platform chat!")
                     .format((await self._bot.fetch_channel(Config.get_cross_platform_chat_settings().channel_id)).name))
+        else:
+            await ctx.channel.send(get_translation("You entered wrong argument!"))
+
+    @channel.command(pass_context=True, name="commands")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_role_or_default()
+    async def c_commands(self, ctx, channel_id: channel_mention = None):
+        channel_set = False
+        if channel_id is None:
+            Config.get_settings().bot_settings.commands_channel_id = ctx.channel.id
+            channel_set = True
+        else:
+            if isinstance(channel_id, int):
+                Config.get_settings().bot_settings.commands_channel_id = channel_id
+                channel_set = True
+            elif channel_id.startswith("<#"):
+                try:
+                    Config.get_settings().bot_settings.commands_channel_id = int(channel_id.strip("<#>"))
+                    channel_set = True
+                except ValueError:
+                    pass
+
+        if channel_set:
+            Config.save_config()
+            await ctx.channel.send(get_translation("Channel `{0}` set as commands' channel for bot!")
+                                   .format((await self._bot.fetch_channel(Config.get_settings()
+                                                                          .bot_settings.commands_channel_id)).name))
         else:
             await ctx.channel.send(get_translation("You entered wrong argument!"))
 

@@ -685,20 +685,16 @@ async def server_checkups(bot: commands.Bot):
                                                                                 get_list_of_processes()) != 0 else ""))))
         if Config.get_settings().bot_settings.forceload and not BotVars.is_stopping \
                 and not BotVars.is_loading and not BotVars.is_restarting:
-            for channel in bot.guilds[0].channels:
-                if not isinstance(channel, TextChannel):
-                    continue
-                with suppress(NotFound, Forbidden, HTTPException):
-                    if Config.get_settings().bot_settings.menu_id is not None:
-                        await channel.fetch_message(Config.get_settings().bot_settings.menu_id)
-                    await send_msg(ctx=channel,
-                                   msg=add_quotes(get_translation("Bot detected: Server\'s offline!\n"
-                                                                  "Time: {0}\n"
-                                                                  "Starting up server again!").format(
-                                       datetime.now().strftime("%d/%m/%Y %H:%M:%S"))),
-                                   is_reaction=True)
-                    await start_server(ctx=channel, bot=bot, shut_up=True, is_reaction=True)
-                    break
+            channel = bot.guilds[0].get_channel(Config.get_settings().bot_settings.commands_channel_id)
+            if channel is None:
+                channel = [ch for ch in bot.guilds[0].channels if isinstance(ch, TextChannel)][0]
+            await send_msg(ctx=channel,
+                           msg=add_quotes(get_translation("Bot detected: Server\'s offline!\n"
+                                                          "Time: {0}\n"
+                                                          "Starting up server again!")
+                                          .format(datetime.now().strftime("%d/%m/%Y %H:%M:%S"))),
+                           is_reaction=True)
+            await start_server(ctx=channel, bot=bot, shut_up=True, is_reaction=True)
     if Config.get_awaiting_times_settings().await_seconds_in_check_ups > 0:
         await asleep(Config.get_awaiting_times_settings().await_seconds_in_check_ups)
 
