@@ -5,6 +5,7 @@ from datetime import datetime
 from os import remove
 from pathlib import Path
 from random import randint
+from re import search
 from sys import argv
 
 import discord
@@ -23,6 +24,12 @@ from components.additional_funcs import (
 )
 from components.localization import get_translation
 from config.init_config import BotVars, Config
+
+
+def ip_address(arg: str):
+    if search(r"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)(\.(?!$)|$)){4}$", arg):
+        return arg
+    raise commands.UserInputError()
 
 
 class MinecraftCommands(commands.Cog):
@@ -461,15 +468,15 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
-    async def a_unban(self, ctx, ip_address: str):
+    async def a_unban(self, ctx, ip: ip_address):
         if len(get_list_of_banned_ips()) == 0:
             await ctx.send(add_quotes(get_translation("There are no banned IP addresses!")))
             return
 
         try:
             with connect_rcon() as cl_r:
-                cl_r.run(f"pardon-ip {ip_address}")
-            await ctx.send(add_quotes(get_translation("Unbanned IP address {0}!").format(ip_address)))
+                cl_r.run(f"pardon-ip {ip}")
+            await ctx.send(add_quotes(get_translation("Unbanned IP address {0}!").format(ip)))
         except (ConnectionError, socket.error):
             if BotVars.is_server_on:
                 await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
@@ -480,7 +487,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def a_revoke(self, ctx, ip_address: str, nick: str = None):
+    async def a_revoke(self, ctx, ip: ip_address, nick: str = None):
         if not Config.get_auth_security().enable_auth_security:
             await ctx.send(add_quotes(get_translation("Authorization is disabled. Enable it to proceed!")))
             return
@@ -509,7 +516,7 @@ class MinecraftCommands(commands.Cog):
                     (has_admin_rights and bound_nicks is not None and nick not in bound_nicks):
                 continue
             for ip in user.ip_addresses:
-                if ip.ip_address == ip_address:
+                if ip.ip_address == ip:
                     possible_matches.append(user.nick)
             if nick is not None and user.nick == nick:
                 break
@@ -522,7 +529,7 @@ class MinecraftCommands(commands.Cog):
                 await ctx.send(get_translation("{0}, there are no nicks in your possession "
                                                "that were logged on with this IP address").format(ctx.author.mention))
             return
-        Config.remove_ip_address(possible_matches, ip_address)
+        Config.remove_ip_address(possible_matches, ip)
         Config.save_auth_users()
         await ctx.send(f"{ctx.author.mention},\n" +
                        add_quotes(get_translation("These nicks were revoked with this IP address:") +
