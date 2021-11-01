@@ -21,7 +21,6 @@ from typing import Tuple, List
 from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 
 from discord import Activity, ActivityType, TextChannel, Message, Status, Member, Role
-from discord.errors import NotFound, Forbidden, HTTPException
 from discord.ext import commands
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r
@@ -156,9 +155,9 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
             with connect_query() as cl_q:
                 _ = cl_q.basic_stats
             break
-    if Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
-            Config.get_cross_platform_chat_settings().channel_id and \
-            Config.get_cross_platform_chat_settings().webhook_url:
+    if (Config.get_cross_platform_chat_settings().enable_cross_platform_chat and
+        Config.get_cross_platform_chat_settings().channel_id and
+        Config.get_cross_platform_chat_settings().webhook_url) or Config.get_auth_security().enable_auth_security:
         create_watcher()
         BotVars.watcher_of_log_file.start()
     if Config.get_selected_server_from_list().server_loading_time:
@@ -661,9 +660,10 @@ async def server_checkups(bot: commands.Bot):
         if not BotVars.is_server_on:
             BotVars.is_server_on = True
         if (BotVars.watcher_of_log_file is None or not BotVars.watcher_of_log_file.is_running()) and \
-                Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
-                Config.get_cross_platform_chat_settings().channel_id and \
-                Config.get_cross_platform_chat_settings().webhook_url:
+                ((Config.get_cross_platform_chat_settings().enable_cross_platform_chat and
+                  Config.get_cross_platform_chat_settings().channel_id and
+                  Config.get_cross_platform_chat_settings().webhook_url) or
+                 Config.get_auth_security().enable_auth_security):
             if BotVars.watcher_of_log_file is None:
                 create_watcher()
             BotVars.watcher_of_log_file.start()
@@ -1055,14 +1055,23 @@ def save_to_whitelist_json(entry: dict):
     whitelist = [entry]
     filepath = Path(Config.get_selected_server_from_list().working_directory + "/whitelist.json")
     if filepath.is_file():
-        try:
+        with suppress(JSONDecodeError):
             with open(filepath, "r", encoding="utf8") as file:
                 whitelist = load(file)
             whitelist.append(entry)
-        except JSONDecodeError:
-            pass
     with open(filepath, "w", encoding="utf8") as file:
         dump(whitelist, file)
+
+
+def get_list_of_banned_ips():
+    filepath = Path(Config.get_selected_server_from_list().working_directory + "/banned-ips.json")
+    banlist = []
+    if filepath.is_file():
+        with suppress(JSONDecodeError):
+            with open(filepath, "r", encoding="utf8") as file:
+                banlist = load(file)
+            banlist = [e.get("ip") for e in banlist]
+    return banlist
 
 
 def get_from_server_properties(setting: str):

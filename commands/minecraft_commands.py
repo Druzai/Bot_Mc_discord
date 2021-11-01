@@ -19,7 +19,7 @@ from components.additional_funcs import (
     make_underscored_line, get_human_readable_size, create_zip_archive, restore_from_zip_archive, get_file_size,
     BackupsThread, get_folder_size, send_message_of_deleted_backup, handle_backups_limit_and_size, bot_backup,
     delete_after_by_msg, get_half_members_count_with_role, warn_about_auto_backups, get_archive_uncompressed_size,
-    get_bot_display_name
+    get_bot_display_name, get_list_of_banned_ips
 )
 from components.localization import get_translation
 from config.init_config import BotVars, Config
@@ -101,7 +101,7 @@ class MinecraftCommands(commands.Cog):
             if minecraft_nick not in [u.user_minecraft_nick for u in Config.get_known_users_list()] or \
                     ctx.author.id not in [u.user_discord_id for u in Config.get_known_users_list()
                                           if u.user_minecraft_nick == minecraft_nick]:
-                await ctx.send(get_translation("{0}, this nick isn't bound to you, use {1}assoc first...")
+                await ctx.send(get_translation("{0}, this nick isn't bound to you, use `{1}assoc` first...")
                                .format(ctx.author.mention, Config.get_settings().bot_settings.prefix))
                 BotVars.is_doing_op = doing_opping
                 return
@@ -337,6 +337,231 @@ class MinecraftCommands(commands.Cog):
             await ctx.send(add_quotes("".join(log[-limit:])))
         else:
             await ctx.send(add_quotes("".join(log)))
+
+    @commands.group(pass_context=True, invoke_without_command=True)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    async def auth(self, ctx):
+        msg = get_translation("Authorization on") if Config.get_auth_security().enable_auth_security \
+            else get_translation("Authorization off")
+        msg += "\n" + get_translation("Max number of login attempts set to {0}") \
+            .format(Config.get_auth_security().max_login_attempts)
+        msg += "\n" + get_translation("Days before IP expires - {0}")\
+            .format(Config.get_auth_security().days_before_ip_expires)
+        msg += "\n" + get_translation("Minutes before code expires - {0}")\
+            .format(Config.get_auth_security().mins_before_code_expires)
+
+        msg += "\n\n" + get_translation("Information about authorized users:") + "\n"
+        if len(Config.get_auth_users()) == 0:
+            msg += "-----"
+        else:
+            for user in Config.get_auth_users():
+                msg += f"{user.nick}:\n"
+                for ip in user.ip_addresses:
+                    msg += f"\t{ip.ip_address}: "
+                    if ip.expires_on_date is None or ip.expires_on_date < datetime.now() or \
+                            ip.login_attempts is not None:
+                        msg += get_translation("not whitelisted")
+                    else:
+                        msg += get_translation("whitelisted")
+                    msg += "\n"
+        await ctx.send(add_quotes(msg))
+
+    @auth.command(pass_context=True, name="on")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_admin_role()
+    async def a_on(self, ctx):
+        Config.get_auth_security().enable_auth_security = True
+        Config.save_config()
+        await ctx.send(add_quotes(get_translation("Authorization on")))
+
+    @auth.command(pass_context=True, name="off")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_admin_role()
+    async def a_off(self, ctx):
+        Config.get_auth_security().enable_auth_security = False
+        Config.save_config()
+        await ctx.send(add_quotes(get_translation("Authorization off")))
+
+    @auth.command(pass_context=True, name="login")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @decorators.has_role_or_default()
+    async def a_login(self, ctx, nick: str, code: str):
+        if not Config.get_auth_security().enable_auth_security:
+            await ctx.send(add_quotes(get_translation("Authorization is disabled. Enable it to proceed!")))
+            return
+        code = code.upper()
+        ip_info = Config.get_users_ip_address_info(nick, code=code)
+        if ip_info is None:
+            await ctx.send(add_quotes(get_translation("Bot couldn't find nickname and/or code "
+                                                      "in the non-whitelisted IP addresses!")))
+            return
+        if len([1 for p in self._IndPoll.get_polls().values() if p.command == f"auth login {nick}"]) > 0:
+            await delete_after_by_msg(ctx.message)
+            await ctx.send(get_translation("{0}, bot already has poll on `auth login {1}` command!")
+                           .format(ctx.author.mention, nick),
+                           delete_after=Config.get_awaiting_times_settings().await_seconds_before_message_deletion)
+            return
+        bound_user = None
+        for user in Config.get_known_users_list():
+            if user.user_minecraft_nick == nick:
+                bound_user = await self._bot.guilds[0].fetch_member(user.user_discord_id)
+                break
+        if (bound_user is not None and bound_user.id != ctx.author.id) or \
+                (isinstance(ctx.channel, discord.DMChannel) and bound_user is None):
+            await ctx.send(add_quotes(get_translation("You don't have this nick in associations!")))
+            return
+
+        if ip_info.code == code:
+            if ip_info.code_expires_on_date is None or ip_info.code_expires_on_date < datetime.now():
+                await ctx.send(add_quotes(get_translation("This code expired! Try to login again to get another one!")))
+                return
+            if bound_user is None:
+                if not await self._IndPoll.run(ctx=ctx,
+                                               message=get_translation("this man {0} trying to login as `{1}`. "
+                                                                       "Bot requesting create link {0} -> {1}. "
+                                                                       "Will you let that happen?")
+                                                       .format(ctx.author.mention, nick),
+                                               command=f"auth login {nick}",
+                                               needed_role=Config.get_settings().bot_settings.admin_role,
+                                               need_for_voting=1,
+                                               timeout=5,
+                                               admin_needed=True,
+                                               remove_logs_after=5):
+                    return
+                # Associate member with this nick
+                Config.add_to_known_users_list(nick, ctx.author.id)
+                Config.save_config()
+            Config.update_ip_address(nick, ip_info.ip_address, whitelist=True)
+            Config.save_auth_users()
+            await ctx.send(get_translation("{0}, bot whitelisted nick `{1}` with IP address `{2}`!")
+                           .format(ctx.author.mention, nick, ip_info.ip_address))
+        else:
+            await ctx.send(add_quotes(get_translation("Your code for these nick and IP is wrong. Try again.")))
+
+    @auth.command(pass_context=True, name="banlist")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_role_or_default()
+    async def a_banlist(self, ctx):
+        banned_ips = get_list_of_banned_ips()
+        if len(banned_ips) > 0:
+            await ctx.send(add_quotes(get_translation("List of banned IP addresses:") +
+                                      "\n- " + "\n- ".join(banned_ips)))
+        else:
+            await ctx.send(add_quotes(get_translation("There are no banned IP addresses!")))
+
+    @auth.command(pass_context=True, aliases=["pardon"], name="unban")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_admin_role()
+    async def a_unban(self, ctx, ip_address: str):
+        if len(get_list_of_banned_ips()) == 0:
+            await ctx.send(add_quotes(get_translation("There are no banned IP addresses!")))
+            return
+
+        try:
+            with connect_rcon() as cl_r:
+                cl_r.run(f"pardon-ip {ip_address}")
+            await ctx.send(add_quotes(get_translation("Unbanned IP address {0}!").format(ip_address)))
+        except (ConnectionError, socket.error):
+            if BotVars.is_server_on:
+                await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
+            else:
+                await ctx.send(add_quotes(get_translation("server offline").capitalize()))
+
+    @auth.group(pass_context=True, name="revoke", invoke_without_command=True)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_role_or_default()
+    async def a_revoke(self, ctx, ip_address: str, nick: str = None):
+        if not Config.get_auth_security().enable_auth_security:
+            await ctx.send(add_quotes(get_translation("Authorization is disabled. Enable it to proceed!")))
+            return
+
+        if len(Config.get_auth_users()) == 0:
+            await ctx.send(add_quotes(get_translation("Bot has no users who tried to enter or entered!")))
+            return
+
+        has_admin_rights = False
+        with suppress(decorators.MissingAdminPermissions):
+            if decorators.is_admin(ctx):
+                has_admin_rights = True
+
+        bound_nicks = None
+        if not has_admin_rights:
+            if ctx.author.id not in [u.user_discord_id for u in Config.get_known_users_list()]:
+                await ctx.send(get_translation("{0}, you don't have bound nicks, use `{1}assoc` first...")
+                               .format(ctx.author.mention, Config.get_settings().bot_settings.prefix))
+                return
+            bound_nicks = [u.user_minecraft_nick for u in Config.get_known_users_list()
+                           if u.user_discord_id == ctx.author.id]
+
+        possible_matches = []
+        for user in Config.get_auth_users():
+            if nick is not None and user.nick != nick or \
+                    (has_admin_rights and bound_nicks is not None and nick not in bound_nicks):
+                continue
+            for ip in user.ip_addresses:
+                if ip.ip_address == ip_address:
+                    possible_matches.append(user.nick)
+            if nick is not None and user.nick == nick:
+                break
+
+        if len(possible_matches) == 0:
+            if has_admin_rights:
+                await ctx.send(get_translation("{0}, there are no nicks that were logged on with this IP address")
+                               .format(ctx.author.mention))
+            else:
+                await ctx.send(get_translation("{0}, there are no nicks in your possession "
+                                               "that were logged on with this IP address").format(ctx.author.mention))
+            return
+        Config.remove_ip_address(possible_matches, ip_address)
+        Config.save_auth_users()
+        await ctx.send(f"{ctx.author.mention},\n" +
+                       add_quotes(get_translation("These nicks were revoked with this IP address:") +
+                                  "\n- " + "\n- ".join(possible_matches)))
+
+    @a_revoke.command(pass_context=True, name="all")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_admin_role()
+    async def a_r_all(self, ctx):
+        if not Config.get_auth_security().enable_auth_security:
+            await ctx.send(add_quotes(get_translation("Authorization is disabled. Enable it to proceed!")))
+            return
+
+        if len(Config.get_auth_users()) == 0:
+            await ctx.send(add_quotes(get_translation("Bot has no users who tried to enter or entered!")))
+            return
+
+        revoked = False
+        revoked_dict = {}
+        for i in range(len(Config.get_auth_users())):
+            to_revoke = []
+            for ip in Config.get_auth_users()[i].ip_addresses:
+                if ip.expires_on_date is None or ip.expires_on_date < datetime.now() or ip.login_attempts is not None:
+                    to_revoke.append(ip)
+                    revoked = True
+            if len(to_revoke) > 0:
+                revoked_dict[Config.get_auth_users()[i].nick] = [ip.ip_address for ip in to_revoke]
+            for item in to_revoke:
+                Config.get_auth_users()[i].ip_addresses.remove(item)
+        if revoked:
+            Config.save_auth_users()
+
+        if revoked:
+            msg_list = "\n"
+            for k, v in revoked_dict.items():
+                msg_list += f"{k}:"
+                msg_list += "\n- " + "\n- ".join(v) + "\n"
+            await ctx.send(f"{ctx.author.mention},\n" +
+                           add_quotes(get_translation("Bot has revoked these non-whitelisted IP addresses:") +
+                                      msg_list))
+        else:
+            await ctx.send(add_quotes(get_translation("There were no non-whitelisted IP addresses!")))
 
     @commands.group(pass_context=True, aliases=["fl"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)

@@ -21,14 +21,19 @@ class Poll(commands.Cog):
         self._await_date[command] = datetime.now()
 
     async def run(self, ctx, message: str, command: str, need_for_voting=2, needed_role=None,
-                  timeout=60 * 60, remove_logs_after=None):
+                  timeout=60 * 60, remove_logs_after=None, admin_needed=False):
         members_count = len([m for m in self._bot.guilds[0].members if not m.bot and m.status != Status.offline])
         if members_count < need_for_voting:
             need_for_voting = members_count
-        start_msg = await ctx.send("@everyone, " + message + " " +
+        mention = "@everyone"
+        if needed_role:
+            for role in self._bot.guilds[0].roles:
+                if role.name == needed_role:
+                    mention = role.mention
+        start_msg = await ctx.send(f"{mention}, {message} " +
                                    get_translation("To win the poll needed {0} votes!").format(str(need_for_voting)))
         poll_msg = await self.make_embed(ctx)
-        current_poll = Poll.PollContent(ctx, command, need_for_voting, needed_role, remove_logs_after)
+        current_poll = Poll.PollContent(ctx, command, need_for_voting, needed_role, remove_logs_after, admin_needed)
         self._polls[poll_msg.id] = current_poll
         seconds = 0
         while current_poll.state == Poll.States.NONE:
@@ -104,7 +109,8 @@ class Poll(commands.Cog):
         CANCELED = auto()
 
     class PollContent:
-        def __init__(self, ctx, command: str, need_for_voting=2, needed_role=None, remove_logs_after=0):
+        def __init__(self, ctx, command: str, need_for_voting=2, needed_role=None,
+                     remove_logs_after=0, admin_needed=False):
             self.poll_yes = 0
             self.poll_no = 0
             self.poll_voted_uniq = {}
@@ -114,6 +120,7 @@ class Poll(commands.Cog):
             self.RLA = remove_logs_after
             self.state = Poll.States.NONE
             self.command = command
+            self.AN = admin_needed
 
         async def count_add_voice(self, channel, user, emoji, to_left):
             if self.state is not Poll.States.NONE:
@@ -124,9 +131,19 @@ class Poll(commands.Cog):
                 await channel.send(f"{user.mention}, " + get_translation("you've already voted!"),
                                    delete_after=self.RLA)
                 return False
-            if self.NR and self.NR not in (e.name for e in user.roles):
+            if not self.AN and self.NR and self.NR not in (e.name for e in user.roles):
                 await channel.send(f"{user.mention}, " +
                                    get_translation("you don't have needed '{0}' role").format(self.NR),
+                                   delete_after=self.RLA)
+                return False
+            if self.AN and self.NR and self.NR not in (e.name for e in user.roles) and \
+                    not user.guild_permissions.administrator:
+                if self.NR != "":
+                    await channel.send(f"{user.mention}, " +
+                                       get_translation("you don't have needed '{0}' role").format(self.NR),
+                                       delete_after=self.RLA)
+                await channel.send(f"{user.mention}, " +
+                                   get_translation("you don't have permission 'Administrator'"),
                                    delete_after=self.RLA)
                 return False
             self.poll_voted_uniq.update({user.id: emoji})

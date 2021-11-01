@@ -52,13 +52,72 @@ class BotVars:
     bot_for_webhooks: Bot = None
 
 
+CODE_LETTERS = "QWERTYUPASFGHJKZXCVBNM23456789"
+
+
 @dataclass
 class Cross_platform_chat:
     enable_cross_platform_chat: Optional[bool] = None
     channel_id: Optional[int] = None
     webhook_url: Optional[str] = None
+
+
+@dataclass
+class Ip_address_of_user:
+    ip_address: str = ""
+    expires_on_stamp: Optional[int] = None
+    login_attempts: Optional[int] = None
+    code = ""
+    _code_expires_on_stamp = None
+
+    @property
+    def expires_on_date(self):
+        if self.expires_on_stamp is not None:
+            return datetime.fromtimestamp(self.expires_on_stamp)
+        else:
+            return None
+
+    @expires_on_date.setter
+    def expires_on_date(self, date: Optional[datetime]):
+        self.expires_on_stamp = int(date.timestamp()) if date is not None else None
+
+    @property
+    def code_expires_on_date(self):
+        if self._code_expires_on_stamp is not None:
+            return datetime.fromtimestamp(self._code_expires_on_stamp)
+        else:
+            return None
+
+    @code_expires_on_date.setter
+    def code_expires_on_date(self, date: Optional[datetime]):
+        self._code_expires_on_stamp = int(date.timestamp()) if date is not None else None
+
+
+@dataclass
+class Auth_user:
+    nick: str = ""
+    ip_addresses: List[Ip_address_of_user] = field(default_factory=list)
+
+
+@dataclass
+class Auth_users_list:
+    auth_users: List[Auth_user] = field(default_factory=list)
+
+
+@dataclass
+class Auth_security:
+    enable_auth_security: Optional[bool] = None
+    max_login_attempts: int = -1
+    days_before_ip_expires: int = -1
+    mins_before_code_expires: int = -1
+
+
+@dataclass
+class Server_watcher:
     refresh_delay_of_console_log: float = -1.0
     number_of_lines_to_check_in_console_log: int = 0
+    auth_security: Auth_security = Auth_security()
+    cross_platform_chat: Cross_platform_chat = Cross_platform_chat()
 
 
 @dataclass
@@ -147,7 +206,7 @@ class Bot_settings:
         self._vk_password = vk_password_decrypted
         self.vk_password_encrypted = None if vk_password_decrypted is None else encrypt_string(vk_password_decrypted)
 
-    cross_platform_chat: Cross_platform_chat = Cross_platform_chat()
+    server_watcher: Server_watcher = Server_watcher()
     rss_feed: Rss_feed = Rss_feed()
     backups: Backups = Backups()
     timeouts: Timeouts = Timeouts()
@@ -226,6 +285,8 @@ class Config:
     _current_bot_path: str = path.dirname(sys.argv[0])
     _config_name = "bot_config.yml"
     _settings_instance: Settings = Settings()
+    _auth_users_name = "auth_users.yml"
+    _auth_users_instance: Auth_users_list = Auth_users_list()
     _server_config_name = "server_config.yml"
     _server_config_instance: Server_config = Server_config()
     _op_log_name = "op.log"
@@ -239,6 +300,7 @@ class Config:
             cls._settings_instance = cls._load_from_yaml(Path(cls._current_bot_path, cls._config_name), Settings)
             file_exists = True
         cls._setup_config(file_exists)
+        cls.read_auth_users()
 
     @classmethod
     def save_config(cls):
@@ -268,8 +330,127 @@ class Config:
         return cls._settings_instance
 
     @classmethod
+    def get_server_watcher(cls) -> Server_watcher:
+        return cls._settings_instance.bot_settings.server_watcher
+
+    @classmethod
+    def get_auth_security(cls) -> Auth_security:
+        return cls._settings_instance.bot_settings.server_watcher.auth_security
+
+    @classmethod
+    def get_auth_users(cls) -> List[Auth_user]:
+        return cls._auth_users_instance.auth_users
+
+    @classmethod
+    def read_auth_users(cls):
+        fpath = Path(cls._current_bot_path, cls._auth_users_name)
+        if fpath.is_file():
+            cls._auth_users_instance = cls._load_from_yaml(fpath, Auth_users_list)
+        else:
+            cls._auth_users_instance = Auth_users_list()
+
+    @classmethod
+    def save_auth_users(cls):
+        cls._save_to_yaml(cls._auth_users_instance, Path(cls._current_bot_path, cls._auth_users_name))
+
+    @classmethod
+    def add_ip_address(cls, user_nick: str, ip_address: str, is_login_attempt: bool = False):
+        for i in range(len(cls.get_auth_users())):
+            if cls.get_auth_users()[i].nick == user_nick:
+                ip_addr = Ip_address_of_user(ip_address=ip_address)
+                if is_login_attempt:
+                    ip_addr.login_attempts = 1
+                    while True:
+                        ip_addr.code = "".join(sec_choice(CODE_LETTERS) for _ in range(6))
+                        if ip_addr.code not in [a.code for a in cls.get_auth_users()[i].ip_addresses]:
+                            break
+                    ip_addr.code_expires_on_date = \
+                        datetime.now() + dt.timedelta(minutes=Config.get_auth_security().mins_before_code_expires)
+                else:
+                    ip_addr.expires_on_date = datetime.now() + \
+                                              dt.timedelta(days=cls.get_auth_security().days_before_ip_expires)
+                cls.get_auth_users()[i].ip_addresses.append(ip_addr)
+                if is_login_attempt:
+                    return ip_addr.login_attempts, ip_addr.code
+                else:
+                    return None
+
+    @classmethod
+    def update_ip_address(cls, user_nick: str, ip_address: str, whitelist: bool = False):
+        is_login_attempt = False
+        for i in range(len(cls.get_auth_users())):
+            if cls.get_auth_users()[i].nick == user_nick:
+                for j in range(len(cls.get_auth_users()[i].ip_addresses)):
+                    if cls.get_auth_users()[i].ip_addresses[j].ip_address == ip_address:
+                        if not whitelist:
+                            if cls.get_auth_users()[i].ip_addresses[j].login_attempts is None:
+                                if cls.get_auth_users()[i].ip_addresses[j].expires_on_date is None or \
+                                        cls.get_auth_users()[i].ip_addresses[j].expires_on_date < datetime.now():
+                                    is_login_attempt = True
+                            else:
+                                is_login_attempt = True
+
+                        if is_login_attempt:
+                            if cls.get_auth_users()[i].ip_addresses[j].login_attempts is None:
+                                cls.get_auth_users()[i].ip_addresses[j].login_attempts = 0
+                            cls.get_auth_users()[i].ip_addresses[j].login_attempts += 1
+                            while True:
+                                code = "".join(sec_choice(CODE_LETTERS) for _ in range(6))
+                                if code not in [a.code for a in cls.get_auth_users()[i].ip_addresses]:
+                                    break
+                            cls.get_auth_users()[i].ip_addresses[j].code = code
+                            cls.get_auth_users()[i].ip_addresses[j].code_expires_on_date = \
+                                datetime.now() + \
+                                dt.timedelta(minutes=Config.get_auth_security().mins_before_code_expires)
+                            cls.get_auth_users()[i].ip_addresses[j].expires_on_date = None
+                            return cls.get_auth_users()[i].ip_addresses[j].login_attempts, \
+                                   cls.get_auth_users()[i].ip_addresses[j].code
+                        else:
+                            cls.get_auth_users()[i].ip_addresses[j].expires_on_date = \
+                                datetime.now() + dt.timedelta(days=cls.get_auth_security().days_before_ip_expires)
+                            cls.get_auth_users()[i].ip_addresses[j].login_attempts = None
+                            cls.get_auth_users()[i].ip_addresses[j].code = None
+                            cls.get_auth_users()[i].ip_addresses[j].code_expires_on_date = None
+                            return None, None
+
+    @classmethod
+    def remove_ip_address(cls, user_nicks: List[str], ip_address: str):
+        ip_info_to_delete = None
+        for i in range(len(cls.get_auth_users())):
+            if cls.get_auth_users()[i].nick in user_nicks:
+                for j in range(len(cls.get_auth_users()[i].ip_addresses)):
+                    if cls.get_auth_users()[i].ip_addresses[j].ip_address == ip_address:
+                        ip_info_to_delete = cls.get_auth_users()[i].ip_addresses[j]
+                        break
+                if ip_info_to_delete is not None:
+                    cls.get_auth_users()[i].ip_addresses.remove(ip_info_to_delete)
+                    if len(user_nicks) == 1:
+                        break
+
+    @classmethod
+    def get_users_ip_address_info(cls, user_nick: str, ip_address: str = None,
+                                  code: str = None) -> Optional[Ip_address_of_user]:
+        if ip_address is None and code is None:
+            return None
+        for user in cls.get_auth_users():
+            if user.nick == user_nick:
+                for ip_info in user.ip_addresses:
+                    if ip_address is not None and ip_info.ip_address == ip_address:
+                        return ip_info
+                    if code is not None and ip_info.code == code:
+                        return ip_info
+
+    @classmethod
+    def add_auth_user(cls, user_nick: str):
+        cls.get_auth_users().append(Auth_user(nick=user_nick))
+
+    @classmethod
+    def remove_auth_user(cls, user_nick: str):
+        cls.get_auth_users().remove([i for i in cls.get_auth_users() if i.nick == user_nick][0])
+
+    @classmethod
     def get_cross_platform_chat_settings(cls) -> Cross_platform_chat:
-        return cls._settings_instance.bot_settings.cross_platform_chat
+        return cls._settings_instance.bot_settings.server_watcher.cross_platform_chat
 
     @classmethod
     def get_rss_feed_settings(cls) -> Rss_feed:
@@ -320,10 +501,9 @@ class Config:
 
     @classmethod
     def read_server_config(cls):
-        if Path(cls.get_selected_server_from_list().working_directory, cls._server_config_name).is_file():
-            cls._server_config_instance = \
-                cls._load_from_yaml(Path(cls.get_selected_server_from_list().working_directory,
-                                         cls._server_config_name), Server_config)
+        fpath = Path(cls.get_selected_server_from_list().working_directory, cls._server_config_name)
+        if fpath.is_file():
+            cls._server_config_instance = cls._load_from_yaml(fpath, Server_config)
         else:
             cls._server_config_instance = Server_config()
 
@@ -523,7 +703,7 @@ class Config:
         cls._setup_commands_channel_id()
         cls._setup_default_number_of_times_to_op()
         cls._setup_vk_credentials()
-        cls._setup_cross_platform_chat()
+        cls._setup_server_watcher()
         cls._setup_rss_feed()
         cls._setup_timeouts()
         cls._setup_servers()
@@ -709,9 +889,9 @@ class Config:
             if cls._ask_for_data(
                     get_translation("Menu message id not found. Would you like to enter it?") + " Y/n\n> ", "y"):
                 cls._need_to_rewrite = True
-                cls._settings_instance.bot_settings.menu_id = cls._ask_for_data(
-                    get_translation("Enter menu message id") + "\n> ",
-                    try_int=True, int_high_than=0)
+                cls._settings_instance.bot_settings.menu_id = \
+                    cls._ask_for_data(get_translation("Enter menu message id") + "\n> ",
+                                      try_int=True, int_high_than=0)
             else:
                 print(get_translation("Menu via reactions wouldn't work. To make it work type "
                                       "'{0}menu' to create new menu and its id.").format(
@@ -772,7 +952,7 @@ class Config:
             cls._settings_instance.bot_settings.timeouts.await_seconds_when_opped = \
                 cls._ask_for_data(get_translation("Set timeout for op (0 - for unlimited timeout) (in seconds, int)") +
                                   "\n> ",
-                                  try_int=True, int_high_than=-1)
+                                  try_int=True, int_high_than=0)
         print(get_translation("Timeout for op set to {0} sec.")
               .format(str(cls._settings_instance.bot_settings.timeouts.await_seconds_when_opped)))
         if cls._settings_instance.bot_settings.timeouts.await_seconds_when_opped == 0:
@@ -798,7 +978,7 @@ class Config:
                 "Timeout before message deletion is set below 1. Change this option."))
             cls._settings_instance.bot_settings.timeouts.await_seconds_before_message_deletion = \
                 cls._ask_for_data(get_translation("Set timeout before message deletion (in seconds, int)") + "\n> ",
-                                  try_int=True, int_high_than=0)
+                                  try_int=True, int_high_than=1)
         print(get_translation("Timeout before message deletion is set to {0} sec.")
               .format(str(cls._settings_instance.bot_settings.timeouts.await_seconds_before_message_deletion)))
 
@@ -911,55 +1091,85 @@ class Config:
                 print(get_translation("This start file doesn't exist."))
 
     @classmethod
-    def _setup_cross_platform_chat(cls):
-        if cls._settings_instance.bot_settings.cross_platform_chat.enable_cross_platform_chat is None:
+    def _setup_server_watcher(cls):
+        if cls._settings_instance.bot_settings.server_watcher.refresh_delay_of_console_log <= 0.05:
+            print(get_translation("Watcher's delay to refresh doesn't set."))
+            print(get_translation("Note: If your machine has processor with frequency 2-2.5 GHz, "
+                                  "you have to set this option from '0.5' to '0.9' second "
+                                  "for the bot to work properly."))
+            cls._settings_instance.bot_settings.server_watcher.refresh_delay_of_console_log = \
+                cls._ask_for_data(get_translation("Set delay to refresh (in seconds, float)") + "\n> ",
+                                  try_float=True, float_high_than=0.05)
+
+        if cls._settings_instance.bot_settings.server_watcher.number_of_lines_to_check_in_console_log < 1:
+            print(get_translation("Watcher's number of lines to check in server log doesn't set."))
+            cls._settings_instance.bot_settings.server_watcher.number_of_lines_to_check_in_console_log = \
+                cls._ask_for_data(get_translation("Set number of lines to check") + "\n> ", try_int=True,
+                                  int_high_than=0)
+
+        if cls._settings_instance.bot_settings.server_watcher.cross_platform_chat.enable_cross_platform_chat is None:
             cls._need_to_rewrite = True
             if cls._ask_for_data(get_translation("Would you like to enable cross-platform chat?") + " Y/n\n> ",
                                  "y"):
-                cls._settings_instance.bot_settings.cross_platform_chat.enable_cross_platform_chat = True
+                cls._settings_instance.bot_settings.server_watcher.cross_platform_chat.enable_cross_platform_chat = True
 
-                if cls._settings_instance.bot_settings.cross_platform_chat.channel_id is None:
+                if cls._settings_instance.bot_settings.server_watcher.cross_platform_chat.channel_id is None:
                     if cls._ask_for_data(
                             get_translation("Channel id not found. Would you like to enter it?") + " Y/n\n> ",
                             "y"):
-                        cls._settings_instance.bot_settings.cross_platform_chat.channel_id = \
+                        cls._settings_instance.bot_settings.server_watcher.cross_platform_chat.channel_id = \
                             cls._ask_for_data(get_translation("Enter channel id") + "\n> ")
                     else:
                         print(get_translation("Cross-platform chat wouldn't work. "
                                               "To make it work type '{0}chat <id>' to create link.")
                               .format(cls._settings_instance.bot_settings.prefix))
 
-                if cls._settings_instance.bot_settings.cross_platform_chat.webhook_url is None:
+                if cls._settings_instance.bot_settings.server_watcher.cross_platform_chat.webhook_url is None:
                     if cls._ask_for_data(get_translation("Webhook url for cross-platform chat not found. "
                                                          "Would you like to enter it?") + " Y/n\n> ", "y"):
-                        cls._settings_instance.bot_settings.cross_platform_chat.webhook_url = \
+                        cls._settings_instance.bot_settings.server_watcher.cross_platform_chat.webhook_url = \
                             cls._ask_for_data(get_translation("Enter webhook url") + "\n> ")
                     else:
                         print(get_translation(
                             "Cross-platform chat wouldn't work. Create webhook and enter it to bot config!"))
-
-                if cls._settings_instance.bot_settings.cross_platform_chat.refresh_delay_of_console_log <= 0.05:
-                    print(get_translation("Watcher's delay to refresh doesn't set."))
-                    print(get_translation("Note: If your machine has processor with frequency 2-2.5 GHz, "
-                                          "you have to set this option from '0.5' to '0.9' second "
-                                          "for the bot to work properly."))
-                    cls._settings_instance.bot_settings.cross_platform_chat.refresh_delay_of_console_log = \
-                        cls._ask_for_data(get_translation("Set delay to refresh (in seconds, float)") + "\n> ",
-                                          try_float=True, float_high_than=0.05)
-
-                if cls._settings_instance.bot_settings.cross_platform_chat.number_of_lines_to_check_in_console_log < 1:
-                    print(get_translation("Watcher's number of lines to check in server log doesn't set."))
-                    cls._settings_instance.bot_settings.cross_platform_chat.number_of_lines_to_check_in_console_log = \
-                        cls._ask_for_data(get_translation("Set number of lines to check") + "\n> ", try_int=True,
-                                          int_high_than=0)
             else:
-                cls._settings_instance.bot_settings.cross_platform_chat.enable_cross_platform_chat = False
+                cls._settings_instance.bot_settings.server_watcher.cross_platform_chat.enable_cross_platform_chat = False
                 print(get_translation("Cross-platform chat wouldn't work."))
 
-        if cls._settings_instance.bot_settings.cross_platform_chat.enable_cross_platform_chat:
+        if cls._settings_instance.bot_settings.server_watcher.cross_platform_chat.enable_cross_platform_chat:
             print(get_translation("Cross-platform chat enabled."))
         else:
             print(get_translation("Cross-platform chat disabled."))
+
+        if cls._settings_instance.bot_settings.server_watcher.auth_security.enable_auth_security is None:
+            cls._need_to_rewrite = True
+            if cls._ask_for_data(get_translation("Would you like to enable authorization security?") + " Y/n\n> ",
+                                 "y"):
+                cls._settings_instance.bot_settings.server_watcher.auth_security.enable_auth_security = True
+            else:
+                cls._settings_instance.bot_settings.server_watcher.auth_security.enable_auth_security = False
+                print(get_translation("Authorization security disabled."))
+        if cls._settings_instance.bot_settings.server_watcher.auth_security.max_login_attempts < 1:
+            cls._need_to_rewrite = True
+            cls._settings_instance.bot_settings.server_watcher.auth_security.max_login_attempts = \
+                cls._ask_for_data(get_translation("Enter how many attempts bot will opens from "
+                                                  "a certain IP address before it bans this IP") + "\n> ",
+                                  try_int=True, int_high_than=1)
+        if cls._settings_instance.bot_settings.server_watcher.auth_security.days_before_ip_expires < 1:
+            cls._need_to_rewrite = True
+            cls._settings_instance.bot_settings.server_watcher.auth_security.days_before_ip_expires = \
+                cls._ask_for_data(get_translation("Enter how many days IP address will be valid before it expires") +
+                                  "\n> ", try_int=True, int_high_than=1)
+        if cls._settings_instance.bot_settings.server_watcher.auth_security.mins_before_code_expires < 1:
+            cls._need_to_rewrite = True
+            cls._settings_instance.bot_settings.server_watcher.auth_security.mins_before_code_expires = \
+                cls._ask_for_data(get_translation("Enter how many minutes code will be valid before it expires") +
+                                  "\n> ", try_int=True, int_high_than=1)
+
+        if cls._settings_instance.bot_settings.server_watcher.auth_security.enable_auth_security:
+            print(get_translation("Authorization security enabled."))
+        else:
+            print(get_translation("Authorization security disabled."))
 
     @classmethod
     def _setup_rss_feed(cls):
