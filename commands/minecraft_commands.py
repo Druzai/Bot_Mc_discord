@@ -698,20 +698,22 @@ class MinecraftCommands(commands.Cog):
                     return
 
                 if await self._IndPoll.timer(ctx, 5, "backup_del"):
-                    if not await self._IndPoll.run(ctx=ctx,
-                                                   message=get_translation(
-                                                       "this man {0} trying to delete {1} backup by {2} of '{3}' "
-                                                       "server. Will you let that happen?")
-                                                           .format(ctx.author.mention,
-                                                                   Config.get_server_config().backups[
-                                                                       backup_number - 1].file_name + ".zip",
-                                                                   Config.get_server_config().backups[
-                                                                       backup_number - 1].initiator,
-                                                                   Config.get_selected_server_from_list().server_name),
-                                                   command="backup_del",
-                                                   needed_role=Config.get_settings().bot_settings.role,
-                                                   need_for_voting=get_half_members_count_with_role(self._bot),
-                                                   remove_logs_after=5):
+                    if not await self._IndPoll. \
+                            run(ctx=ctx,
+                                message=get_translation(
+                                    "this man {0} trying to delete {1} backup by {2} of '{3}' "
+                                    "server. Will you let that happen?")
+                                        .format(ctx.author.mention,
+                                                Config.get_server_config().backups[
+                                                    backup_number - 1].file_name + ".zip",
+                                                Config.get_server_config().backups[
+                                                    backup_number - 1].initiator,
+                                                Config.get_selected_server_from_list().server_name),
+                                command="backup_del",
+                                needed_role=Config.get_settings().bot_settings.role,
+                                need_for_voting=get_half_members_count_with_role(self._bot,
+                                                                                 Config.get_settings().bot_settings.role),
+                                remove_logs_after=5):
                         return
                 else:
                     await delete_after_by_msg(ctx.message)
@@ -747,16 +749,18 @@ class MinecraftCommands(commands.Cog):
             return
 
         if await self._IndPoll.timer(ctx, 5, "backup_del_all"):
-            if not await self._IndPoll.run(ctx=ctx,
-                                           message=get_translation(
-                                               "this man {0} trying to delete all backups of '{1}' server. "
-                                               "Will you let that happen?")
-                                                   .format(ctx.author.mention,
-                                                           Config.get_selected_server_from_list().server_name),
-                                           command="backup_del_all",
-                                           needed_role=Config.get_settings().bot_settings.role,
-                                           need_for_voting=get_half_members_count_with_role(self._bot),
-                                           remove_logs_after=5):
+            if not await self._IndPoll. \
+                    run(ctx=ctx,
+                        message=get_translation(
+                            "this man {0} trying to delete all backups of '{1}' server. "
+                            "Will you let that happen?")
+                                .format(ctx.author.mention,
+                                        Config.get_selected_server_from_list().server_name),
+                        command="backup_del_all",
+                        needed_role=Config.get_settings().bot_settings.role,
+                        need_for_voting=get_half_members_count_with_role(self._bot,
+                                                                         Config.get_settings().bot_settings.role),
+                        remove_logs_after=5):
                 return
         else:
             await delete_after_by_msg(ctx.message)

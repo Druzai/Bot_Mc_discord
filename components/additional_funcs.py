@@ -630,12 +630,12 @@ async def warn_about_auto_backups(ctx, bot: commands.Bot):
                            .format(Config.get_selected_server_from_list().server_name))
 
 
-def get_half_members_count_with_role(bot: commands.Bot):
+def get_half_members_count_with_role(bot: commands.Bot, role: str):
     count = 0
     for m in bot.guilds[0].members:
         if not m.bot and m.status != Status.offline:
-            if Config.get_settings().bot_settings.role:
-                if Config.get_settings().bot_settings.role in (e.name for e in m.roles):
+            if role:
+                if role in (e.name for e in m.roles):
                     count += 1
             else:
                 count += 1
