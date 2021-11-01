@@ -205,39 +205,43 @@ class MinecraftCommands(commands.Cog):
         syntax: Nick_Discord +=/-= Nick_minecraft
         """
         comm_operators = ["+=", "-="]
-        if discord_mention.startswith("<@!"):
-            need_to_save = False
-            try:
-                discord_id = int(discord_mention[3:-1])
-            except ValueError:
-                await ctx.send(get_translation("Wrong 1-st argument used!"))
-                return
-            if assoc_command == comm_operators[0]:
-                if minecraft_nick in [u.user_minecraft_nick for u in Config.get_known_users_list()] and \
-                        discord_id in [u.user_discord_id for u in Config.get_known_users_list()
-                                       if u.user_minecraft_nick == minecraft_nick]:
-                    await ctx.send(get_translation("Existing `mention to nick` link!"))
-                else:
-                    need_to_save = True
-                    Config.add_to_known_users_list(minecraft_nick, discord_id)
-                    await ctx.send(get_translation("Now {0} associates with nick in minecraft {1}")
-                                   .format(discord_mention, minecraft_nick))
-            elif assoc_command == comm_operators[1]:
-                if minecraft_nick in [u.user_minecraft_nick for u in Config.get_known_users_list()] and \
-                        discord_id in [u.user_discord_id for u in Config.get_known_users_list()]:
-                    need_to_save = True
-                    Config.remove_from_known_users_list(minecraft_nick, discord_id)
-                    await ctx.send(get_translation("Now link {0} -> {1} do not exist!")
-                                   .format(discord_mention, minecraft_nick))
-                else:
-                    await ctx.send(get_translation("Doesn't have `mention to nick` link already!"))
-            else:
-                await ctx.send(get_translation("Wrong command syntax! Right example: `{0}assoc @me +=/-= My_nick`.")
-                               .format(Config.get_settings().bot_settings.prefix))
-            if need_to_save:
-                Config.save_config()
-        else:
+        if not discord_mention.startswith("<@!"):
             await ctx.send(get_translation("Wrong 1-st argument! You can mention ONLY members of this server."))
+            return
+        need_to_save = False
+        try:
+            discord_id = int(discord_mention[3:-1])
+        except ValueError:
+            await ctx.send(get_translation("Wrong 1-st argument used!"))
+            return
+        if assoc_command not in comm_operators:
+            await ctx.send(get_translation("Wrong command syntax! Right example: `{0}assoc @me +=/-= My_nick`.")
+                           .format(Config.get_settings().bot_settings.prefix))
+            return
+
+        if assoc_command == comm_operators[0]:
+            if minecraft_nick in [u.user_minecraft_nick for u in Config.get_known_users_list()]:
+                associated_member = [u.user_discord_id for u in Config.get_known_users_list()
+                                     if u.user_minecraft_nick == minecraft_nick][0]
+                associated_member = await self._bot.guilds[0].fetch_member(associated_member)
+                await ctx.send(get_translation("This nick is already associated with {0}.")
+                               .format(associated_member.mention))
+            else:
+                need_to_save = True
+                Config.add_to_known_users_list(minecraft_nick, discord_id)
+                await ctx.send(get_translation("Now {0} associates with nick in minecraft {1}.")
+                               .format(discord_mention, minecraft_nick))
+        else:
+            if minecraft_nick in [u.user_minecraft_nick for u in Config.get_known_users_list()] and \
+                    discord_id in [u.user_discord_id for u in Config.get_known_users_list()]:
+                need_to_save = True
+                Config.remove_from_known_users_list(minecraft_nick, discord_id)
+                await ctx.send(get_translation("Now link {0} -> {1} do not exist!")
+                               .format(discord_mention, minecraft_nick))
+            else:
+                await ctx.send(get_translation("Bot don't have `mention to nick` link already!"))
+        if need_to_save:
+            Config.save_config()
 
     @commands.group(pass_context=True, invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -346,9 +350,9 @@ class MinecraftCommands(commands.Cog):
             else get_translation("Authorization off")
         msg += "\n" + get_translation("Max number of login attempts set to {0}") \
             .format(Config.get_auth_security().max_login_attempts)
-        msg += "\n" + get_translation("Days before IP expires - {0}")\
+        msg += "\n" + get_translation("Days before IP expires - {0}") \
             .format(Config.get_auth_security().days_before_ip_expires)
-        msg += "\n" + get_translation("Minutes before code expires - {0}")\
+        msg += "\n" + get_translation("Minutes before code expires - {0}") \
             .format(Config.get_auth_security().mins_before_code_expires)
 
         msg += "\n\n" + get_translation("Information about authorized users:") + "\n"
