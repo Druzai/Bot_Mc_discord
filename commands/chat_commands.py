@@ -4,7 +4,7 @@ from random import choice, randint
 from typing import Union
 
 import discord
-from discord import Activity, ActivityType, Role, Member, InvalidData, HTTPException, NotFound, Forbidden
+from discord import Activity, ActivityType, Role, Member, InvalidData, HTTPException, NotFound, Forbidden, DMChannel
 from discord.ext import commands, tasks
 from vk_api import VkApi
 from vk_api.exceptions import ApiError, Captcha
@@ -13,7 +13,7 @@ from commands.poll import Poll
 from components import decorators
 from components.additional_funcs import (
     handle_message_for_chat, send_error, bot_clear, add_quotes, parse_params_for_help, send_help_of_command,
-    parse_subcommands_for_help, find_subcommand, make_underscored_line, create_webhooks
+    parse_subcommands_for_help, find_subcommand, make_underscored_line, create_webhooks, bot_dm_clear
 )
 from components.localization import get_translation, get_locales, set_locale, get_current_locale
 from components.rss_feed_handle import *
@@ -375,26 +375,35 @@ class ChatCommands(commands.Cog):
             await ctx.send(embed=emb)
 
     @commands.group(pass_context=True, aliases=["cls"], invoke_without_command=True)
-    @commands.bot_has_permissions(manage_messages=True, send_messages=True, mention_everyone=True, add_reactions=True,
-                                  embed_links=True, read_message_history=True, view_channel=True)
-    @commands.guild_only()
+    @decorators.bot_has_permissions_with_dm(manage_messages=True, send_messages=True, mention_everyone=True,
+                                            add_reactions=True, embed_links=True, read_message_history=True,
+                                            view_channel=True)
     async def clear(self, ctx, count: int = 1, mentions: commands.Greedy[Union[Member, Role]] = None):
-        await bot_clear(ctx, self._IndPoll, count=count, discord_mentions=mentions)
+        if not isinstance(ctx.channel, DMChannel):
+            await bot_clear(ctx, self._IndPoll, count=count, discord_mentions=mentions)
+        else:
+            await bot_dm_clear(ctx, self._bot, count=count)
 
     @clear.command(pass_context=True, name="all")
-    @commands.bot_has_permissions(manage_messages=True, send_messages=True, mention_everyone=True, add_reactions=True,
-                                  embed_links=True, read_message_history=True, view_channel=True)
-    @commands.guild_only()
+    @decorators.bot_has_permissions_with_dm(manage_messages=True, send_messages=True, mention_everyone=True,
+                                            add_reactions=True, embed_links=True, read_message_history=True,
+                                            view_channel=True)
     async def c_all(self, ctx, mentions: commands.Greedy[Union[Member, Role]] = None):
-        await bot_clear(ctx, self._IndPoll, subcommand="all", discord_mentions=mentions)
+        if not isinstance(ctx.channel, DMChannel):
+            await bot_clear(ctx, self._IndPoll, subcommand="all", discord_mentions=mentions)
+        else:
+            await bot_dm_clear(ctx, self._bot, subcommand="all")
 
     @clear.command(pass_context=True, name="reply")
-    @commands.bot_has_permissions(manage_messages=True, send_messages=True, mention_everyone=True, add_reactions=True,
-                                  embed_links=True, read_message_history=True, view_channel=True)
-    @commands.guild_only()
+    @decorators.bot_has_permissions_with_dm(manage_messages=True, send_messages=True, mention_everyone=True,
+                                            add_reactions=True, embed_links=True, read_message_history=True,
+                                            view_channel=True)
     async def c_reply(self, ctx, mentions: commands.Greedy[Union[Member, Role]] = None):
         if ctx.message.reference is not None:
-            await bot_clear(ctx, self._IndPoll, subcommand="reply", discord_mentions=mentions)
+            if not isinstance(ctx.channel, DMChannel):
+                await bot_clear(ctx, self._IndPoll, subcommand="reply", discord_mentions=mentions)
+            else:
+                await bot_dm_clear(ctx, self._bot, subcommand="reply")
         else:
             await ctx.send(get_translation("You didn't provide reply in your message!"))
 

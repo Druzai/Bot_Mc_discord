@@ -20,7 +20,7 @@ from time import sleep
 from typing import Tuple, List
 from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 
-from discord import Activity, ActivityType, TextChannel, Message, Status, Member, Role
+from discord import Activity, ActivityType, TextChannel, Message, Status, Member, Role, MessageType
 from discord.ext import commands
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r
@@ -865,6 +865,23 @@ async def bot_clear(ctx, poll: Poll, subcommand: str = None, count: int = None, 
                 await ctx.channel.purge(limit=count, check=check_condition, bulk=False)
     else:
         await delete_after_by_msg(ctx.message)
+
+
+async def bot_dm_clear(ctx, bot: commands.Bot, subcommand: str = None, count: int = None):
+    message_created = None
+    if count is not None:
+        count += 1
+    if subcommand is None:
+        if count < 0:
+            message_created = (await ctx.channel.history(limit=-count, oldest_first=True).flatten())[-1]
+        else:
+            await send_msg(ctx, get_translation("Nothing's done!"), True)
+    elif subcommand == "reply":
+        message_created = ctx.message.reference.resolved
+
+    async for msg in ctx.channel.history(limit=count, after=message_created):
+        if msg.author == bot.user and msg.type == MessageType.default:
+            await msg.delete()
 
 
 async def bot_backup(ctx, is_reaction=False):
