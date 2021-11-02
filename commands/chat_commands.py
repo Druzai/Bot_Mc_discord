@@ -58,18 +58,18 @@ class ChatCommands(commands.Cog):
     @decorators.has_role_or_default()
     async def channel(self, ctx):
         try:
-            msg = get_translation("Channel `{0}` set to minecraft cross-platform chat!") \
-                .format((await self._bot.fetch_channel(Config.get_cross_platform_chat_settings().channel_id)).name)
+            msg = get_translation("Channel {0} set to minecraft cross-platform chat!") \
+                .format((await self._bot.fetch_channel(Config.get_cross_platform_chat_settings().channel_id)).mention)
         except (InvalidData, HTTPException, NotFound, Forbidden):
             msg = get_translation("Channel for minecraft cross-platform chat is not found or unreachable!")
         msg += "\n"
         try:
-            msg += get_translation("Channel `{0}` set as commands' channel for bot!") \
+            msg += get_translation("Channel {0} set as commands' channel for bot!") \
                 .format((await self._bot.fetch_channel(Config.get_settings()
-                                                       .bot_settings.commands_channel_id)).name)
+                                                       .bot_settings.commands_channel_id)).mention)
         except (InvalidData, HTTPException, NotFound, Forbidden):
             msg += get_translation("Channel for bot commands is not found or unreachable!")
-        await ctx.channel.send(add_quotes(msg))
+        await ctx.channel.send(msg)
 
     @channel.command(pass_context=True, name="chat")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -98,8 +98,9 @@ class ChatCommands(commands.Cog):
         if channel_set:
             Config.save_config()
             await ctx.channel.send(
-                get_translation("Channel `{0}` set to minecraft cross-platform chat!")
-                    .format((await self._bot.fetch_channel(Config.get_cross_platform_chat_settings().channel_id)).name))
+                get_translation("Channel {0} set to minecraft cross-platform chat!")
+                    .format((await self._bot.fetch_channel(Config.get_cross_platform_chat_settings()
+                                                           .channel_id)).mention))
         else:
             await ctx.channel.send(get_translation("You entered wrong argument!"))
 
@@ -125,9 +126,9 @@ class ChatCommands(commands.Cog):
 
         if channel_set:
             Config.save_config()
-            await ctx.channel.send(get_translation("Channel `{0}` set as commands' channel for bot!")
+            await ctx.channel.send(get_translation("Channel {0} set as commands' channel for bot!")
                                    .format((await self._bot.fetch_channel(Config.get_settings()
-                                                                          .bot_settings.commands_channel_id)).name))
+                                                                          .bot_settings.commands_channel_id)).mention))
         else:
             await ctx.channel.send(get_translation("You entered wrong argument!"))
 
