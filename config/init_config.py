@@ -105,7 +105,7 @@ class Auth_users_list:
 
 
 @dataclass
-class Auth_security:
+class Secure_authorization:
     enable_auth_security: Optional[bool] = None
     max_login_attempts: int = -1
     days_before_ip_expires: int = -1
@@ -116,7 +116,7 @@ class Auth_security:
 class Server_watcher:
     refresh_delay_of_console_log: float = -1.0
     number_of_lines_to_check_in_console_log: int = 0
-    auth_security: Auth_security = Auth_security()
+    secure_auth: Secure_authorization = Secure_authorization()
     cross_platform_chat: Cross_platform_chat = Cross_platform_chat()
 
 
@@ -334,8 +334,8 @@ class Config:
         return cls._settings_instance.bot_settings.server_watcher
 
     @classmethod
-    def get_auth_security(cls) -> Auth_security:
-        return cls._settings_instance.bot_settings.server_watcher.auth_security
+    def get_secure_auth(cls) -> Secure_authorization:
+        return cls._settings_instance.bot_settings.server_watcher.secure_auth
 
     @classmethod
     def get_auth_users(cls) -> List[Auth_user]:
@@ -365,10 +365,10 @@ class Config:
                         if ip_addr.code not in [a.code for a in cls.get_auth_users()[i].ip_addresses]:
                             break
                     ip_addr.code_expires_on_date = \
-                        datetime.now() + dt.timedelta(minutes=Config.get_auth_security().mins_before_code_expires)
+                        datetime.now() + dt.timedelta(minutes=Config.get_secure_auth().mins_before_code_expires)
                 else:
                     ip_addr.expires_on_date = datetime.now() + \
-                                              dt.timedelta(days=cls.get_auth_security().days_before_ip_expires)
+                                              dt.timedelta(days=cls.get_secure_auth().days_before_ip_expires)
                 cls.get_auth_users()[i].ip_addresses.append(ip_addr)
                 if is_login_attempt:
                     return ip_addr.login_attempts, ip_addr.code
@@ -401,13 +401,13 @@ class Config:
                             cls.get_auth_users()[i].ip_addresses[j].code = code
                             cls.get_auth_users()[i].ip_addresses[j].code_expires_on_date = \
                                 datetime.now() + \
-                                dt.timedelta(minutes=Config.get_auth_security().mins_before_code_expires)
+                                dt.timedelta(minutes=Config.get_secure_auth().mins_before_code_expires)
                             cls.get_auth_users()[i].ip_addresses[j].expires_on_date = None
                             return cls.get_auth_users()[i].ip_addresses[j].login_attempts, \
                                    cls.get_auth_users()[i].ip_addresses[j].code
                         else:
                             cls.get_auth_users()[i].ip_addresses[j].expires_on_date = \
-                                datetime.now() + dt.timedelta(days=cls.get_auth_security().days_before_ip_expires)
+                                datetime.now() + dt.timedelta(days=cls.get_secure_auth().days_before_ip_expires)
                             cls.get_auth_users()[i].ip_addresses[j].login_attempts = None
                             cls.get_auth_users()[i].ip_addresses[j].code = None
                             cls.get_auth_users()[i].ip_addresses[j].code_expires_on_date = None
@@ -1141,31 +1141,31 @@ class Config:
         else:
             print(get_translation("Cross-platform chat disabled."))
 
-        if cls._settings_instance.bot_settings.server_watcher.auth_security.enable_auth_security is None:
+        if cls._settings_instance.bot_settings.server_watcher.secure_auth.enable_auth_security is None:
             cls._need_to_rewrite = True
             if cls._ask_for_data(get_translation("Would you like to enable authorization security?") + " Y/n\n> ",
                                  "y"):
-                cls._settings_instance.bot_settings.server_watcher.auth_security.enable_auth_security = True
+                cls._settings_instance.bot_settings.server_watcher.secure_auth.enable_auth_security = True
             else:
-                cls._settings_instance.bot_settings.server_watcher.auth_security.enable_auth_security = False
-        if cls._settings_instance.bot_settings.server_watcher.auth_security.max_login_attempts < 1:
+                cls._settings_instance.bot_settings.server_watcher.secure_auth.enable_auth_security = False
+        if cls._settings_instance.bot_settings.server_watcher.secure_auth.max_login_attempts < 1:
             cls._need_to_rewrite = True
-            cls._settings_instance.bot_settings.server_watcher.auth_security.max_login_attempts = \
+            cls._settings_instance.bot_settings.server_watcher.secure_auth.max_login_attempts = \
                 cls._ask_for_data(get_translation("Enter how many attempts bot will accept connection from "
                                                   "a certain IP address before it bans this IP") + "\n> ",
                                   try_int=True, int_high_than=1)
-        if cls._settings_instance.bot_settings.server_watcher.auth_security.days_before_ip_expires < 1:
+        if cls._settings_instance.bot_settings.server_watcher.secure_auth.days_before_ip_expires < 1:
             cls._need_to_rewrite = True
-            cls._settings_instance.bot_settings.server_watcher.auth_security.days_before_ip_expires = \
+            cls._settings_instance.bot_settings.server_watcher.secure_auth.days_before_ip_expires = \
                 cls._ask_for_data(get_translation("Enter how many days IP address will be valid before it expires") +
                                   "\n> ", try_int=True, int_high_than=1)
-        if cls._settings_instance.bot_settings.server_watcher.auth_security.mins_before_code_expires < 1:
+        if cls._settings_instance.bot_settings.server_watcher.secure_auth.mins_before_code_expires < 1:
             cls._need_to_rewrite = True
-            cls._settings_instance.bot_settings.server_watcher.auth_security.mins_before_code_expires = \
+            cls._settings_instance.bot_settings.server_watcher.secure_auth.mins_before_code_expires = \
                 cls._ask_for_data(get_translation("Enter how many minutes code will be valid before it expires") +
                                   "\n> ", try_int=True, int_high_than=1)
 
-        if cls._settings_instance.bot_settings.server_watcher.auth_security.enable_auth_security:
+        if cls._settings_instance.bot_settings.server_watcher.secure_auth.enable_auth_security:
             print(get_translation("Secure authorization enabled."))
         else:
             print(get_translation("Secure authorization disabled."))

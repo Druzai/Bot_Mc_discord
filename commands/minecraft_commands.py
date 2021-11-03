@@ -353,14 +353,14 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     async def auth(self, ctx):
-        msg = get_translation("Secure authorization on") if Config.get_auth_security().enable_auth_security \
+        msg = get_translation("Secure authorization on") if Config.get_secure_auth().enable_auth_security \
             else get_translation("Secure authorization off")
         msg += "\n" + get_translation("Max number of login attempts - {0}") \
-            .format(Config.get_auth_security().max_login_attempts)
+            .format(Config.get_secure_auth().max_login_attempts)
         msg += "\n" + get_translation("Session expiration time in days - {0}") \
-            .format(Config.get_auth_security().days_before_ip_expires)
+            .format(Config.get_secure_auth().days_before_ip_expires)
         msg += "\n" + get_translation("Сode expiration time in minutes - {0}") \
-            .format(Config.get_auth_security().mins_before_code_expires)
+            .format(Config.get_secure_auth().mins_before_code_expires)
 
         msg += "\n\n" + get_translation("Information about authorized users:") + "\n"
         if len(Config.get_auth_users()) == 0:
@@ -383,7 +383,7 @@ class MinecraftCommands(commands.Cog):
     @commands.guild_only()
     @decorators.has_admin_role()
     async def a_on(self, ctx):
-        Config.get_auth_security().enable_auth_security = True
+        Config.get_secure_auth().enable_auth_security = True
         Config.save_config()
         await ctx.send(add_quotes(get_translation("Secure authorization on")))
 
@@ -392,7 +392,7 @@ class MinecraftCommands(commands.Cog):
     @commands.guild_only()
     @decorators.has_admin_role()
     async def a_off(self, ctx):
-        Config.get_auth_security().enable_auth_security = False
+        Config.get_secure_auth().enable_auth_security = False
         Config.save_config()
         await ctx.send(add_quotes(get_translation("Secure authorization off")))
 
@@ -400,7 +400,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @decorators.has_role_or_default()
     async def a_login(self, ctx, nick: str, code: str):
-        if not Config.get_auth_security().enable_auth_security:
+        if not Config.get_secure_auth().enable_auth_security:
             await ctx.send(add_quotes(get_translation("Secure authorization is disabled. Enable it to proceed!")))
             return
         code = code.upper()
@@ -488,7 +488,7 @@ class MinecraftCommands(commands.Cog):
     @commands.guild_only()
     @decorators.has_role_or_default()
     async def a_revoke(self, ctx, ip: ip_address, nick: str = None):
-        if not Config.get_auth_security().enable_auth_security:
+        if not Config.get_secure_auth().enable_auth_security:
             await ctx.send(add_quotes(get_translation("Secure authorization is disabled. Enable it to proceed!")))
             return
 
@@ -541,7 +541,7 @@ class MinecraftCommands(commands.Cog):
     @commands.guild_only()
     @decorators.has_admin_role()
     async def a_r_all(self, ctx):
-        if not Config.get_auth_security().enable_auth_security:
+        if not Config.get_secure_auth().enable_auth_security:
             await ctx.send(add_quotes(get_translation("Secure authorization is disabled. Enable it to proceed!")))
             return
 

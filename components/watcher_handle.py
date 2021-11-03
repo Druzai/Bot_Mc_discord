@@ -99,7 +99,7 @@ def create_chat_webhook():
 
 def _check_log_file(file: Path, last_line: str = None):
     if Config.get_cross_platform_chat_settings().channel_id is None and \
-            not Config.get_auth_security().enable_auth_security:
+            not Config.get_secure_auth().enable_auth_security:
         return
 
     last_lines = _get_last_n_lines(file, Config.get_server_watcher().number_of_lines_to_check_in_console_log, last_line)
@@ -107,7 +107,7 @@ def _check_log_file(file: Path, last_line: str = None):
         return last_line
 
     if last_line is None:
-        if Config.get_auth_security().enable_auth_security:
+        if Config.get_secure_auth().enable_auth_security:
             last_lines = last_lines[-5:]
         else:
             last_lines = last_lines[-2:]
@@ -267,7 +267,7 @@ def _check_log_file(file: Path, last_line: str = None):
 
                 BotVars.webhook_chat.send(player_message, username=player_nick, avatar_url=player_url_pic)
 
-        if Config.get_auth_security().enable_auth_security:
+        if Config.get_secure_auth().enable_auth_security:
             from components.additional_funcs import connect_rcon, add_quotes
             if search(r"INFO", line) and "*" not in split(r"[\w ]+\[/\d+\.\d+\.\d+\.\d+:\d+]", line)[0] and \
                     search(r": [\w ]+\[/\d+\.\d+\.\d+\.\d+:\d+] logged in with entity id \d+ at", line):
@@ -282,7 +282,7 @@ def _check_log_file(file: Path, last_line: str = None):
                 else:
                     user_attempts, code = Config.add_ip_address(nick, ip_address, is_login_attempt=True)
                 if code is not None and user_attempts is not None:
-                    if user_attempts >= Config.get_auth_security().max_login_attempts + 1:
+                    if user_attempts >= Config.get_secure_auth().max_login_attempts + 1:
                         with suppress(ConnectionError, socket.error):
                             with connect_rcon() as cl_r:
                                 cl_r.run(f"ban-ip {ip_address} " +
@@ -306,12 +306,12 @@ def _check_log_file(file: Path, last_line: str = None):
                         msg = get_translation("Connection attempt detected!\nNick: {0}\n"
                                               "IP: {1}\nConnection attempts: {2}\nTime: {3}") \
                             .format(nick, ip_address,
-                                    f"{user_attempts}/{Config.get_auth_security().max_login_attempts}",
+                                    f"{user_attempts}/{Config.get_secure_auth().max_login_attempts}",
                                     datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
                         msg = add_quotes(msg) + "\n"
                         msg += get_translation("To proceed enter command `{0}` within {1} min") \
                             .format(f"{Config.get_settings().bot_settings.prefix}auth login <nick> <code>",
-                                    Config.get_auth_security().mins_before_code_expires)
+                                    Config.get_secure_auth().mins_before_code_expires)
                         if member is not None:
                             BotVars.bot_for_webhooks.loop.create_task(member.send(msg))
                         else:

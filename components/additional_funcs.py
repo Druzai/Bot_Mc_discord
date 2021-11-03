@@ -157,7 +157,7 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
             break
     if (Config.get_cross_platform_chat_settings().enable_cross_platform_chat and
         Config.get_cross_platform_chat_settings().channel_id and
-        Config.get_cross_platform_chat_settings().webhook_url) or Config.get_auth_security().enable_auth_security:
+        Config.get_cross_platform_chat_settings().webhook_url) or Config.get_secure_auth().enable_auth_security:
         create_watcher()
         BotVars.watcher_of_log_file.start()
     if Config.get_selected_server_from_list().server_loading_time:
@@ -663,7 +663,7 @@ async def server_checkups(bot: commands.Bot):
                 ((Config.get_cross_platform_chat_settings().enable_cross_platform_chat and
                   Config.get_cross_platform_chat_settings().channel_id and
                   Config.get_cross_platform_chat_settings().webhook_url) or
-                 Config.get_auth_security().enable_auth_security):
+                 Config.get_secure_auth().enable_auth_security):
             if BotVars.watcher_of_log_file is None:
                 create_watcher()
             BotVars.watcher_of_log_file.start()
