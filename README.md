@@ -18,6 +18,8 @@
     * Restart the server
     * Get info about players on the server
     * Work with server whitelist
+    * Secure authorization
+        * **Can't guarantee tight security when nickname has spaces**
     * Autoload if the minecraft server crashes
     * Auto backup at specified intervals and forced backup by member
         * Auto deleting backup(s) if backup's limit or space exceeded
@@ -25,6 +27,8 @@
 * Changing minecraft servers on the go while server is down
 * Setting an optional role. If set then the bot commands for managing the minecraft server will require this role from
   the member
+* Setting an optional admin role. If set then commands that interacts with minecraft server commands will execute if
+  member has admin role. Otherwise, member must have `Administrator` permission.
 * Creating optional cross-platform chat between discord text channel and minecraft server via bot and webhook
     * Supported mentions in discord and minecraft (also for better recognition you can create list of associations
       between discord member and minecraft nick)
