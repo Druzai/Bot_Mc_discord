@@ -561,7 +561,7 @@ class Config:
         filepath = Path(cls.get_selected_server_from_list().working_directory, "server.properties")
         if not filepath.exists():
             raise RuntimeError(get_translation("File '{0}' doesn't exist! "
-                                               "Run minecraft server manually to create one and accept eula!")
+                                               "Run Minecraft server manually to create one and accept eula!")
                                .format(filepath.as_posix()))
         BotVars.port_query = None
         BotVars.port_rcon = None
@@ -570,7 +570,7 @@ class Config:
             lines = f.readlines()
             if len(lines) < 3:
                 raise RuntimeError(get_translation("File '{0}' doesn't have any parameters! Accept eula and "
-                                                   "run minecraft server manually to fill it with parameters!")
+                                                   "run Minecraft server manually to fill it with parameters!")
                                    .format(filepath.as_posix()))
             for i in lines:
                 if i.find("enable-query") >= 0:
@@ -986,10 +986,10 @@ class Config:
     def _setup_servers(cls):
         if not 0 < cls._settings_instance.selected_server_number <= len(cls._settings_instance.servers_list):
             cls._settings_instance.selected_server_number = 1
-            print(get_translation("Selected minecraft server number is out of range! Bot set it to '1'."))
+            print(get_translation("Selected Minecraft server number is out of range! Bot set it to '1'."))
             cls._need_to_rewrite = True
         if not cls._settings_instance.ask_to_change_servers_list:
-            print(get_translation("Selected minecraft server dir set to path '{0}' also known as '{1}'.")
+            print(get_translation("Selected Minecraft server dir set to path '{0}' also known as '{1}'.")
                   .format(cls.get_selected_server_from_list().working_directory,
                           cls.get_selected_server_from_list().server_name))
             return
@@ -1016,7 +1016,7 @@ class Config:
                     cls._settings_instance.servers_list.remove(server)
 
         cls._settings_instance.ask_to_change_servers_list = False
-        print(get_translation("Selected minecraft server dir set to path '{0}' also known as '{1}'.")
+        print(get_translation("Selected Minecraft server dir set to path '{0}' also known as '{1}'.")
               .format(cls.get_selected_server_from_list().working_directory,
                       cls.get_selected_server_from_list().server_name))
 
@@ -1148,11 +1148,10 @@ class Config:
                 cls._settings_instance.bot_settings.server_watcher.auth_security.enable_auth_security = True
             else:
                 cls._settings_instance.bot_settings.server_watcher.auth_security.enable_auth_security = False
-                print(get_translation("Authorization security disabled."))
         if cls._settings_instance.bot_settings.server_watcher.auth_security.max_login_attempts < 1:
             cls._need_to_rewrite = True
             cls._settings_instance.bot_settings.server_watcher.auth_security.max_login_attempts = \
-                cls._ask_for_data(get_translation("Enter how many attempts bot will opens from "
+                cls._ask_for_data(get_translation("Enter how many attempts bot will accept connection from "
                                                   "a certain IP address before it bans this IP") + "\n> ",
                                   try_int=True, int_high_than=1)
         if cls._settings_instance.bot_settings.server_watcher.auth_security.days_before_ip_expires < 1:
@@ -1167,49 +1166,49 @@ class Config:
                                   "\n> ", try_int=True, int_high_than=1)
 
         if cls._settings_instance.bot_settings.server_watcher.auth_security.enable_auth_security:
-            print(get_translation("Authorization security enabled."))
+            print(get_translation("Secure authorization enabled."))
         else:
-            print(get_translation("Authorization security disabled."))
+            print(get_translation("Secure authorization disabled."))
 
     @classmethod
     def _setup_rss_feed(cls):
         if cls._settings_instance.bot_settings.rss_feed.enable_rss_feed is None:
             cls._need_to_rewrite = True
-            if cls._ask_for_data(get_translation("Would you like to enable rss feed?") + " Y/n\n> ", "y"):
+            if cls._ask_for_data(get_translation("Would you like to enable RSS feed?") + " Y/n\n> ", "y"):
                 cls._settings_instance.bot_settings.rss_feed.enable_rss_feed = True
 
                 if cls._settings_instance.bot_settings.rss_feed.webhook_url is None:
-                    if cls._ask_for_data(get_translation("Webhook rss url not found. Would you like to enter it?") +
+                    if cls._ask_for_data(get_translation("Webhook RSS url not found. Would you like to enter it?") +
                                          " Y/n\n> ", "y"):
                         cls._settings_instance.bot_settings.rss_feed.webhook_url = \
-                            cls._ask_for_data(get_translation("Enter webhook rss url") + "\n> ")
+                            cls._ask_for_data(get_translation("Enter webhook RSS url") + "\n> ")
                     else:
-                        print(get_translation("Rss wouldn't work. Create webhook and enter it to bot config!"))
+                        print(get_translation("RSS wouldn't work. Create webhook and enter it to bot config!"))
 
                 if cls._settings_instance.bot_settings.rss_feed.rss_url is None:
                     if cls._ask_for_data(
-                            get_translation("Rss url not found. Would you like to enter it?") + " Y/n\n> ", "y"):
+                            get_translation("RSS url not found. Would you like to enter it?") + " Y/n\n> ", "y"):
                         cls._settings_instance.bot_settings.rss_feed.rss_url = cls._ask_for_data(
-                            get_translation("Enter rss url") + "\n> ")
+                            get_translation("Enter RSS url") + "\n> ")
                     else:
-                        print(get_translation("Rss wouldn't work. Enter url of rss feed to bot config!"))
+                        print(get_translation("RSS wouldn't work. Enter url of RSS feed to bot config!"))
 
                 if cls._settings_instance.bot_settings.rss_feed.rss_download_delay < 1:
-                    print(get_translation("Rss download delay doesn't set."))
+                    print(get_translation("RSS download delay doesn't set."))
                     cls._settings_instance.bot_settings.rss_feed.rss_download_delay = \
-                        cls._ask_for_data(get_translation("Enter rss download delay (in seconds, int)") + "\n> ",
+                        cls._ask_for_data(get_translation("Enter RSS download delay (in seconds, int)") + "\n> ",
                                           try_int=True, int_high_than=0)
 
                 cls._settings_instance.bot_settings.rss_feed.rss_last_date = \
                     datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
             else:
                 cls._settings_instance.bot_settings.rss_feed.enable_rss_feed = False
-                print(get_translation("Rss feed wouldn't work."))
+                print(get_translation("RSS feed wouldn't work."))
         else:
             if cls._settings_instance.bot_settings.rss_feed.enable_rss_feed:
-                print(get_translation("Rss feed enabled."))
+                print(get_translation("RSS feed enabled."))
             else:
-                print(get_translation("Rss feed disabled."))
+                print(get_translation("RSS feed disabled."))
 
     @classmethod
     def _setup_backups(cls):
@@ -1226,7 +1225,7 @@ class Config:
         if not cls._settings_instance.bot_settings.backups.name_of_the_backups_folder:
             cls._need_to_rewrite = True
             cls._settings_instance.bot_settings.backups.name_of_the_backups_folder = \
-                cls._ask_for_data(get_translation("Enter name of the backups folder for each minecraft server") +
+                cls._ask_for_data(get_translation("Enter name of the backups folder for each Minecraft server") +
                                   "\n> ")
         if cls._settings_instance.bot_settings.backups.max_backups_limit_for_server is not None and \
                 cls._settings_instance.bot_settings.backups.max_backups_limit_for_server < 1:

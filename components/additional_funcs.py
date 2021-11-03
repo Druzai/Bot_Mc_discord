@@ -721,7 +721,7 @@ async def bot_status(ctx, is_reaction=False):
             with connect_rcon() as cl_r:
                 """rcon check daytime cycle"""
                 time_ticks = int(cl_r.run("time query daytime").split(" ")[-1])
-            message = get_translation("Time in minecraft: ")
+            message = get_translation("Time in Minecraft: ")
             if 450 <= time_ticks <= 11616:
                 message += get_translation("Day, ")
             elif 11617 <= time_ticks <= 13800:
@@ -1208,8 +1208,8 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
         server_version = get_server_version()
         if server_version < 7:
             await send_msg(message.channel, f"{author_mention}, " +
-                           get_translation("version of your minecraft server is lower than `1.7.2` "
-                                           "so bot can't send messages from discord to minecraft!"),
+                           get_translation("version of your Minecraft server is lower than `1.7.2` "
+                                           "so bot can't send messages from discord to Minecraft!"),
                            is_reaction=True)
         elif len(get_server_players()) > 0:
             result_msg = _handle_custom_emojis(message)
@@ -1306,7 +1306,7 @@ async def _handle_reply_in_message(message, result_msg):
         cnt = reply_msg.clean_content.strip()
         cnt = cnt.replace("​", "")
         if reply_msg.author.discriminator == "0000":
-            # reply to minecraft player
+            # reply to Minecraft player
             result_msg["reply"] = f"\n -> <{reply_msg.author.display_name}> {cnt}"
         else:
             # Reply to discord user

@@ -208,7 +208,7 @@ class MinecraftCommands(commands.Cog):
     @decorators.has_admin_role()
     async def assoc(self, ctx, discord_mention: str, assoc_command: str, minecraft_nick: str):
         """
-        Associates discord user with nick in minecraft
+        Associates discord user with nick in Minecraft
         syntax: Nick_Discord +=/-= Nick_minecraft
         """
         comm_operators = ["+=", "-="]
@@ -236,7 +236,7 @@ class MinecraftCommands(commands.Cog):
             else:
                 need_to_save = True
                 Config.add_to_known_users_list(minecraft_nick, discord_id)
-                await ctx.send(get_translation("Now {0} associates with nick in minecraft {1}.")
+                await ctx.send(get_translation("Now {0} associates with nick in Minecraft {1}.")
                                .format(discord_mention, minecraft_nick))
         else:
             if minecraft_nick in [u.user_minecraft_nick for u in Config.get_known_users_list()] and \
@@ -353,13 +353,13 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     async def auth(self, ctx):
-        msg = get_translation("Authorization on") if Config.get_auth_security().enable_auth_security \
-            else get_translation("Authorization off")
-        msg += "\n" + get_translation("Max number of login attempts set to {0}") \
+        msg = get_translation("Secure authorization on") if Config.get_auth_security().enable_auth_security \
+            else get_translation("Secure authorization off")
+        msg += "\n" + get_translation("Max number of login attempts - {0}") \
             .format(Config.get_auth_security().max_login_attempts)
-        msg += "\n" + get_translation("Days before IP expires - {0}") \
+        msg += "\n" + get_translation("Session expiration time in days - {0}") \
             .format(Config.get_auth_security().days_before_ip_expires)
-        msg += "\n" + get_translation("Minutes before code expires - {0}") \
+        msg += "\n" + get_translation("Сode expiration time in minutes - {0}") \
             .format(Config.get_auth_security().mins_before_code_expires)
 
         msg += "\n\n" + get_translation("Information about authorized users:") + "\n"
@@ -372,9 +372,9 @@ class MinecraftCommands(commands.Cog):
                     msg += f"\t{ip.ip_address}: "
                     if ip.expires_on_date is None or ip.expires_on_date < datetime.now() or \
                             ip.login_attempts is not None:
-                        msg += get_translation("not whitelisted")
+                        msg += get_translation("Access is denied")
                     else:
-                        msg += get_translation("whitelisted")
+                        msg += get_translation("Access is allowed")
                     msg += "\n"
         await ctx.send(add_quotes(msg))
 
@@ -385,7 +385,7 @@ class MinecraftCommands(commands.Cog):
     async def a_on(self, ctx):
         Config.get_auth_security().enable_auth_security = True
         Config.save_config()
-        await ctx.send(add_quotes(get_translation("Authorization on")))
+        await ctx.send(add_quotes(get_translation("Secure authorization on")))
 
     @auth.command(pass_context=True, name="off")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -394,20 +394,20 @@ class MinecraftCommands(commands.Cog):
     async def a_off(self, ctx):
         Config.get_auth_security().enable_auth_security = False
         Config.save_config()
-        await ctx.send(add_quotes(get_translation("Authorization off")))
+        await ctx.send(add_quotes(get_translation("Secure authorization off")))
 
     @auth.command(pass_context=True, name="login")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @decorators.has_role_or_default()
     async def a_login(self, ctx, nick: str, code: str):
         if not Config.get_auth_security().enable_auth_security:
-            await ctx.send(add_quotes(get_translation("Authorization is disabled. Enable it to proceed!")))
+            await ctx.send(add_quotes(get_translation("Secure authorization is disabled. Enable it to proceed!")))
             return
         code = code.upper()
         ip_info = Config.get_users_ip_address_info(nick, code=code)
         if ip_info is None:
-            await ctx.send(add_quotes(get_translation("Bot couldn't find nickname and/or code "
-                                                      "in the non-whitelisted IP addresses!")))
+            await ctx.send(add_quotes(get_translation("Bot couldn't find nick and/or code "
+                                                      "in the IP addresses without access!")))
             return
         if len([1 for p in self._IndPoll.get_polls().values() if p.command == f"auth login {nick}"]) > 0:
             await delete_after_by_msg(ctx.message)
@@ -447,10 +447,10 @@ class MinecraftCommands(commands.Cog):
                 Config.save_config()
             Config.update_ip_address(nick, ip_info.ip_address, whitelist=True)
             Config.save_auth_users()
-            await ctx.send(get_translation("{0}, bot whitelisted nick `{1}` with IP address `{2}`!")
+            await ctx.send(get_translation("{0}, bot gave access to the nick `{1}` with IP address `{2}`!")
                            .format(ctx.author.mention, nick, ip_info.ip_address))
         else:
-            await ctx.send(add_quotes(get_translation("Your code for these nick and IP is wrong. Try again.")))
+            await ctx.send(add_quotes(get_translation("Your code for this nick is wrong. Try again.")))
 
     @auth.command(pass_context=True, name="banlist")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -489,11 +489,12 @@ class MinecraftCommands(commands.Cog):
     @decorators.has_role_or_default()
     async def a_revoke(self, ctx, ip: ip_address, nick: str = None):
         if not Config.get_auth_security().enable_auth_security:
-            await ctx.send(add_quotes(get_translation("Authorization is disabled. Enable it to proceed!")))
+            await ctx.send(add_quotes(get_translation("Secure authorization is disabled. Enable it to proceed!")))
             return
 
         if len(Config.get_auth_users()) == 0:
-            await ctx.send(add_quotes(get_translation("Bot has no users who tried to enter or entered!")))
+            await ctx.send(add_quotes(get_translation("Bot has no users who tried to enter "
+                                                      "or entered Minecraft server!")))
             return
 
         has_admin_rights = False
@@ -541,7 +542,7 @@ class MinecraftCommands(commands.Cog):
     @decorators.has_admin_role()
     async def a_r_all(self, ctx):
         if not Config.get_auth_security().enable_auth_security:
-            await ctx.send(add_quotes(get_translation("Authorization is disabled. Enable it to proceed!")))
+            await ctx.send(add_quotes(get_translation("Secure authorization is disabled. Enable it to proceed!")))
             return
 
         if len(Config.get_auth_users()) == 0:
@@ -569,10 +570,10 @@ class MinecraftCommands(commands.Cog):
                 msg_list += f"{k}:"
                 msg_list += "\n- " + "\n- ".join(v) + "\n"
             await ctx.send(f"{ctx.author.mention},\n" +
-                           add_quotes(get_translation("Bot has revoked these non-whitelisted IP addresses:") +
+                           add_quotes(get_translation("Bot has revoked these IP addresses without access:") +
                                       msg_list))
         else:
-            await ctx.send(add_quotes(get_translation("There were no non-whitelisted IP addresses!")))
+            await ctx.send(add_quotes(get_translation("There were no IP addresses without access!")))
 
     @commands.group(pass_context=True, aliases=["fl"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -1066,7 +1067,7 @@ class MinecraftCommands(commands.Cog):
     @checkups_task.before_loop
     async def before_checkups(self):
         await self._bot.wait_until_ready()
-        print(get_translation("Starting minecraft server check-ups"))
+        print(get_translation("Starting Minecraft server check-ups"))
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):

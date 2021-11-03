@@ -58,13 +58,13 @@ class ChatCommands(commands.Cog):
     @decorators.has_role_or_default()
     async def channel(self, ctx):
         try:
-            msg = get_translation("Channel {0} set to minecraft cross-platform chat!") \
+            msg = get_translation("Channel {0} set to Minecraft cross-platform chat") \
                 .format((await self._bot.fetch_channel(Config.get_cross_platform_chat_settings().channel_id)).mention)
         except (InvalidData, HTTPException, NotFound, Forbidden):
-            msg = get_translation("Channel for minecraft cross-platform chat is not found or unreachable!")
+            msg = get_translation("Channel for Minecraft cross-platform chat is not found or unreachable!")
         msg += "\n"
         try:
-            msg += get_translation("Channel {0} set as commands' channel for bot!") \
+            msg += get_translation("Channel {0} set as commands' channel for bot") \
                 .format((await self._bot.fetch_channel(Config.get_settings()
                                                        .bot_settings.commands_channel_id)).mention)
         except (InvalidData, HTTPException, NotFound, Forbidden):
@@ -98,7 +98,7 @@ class ChatCommands(commands.Cog):
         if channel_set:
             Config.save_config()
             await ctx.channel.send(
-                get_translation("Channel {0} set to minecraft cross-platform chat!")
+                get_translation("Channel {0} set to Minecraft cross-platform chat")
                     .format((await self._bot.fetch_channel(Config.get_cross_platform_chat_settings()
                                                            .channel_id)).mention))
         else:
@@ -126,7 +126,7 @@ class ChatCommands(commands.Cog):
 
         if channel_set:
             Config.save_config()
-            await ctx.channel.send(get_translation("Channel {0} set as commands' channel for bot!")
+            await ctx.channel.send(get_translation("Channel {0} set as commands' channel for bot")
                                    .format((await self._bot.fetch_channel(Config.get_settings()
                                                                           .bot_settings.commands_channel_id)).mention))
         else:
@@ -415,7 +415,7 @@ class ChatCommands(commands.Cog):
     @rss_feed_task.before_loop
     async def before_rss_feed(self):
         await self._bot.wait_until_ready()
-        print(get_translation("Starting rss feed check"))
+        print(get_translation("Starting RSS feed check"))
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):

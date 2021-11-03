@@ -51,7 +51,7 @@ class Watcher:
                 print(get_translation("Watcher Error: File '{0}' wasn't found!").format(self._filename.as_posix()))
             except UnicodeDecodeError:
                 print(get_translation("Watcher Error: Can't decode strings from file '{0}'"
-                                      ", check that minecraft server saves it in utf-8 encoding!\n"
+                                      ", check that Minecraft server saves it in utf-8 encoding!\n"
                                       "(Ensure you have '-Dfile.encoding=UTF-8' as one of the arguments "
                                       "to start the server in start script)").format(self._filename.as_posix()))
             except BaseException:
@@ -176,7 +176,7 @@ def _check_log_file(file: Path, last_line: str = None):
                                         break
                                 if found:
                                     break
-                                # Check mention on minecraft nick mention
+                                # Check mention on Minecraft nick mention
                                 for user in Config.get_settings().known_users:
                                     if user.user_minecraft_nick.lower() == mention:
                                         if len(mentions[i_mention]) == 1:
@@ -289,7 +289,7 @@ def _check_log_file(file: Path, last_line: str = None):
                                          get_translation("Too many login attempts\nYour IP: {0}").format(ip_address))
                             Config.remove_ip_address([nick], ip_address)
                             msg = get_translation("Too many login attempts: User was banned!\n"
-                                                  "Username: {0}\nIP: {1}\nTime: {2}") \
+                                                  "Nick: {0}\nIP: {1}\nTime: {2}") \
                                 .format(nick, ip_address, datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
                             channel = _get_commands_channel()
                             BotVars.bot_for_webhooks.loop.create_task(channel.send(add_quotes(msg)))
@@ -303,7 +303,7 @@ def _check_log_file(file: Path, last_line: str = None):
                             if user.user_minecraft_nick == nick:
                                 member = [m for m in BotVars.bot_for_webhooks.guilds[0].members
                                           if m.id == user.user_discord_id][0]
-                        msg = get_translation("Connection attempt detected!\nUsername: {0}\n"
+                        msg = get_translation("Connection attempt detected!\nNick: {0}\n"
                                               "IP: {1}\nConnection attempts: {2}\nTime: {3}") \
                             .format(nick, ip_address,
                                     f"{user_attempts}/{Config.get_auth_security().max_login_attempts}",
