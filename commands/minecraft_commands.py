@@ -94,7 +94,7 @@ class MinecraftCommands(commands.Cog):
         BotVars.is_doing_op = True
         if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and not BotVars.is_restarting:
             if len(get_server_players()) == 0:
-                await ctx.send(f"{ctx.author.mention}, " +
+                await ctx.send(f"{ctx.author.mention} " +
                                get_translation("There are no players on the server").lower() + "!")
                 BotVars.is_doing_op = doing_opping
                 return
@@ -355,7 +355,7 @@ class MinecraftCommands(commands.Cog):
     async def auth(self, ctx):
         msg = get_translation("Secure authorization on") if Config.get_secure_auth().enable_auth_security \
             else get_translation("Secure authorization off")
-        msg += "\n" + get_translation("Max number of login attempts - {0}") \
+        msg += "\n" + get_translation("Login attempts allowed - {0}") \
             .format(Config.get_secure_auth().max_login_attempts)
         msg += "\n" + get_translation("Session expiration time in days - {0}") \
             .format(Config.get_secure_auth().days_before_ip_expires)
@@ -372,9 +372,9 @@ class MinecraftCommands(commands.Cog):
                     msg += f"\t{ip.ip_address}: "
                     if ip.expires_on_date is None or ip.expires_on_date < datetime.now() or \
                             ip.login_attempts is not None:
-                        msg += get_translation("Access is denied")
+                        msg += get_translation("Not allowed")
                     else:
-                        msg += get_translation("Access is allowed")
+                        msg += get_translation("Access granted")
                     msg += "\n"
         await ctx.send(add_quotes(msg))
 
@@ -516,8 +516,8 @@ class MinecraftCommands(commands.Cog):
             if nick is not None and user.nick != nick or \
                     (has_admin_rights and bound_nicks is not None and nick not in bound_nicks):
                 continue
-            for ip in user.ip_addresses:
-                if ip.ip_address == ip:
+            for ip_addr in user.ip_addresses:
+                if ip_addr.ip_address == ip:
                     possible_matches.append(user.nick)
             if nick is not None and user.nick == nick:
                 break
@@ -532,9 +532,22 @@ class MinecraftCommands(commands.Cog):
             return
         Config.remove_ip_address(possible_matches, ip)
         Config.save_auth_users()
-        await ctx.send(f"{ctx.author.mention},\n" +
+        try:
+            server_players = get_server_players()
+            available_players_to_kick = [p for p in possible_matches if p in server_players]
+        except (ConnectionError, socket.error):
+            available_players_to_kick = []
+        await ctx.send(f"{ctx.author.mention}\n" +
                        add_quotes(get_translation("These nicks were revoked with this IP address:") +
                                   "\n- " + "\n- ".join(possible_matches)))
+        if len(available_players_to_kick) > 0:
+            with suppress(ConnectionError, socket.error):
+                with connect_rcon() as cl_r:
+                    for p in available_players_to_kick:
+                        cl_r.kick(p, get_translation("One of the sessions for this nick has been ended"))
+            await ctx.send(f"{ctx.author.mention}\n" + add_quotes(get_translation("These nicks bound this IP address "
+                                                                                  "were kicked from Minecraft server:")
+                                                                  + "\n- " + "\n- ".join(available_players_to_kick)))
 
     @a_revoke.command(pass_context=True, name="all")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -546,34 +559,29 @@ class MinecraftCommands(commands.Cog):
             return
 
         if len(Config.get_auth_users()) == 0:
-            await ctx.send(add_quotes(get_translation("Bot has no users who tried to enter or entered!")))
+            await ctx.send(add_quotes(get_translation("Bot has no users who tried to enter "
+                                                      "or entered Minecraft server!")))
             return
 
-        revoked = False
-        revoked_dict = {}
-        for i in range(len(Config.get_auth_users())):
-            to_revoke = []
-            for ip in Config.get_auth_users()[i].ip_addresses:
-                if ip.expires_on_date is None or ip.expires_on_date < datetime.now() or ip.login_attempts is not None:
-                    to_revoke.append(ip)
-                    revoked = True
-            if len(to_revoke) > 0:
-                revoked_dict[Config.get_auth_users()[i].nick] = [ip.ip_address for ip in to_revoke]
-            for item in to_revoke:
-                Config.get_auth_users()[i].ip_addresses.remove(item)
-        if revoked:
-            Config.save_auth_users()
+        nicks_to_revoke = [pl.nick for pl in Config.get_auth_users()]
+        try:
+            server_players = get_server_players()
+            available_players_to_kick = [p for p in nicks_to_revoke if p in server_players]
+        except (ConnectionError, socket.error):
+            available_players_to_kick = []
 
-        if revoked:
-            msg_list = "\n"
-            for k, v in revoked_dict.items():
-                msg_list += f"{k}:"
-                msg_list += "\n- " + "\n- ".join(v) + "\n"
-            await ctx.send(f"{ctx.author.mention},\n" +
-                           add_quotes(get_translation("Bot has revoked these IP addresses without access:") +
-                                      msg_list))
-        else:
-            await ctx.send(add_quotes(get_translation("There were no IP addresses without access!")))
+        Config.get_auth_users().clear()
+        Config.save_auth_users()
+        await ctx.send(f"{ctx.author.mention}\n" + add_quotes(get_translation("All these nicks were revoked:") +
+                                                              "\n- " + "\n- ".join(nicks_to_revoke)))
+        if len(available_players_to_kick) > 0:
+            with suppress(ConnectionError, socket.error):
+                with connect_rcon() as cl_r:
+                    for p in available_players_to_kick:
+                        cl_r.kick(p, get_translation("All sessions for this nick have been ended"))
+            await ctx.send(f"{ctx.author.mention}\n" +
+                           add_quotes(get_translation("These nicks were kicked from Minecraft server:")
+                                      + "\n- " + "\n- ".join(available_players_to_kick)))
 
     @commands.group(pass_context=True, aliases=["fl"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)

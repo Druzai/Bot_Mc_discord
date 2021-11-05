@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
-"POT-Creation-Date: 2021-11-03 17:59+0300\n"
-"PO-Revision-Date: 2021-11-03 18:03+0300\n"
+"POT-Creation-Date: 2021-11-05 16:22+0300\n"
+"PO-Revision-Date: 2021-11-05 16:22+0300\n"
 "Last-Translator: Druzai <astyn37@gmail.com>\n"
 "Language-Team: \n"
 "Language: en\n"
@@ -17,7 +17,7 @@ msgstr ""
 "X-Generator: Poedit 3.0\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: ..\Discord_bot.py:91 ..\commands\minecraft_commands.py:759
+#: ..\Discord_bot.py:91 ..\commands\minecraft_commands.py:767
 msgid "Server info read!"
 msgstr "Server info read!"
 
@@ -90,7 +90,7 @@ msgstr "Nick in Minecraft that you want to link to"
 
 #: ..\_frozen_translations.py:14
 msgid "help_brief_auth"
-msgstr "Handles secure authorization in Minecraft"
+msgstr "Handles secure authorization in Minecraft 🔑"
 
 #: ..\_frozen_translations.py:15
 msgid "help_auth"
@@ -104,7 +104,9 @@ msgstr "Returns list of bans by IP address on selected Minecraft server"
 
 #: ..\_frozen_translations.py:17
 msgid "help_auth_login"
-msgstr "Confirms and whitelists the user by nick using code"
+msgstr ""
+"Confirms and gives access to the user by nick using code\n"
+"Works only if user logged into the Minecraft server at least once"
 
 #: ..\_frozen_translations.py:18
 msgid "help_auth_login_code"
@@ -124,7 +126,9 @@ msgstr "Enables secure authorization"
 
 #: ..\_frozen_translations.py:22
 msgid "help_auth_revoke"
-msgstr "Revokes selected IP address on Minecraft nick(s)"
+msgstr ""
+"Prematurely revokes permission to access by IP address for nicks in "
+"Minecraft available to you"
 
 #: ..\_frozen_translations.py:23
 msgid "help_auth_revoke_ip"
@@ -138,7 +142,7 @@ msgstr ""
 
 #: ..\_frozen_translations.py:25
 msgid "help_auth_revoke_all"
-msgstr "Revokes all non-whitelisted IP addresses from each nick"
+msgstr "Revokes all logged nicks"
 
 #: ..\_frozen_translations.py:26
 msgid "help_auth_unban"
@@ -880,8 +884,8 @@ msgstr "{0}, you've already been opped!"
 msgid "Opped "
 msgstr "Opped "
 
-#: ..\commands\minecraft_commands.py:137 ..\commands\minecraft_commands.py:1031
-#: ..\commands\minecraft_commands.py:1033 ..\components\additional_funcs.py:928
+#: ..\commands\minecraft_commands.py:137 ..\commands\minecraft_commands.py:1039
+#: ..\commands\minecraft_commands.py:1041 ..\components\additional_funcs.py:928
 #: ..\components\additional_funcs.py:930
 msgid "Reason: "
 msgstr "Reason: "
@@ -1008,8 +1012,8 @@ msgid "Secure authorization off"
 msgstr "Secure authorization off"
 
 #: ..\commands\minecraft_commands.py:358
-msgid "Max number of login attempts - {0}"
-msgstr "Max number of login attempts - {0}"
+msgid "Login attempts allowed - {0}"
+msgstr "Login attempts allowed - {0}"
 
 #: ..\commands\minecraft_commands.py:360
 msgid "Session expiration time in days - {0}"
@@ -1024,15 +1028,15 @@ msgid "Information about authorized users:"
 msgstr "Information about authorized users:"
 
 #: ..\commands\minecraft_commands.py:375
-msgid "Access is denied"
-msgstr "Access is denied"
+msgid "Not allowed"
+msgstr "Not allowed"
 
 #: ..\commands\minecraft_commands.py:377
-msgid "Access is allowed"
-msgstr "Access is allowed"
+msgid "Access granted"
+msgstr "Access granted"
 
 #: ..\commands\minecraft_commands.py:404 ..\commands\minecraft_commands.py:492
-#: ..\commands\minecraft_commands.py:545
+#: ..\commands\minecraft_commands.py:558
 msgid "Secure authorization is disabled. Enable it to proceed!"
 msgstr "Secure authorization is disabled. Enable it to proceed!"
 
@@ -1080,22 +1084,22 @@ msgstr "There are no banned IP addresses!"
 msgid "Unbanned IP address {0}!"
 msgstr "Unbanned IP address {0}!"
 
-#: ..\commands\minecraft_commands.py:482 ..\commands\minecraft_commands.py:628
-#: ..\commands\minecraft_commands.py:643 ..\commands\minecraft_commands.py:666
-#: ..\commands\minecraft_commands.py:681 ..\commands\minecraft_commands.py:696
-#: ..\commands\minecraft_commands.py:711
+#: ..\commands\minecraft_commands.py:482 ..\commands\minecraft_commands.py:636
+#: ..\commands\minecraft_commands.py:651 ..\commands\minecraft_commands.py:674
+#: ..\commands\minecraft_commands.py:689 ..\commands\minecraft_commands.py:704
+#: ..\commands\minecraft_commands.py:719
 msgid "Couldn't connect to server, try again("
 msgstr "Couldn't connect to server, try again("
 
-#: ..\commands\minecraft_commands.py:484 ..\commands\minecraft_commands.py:630
-#: ..\commands\minecraft_commands.py:645 ..\commands\minecraft_commands.py:668
-#: ..\commands\minecraft_commands.py:683 ..\commands\minecraft_commands.py:698
-#: ..\commands\minecraft_commands.py:713 ..\components\additional_funcs.py:743
+#: ..\commands\minecraft_commands.py:484 ..\commands\minecraft_commands.py:638
+#: ..\commands\minecraft_commands.py:653 ..\commands\minecraft_commands.py:676
+#: ..\commands\minecraft_commands.py:691 ..\commands\minecraft_commands.py:706
+#: ..\commands\minecraft_commands.py:721 ..\components\additional_funcs.py:743
 #: ..\components\additional_funcs.py:762 ..\components\additional_funcs.py:1197
 msgid "server offline"
 msgstr "server offline"
 
-#: ..\commands\minecraft_commands.py:496
+#: ..\commands\minecraft_commands.py:496 ..\commands\minecraft_commands.py:562
 msgid "Bot has no users who tried to enter or entered Minecraft server!"
 msgstr "Bot has no users who tried to enter or entered Minecraft server!"
 
@@ -1115,43 +1119,52 @@ msgstr ""
 "{0}, there are no nicks in your possession that were logged on with this IP "
 "address"
 
-#: ..\commands\minecraft_commands.py:536
+#: ..\commands\minecraft_commands.py:541
 msgid "These nicks were revoked with this IP address:"
 msgstr "These nicks were revoked with this IP address:"
 
-#: ..\commands\minecraft_commands.py:549
-msgid "Bot has no users who tried to enter or entered!"
-msgstr "Bot has no users who tried to enter or entered!"
+#: ..\commands\minecraft_commands.py:547
+#| msgid "Session for this nick has been ended"
+msgid "One of the sessions for this nick has been ended"
+msgstr "One of the sessions for this nick has been ended"
 
-#: ..\commands\minecraft_commands.py:573
-msgid "Bot has revoked these IP addresses without access:"
-msgstr "Bot has revoked these IP addresses without access:"
+#: ..\commands\minecraft_commands.py:548
+msgid "These nicks bound this IP address were kicked from Minecraft server:"
+msgstr "These nicks bound this IP address were kicked from Minecraft server:"
 
-#: ..\commands\minecraft_commands.py:576
-msgid "There were no IP addresses without access!"
-msgstr "There were no IP addresses without access!"
+#: ..\commands\minecraft_commands.py:575
+msgid "All these nicks were revoked:"
+msgstr "All these nicks were revoked:"
 
-#: ..\commands\minecraft_commands.py:583 ..\commands\minecraft_commands.py:594
+#: ..\commands\minecraft_commands.py:581
+msgid "All sessions for this nick have been ended"
+msgstr "All sessions for this nick have been ended"
+
+#: ..\commands\minecraft_commands.py:583
+msgid "These nicks were kicked from Minecraft server:"
+msgstr "These nicks were kicked from Minecraft server:"
+
+#: ..\commands\minecraft_commands.py:591 ..\commands\minecraft_commands.py:602
 msgid "Forceload on"
 msgstr "Auto restart if server crashes is on"
 
-#: ..\commands\minecraft_commands.py:585 ..\commands\minecraft_commands.py:603
+#: ..\commands\minecraft_commands.py:593 ..\commands\minecraft_commands.py:611
 msgid "Forceload off"
 msgstr "Auto restart if server crashes is off"
 
-#: ..\commands\minecraft_commands.py:610 ..\commands\minecraft_commands.py:720
+#: ..\commands\minecraft_commands.py:618 ..\commands\minecraft_commands.py:728
 msgid "Wrong syntax, subcommands:"
 msgstr "Wrong syntax, subcommands:"
 
-#: ..\commands\minecraft_commands.py:625
+#: ..\commands\minecraft_commands.py:633
 msgid "Added {0} to the whitelist"
 msgstr "Added {0} to the whitelist"
 
-#: ..\commands\minecraft_commands.py:640
+#: ..\commands\minecraft_commands.py:648
 msgid "Removed {0} from the whitelist"
 msgstr "Removed {0} from the whitelist"
 
-#: ..\commands\minecraft_commands.py:660
+#: ..\commands\minecraft_commands.py:668
 msgid ""
 "There are {0} players in whitelist\n"
 "{1}"
@@ -1159,28 +1172,28 @@ msgstr ""
 "There are {0} players in whitelist\n"
 "{1}"
 
-#: ..\commands\minecraft_commands.py:663
+#: ..\commands\minecraft_commands.py:671
 msgid "There are no whitelisted players"
 msgstr "There are no whitelisted players"
 
-#: ..\commands\minecraft_commands.py:678
+#: ..\commands\minecraft_commands.py:686
 msgid "Turned on the whitelist"
 msgstr "Turned on the whitelist"
 
-#: ..\commands\minecraft_commands.py:693
+#: ..\commands\minecraft_commands.py:701
 msgid "Turned off the whitelist"
 msgstr "Turned off the whitelist"
 
-#: ..\commands\minecraft_commands.py:708
+#: ..\commands\minecraft_commands.py:716
 msgid "Reloaded the whitelist"
 msgstr "Reloaded the whitelist"
 
-#: ..\commands\minecraft_commands.py:728 ..\commands\minecraft_commands.py:753
-#: ..\commands\minecraft_commands.py:756
+#: ..\commands\minecraft_commands.py:736 ..\commands\minecraft_commands.py:761
+#: ..\commands\minecraft_commands.py:764
 msgid "Selected server"
 msgstr "Selected server"
 
-#: ..\commands\minecraft_commands.py:739
+#: ..\commands\minecraft_commands.py:747
 msgid ""
 "My, you have chosen selected server, insane?)\n"
 " ...Patsan ramsi poputal"
@@ -1188,7 +1201,7 @@ msgstr ""
 "My, you have chosen selected server, insane?)\n"
 " ...Patsan ramsi poputal"
 
-#: ..\commands\minecraft_commands.py:743
+#: ..\commands\minecraft_commands.py:751
 msgid ""
 "You can't change servers, while some instance(s) is/are still running\n"
 "Please stop them, before trying again"
@@ -1196,44 +1209,44 @@ msgstr ""
 "You can't change servers, while some instance(s) is/are still running\n"
 "Please stop them, before trying again"
 
-#: ..\commands\minecraft_commands.py:758
+#: ..\commands\minecraft_commands.py:766
 msgid "Server properties read!"
 msgstr "Server properties read!"
 
-#: ..\commands\minecraft_commands.py:761
+#: ..\commands\minecraft_commands.py:769
 msgid "Use server list, there's no such server number on the list!"
 msgstr "Use server list, there's no such server number on the list!"
 
-#: ..\commands\minecraft_commands.py:769
+#: ..\commands\minecraft_commands.py:777
 msgid "List of servers"
 msgstr "List of servers"
 
-#: ..\commands\minecraft_commands.py:792 ..\components\additional_funcs.py:888
+#: ..\commands\minecraft_commands.py:800 ..\components\additional_funcs.py:888
 msgid "Automatic backups enabled"
 msgstr "Automatic backups enabled"
 
-#: ..\commands\minecraft_commands.py:802 ..\components\additional_funcs.py:889
+#: ..\commands\minecraft_commands.py:810 ..\components\additional_funcs.py:889
 msgid "Automatic backups disabled"
 msgstr "Automatic backups disabled"
 
-#: ..\commands\minecraft_commands.py:812 ..\commands\minecraft_commands.py:814
+#: ..\commands\minecraft_commands.py:820 ..\commands\minecraft_commands.py:822
 #: ..\components\additional_funcs.py:890
 msgid "Automatic backups period set to {0} min"
 msgstr "Automatic backups period set to {0} min"
 
-#: ..\commands\minecraft_commands.py:817
+#: ..\commands\minecraft_commands.py:825
 msgid "Automatic backups period can't be lower than 0!"
 msgstr "Automatic backups period can't be lower than 0!"
 
-#: ..\commands\minecraft_commands.py:828
+#: ..\commands\minecraft_commands.py:836
 msgid "Compression method set to {0}"
 msgstr "Compression method set to {0}"
 
-#: ..\commands\minecraft_commands.py:830 ..\components\additional_funcs.py:898
+#: ..\commands\minecraft_commands.py:838 ..\components\additional_funcs.py:898
 msgid "Current compression method - {0}"
 msgstr "Current compression method - {0}"
 
-#: ..\commands\minecraft_commands.py:833
+#: ..\commands\minecraft_commands.py:841
 msgid ""
 "Bot doesn't have such compression method!\n"
 "Supported:"
@@ -1241,11 +1254,11 @@ msgstr ""
 "Bot doesn't have such compression method!\n"
 "Supported:"
 
-#: ..\commands\minecraft_commands.py:840
+#: ..\commands\minecraft_commands.py:848
 msgid "Supported compression methods:"
 msgstr "Supported compression methods:"
 
-#: ..\commands\minecraft_commands.py:853
+#: ..\commands\minecraft_commands.py:861
 msgid ""
 "Can't create backup because of {0}\n"
 "Delete some backups to proceed!"
@@ -1253,11 +1266,11 @@ msgstr ""
 "Can't create backup because of {0}\n"
 "Delete some backups to proceed!"
 
-#: ..\commands\minecraft_commands.py:858
+#: ..\commands\minecraft_commands.py:866
 msgid "Starting backup..."
 msgstr "Starting backup..."
 
-#: ..\commands\minecraft_commands.py:892
+#: ..\commands\minecraft_commands.py:900
 msgid ""
 "There are not enough space on disk to restore from backup!\n"
 "Free - {0}\n"
@@ -1269,30 +1282,30 @@ msgstr ""
 "Required at least - {1}\n"
 "Delete some backups to proceed!"
 
-#: ..\commands\minecraft_commands.py:898
+#: ..\commands\minecraft_commands.py:906
 msgid "Starting restore from backup..."
 msgstr "Starting restore from backup..."
 
-#: ..\commands\minecraft_commands.py:909 ..\config\init_config.py:559
+#: ..\commands\minecraft_commands.py:917 ..\config\init_config.py:559
 msgid "Done!"
 msgstr "Done!"
 
-#: ..\commands\minecraft_commands.py:912 ..\commands\minecraft_commands.py:968
+#: ..\commands\minecraft_commands.py:920 ..\commands\minecraft_commands.py:976
 msgid ""
 "Bot doesn't have backup with this number in backups list for current server!"
 msgstr ""
 "Bot doesn't have backup with this number in backups list for current server!"
 
-#: ..\commands\minecraft_commands.py:923 ..\commands\minecraft_commands.py:977
-#: ..\commands\minecraft_commands.py:1043
+#: ..\commands\minecraft_commands.py:931 ..\commands\minecraft_commands.py:985
+#: ..\commands\minecraft_commands.py:1051
 msgid "There are no backups for '{0}' server!"
 msgstr "There are no backups for '{0}' server!"
 
-#: ..\commands\minecraft_commands.py:931
+#: ..\commands\minecraft_commands.py:939
 msgid "{0}, bot already has poll on `backup del` command!"
 msgstr "{0}, bot already has poll on `backup del` command!"
 
-#: ..\commands\minecraft_commands.py:940
+#: ..\commands\minecraft_commands.py:948
 msgid ""
 "this man {0} trying to delete {1} backup by {2} of '{3}' server. Will you "
 "let that happen?"
@@ -1300,15 +1313,15 @@ msgstr ""
 "this man {0} trying to delete {1} backup by {2} of '{3}' server. Will you "
 "let that happen?"
 
-#: ..\commands\minecraft_commands.py:965
+#: ..\commands\minecraft_commands.py:973
 msgid "Deleted backup {0}.zip of '{1}' server"
 msgstr "Deleted backup {0}.zip of '{1}' server"
 
-#: ..\commands\minecraft_commands.py:983
+#: ..\commands\minecraft_commands.py:991
 msgid "{0}, bot already has poll on `backup del all` command!"
 msgstr "{0}, bot already has poll on `backup del all` command!"
 
-#: ..\commands\minecraft_commands.py:991
+#: ..\commands\minecraft_commands.py:999
 msgid ""
 "this man {0} trying to delete all backups of '{1}' server. Will you let that "
 "happen?"
@@ -1316,43 +1329,43 @@ msgstr ""
 "this man {0} trying to delete all backups of '{1}' server. Will you let that "
 "happen?"
 
-#: ..\commands\minecraft_commands.py:1011
+#: ..\commands\minecraft_commands.py:1019
 msgid "Deleted all backups of '{0}' server"
 msgstr "Deleted all backups of '{0}' server"
 
-#: ..\commands\minecraft_commands.py:1019
+#: ..\commands\minecraft_commands.py:1027
 msgid "List of backups for '{0}' server:"
 msgstr "List of backups for '{0}' server:"
 
-#: ..\commands\minecraft_commands.py:1023
+#: ..\commands\minecraft_commands.py:1031
 msgid "Date: "
 msgstr "Date: "
 
-#: ..\commands\minecraft_commands.py:1025 ..\components\additional_funcs.py:923
+#: ..\commands\minecraft_commands.py:1033 ..\components\additional_funcs.py:923
 msgid "Backup size: "
 msgstr "Backup size: "
 
-#: ..\commands\minecraft_commands.py:1031 ..\components\additional_funcs.py:928
+#: ..\commands\minecraft_commands.py:1039 ..\components\additional_funcs.py:928
 msgid "Automatic backup"
 msgstr "Automatic backup"
 
-#: ..\commands\minecraft_commands.py:1034 ..\components\additional_funcs.py:931
+#: ..\commands\minecraft_commands.py:1042 ..\components\additional_funcs.py:931
 msgid "Not stated"
 msgstr "Not stated"
 
-#: ..\commands\minecraft_commands.py:1035 ..\components\additional_funcs.py:932
+#: ..\commands\minecraft_commands.py:1043 ..\components\additional_funcs.py:932
 msgid "Initiator: "
 msgstr "Initiator: "
 
-#: ..\commands\minecraft_commands.py:1039 ..\components\additional_funcs.py:934
+#: ..\commands\minecraft_commands.py:1047 ..\components\additional_funcs.py:934
 msgid "The world of the server was restored from this backup"
 msgstr "The world of the server was restored from this backup"
 
-#: ..\commands\minecraft_commands.py:1053
+#: ..\commands\minecraft_commands.py:1061
 msgid "List of commands via reactions"
 msgstr "List of commands via reactions"
 
-#: ..\commands\minecraft_commands.py:1070
+#: ..\commands\minecraft_commands.py:1078
 msgid "Starting Minecraft server check-ups"
 msgstr "Starting Minecraft server check-ups"
 

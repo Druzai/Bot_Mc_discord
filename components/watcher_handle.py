@@ -310,7 +310,7 @@ def _check_log_file(file: Path, last_line: str = None):
                                     datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
                         msg = add_quotes(msg) + "\n"
                         msg += get_translation("To proceed enter command `{0}` within {1} min") \
-                            .format(f"{Config.get_settings().bot_settings.prefix}auth login <nick> <code>",
+                            .format(f"{Config.get_settings().bot_settings.prefix}auth login {nick} <code>",
                                     Config.get_secure_auth().mins_before_code_expires)
                         if member is not None:
                             BotVars.bot_for_webhooks.loop.create_task(member.send(msg))
