@@ -112,9 +112,6 @@ def _check_log_file(file: Path, last_line: str = None):
         else:
             last_lines = last_lines[-2:]
 
-    mention_max_words = 5
-    mention_max_right_symbols = 5
-
     for line in last_lines:
         if Config.get_cross_platform_chat_settings().channel_id is not None:
             if search(r"INFO", line) and "*" not in split(r"<([^>]*)>", line, maxsplit=1)[0] and \
@@ -125,13 +122,14 @@ def _check_log_file(file: Path, last_line: str = None):
                     split_arr = split(r"@[^\s]+", player_message)
                     mentions = [[i[1:]] for i in findall(r"@[^\s]+", player_message)]
                     for i_mention in range(len(mentions)):
-                        for words_number in range(mention_max_words + 1):
+                        for words_number in range(Config.get_cross_platform_chat_settings().max_words_in_mention + 1):
                             if len(split_arr[1 + i_mention]) < words_number:
                                 break
                             found = False
                             add_string = " ".join(split_arr[1 + i_mention].lstrip(" ").split(" ")[:words_number]) \
                                 if words_number > 0 else ""
-                            for symbols_number in range(mention_max_right_symbols + 1):
+                            for symbols_number in range(Config.get_cross_platform_chat_settings().
+                                                                max_wrong_symbols_in_mention_from_right + 1):
                                 mention = f"{mentions[i_mention][0]} {add_string}".lower() \
                                     if len(add_string) > 0 else mentions[i_mention][0].lower()
                                 cut_right_string = None

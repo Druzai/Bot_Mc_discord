@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
-"POT-Creation-Date: 2021-11-05 16:22+0300\n"
-"PO-Revision-Date: 2021-11-05 16:27+0300\n"
+"POT-Creation-Date: 2021-11-05 19:56+0300\n"
+"PO-Revision-Date: 2021-11-05 19:58+0300\n"
 "Last-Translator: Druzai <astyn37@gmail.com>\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -112,7 +112,7 @@ msgstr ""
 
 #: ..\_frozen_translations.py:18
 msgid "help_auth_login_code"
-msgstr "Шестизначный код без учёта регистра"
+msgstr "{code_length}-значный код без учёта регистра"
 
 #: ..\_frozen_translations.py:19
 msgid "help_auth_login_nick"
@@ -1113,7 +1113,7 @@ msgstr "Не удалось подключиться к серверу, попр
 #: ..\commands\minecraft_commands.py:653 ..\commands\minecraft_commands.py:676
 #: ..\commands\minecraft_commands.py:691 ..\commands\minecraft_commands.py:706
 #: ..\commands\minecraft_commands.py:721 ..\components\additional_funcs.py:743
-#: ..\components\additional_funcs.py:762 ..\components\additional_funcs.py:1197
+#: ..\components\additional_funcs.py:762 ..\components\additional_funcs.py:1198
 msgid "server offline"
 msgstr "сервер не в сети"
 
@@ -1305,7 +1305,7 @@ msgstr ""
 msgid "Starting restore from backup..."
 msgstr "Начинаем восстановление из резервной копии..."
 
-#: ..\commands\minecraft_commands.py:917 ..\config\init_config.py:559
+#: ..\commands\minecraft_commands.py:917 ..\config\init_config.py:564
 msgid "Done!"
 msgstr "Сделано!"
 
@@ -1453,11 +1453,11 @@ msgstr "сервер уже запущен!"
 msgid "Bot is restoring server from backup!"
 msgstr "Бот восстанавливает сервер из резервной копии!"
 
-#: ..\components\additional_funcs.py:96 ..\components\additional_funcs.py:1206
+#: ..\components\additional_funcs.py:96 ..\components\additional_funcs.py:1207
 msgid "server is loading!"
 msgstr "сервер загружается!"
 
-#: ..\components\additional_funcs.py:98 ..\components\additional_funcs.py:1203
+#: ..\components\additional_funcs.py:98 ..\components\additional_funcs.py:1204
 msgid "server is stopping!"
 msgstr "сервер останавливается!"
 
@@ -1775,79 +1775,79 @@ msgstr "Подкоманды"
 msgid "Parameters"
 msgstr "Параметры"
 
-#: ..\components\additional_funcs.py:1103
+#: ..\components\additional_funcs.py:1104
 msgid "File '{0}' doesn't exist!"
 msgstr "Файл '{0}' не существует!"
 
-#: ..\components\additional_funcs.py:1117
+#: ..\components\additional_funcs.py:1118
 msgid "{0} didn't input the argument"
 msgstr "{0} не ввёл аргумент"
 
-#: ..\components\additional_funcs.py:1118
+#: ..\components\additional_funcs.py:1119
 msgid "enter all arguments"
 msgstr "введите все аргументы"
 
-#: ..\components\additional_funcs.py:1121
+#: ..\components\additional_funcs.py:1122
 msgid "{0} don't have some permissions to run command"
 msgstr "{0} не имеет некоторых прав доступа чтобы использовать команду"
 
-#: ..\components\additional_funcs.py:1125
+#: ..\components\additional_funcs.py:1126
 msgid "to run this command you don't have these permissions:"
 msgstr "чтобы использовать эту команду у вас нету этих прав доступа:"
 
-#: ..\components\additional_funcs.py:1129
+#: ..\components\additional_funcs.py:1130
 msgid "Bot doesn't have some permissions"
 msgstr "Бот не имеет некоторых прав доступа"
 
-#: ..\components\additional_funcs.py:1133
+#: ..\components\additional_funcs.py:1134
 msgid "to run this command bot don't have these permissions:"
 msgstr "чтобы использовать эту команду у бота нету этих прав доступа:"
 
-#: ..\components\additional_funcs.py:1137
+#: ..\components\additional_funcs.py:1138
 msgid "{0} don't have role '{1}' to run command"
 msgstr "{0} не имеет роли '{1}' для использования команды"
 
-#: ..\components\additional_funcs.py:1139
+#: ..\components\additional_funcs.py:1140
 msgid "you don't have role '{0}' to run this command"
 msgstr "вы не имеете роли '{0}' для использования этой команды"
 
-#: ..\components\additional_funcs.py:1143
+#: ..\components\additional_funcs.py:1144
 msgid "{0} entered non-existent command"
 msgstr "{0} ввёл несуществующую команду"
 
-#: ..\components\additional_funcs.py:1145
+#: ..\components\additional_funcs.py:1146
 msgid "you entered non-existent command"
 msgstr "вы ввели несуществующую команду"
 
-#: ..\components\additional_funcs.py:1148
+#: ..\components\additional_funcs.py:1149
 msgid "{0} entered wrong argument(s) of command"
 msgstr "{0} неверно ввёл аргумент(ы) команды"
 
-#: ..\components\additional_funcs.py:1150
+#: ..\components\additional_funcs.py:1151
 msgid "you entered wrong argument(s) of this command"
 msgstr "вы неверно ввели аргумент(ы) этой команды"
 
-#: ..\components\additional_funcs.py:1153
+#: ..\components\additional_funcs.py:1154
 msgid "{0} entered disabled command"
 msgstr "{0} ввёл отключенную команду"
 
-#: ..\components\additional_funcs.py:1155
+#: ..\components\additional_funcs.py:1156
 msgid "you entered disabled command"
 msgstr "вы ввели отключенную команду"
 
-#: ..\components\additional_funcs.py:1158
+#: ..\components\additional_funcs.py:1159
 msgid "{0} entered a command that only works in the guild"
 msgstr "{0} ввёл команду, которая работает только в гильдии"
 
-#: ..\components\additional_funcs.py:1160
+#: ..\components\additional_funcs.py:1161
 msgid "this command only works on server"
 msgstr "эта команда работает только на сервере"
 
-#: ..\components\additional_funcs.py:1163
+#: ..\components\additional_funcs.py:1164
 msgid "{0} triggered a command more than {1} time(s) per {2} sec"
 msgstr "{0} вызвал команду больше чем {1} раз(а) за {2} сек"
 
-#: ..\components\additional_funcs.py:1166
+#: ..\components\additional_funcs.py:1167
 msgid ""
 "You triggered this command more than {0} time(s) per {1} sec\n"
 "Try again in {2} sec"
@@ -1855,15 +1855,15 @@ msgstr ""
 "Вы вызвали эту команду больше чем {0} раз(а) за {1} сек\n"
 "Попробуйте снова через {2} сек"
 
-#: ..\components\additional_funcs.py:1194
+#: ..\components\additional_funcs.py:1195
 msgid "this chat can't work! Cross-platform chat disabled!"
 msgstr "этот чат не может работать! Кроссплатформенный чат отключён!"
 
-#: ..\components\additional_funcs.py:1200
+#: ..\components\additional_funcs.py:1201
 msgid "server is restarting!"
 msgstr "сервер перезагружается!"
 
-#: ..\components\additional_funcs.py:1211
+#: ..\components\additional_funcs.py:1212
 msgid ""
 "version of your Minecraft server is lower than `1.7.2` so bot can't send "
 "messages from discord to Minecraft!"
@@ -1871,7 +1871,7 @@ msgstr ""
 "версия вашего майнкрафт сервера ниже, чем `1.7.2`, поэтому бот не может "
 "отправлять сообщения из дискорда в майнкрафт!"
 
-#: ..\components\additional_funcs.py:1281
+#: ..\components\additional_funcs.py:1282
 msgid "No players on server!"
 msgstr "На сервере нет игроков!"
 
@@ -1895,7 +1895,7 @@ msgstr ""
 msgid "Watcher Unhandled Error: {0}"
 msgstr "Необработанная ошибка наблюдателя: {0}"
 
-#: ..\components\watcher_handle.py:291
+#: ..\components\watcher_handle.py:289
 msgid ""
 "Too many login attempts\n"
 "Your IP: {0}"
@@ -1903,7 +1903,7 @@ msgstr ""
 "Слишком много попыток авторизации\n"
 "Ваш IP: {0}"
 
-#: ..\components\watcher_handle.py:293
+#: ..\components\watcher_handle.py:291
 msgid ""
 "Too many login attempts: User was banned!\n"
 "Nick: {0}\n"
@@ -1915,7 +1915,7 @@ msgstr ""
 "IP: {1}\n"
 "Время: {2}"
 
-#: ..\components\watcher_handle.py:301
+#: ..\components\watcher_handle.py:299
 msgid ""
 "Not authorized\n"
 "Your IP: {0}\n"
@@ -1925,7 +1925,7 @@ msgstr ""
 "Ваш IP: {0}\n"
 "Код: {1}"
 
-#: ..\components\watcher_handle.py:308
+#: ..\components\watcher_handle.py:306
 msgid ""
 "Connection attempt detected!\n"
 "Nick: {0}\n"
@@ -1939,19 +1939,19 @@ msgstr ""
 "Попыток подключения: {2}\n"
 "Время: {3}"
 
-#: ..\components\watcher_handle.py:314
+#: ..\components\watcher_handle.py:312
 msgid "To proceed enter command `{0}` within {1} min"
 msgstr "Чтобы продолжить введите команду `{0}` в течение {1} мин"
 
-#: ..\config\init_config.py:534
+#: ..\config\init_config.py:539
 msgid "There are some mismatched backups entries in '{0}':"
 msgstr "В '{0}' есть несколько несоответствующих записей резервных копий:"
 
-#: ..\config\init_config.py:539
+#: ..\config\init_config.py:544
 msgid "Deleted backup entry named '{0}'"
 msgstr "Удаленная резервная запись с именем '{0}'"
 
-#: ..\config\init_config.py:543
+#: ..\config\init_config.py:548
 msgid ""
 "Starting checking backups folder '{0}' for nonexistent files and folder by "
 "using '{1}'"
@@ -1959,15 +1959,15 @@ msgstr ""
 "Начинаем проверку папки резервных копий '{0}' на наличие несуществующих "
 "файлов и папок с помощью '{1}'"
 
-#: ..\config\init_config.py:555
+#: ..\config\init_config.py:560
 msgid "Deleted file in path '{0}'"
 msgstr "Удалён файл по пути '{0}'"
 
-#: ..\config\init_config.py:558
+#: ..\config\init_config.py:563
 msgid "Deleted folder in path '{0}'"
 msgstr "Удалена папка по пути '{0}'"
 
-#: ..\config\init_config.py:563
+#: ..\config\init_config.py:568
 msgid ""
 "File '{0}' doesn't exist! Run Minecraft server manually to create one and "
 "accept eula!"
@@ -1975,7 +1975,7 @@ msgstr ""
 "Файл '{0}' не существует! Запустите майнкрафт сервер вручную, чтобы создать "
 "его и примите eula!"
 
-#: ..\config\init_config.py:572
+#: ..\config\init_config.py:577
 msgid ""
 "File '{0}' doesn't have any parameters! Accept eula and run Minecraft server "
 "manually to fill it with parameters!"
@@ -1983,7 +1983,7 @@ msgstr ""
 "Файл '{0}' не имеет никаких параметров! Примите eula и запустите майнкрафт "
 "сервер вручную, чтобы заполнить его параметрами!"
 
-#: ..\config\init_config.py:596
+#: ..\config\init_config.py:601
 msgid ""
 "Reminder: For better security you have to change this password for a more "
 "secure one."
@@ -1991,113 +1991,117 @@ msgstr ""
 "Напоминание: Для большей безопасности вам необходимо сменить этот пароль на "
 "более безопасный."
 
-#: ..\config\init_config.py:619
+#: ..\config\init_config.py:624
 msgid "Note: In '{0}' bot set these parameters:"
 msgstr "Примечание: в '{0}' бот установил следующие параметры:"
 
-#: ..\config\init_config.py:667 ..\config\init_config.py:676
+#: ..\config\init_config.py:673 ..\config\init_config.py:685
 msgid "Your number lower than {0}!"
 msgstr "Ваше число меньше чем {0}!"
 
-#: ..\config\init_config.py:671
+#: ..\config\init_config.py:676 ..\config\init_config.py:688
+msgid "Your number higher than {0}!"
+msgstr "Ваше число больше чем {0}!"
+
+#: ..\config\init_config.py:680
 msgid "Your string doesn't contain an integer!"
 msgstr "Ваша строка не содержит целого числа!"
 
-#: ..\config\init_config.py:680
+#: ..\config\init_config.py:692
 msgid "Your string doesn't contain a fractional number!"
 msgstr "Ваша строка не содержит дробного числа!"
 
-#: ..\config\init_config.py:689
+#: ..\config\init_config.py:701
 msgid "File '{0}' wasn't found! Setting up a new one!"
 msgstr "Файл '{0}' не найден! Настраиваем новый!"
 
-#: ..\config\init_config.py:691
+#: ..\config\init_config.py:703
 msgid "File '{0}' was found!"
 msgstr "Файл '{0}' был найден!"
 
-#: ..\config\init_config.py:715
+#: ..\config\init_config.py:727
 msgid "Config saved!"
 msgstr "Конфиг сохранён!"
 
-#: ..\config\init_config.py:716
+#: ..\config\init_config.py:728
 msgid "Config read!"
 msgstr "Конфиг прочитан!"
 
-#: ..\config\init_config.py:732
+#: ..\config\init_config.py:744
 msgid "Bot selected language based on your system language."
 msgstr "Бот выбрал русский основываясь на вашем системном языке."
 
-#: ..\config\init_config.py:735
+#: ..\config\init_config.py:747
 msgid "Do you want to change it?"
 msgstr "Вы хотите поменять его?"
 
-#: ..\config\init_config.py:737
+#: ..\config\init_config.py:749
 msgid "Enter one of these two-letter language codes: "
 msgstr "Введите один из этих двухбуквенных языковых кодов: "
 
-#: ..\config\init_config.py:743
+#: ..\config\init_config.py:755
 msgid "This language selected!"
 msgstr "Русский язык выбран!"
 
-#: ..\config\init_config.py:746
+#: ..\config\init_config.py:758
 msgid "Bot doesn't have such language. Try again."
 msgstr "У бота нет такого языка. Попробуйте снова."
 
-#: ..\config\init_config.py:753
+#: ..\config\init_config.py:765
 msgid "Token not founded. Enter token"
 msgstr "Токен не найден. Введите токен"
 
-#: ..\config\init_config.py:759
+#: ..\config\init_config.py:771
 msgid "Enter bot prefix"
 msgstr "Введите префикс бота"
 
-#: ..\config\init_config.py:760
+#: ..\config\init_config.py:772
 msgid "Bot prefix set to '{0}'."
 msgstr "Префикс бота - '{0}'."
 
-#: ..\config\init_config.py:768
+#: ..\config\init_config.py:780
 msgid "Default help arguments for each command are {0}."
 msgstr "Аргументы справки по умолчанию для каждой команды - {0}."
 
-#: ..\config\init_config.py:770
+#: ..\config\init_config.py:782
 msgid "Would you like to add something else?"
 msgstr "Хотите добавить какие-то ещё?"
 
-#: ..\config\init_config.py:771
+#: ..\config\init_config.py:783
 msgid "Enter new arguments comma separated"
 msgstr "Введите новые аргументы через запятую"
 
-#: ..\config\init_config.py:774
+#: ..\config\init_config.py:786
 msgid "Arguments added!"
 msgstr "Аргументы добавлены!"
 
-#: ..\config\init_config.py:775
+#: ..\config\init_config.py:787
 msgid "Help arguments for each command set to {0}."
 msgstr "Аргументы справки для каждой команды - {0}."
 
-#: ..\config\init_config.py:783
+#: ..\config\init_config.py:795
 msgid "Role for specific commands is '{0}'."
 msgstr "Роль для определённых команд - '{0}'."
 
-#: ..\config\init_config.py:785
+#: ..\config\init_config.py:797
 msgid "Role for specific commands doesn't stated."
 msgstr "Роль для определённых команд не указана."
 
-#: ..\config\init_config.py:789
+#: ..\config\init_config.py:801
 msgid "Do you want to set role for some specific commands?"
 msgstr "Вы хотите поставить роль для определённых команд?"
 
-#: ..\config\init_config.py:791
+#: ..\config\init_config.py:803
 msgid "Set discord role for some specific commands such as start, stop, etc."
 msgstr ""
 "Установите роль в дискорде для определённых команд, таких как start, stop, и "
 "т. д."
 
-#: ..\config\init_config.py:798
+#: ..\config\init_config.py:810
 msgid "Admin role for bot is '{0}'."
 msgstr "Роль админа для бота - '{0}'."
 
-#: ..\config\init_config.py:800
+#: ..\config\init_config.py:812
 msgid ""
 "Admin role for bot doesn't stated. Bot will check if member has "
 "'Administrator' permission."
@@ -2105,47 +2109,47 @@ msgstr ""
 "Роль админа для бота не указана. Бот проверит, есть ли у пользователя право "
 "доступа 'Администратор'."
 
-#: ..\config\init_config.py:804
+#: ..\config\init_config.py:816
 msgid "Do you want to set admin role for bot?"
 msgstr "Вы хотите поставить роль админа?"
 
-#: ..\config\init_config.py:806
+#: ..\config\init_config.py:818
 msgid "Set discord admin role for bot"
 msgstr "Установите роль админа в дискорде для бота"
 
-#: ..\config\init_config.py:817
+#: ..\config\init_config.py:829
 msgid "change"
 msgstr "изменить"
 
-#: ..\config\init_config.py:819
+#: ..\config\init_config.py:831
 msgid "enter"
 msgstr "ввести"
 
-#: ..\config\init_config.py:820
+#: ..\config\init_config.py:832
 msgid "Would you like to "
 msgstr "Вы хотите "
 
-#: ..\config\init_config.py:821
+#: ..\config\init_config.py:833
 msgid " vk account data?"
 msgstr " данные аккаунта вк?"
 
-#: ..\config\init_config.py:823
+#: ..\config\init_config.py:835
 msgid "Enter vk login"
 msgstr "Введите логин вк"
 
-#: ..\config\init_config.py:825
+#: ..\config\init_config.py:837
 msgid "Enter vk password"
 msgstr "Введите пароль вк"
 
-#: ..\config\init_config.py:827
+#: ..\config\init_config.py:839
 msgid "Never ask about it again?"
 msgstr "Никогда не спрашивать об этом снова?"
 
-#: ..\config\init_config.py:832
+#: ..\config\init_config.py:844
 msgid "I'll never ask you about it again."
 msgstr "Я никогда не спрошу вас об этом снова."
 
-#: ..\config\init_config.py:834
+#: ..\config\init_config.py:846
 msgid ""
 "Vk account data not received.\n"
 "I'll never ask you about it again.\n"
@@ -2155,19 +2159,19 @@ msgstr ""
 "Я больше никогда тебя об этом не буду спрашивать.\n"
 "Примечание: Команда {0}say не будет работать."
 
-#: ..\config\init_config.py:841
+#: ..\config\init_config.py:853
 msgid "Vk account data not received. Why man?"
 msgstr "Данные аккаунта вк не получены. Зачем чувак?"
 
-#: ..\config\init_config.py:843
+#: ..\config\init_config.py:855
 msgid "Vk account data not received."
 msgstr "Данные аккаунта вк не получены."
 
-#: ..\config\init_config.py:847
+#: ..\config\init_config.py:859
 msgid "Vk account data received."
 msgstr "Данные аккаунта вк получены."
 
-#: ..\config\init_config.py:849
+#: ..\config\init_config.py:861
 msgid ""
 "Vk account data not received.\n"
 "Note: Command {0}say won't work."
@@ -2175,38 +2179,38 @@ msgstr ""
 "Данные аккаунта вк не получены.\n"
 "Примечание: Команда {0}say не будет работать."
 
-#: ..\config\init_config.py:858
+#: ..\config\init_config.py:870
 msgid "Enter server's real IP-address or DNS-name"
 msgstr "Введите реальный IP-адрес или DNS-имя сервера"
 
-#: ..\config\init_config.py:859
+#: ..\config\init_config.py:871
 msgid "Server's real IP-address or DNS-name is '{0}'."
 msgstr "Реальный IP-адрес или DNS-имя сервера - '{0}'."
 
-#: ..\config\init_config.py:867
+#: ..\config\init_config.py:879
 msgid "Enter server's local address (default - 'localhost')"
 msgstr "Введите локальный адрес сервера (по умолчанию - localhost)"
 
-#: ..\config\init_config.py:874
+#: ..\config\init_config.py:886
 msgid "Do you want bot to log messages to '{0}' file?"
 msgstr "Вы хотите, чтобы бот логировал сообщения в файл '{0}'?"
 
-#: ..\config\init_config.py:882
+#: ..\config\init_config.py:894
 msgid ""
 "Set limit for deletion messages without poll (0 - for disable poll) (int)"
 msgstr ""
 "Установите предел на удаление сообщений без опроса (0 - для отключения "
 "опроса) (целое число)"
 
-#: ..\config\init_config.py:890
+#: ..\config\init_config.py:902
 msgid "Menu message id not found. Would you like to enter it?"
 msgstr "Id сообщения меню не найден. Вы хотите его ввести?"
 
-#: ..\config\init_config.py:893
+#: ..\config\init_config.py:905
 msgid "Enter menu message id"
 msgstr "Введите id сообщения меню"
 
-#: ..\config\init_config.py:896
+#: ..\config\init_config.py:908
 msgid ""
 "Menu via reactions wouldn't work. To make it work type '{0}menu' to create "
 "new menu and its id."
@@ -2214,15 +2218,15 @@ msgstr ""
 "Меню через реакции не будет работать. Чтобы оно заработало, введите '{0}"
 "menu' для создания нового меню и его id."
 
-#: ..\config\init_config.py:904
+#: ..\config\init_config.py:916
 msgid "Commands' channel id not found. Would you like to enter it?"
 msgstr "Id канала команд не найден. Вы хотите его ввести?"
 
-#: ..\config\init_config.py:907
+#: ..\config\init_config.py:919
 msgid "Enter commands' channel id"
 msgstr "Введите id канала команд"
 
-#: ..\config\init_config.py:910
+#: ..\config\init_config.py:922
 msgid ""
 "Bot send some push events to the channel it can post. To make it work rigth "
 "type '{0}channel commands' to create a link."
@@ -2231,28 +2235,28 @@ msgstr ""
 "опубликовать. Чтобы заставить его работать правильно, введите '{0}channel "
 "commands' для создания ссылки."
 
-#: ..\config\init_config.py:919
+#: ..\config\init_config.py:931
 msgid "Set gaming status"
 msgstr "Установите игровой статус"
 
-#: ..\config\init_config.py:923
+#: ..\config\init_config.py:935
 msgid "Set idle status"
 msgstr "Введите статус в состоянии ожидания"
 
-#: ..\config\init_config.py:930
+#: ..\config\init_config.py:942
 msgid "Set default number of times to op for every player (int):"
 msgstr ""
 "Установите количество раз на получения оператора по умолчанию для каждого "
 "игрока (int):"
 
-#: ..\config\init_config.py:937
+#: ..\config\init_config.py:949
 msgid ""
 "Timeout between check-ups 'Server on/off' set below 1. Change this option."
 msgstr ""
 "Время ожидания между проверками 'Сервер включен/выключен' установлено ниже "
 "1. Измените этот параметр."
 
-#: ..\config\init_config.py:938
+#: ..\config\init_config.py:950
 msgid ""
 "Note: If your machine has processor with frequency 2-2.5 GHz, you have to "
 "set this option at least to '2' seconds or higher for the bot to work "
@@ -2262,131 +2266,131 @@ msgstr ""
 "ГГц, для правильной работы бота необходимо установить для этого параметра "
 "как минимум значение '2' секунды или больше."
 
-#: ..\config\init_config.py:943
+#: ..\config\init_config.py:955
 msgid "Set timeout between check-ups 'Server on/off' (in seconds, int)"
 msgstr ""
 "Установите время ожидания между проверками 'Сервер включен/выключен' (в "
 "секундах, целое число)"
 
-#: ..\config\init_config.py:945
+#: ..\config\init_config.py:957
 msgid "Timeout between check-ups 'Server on/off' set to {0} sec."
 msgstr ""
 "Время ожидания между проверками 'Сервер включен/выключен' установлено на {0} "
 "сек."
 
-#: ..\config\init_config.py:951
+#: ..\config\init_config.py:963
 msgid "Timeout for op set below 0. Change this option."
 msgstr "Время ожидания для op'ки установлено ниже 0. Измените этот параметр."
 
-#: ..\config\init_config.py:953
+#: ..\config\init_config.py:965
 msgid "Set timeout for op (0 - for unlimited timeout) (in seconds, int)"
 msgstr ""
 "Установите время ожидания для op'ки (0 - для неограниченного времени "
 "ожидания) (в секундах, целое число)"
 
-#: ..\config\init_config.py:956
+#: ..\config\init_config.py:968
 msgid "Timeout for op set to {0} sec."
 msgstr "Время ожидания для op'ки установлено на {0} сек."
 
-#: ..\config\init_config.py:959
+#: ..\config\init_config.py:971
 msgid "Limitation doesn't exist, padawan."
 msgstr "Ограничения не существует, падаван."
 
-#: ..\config\init_config.py:964
+#: ..\config\init_config.py:976
 msgid ""
 "Timeout while bot pinging server for info set below 0. Change this option."
 msgstr ""
 "Время ожидания, пока бот пингует сервер для получения информации, "
 "установлено ниже 0. Измените этот параметр."
 
-#: ..\config\init_config.py:966
+#: ..\config\init_config.py:978
 msgid "Set timeout while bot pinging server for info (in seconds, float)"
 msgstr ""
 "Установите время ожидания, пока бот пингует сервер для получения информации "
 "(в секундах, целое число)"
 
-#: ..\config\init_config.py:969
+#: ..\config\init_config.py:981
 msgid "Timeout while bot pinging server for info set to {0} sec."
 msgstr ""
 "Время ожидания, пока бот пингует сервер для получения информации, "
 "установлено на {0} сек."
 
-#: ..\config\init_config.py:972
+#: ..\config\init_config.py:984
 msgid "I'm fast as f*ck, boi!"
 msgstr "Я чертовски быстр, сынок!"
 
-#: ..\config\init_config.py:977
+#: ..\config\init_config.py:989
 msgid "Timeout before message deletion is set below 1. Change this option."
 msgstr ""
 "Время ожидания перед удалением сообщения установлено ниже 1. Измените этот "
 "параметр."
 
-#: ..\config\init_config.py:980
+#: ..\config\init_config.py:992
 msgid "Set timeout before message deletion (in seconds, int)"
 msgstr ""
 "Установите время ожидания перед удалением сообщения (в секундах, целое число)"
 
-#: ..\config\init_config.py:982
+#: ..\config\init_config.py:994
 msgid "Timeout before message deletion is set to {0} sec."
 msgstr "Время ожидания перед удалением сообщения установлено на {0} сек."
 
-#: ..\config\init_config.py:989
+#: ..\config\init_config.py:1001
 msgid "Selected Minecraft server number is out of range! Bot set it to '1'."
 msgstr ""
 "Выбранный номер майнкрафт сервера вне допустимого диапазона! Бот установил "
 "его на '1'."
 
-#: ..\config\init_config.py:992 ..\config\init_config.py:1019
+#: ..\config\init_config.py:1004 ..\config\init_config.py:1031
 msgid "Selected Minecraft server dir set to path '{0}' also known as '{1}'."
 msgstr ""
 "Выбранная директория майнкрафт сервера установлена на путь '{0}', также "
 "известная как '{1}'."
 
-#: ..\config\init_config.py:998
+#: ..\config\init_config.py:1010
 msgid "How much servers you intend to keep?"
 msgstr "Сколько серверов вы собираетесь держать?"
 
-#: ..\config\init_config.py:1013
+#: ..\config\init_config.py:1025
 msgid "Would you like to delete this server '{0}'?"
 msgstr "Вы хотите удалить этот сервер '{0}'?"
 
-#: ..\config\init_config.py:1028
+#: ..\config\init_config.py:1040
 msgid "Would you like to change this server '{0}'?"
 msgstr "Хотите изменить этот сервер \"{0}\"?"
 
-#: ..\config\init_config.py:1033
+#: ..\config\init_config.py:1045
 msgid "Configuring new server settings..."
 msgstr "Настраиваем новые параметры для сервера..."
 
-#: ..\config\init_config.py:1037 ..\config\init_config.py:1043
+#: ..\config\init_config.py:1049 ..\config\init_config.py:1055
 msgid "Enter server name"
 msgstr "Введите название сервера"
 
-#: ..\config\init_config.py:1042
+#: ..\config\init_config.py:1054
 msgid "Change server name '{0}'?"
 msgstr "Изменить название сервера '{0}'?"
 
-#: ..\config\init_config.py:1045
+#: ..\config\init_config.py:1057
 msgid "Change server working directory '{0}'?"
 msgstr "Изменить рабочую директорию сервера '{0}'?"
 
-#: ..\config\init_config.py:1049
+#: ..\config\init_config.py:1061
 msgid "Change server start file name '{0}'?"
 msgstr "Изменить название файла запуска сервера '{0}'?"
 
-#: ..\config\init_config.py:1058
+#: ..\config\init_config.py:1070
 msgid "Enter server working directory (full path)"
 msgstr "Введите рабочую директорию сервера (полный путь)"
 
-#: ..\config\init_config.py:1063
+#: ..\config\init_config.py:1075
 msgid "There are no '*.jar' files in this working directory."
 msgstr "В этой рабочей директории нет файлов '*.jar'."
 
-#: ..\config\init_config.py:1065
+#: ..\config\init_config.py:1077
 msgid "This working directory is wrong."
 msgstr "Эта рабочая директория - неправильная."
 
-#: ..\config\init_config.py:1074
+#: ..\config\init_config.py:1086
 msgid ""
 "Bot detected your operating system is Linux.\n"
 "Bot will search for '*.sh' file.\n"
@@ -2396,7 +2400,7 @@ msgstr ""
 "Бот будет искать файл '*.sh'.\n"
 "Вам необходимо ввести имя файла {0}без{1} расширения файла!"
 
-#: ..\config\init_config.py:1079
+#: ..\config\init_config.py:1091
 msgid ""
 "Bot detected your operating system is Windows.\n"
 "Bot will search for '*.bat' file.\n"
@@ -2406,7 +2410,7 @@ msgstr ""
 "Бот будет искать файл '*.bat'.\n"
 "Вам необходимо ввести имя файла {0}без{1} расширения файла!"
 
-#: ..\config\init_config.py:1083
+#: ..\config\init_config.py:1095
 msgid ""
 "Bot couldn't detect your operating system.\n"
 "You need to enter file name {0}with{1} file extension!"
@@ -2414,19 +2418,19 @@ msgstr ""
 "Бот не смог обнаружить вашу операционную систему.\n"
 "Вам необходимо ввести имя файла {0}с{1} расширением!"
 
-#: ..\config\init_config.py:1086
+#: ..\config\init_config.py:1098
 msgid "Enter server start file name"
 msgstr "Введите имя файла для запуска сервера"
 
-#: ..\config\init_config.py:1091
+#: ..\config\init_config.py:1103
 msgid "This start file doesn't exist."
 msgstr "Этого файла для запуска сервера не существует."
 
-#: ..\config\init_config.py:1096
+#: ..\config\init_config.py:1108
 msgid "Watcher's delay to refresh doesn't set."
 msgstr "Задержка наблюдателя на обновление не установлена."
 
-#: ..\config\init_config.py:1097
+#: ..\config\init_config.py:1109
 msgid ""
 "Note: If your machine has processor with frequency 2-2.5 GHz, you have to "
 "set this option from '0.5' to '0.9' second for the bot to work properly."
@@ -2435,32 +2439,32 @@ msgstr ""
 "должны установить для этого параметра значение от '0,5' до '0,9' секунды, "
 "чтобы бот работал правильно."
 
-#: ..\config\init_config.py:1101
+#: ..\config\init_config.py:1113
 msgid "Set delay to refresh (in seconds, float)"
 msgstr "Установите задержку обновления (в секундах, дробное число)"
 
-#: ..\config\init_config.py:1105
+#: ..\config\init_config.py:1117
 msgid "Watcher's number of lines to check in server log doesn't set."
 msgstr ""
 "Количество строк для проверки наблюдателем в логе сервера не установлено."
 
-#: ..\config\init_config.py:1107
+#: ..\config\init_config.py:1119
 msgid "Set number of lines to check"
 msgstr "Установите количество строк для проверки"
 
-#: ..\config\init_config.py:1112
+#: ..\config\init_config.py:1124
 msgid "Would you like to enable cross-platform chat?"
 msgstr "Вы хотите включить кроссплатформенный чат?"
 
-#: ..\config\init_config.py:1118
+#: ..\config\init_config.py:1130
 msgid "Channel id not found. Would you like to enter it?"
 msgstr "Id канала не найден. Вы хотите его ввести?"
 
-#: ..\config\init_config.py:1121
+#: ..\config\init_config.py:1133
 msgid "Enter channel id"
 msgstr "Введите id канала"
 
-#: ..\config\init_config.py:1123
+#: ..\config\init_config.py:1135
 msgid ""
 "Cross-platform chat wouldn't work. To make it work type '{0}chat <id>' to "
 "create link."
@@ -2468,41 +2472,60 @@ msgstr ""
 "Кроссплатформенный чат не будет работать. Чтобы он заработал, введите '{0}"
 "chat <id>' для создания ссылки."
 
-#: ..\config\init_config.py:1128
+#: ..\config\init_config.py:1140
 msgid ""
 "Webhook url for cross-platform chat not found. Would you like to enter it?"
 msgstr ""
 "Url-адрес вебхука для кроссплатформенного чата не найден. Вы хотите его "
 "ввести?"
 
-#: ..\config\init_config.py:1131
+#: ..\config\init_config.py:1143
 msgid "Enter webhook url"
 msgstr "Введите url-адрес вебхука"
 
-#: ..\config\init_config.py:1133
+#: ..\config\init_config.py:1145
 msgid ""
 "Cross-platform chat wouldn't work. Create webhook and enter it to bot config!"
 msgstr ""
 "Кроссплатформенный чат не будет работать. Создайте вебхук и введите его в "
 "конфиге бота!"
 
-#: ..\config\init_config.py:1137
+#: ..\config\init_config.py:1149
 msgid "Cross-platform chat wouldn't work."
 msgstr "Кроссплатформенный чат не будет работать."
 
-#: ..\config\init_config.py:1140
+#: ..\config\init_config.py:1155
+msgid ""
+"Enter how many words in mention from Minecraft chat bot can parse (0 - "
+"handle only mentions with one word) (default - 5, int)"
+msgstr ""
+"Введите сколько слов в упоминании из чата майнкрафта бот может разобрать (0 "
+"- обрабатывать только упоминания с одним словом) (по умолчанию - 5, целое "
+"число)"
+
+#: ..\config\init_config.py:1166
+msgid ""
+"Enter how many characters from right side of mention bot can remove to find "
+"similar mention in discord (0 - don't try to find similar ones) (default - "
+"5, int)"
+msgstr ""
+"Введите сколько символов из правой части упоминания бот может удалить, чтобы "
+"найти похожее упоминание в дискорде (0 - не пытаться найти похожие) (по "
+"умолчанию - 5, целое число)"
+
+#: ..\config\init_config.py:1172
 msgid "Cross-platform chat enabled."
 msgstr "Кроссплатформенный чат включён."
 
-#: ..\config\init_config.py:1142
+#: ..\config\init_config.py:1174
 msgid "Cross-platform chat disabled."
 msgstr "Кроссплатформенный чат отключён."
 
-#: ..\config\init_config.py:1146
+#: ..\config\init_config.py:1178
 msgid "Would you like to enable authorization security?"
 msgstr "Вы хотите включить безопасную авторизацию?"
 
-#: ..\config\init_config.py:1154
+#: ..\config\init_config.py:1186
 msgid ""
 "Enter how many attempts bot will accept connection from a certain IP address "
 "before it bans this IP"
@@ -2510,118 +2533,125 @@ msgstr ""
 "Введите сколько попыток бот будет принимать соединение с определенного IP-"
 "адреса, прежде чем он забанит этот IP"
 
-#: ..\config\init_config.py:1160
-msgid "Enter how many days IP address will be valid before it expires"
+#: ..\config\init_config.py:1193
+msgid "Enter how many days IP address will be valid before it expires (int)"
 msgstr ""
 "Введите сколько дней IP-адрес будет действителен до истечения срока его "
-"действия"
+"действия (целое число)"
 
-#: ..\config\init_config.py:1165
-msgid "Enter how many minutes code will be valid before it expires"
+#: ..\config\init_config.py:1199
+msgid "Enter how many characters the code should consist of (default - 6, int)"
 msgstr ""
-"Введите сколько минут код будет действителен до истечения срока его действия"
+"Введите количество символов, из которых должен состоять код (по умолчанию - "
+"6, целое число)"
 
-#: ..\config\init_config.py:1169
+#: ..\config\init_config.py:1204
+msgid "Enter how many minutes code will be valid before it expires (int)"
+msgstr ""
+"Введите сколько минут код будет действителен до истечения срока его действия "
+"(целое число)"
+
+#: ..\config\init_config.py:1208
 msgid "Secure authorization enabled."
 msgstr "Безопасная авторизация включена."
 
-#: ..\config\init_config.py:1171
+#: ..\config\init_config.py:1210
 msgid "Secure authorization disabled."
 msgstr "Безопасная авторизация выключена."
 
-#: ..\config\init_config.py:1177
+#: ..\config\init_config.py:1216
 msgid "Would you like to enable RSS feed?"
 msgstr "Вы хотите включить RSS-канал?"
 
-#: ..\config\init_config.py:1181
+#: ..\config\init_config.py:1220
 msgid "Webhook RSS url not found. Would you like to enter it?"
 msgstr "Url-адрес вебхука RSS не найден. Вы хотите его ввести?"
 
-#: ..\config\init_config.py:1184
+#: ..\config\init_config.py:1223
 msgid "Enter webhook RSS url"
 msgstr "Введите url-адрес вебхука"
 
-#: ..\config\init_config.py:1186
+#: ..\config\init_config.py:1225
 msgid "RSS wouldn't work. Create webhook and enter it to bot config!"
 msgstr "RSS не будет работать. Создайте вебхук и введите его в конфиге бота!"
 
-#: ..\config\init_config.py:1190
+#: ..\config\init_config.py:1229
 msgid "RSS url not found. Would you like to enter it?"
 msgstr "Url-адрес для RSS не найден. Вы хотите его ввести?"
 
-#: ..\config\init_config.py:1192
+#: ..\config\init_config.py:1231
 msgid "Enter RSS url"
 msgstr "Введите url-адрес для RSS"
 
-#: ..\config\init_config.py:1194
+#: ..\config\init_config.py:1233
 msgid "RSS wouldn't work. Enter url of RSS feed to bot config!"
 msgstr "RSS не будет работать. Введите url-адрес для RSS в конфиге бота!"
 
-#: ..\config\init_config.py:1197
+#: ..\config\init_config.py:1236
 msgid "RSS download delay doesn't set."
 msgstr "Задержка скачивания RSS не установлена."
 
-#: ..\config\init_config.py:1199
+#: ..\config\init_config.py:1238
 msgid "Enter RSS download delay (in seconds, int)"
 msgstr "Введите задержку скачивания RSS (в секундах, целое число)"
 
-#: ..\config\init_config.py:1206
+#: ..\config\init_config.py:1245
 msgid "RSS feed wouldn't work."
 msgstr "RSS-канал не будет работать."
 
-#: ..\config\init_config.py:1209
+#: ..\config\init_config.py:1248
 msgid "RSS feed enabled."
 msgstr "RSS-канал включён."
 
-#: ..\config\init_config.py:1211
+#: ..\config\init_config.py:1250
 msgid "RSS feed disabled."
 msgstr "RSS-канал выключен."
 
-#: ..\config\init_config.py:1218
+#: ..\config\init_config.py:1257
 msgid "Automatic backup isn't set. Would you like to enable them?"
 msgstr ""
 "Автоматическое резервное копирование не установлено. Вы хотите включить его?"
 
-#: ..\config\init_config.py:1223
+#: ..\config\init_config.py:1262
 msgid "Set period of automatic backups (in minutes, int)"
 msgstr ""
 "Установите период автоматического резервного копирования (в минутах, целое "
 "число)"
 
-#: ..\config\init_config.py:1228
+#: ..\config\init_config.py:1267
 msgid "Enter name of the backups folder for each Minecraft server"
 msgstr "Введите имя папки резервных копий для каждого майнкрафт сервера"
 
-#: ..\config\init_config.py:1234
+#: ..\config\init_config.py:1273
 msgid ""
 "Max backups' count limit for server not found. Would you like to set it?"
 msgstr ""
 "Максимальный предел количества резервных копий для сервера не найден. Вы "
 "хотите его установить?"
 
-#: ..\config\init_config.py:1237
+#: ..\config\init_config.py:1276
 msgid "Set max backups' count limit for server (int)"
 msgstr ""
 "Максимальный предел количества резервных копий для сервера (целое число)"
 
-#: ..\config\init_config.py:1248
+#: ..\config\init_config.py:1287
 msgid "Backups' size limit for server not found. Would you like to set it?"
 msgstr ""
 "Предел размера резервных копий для сервера не найден. Вы хотите его "
 "установить?"
 
-#: ..\config\init_config.py:1251
+#: ..\config\init_config.py:1290
 msgid "Enter in what unit of measure you will set the limit"
 msgstr "Введите в каких единицах измерения вы установите предел"
 
-#: ..\config\init_config.py:1255
+#: ..\config\init_config.py:1294
 msgid "You have entered the wrong unit of measure!"
 msgstr "Вы ввели неверную единицу измерения!"
 
-#: ..\config\init_config.py:1258
+#: ..\config\init_config.py:1297
 msgid "Backups' size limit for server in {0} (int)"
 msgstr "Предел размера резервных копий для сервера в {0} (целое число)"
 
-#: ..\config\init_config.py:1268
+#: ..\config\init_config.py:1307
 msgid "Name of the backups folder in which bot will store them - '{0}'."
 msgstr "Имя папки резервных копий, в которой бот будет их сохранять - '{0}'."

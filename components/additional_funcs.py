@@ -1017,7 +1017,8 @@ async def send_help_of_command(ctx, command):
         for arg_name, arg_type in params.items():
             str_help += f"{arg_name}: {arg_type}\n" + \
                         get_translation(f'help_{str(command).replace(" ", "_")}_{arg_name}') \
-                            .format(prefix=Config.get_settings().bot_settings.prefix) + "\n\n"
+                            .format(prefix=Config.get_settings().bot_settings.prefix,
+                                    code_length=Config.get_secure_auth().code_length) + "\n\n"
     await ctx.send(add_quotes(f"\n{str_help}"))
 
 
