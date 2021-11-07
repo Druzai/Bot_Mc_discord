@@ -31,7 +31,7 @@ class Poll(commands.Cog):
                 if role.name == needed_role:
                     mention = role.mention
         start_msg = await ctx.send(f"{mention}, {message} " +
-                                   get_translation("To win the poll needed {0} votes!").format(str(need_for_voting)))
+                                   get_translation("To win the poll needed {0} vote(s)!").format(str(need_for_voting)))
         poll_msg = await self.make_embed(ctx)
         current_poll = Poll.PollContent(ctx, command, need_for_voting, needed_role, remove_logs_after, admin_needed)
         self._polls[poll_msg.id] = current_poll

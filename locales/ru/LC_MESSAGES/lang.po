@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
-"POT-Creation-Date: 2021-11-05 19:56+0300\n"
-"PO-Revision-Date: 2021-11-05 19:58+0300\n"
+"POT-Creation-Date: 2021-11-07 23:46+0300\n"
+"PO-Revision-Date: 2021-11-07 23:47+0300\n"
 "Last-Translator: Druzai <astyn37@gmail.com>\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -18,19 +18,19 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
 
-#: ..\Discord_bot.py:91 ..\commands\minecraft_commands.py:767
+#: ..\Discord_bot.py:93 ..\commands\minecraft_commands.py:767
 msgid "Server info read!"
 msgstr "Информация о сервере прочтена!"
 
-#: ..\Discord_bot.py:94
+#: ..\Discord_bot.py:96
 msgid "Bot/Discord Error: Your token is wrong"
 msgstr "Ошибка бота/дискорда: Ваш токен не правильный"
 
-#: ..\Discord_bot.py:96
+#: ..\Discord_bot.py:98
 msgid "Bot Error: {0}"
 msgstr "Ошибка бота: {0}"
 
-#: ..\Discord_bot.py:99
+#: ..\Discord_bot.py:101
 msgid "Bot/Discord Error: Something went wrong"
 msgstr "Ошибка бота/дискорда: Что-то пошло не так"
 
@@ -979,12 +979,12 @@ msgstr ""
 "Мой_ник`."
 
 #: ..\commands\minecraft_commands.py:234
-msgid "This nick is already associated with {0}."
-msgstr "Этот ник уже ассоциирован с {0}."
+msgid "This nick is already associated with nick `{0}`."
+msgstr "Этот ник уже ассоциирован с ником `{0}`."
 
 #: ..\commands\minecraft_commands.py:239
-msgid "Now {0} associates with nick in Minecraft {1}."
-msgstr "Теперь {0} ассоциируется с {1} ником в майнкрафте."
+msgid "Now {0} associates with nick `{1}` in Minecraft."
+msgstr "Теперь {0} ассоциируется с ником `{1}` в майнкрафте."
 
 #: ..\commands\minecraft_commands.py:246
 msgid "Now link {0} -> {1} do not exist!"
@@ -1390,8 +1390,8 @@ msgid "Starting Minecraft server check-ups"
 msgstr "Запускаем проверки майнкрафт сервера"
 
 #: ..\commands\poll.py:34
-msgid "To win the poll needed {0} votes!"
-msgstr "Для победы в опросе необходимо {0} голосов!"
+msgid "To win the poll needed {0} vote(s)!"
+msgstr "Для победы в опросе необходимо {0} голос(ов)!"
 
 #: ..\commands\poll.py:48
 msgid "Poll result: canceled!"
@@ -1895,7 +1895,7 @@ msgstr ""
 msgid "Watcher Unhandled Error: {0}"
 msgstr "Необработанная ошибка наблюдателя: {0}"
 
-#: ..\components\watcher_handle.py:289
+#: ..\components\watcher_handle.py:287
 msgid ""
 "Too many login attempts\n"
 "Your IP: {0}"
@@ -1903,7 +1903,7 @@ msgstr ""
 "Слишком много попыток авторизации\n"
 "Ваш IP: {0}"
 
-#: ..\components\watcher_handle.py:291
+#: ..\components\watcher_handle.py:289
 msgid ""
 "Too many login attempts: User was banned!\n"
 "Nick: {0}\n"
@@ -1915,7 +1915,7 @@ msgstr ""
 "IP: {1}\n"
 "Время: {2}"
 
-#: ..\components\watcher_handle.py:299
+#: ..\components\watcher_handle.py:297
 msgid ""
 "Not authorized\n"
 "Your IP: {0}\n"
@@ -1925,7 +1925,7 @@ msgstr ""
 "Ваш IP: {0}\n"
 "Код: {1}"
 
-#: ..\components\watcher_handle.py:306
+#: ..\components\watcher_handle.py:304
 msgid ""
 "Connection attempt detected!\n"
 "Nick: {0}\n"
@@ -1939,7 +1939,7 @@ msgstr ""
 "Попыток подключения: {2}\n"
 "Время: {3}"
 
-#: ..\components\watcher_handle.py:312
+#: ..\components\watcher_handle.py:310
 msgid "To proceed enter command `{0}` within {1} min"
 msgstr "Чтобы продолжить введите команду `{0}` в течение {1} мин"
 
@@ -2494,7 +2494,7 @@ msgstr ""
 msgid "Cross-platform chat wouldn't work."
 msgstr "Кроссплатформенный чат не будет работать."
 
-#: ..\config\init_config.py:1155
+#: ..\config\init_config.py:1156
 msgid ""
 "Enter how many words in mention from Minecraft chat bot can parse (0 - "
 "handle only mentions with one word) (default - 5, int)"
@@ -2503,7 +2503,7 @@ msgstr ""
 "- обрабатывать только упоминания с одним словом) (по умолчанию - 5, целое "
 "число)"
 
-#: ..\config\init_config.py:1166
+#: ..\config\init_config.py:1169
 msgid ""
 "Enter how many characters from right side of mention bot can remove to find "
 "similar mention in discord (0 - don't try to find similar ones) (default - "
@@ -2513,19 +2513,19 @@ msgstr ""
 "найти похожее упоминание в дискорде (0 - не пытаться найти похожие) (по "
 "умолчанию - 5, целое число)"
 
-#: ..\config\init_config.py:1172
+#: ..\config\init_config.py:1175
 msgid "Cross-platform chat enabled."
 msgstr "Кроссплатформенный чат включён."
 
-#: ..\config\init_config.py:1174
+#: ..\config\init_config.py:1177
 msgid "Cross-platform chat disabled."
 msgstr "Кроссплатформенный чат отключён."
 
-#: ..\config\init_config.py:1178
+#: ..\config\init_config.py:1181
 msgid "Would you like to enable authorization security?"
 msgstr "Вы хотите включить безопасную авторизацию?"
 
-#: ..\config\init_config.py:1186
+#: ..\config\init_config.py:1189
 msgid ""
 "Enter how many attempts bot will accept connection from a certain IP address "
 "before it bans this IP"
@@ -2533,125 +2533,125 @@ msgstr ""
 "Введите сколько попыток бот будет принимать соединение с определенного IP-"
 "адреса, прежде чем он забанит этот IP"
 
-#: ..\config\init_config.py:1193
+#: ..\config\init_config.py:1196
 msgid "Enter how many days IP address will be valid before it expires (int)"
 msgstr ""
 "Введите сколько дней IP-адрес будет действителен до истечения срока его "
 "действия (целое число)"
 
-#: ..\config\init_config.py:1199
+#: ..\config\init_config.py:1203
 msgid "Enter how many characters the code should consist of (default - 6, int)"
 msgstr ""
 "Введите количество символов, из которых должен состоять код (по умолчанию - "
 "6, целое число)"
 
-#: ..\config\init_config.py:1204
+#: ..\config\init_config.py:1208
 msgid "Enter how many minutes code will be valid before it expires (int)"
 msgstr ""
 "Введите сколько минут код будет действителен до истечения срока его действия "
 "(целое число)"
 
-#: ..\config\init_config.py:1208
+#: ..\config\init_config.py:1212
 msgid "Secure authorization enabled."
 msgstr "Безопасная авторизация включена."
 
-#: ..\config\init_config.py:1210
+#: ..\config\init_config.py:1214
 msgid "Secure authorization disabled."
 msgstr "Безопасная авторизация выключена."
 
-#: ..\config\init_config.py:1216
+#: ..\config\init_config.py:1220
 msgid "Would you like to enable RSS feed?"
 msgstr "Вы хотите включить RSS-канал?"
 
-#: ..\config\init_config.py:1220
+#: ..\config\init_config.py:1224
 msgid "Webhook RSS url not found. Would you like to enter it?"
 msgstr "Url-адрес вебхука RSS не найден. Вы хотите его ввести?"
 
-#: ..\config\init_config.py:1223
+#: ..\config\init_config.py:1227
 msgid "Enter webhook RSS url"
 msgstr "Введите url-адрес вебхука"
 
-#: ..\config\init_config.py:1225
+#: ..\config\init_config.py:1229
 msgid "RSS wouldn't work. Create webhook and enter it to bot config!"
 msgstr "RSS не будет работать. Создайте вебхук и введите его в конфиге бота!"
 
-#: ..\config\init_config.py:1229
+#: ..\config\init_config.py:1233
 msgid "RSS url not found. Would you like to enter it?"
 msgstr "Url-адрес для RSS не найден. Вы хотите его ввести?"
 
-#: ..\config\init_config.py:1231
+#: ..\config\init_config.py:1235
 msgid "Enter RSS url"
 msgstr "Введите url-адрес для RSS"
 
-#: ..\config\init_config.py:1233
+#: ..\config\init_config.py:1237
 msgid "RSS wouldn't work. Enter url of RSS feed to bot config!"
 msgstr "RSS не будет работать. Введите url-адрес для RSS в конфиге бота!"
 
-#: ..\config\init_config.py:1236
+#: ..\config\init_config.py:1240
 msgid "RSS download delay doesn't set."
 msgstr "Задержка скачивания RSS не установлена."
 
-#: ..\config\init_config.py:1238
+#: ..\config\init_config.py:1242
 msgid "Enter RSS download delay (in seconds, int)"
 msgstr "Введите задержку скачивания RSS (в секундах, целое число)"
 
-#: ..\config\init_config.py:1245
+#: ..\config\init_config.py:1249
 msgid "RSS feed wouldn't work."
 msgstr "RSS-канал не будет работать."
 
-#: ..\config\init_config.py:1248
+#: ..\config\init_config.py:1252
 msgid "RSS feed enabled."
 msgstr "RSS-канал включён."
 
-#: ..\config\init_config.py:1250
+#: ..\config\init_config.py:1254
 msgid "RSS feed disabled."
 msgstr "RSS-канал выключен."
 
-#: ..\config\init_config.py:1257
+#: ..\config\init_config.py:1261
 msgid "Automatic backup isn't set. Would you like to enable them?"
 msgstr ""
 "Автоматическое резервное копирование не установлено. Вы хотите включить его?"
 
-#: ..\config\init_config.py:1262
+#: ..\config\init_config.py:1266
 msgid "Set period of automatic backups (in minutes, int)"
 msgstr ""
 "Установите период автоматического резервного копирования (в минутах, целое "
 "число)"
 
-#: ..\config\init_config.py:1267
+#: ..\config\init_config.py:1271
 msgid "Enter name of the backups folder for each Minecraft server"
 msgstr "Введите имя папки резервных копий для каждого майнкрафт сервера"
 
-#: ..\config\init_config.py:1273
+#: ..\config\init_config.py:1277
 msgid ""
 "Max backups' count limit for server not found. Would you like to set it?"
 msgstr ""
 "Максимальный предел количества резервных копий для сервера не найден. Вы "
 "хотите его установить?"
 
-#: ..\config\init_config.py:1276
+#: ..\config\init_config.py:1280
 msgid "Set max backups' count limit for server (int)"
 msgstr ""
 "Максимальный предел количества резервных копий для сервера (целое число)"
 
-#: ..\config\init_config.py:1287
+#: ..\config\init_config.py:1291
 msgid "Backups' size limit for server not found. Would you like to set it?"
 msgstr ""
 "Предел размера резервных копий для сервера не найден. Вы хотите его "
 "установить?"
 
-#: ..\config\init_config.py:1290
+#: ..\config\init_config.py:1294
 msgid "Enter in what unit of measure you will set the limit"
 msgstr "Введите в каких единицах измерения вы установите предел"
 
-#: ..\config\init_config.py:1294
+#: ..\config\init_config.py:1298
 msgid "You have entered the wrong unit of measure!"
 msgstr "Вы ввели неверную единицу измерения!"
 
-#: ..\config\init_config.py:1297
+#: ..\config\init_config.py:1301
 msgid "Backups' size limit for server in {0} (int)"
 msgstr "Предел размера резервных копий для сервера в {0} (целое число)"
 
-#: ..\config\init_config.py:1307
+#: ..\config\init_config.py:1311
 msgid "Name of the backups folder in which bot will store them - '{0}'."
 msgstr "Имя папки резервных копий, в которой бот будет их сохранять - '{0}'."

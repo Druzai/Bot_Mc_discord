@@ -231,12 +231,12 @@ class MinecraftCommands(commands.Cog):
                 associated_member = [u.user_discord_id for u in Config.get_known_users_list()
                                      if u.user_minecraft_nick == minecraft_nick][0]
                 associated_member = await self._bot.guilds[0].fetch_member(associated_member)
-                await ctx.send(get_translation("This nick is already associated with {0}.")
+                await ctx.send(get_translation("This nick is already associated with nick `{0}`.")
                                .format(associated_member.mention))
             else:
                 need_to_save = True
                 Config.add_to_known_users_list(minecraft_nick, discord_id)
-                await ctx.send(get_translation("Now {0} associates with nick in Minecraft {1}.")
+                await ctx.send(get_translation("Now {0} associates with nick `{1}` in Minecraft.")
                                .format(discord_mention, minecraft_nick))
         else:
             if minecraft_nick in [u.user_minecraft_nick for u in Config.get_known_users_list()] and \

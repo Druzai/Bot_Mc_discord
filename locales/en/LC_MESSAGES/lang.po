@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
-"POT-Creation-Date: 2021-11-05 19:56+0300\n"
-"PO-Revision-Date: 2021-11-05 19:56+0300\n"
+"POT-Creation-Date: 2021-11-07 23:46+0300\n"
+"PO-Revision-Date: 2021-11-07 23:46+0300\n"
 "Last-Translator: Druzai <astyn37@gmail.com>\n"
 "Language-Team: \n"
 "Language: en\n"
@@ -17,19 +17,19 @@ msgstr ""
 "X-Generator: Poedit 3.0\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: ..\Discord_bot.py:91 ..\commands\minecraft_commands.py:767
+#: ..\Discord_bot.py:93 ..\commands\minecraft_commands.py:767
 msgid "Server info read!"
 msgstr "Server info read!"
 
-#: ..\Discord_bot.py:94
+#: ..\Discord_bot.py:96
 msgid "Bot/Discord Error: Your token is wrong"
 msgstr "Bot/Discord Error: Your token is wrong"
 
-#: ..\Discord_bot.py:96
+#: ..\Discord_bot.py:98
 msgid "Bot Error: {0}"
 msgstr "Bot Error: {0}"
 
-#: ..\Discord_bot.py:99
+#: ..\Discord_bot.py:101
 msgid "Bot/Discord Error: Something went wrong"
 msgstr "Bot/Discord Error: Something went wrong"
 
@@ -964,12 +964,12 @@ msgid "Wrong command syntax! Right example: `{0}assoc @me +=/-= My_nick`."
 msgstr "Wrong command syntax! Right example: `{0}assoc @me +=/-= My_nick`."
 
 #: ..\commands\minecraft_commands.py:234
-msgid "This nick is already associated with {0}."
-msgstr "This nick is already associated with {0}."
+msgid "This nick is already associated with nick `{0}`."
+msgstr "This nick is already associated with nick `{0}`."
 
 #: ..\commands\minecraft_commands.py:239
-msgid "Now {0} associates with nick in Minecraft {1}."
-msgstr "Now {0} associates with nick in Minecraft {1}."
+msgid "Now {0} associates with nick `{1}` in Minecraft."
+msgstr "Now {0} associates with nick `{1}` in Minecraft."
 
 #: ..\commands\minecraft_commands.py:246
 msgid "Now link {0} -> {1} do not exist!"
@@ -1369,8 +1369,8 @@ msgid "Starting Minecraft server check-ups"
 msgstr "Starting Minecraft server check-ups"
 
 #: ..\commands\poll.py:34
-msgid "To win the poll needed {0} votes!"
-msgstr "To win the poll needed {0} votes!"
+msgid "To win the poll needed {0} vote(s)!"
+msgstr "To win the poll needed {0} vote(s)!"
 
 #: ..\commands\poll.py:48
 msgid "Poll result: canceled!"
@@ -1867,16 +1867,16 @@ msgstr ""
 msgid "Watcher Unhandled Error: {0}"
 msgstr "Watcher Unhandled Error: {0}"
 
+#: ..\components\watcher_handle.py:287
+msgid ""
+"Too many login attempts\n"
+"Your IP: {0}"
+msgstr ""
+"Too many login attempts\n"
+"Your IP: {0}"
+
 #: ..\components\watcher_handle.py:289
 msgid ""
-"Too many login attempts\n"
-"Your IP: {0}"
-msgstr ""
-"Too many login attempts\n"
-"Your IP: {0}"
-
-#: ..\components\watcher_handle.py:291
-msgid ""
 "Too many login attempts: User was banned!\n"
 "Nick: {0}\n"
 "IP: {1}\n"
@@ -1887,7 +1887,7 @@ msgstr ""
 "IP: {1}\n"
 "Time: {2}"
 
-#: ..\components\watcher_handle.py:299
+#: ..\components\watcher_handle.py:297
 msgid ""
 "Not authorized\n"
 "Your IP: {0}\n"
@@ -1897,7 +1897,7 @@ msgstr ""
 "Your IP: {0}\n"
 "Code: {1}"
 
-#: ..\components\watcher_handle.py:306
+#: ..\components\watcher_handle.py:304
 msgid ""
 "Connection attempt detected!\n"
 "Nick: {0}\n"
@@ -1911,7 +1911,7 @@ msgstr ""
 "Connection attempts: {2}\n"
 "Time: {3}"
 
-#: ..\components\watcher_handle.py:312
+#: ..\components\watcher_handle.py:310
 msgid "To proceed enter command `{0}` within {1} min"
 msgstr "To proceed enter command `{0}` within {1} min"
 
@@ -2437,10 +2437,7 @@ msgstr ""
 msgid "Cross-platform chat wouldn't work."
 msgstr "Cross-platform chat wouldn't work."
 
-#: ..\config\init_config.py:1155
-#| msgid ""
-#| "Enter how many words in mention from minecraft chat bot can parse (0 - "
-#| "handle only mentions with one word) (default - 5, int)"
+#: ..\config\init_config.py:1156
 msgid ""
 "Enter how many words in mention from Minecraft chat bot can parse (0 - "
 "handle only mentions with one word) (default - 5, int)"
@@ -2448,7 +2445,7 @@ msgstr ""
 "Enter how many words in mention from Minecraft chat bot can parse (0 - "
 "handle only mentions with one word) (default - 5, int)"
 
-#: ..\config\init_config.py:1166
+#: ..\config\init_config.py:1169
 msgid ""
 "Enter how many characters from right side of mention bot can remove to find "
 "similar mention in discord (0 - don't try to find similar ones) (default - "
@@ -2458,19 +2455,19 @@ msgstr ""
 "similar mention in discord (0 - don't try to find similar ones) (default - "
 "5, int)"
 
-#: ..\config\init_config.py:1172
+#: ..\config\init_config.py:1175
 msgid "Cross-platform chat enabled."
 msgstr "Cross-platform chat enabled."
 
-#: ..\config\init_config.py:1174
+#: ..\config\init_config.py:1177
 msgid "Cross-platform chat disabled."
 msgstr "Cross-platform chat disabled."
 
-#: ..\config\init_config.py:1178
+#: ..\config\init_config.py:1181
 msgid "Would you like to enable authorization security?"
 msgstr "Would you like to enable authorization security?"
 
-#: ..\config\init_config.py:1186
+#: ..\config\init_config.py:1189
 msgid ""
 "Enter how many attempts bot will accept connection from a certain IP address "
 "before it bans this IP"
@@ -2478,113 +2475,113 @@ msgstr ""
 "Enter how many attempts bot will accept connection from a certain IP address "
 "before it bans this IP"
 
-#: ..\config\init_config.py:1193
+#: ..\config\init_config.py:1196
 msgid "Enter how many days IP address will be valid before it expires (int)"
 msgstr "Enter how many days IP address will be valid before it expires (int)"
 
-#: ..\config\init_config.py:1199
+#: ..\config\init_config.py:1203
 msgid "Enter how many characters the code should consist of (default - 6, int)"
 msgstr ""
 "Enter how many characters the code should consist of (default - 6, int)"
 
-#: ..\config\init_config.py:1204
+#: ..\config\init_config.py:1208
 msgid "Enter how many minutes code will be valid before it expires (int)"
 msgstr "Enter how many minutes code will be valid before it expires (int)"
 
-#: ..\config\init_config.py:1208
+#: ..\config\init_config.py:1212
 msgid "Secure authorization enabled."
 msgstr "Secure authorization enabled."
 
-#: ..\config\init_config.py:1210
+#: ..\config\init_config.py:1214
 msgid "Secure authorization disabled."
 msgstr "Secure authorization disabled."
 
-#: ..\config\init_config.py:1216
+#: ..\config\init_config.py:1220
 msgid "Would you like to enable RSS feed?"
 msgstr "Would you like to enable RSS feed?"
 
-#: ..\config\init_config.py:1220
+#: ..\config\init_config.py:1224
 msgid "Webhook RSS url not found. Would you like to enter it?"
 msgstr "Webhook RSS url not found. Would you like to enter it?"
 
-#: ..\config\init_config.py:1223
+#: ..\config\init_config.py:1227
 msgid "Enter webhook RSS url"
 msgstr "Enter webhook RSS url"
 
-#: ..\config\init_config.py:1225
+#: ..\config\init_config.py:1229
 msgid "RSS wouldn't work. Create webhook and enter it to bot config!"
 msgstr "RSS wouldn't work. Create webhook and enter it to bot config!"
 
-#: ..\config\init_config.py:1229
+#: ..\config\init_config.py:1233
 msgid "RSS url not found. Would you like to enter it?"
 msgstr "RSS url not found. Would you like to enter it?"
 
-#: ..\config\init_config.py:1231
+#: ..\config\init_config.py:1235
 msgid "Enter RSS url"
 msgstr "Enter RSS url"
 
-#: ..\config\init_config.py:1233
+#: ..\config\init_config.py:1237
 msgid "RSS wouldn't work. Enter url of RSS feed to bot config!"
 msgstr "RSS wouldn't work. Enter url of RSS feed to bot config!"
 
-#: ..\config\init_config.py:1236
+#: ..\config\init_config.py:1240
 msgid "RSS download delay doesn't set."
 msgstr "RSS download delay doesn't set."
 
-#: ..\config\init_config.py:1238
+#: ..\config\init_config.py:1242
 msgid "Enter RSS download delay (in seconds, int)"
 msgstr "Enter RSS download delay (in seconds, int)"
 
-#: ..\config\init_config.py:1245
+#: ..\config\init_config.py:1249
 msgid "RSS feed wouldn't work."
 msgstr "RSS feed wouldn't work."
 
-#: ..\config\init_config.py:1248
+#: ..\config\init_config.py:1252
 msgid "RSS feed enabled."
 msgstr "RSS feed enabled."
 
-#: ..\config\init_config.py:1250
+#: ..\config\init_config.py:1254
 msgid "RSS feed disabled."
 msgstr "RSS feed disabled."
 
-#: ..\config\init_config.py:1257
+#: ..\config\init_config.py:1261
 msgid "Automatic backup isn't set. Would you like to enable them?"
 msgstr "Automatic backup isn't set. Would you like to enable them?"
 
-#: ..\config\init_config.py:1262
+#: ..\config\init_config.py:1266
 msgid "Set period of automatic backups (in minutes, int)"
 msgstr "Set period of automatic backups (in minutes, int)"
 
-#: ..\config\init_config.py:1267
+#: ..\config\init_config.py:1271
 msgid "Enter name of the backups folder for each Minecraft server"
 msgstr "Enter name of the backups folder for each Minecraft server"
 
-#: ..\config\init_config.py:1273
+#: ..\config\init_config.py:1277
 msgid ""
 "Max backups' count limit for server not found. Would you like to set it?"
 msgstr ""
 "Max backups' count limit for server not found. Would you like to set it?"
 
-#: ..\config\init_config.py:1276
+#: ..\config\init_config.py:1280
 msgid "Set max backups' count limit for server (int)"
 msgstr "Set max backups' count limit for server (int)"
 
-#: ..\config\init_config.py:1287
+#: ..\config\init_config.py:1291
 msgid "Backups' size limit for server not found. Would you like to set it?"
 msgstr "Backups' size limit for server not found. Would you like to set it?"
 
-#: ..\config\init_config.py:1290
+#: ..\config\init_config.py:1294
 msgid "Enter in what unit of measure you will set the limit"
 msgstr "Enter in what unit of measure you will set the limit"
 
-#: ..\config\init_config.py:1294
+#: ..\config\init_config.py:1298
 msgid "You have entered the wrong unit of measure!"
 msgstr "You have entered the wrong unit of measure!"
 
-#: ..\config\init_config.py:1297
+#: ..\config\init_config.py:1301
 msgid "Backups' size limit for server in {0} (int)"
 msgstr "Backups' size limit for server in {0} (int)"
 
-#: ..\config\init_config.py:1307
+#: ..\config\init_config.py:1311
 msgid "Name of the backups folder in which bot will store them - '{0}'."
 msgstr "Name of the backups folder in which bot will store them - '{0}'."
