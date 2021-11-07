@@ -45,7 +45,7 @@
 If you want to see help on all bot's commands use `help` command when bot is running.
 
 Note: these commands will require custom optional role if you set it in bot config:
-`start`, `stop`, `restart`, `menu`, `forceload`, `whitelist`, `servers`, `op`, `ops`, `backup`, `chat`.
+`start`, `stop`, `restart`, `menu`, `forceload`, `whitelist`, `servers`, `op`, `ops`, `backup`, `channel`, `auth`.
 
 To enable cross-platform chat you need to enter in bot setup channel id (or use `chat` command) and webhook url!
 And to enable rss feed you also need webhook url!
@@ -85,8 +85,6 @@ ____________
 > Libraries for Python:
 
 * [discord](https://github.com/Rapptz/discord.py) - main lib to run bot
-* [vk_api](https://github.com/python273/vk_api) - lib for connecting & using VK to download and post photos from
-  selected communities
 * [cryptography](https://github.com/pyca/cryptography) - lib for encrypting necessary data to config file
 * [mcipc](https://github.com/conqp/mcipc) - lib for easy using query and rcon to connect to minecraft server
 * [pyinstaller](https://github.com/pyinstaller/pyinstaller) - lib to build project to executable file, you can use

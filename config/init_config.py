@@ -19,7 +19,6 @@ from discord import Webhook, Member
 from discord.ext.commands import Bot
 from jsons import load as sload, DeserializationError
 from omegaconf import OmegaConf as Conf
-from vk_api.exceptions import Captcha
 
 from components.localization import get_translation, get_locales, set_locale
 from config.crypt_wrapper import *
@@ -40,7 +39,6 @@ class BotVars:
     is_backing_up: bool = False
     is_restoring: bool = False
     is_auto_backup_disable: bool = False
-    vk_captcha: Captcha = None
     op_deop_list: List = []  # List of nicks of players to op and then to deop
     port_query: int = None
     port_rcon: int = None
@@ -195,20 +193,6 @@ class Bot_settings:
     commands_channel_id: Optional[int] = None
     forceload: bool = False
     default_number_of_times_to_op: int = -1
-    vk_ask_credentials: bool = True
-    vk_login: Optional[str] = None
-    _vk_password = None
-    vk_password_encrypted: Optional[str] = None
-
-    @property
-    def vk_password(self):
-        return self._vk_password
-
-    @vk_password.setter
-    def vk_password(self, vk_password_decrypted):
-        self._vk_password = vk_password_decrypted
-        self.vk_password_encrypted = None if vk_password_decrypted is None else encrypt_string(vk_password_decrypted)
-
     server_watcher: Server_watcher = Server_watcher()
     rss_feed: Rss_feed = Rss_feed()
     backups: Backups = Backups()
@@ -217,8 +201,6 @@ class Bot_settings:
     def __post_init__(self):
         if self.token_encrypted:
             self._token = decrypt_string(self.token_encrypted)
-        if self.vk_password_encrypted:
-            self._vk_password = decrypt_string(self.vk_password_encrypted)
 
 
 @dataclass
@@ -714,7 +696,6 @@ class Config:
         cls._setup_menu_id()
         cls._setup_commands_channel_id()
         cls._setup_default_number_of_times_to_op()
-        cls._setup_vk_credentials()
         cls._setup_server_watcher()
         cls._setup_rss_feed()
         cls._setup_timeouts()
@@ -818,49 +799,6 @@ class Config:
                     cls._ask_for_data(get_translation("Set discord admin role for bot") + "\n> ")
             else:
                 cls._settings_instance.bot_settings.admin_role = ""
-
-    @classmethod
-    def _setup_vk_credentials(cls):
-        if not cls._settings_instance.bot_settings.vk_login or not cls._settings_instance.bot_settings.vk_password:
-            cls._settings_instance.bot_settings.vk_login = None
-            cls._settings_instance.bot_settings.vk_password = None
-        if cls._settings_instance.bot_settings.vk_ask_credentials:
-            if cls._settings_instance.bot_settings.vk_login is not None:
-                word = get_translation('change')
-            else:
-                word = get_translation('enter')
-            if cls._ask_for_data(get_translation("Would you like to ") + word +
-                                 get_translation(" vk account data?") + " Y/n\n> ", "y"):
-                cls._settings_instance.bot_settings.vk_login = cls._ask_for_data(
-                    get_translation("Enter vk login") + "\n> ")
-                cls._settings_instance.bot_settings.vk_password = cls._ask_for_data(
-                    get_translation("Enter vk password") + "\n> ")
-                cls._need_to_rewrite = True
-            if cls._ask_for_data(get_translation("Never ask about it again?") + " Y/n\n> ", "y"):
-                cls._settings_instance.bot_settings.vk_ask_credentials = False
-                cls._need_to_rewrite = True
-                if cls._settings_instance.bot_settings.vk_login is not None and \
-                        cls._settings_instance.bot_settings.vk_password is not None:
-                    print(get_translation("I'll never ask you about it again."))
-                else:
-                    print(get_translation("Vk account data not received.\n"
-                                          "I'll never ask you about it again.\n"
-                                          "Note: Command {0}say won't work.").format(
-                        cls._settings_instance.bot_settings.prefix))
-            else:
-                if cls._settings_instance.bot_settings.vk_login is not None and \
-                        cls._settings_instance.bot_settings.vk_password is not None:
-                    print(get_translation("Vk account data not received. Why man?"))
-                else:
-                    print(get_translation("Vk account data not received."))
-        else:
-            if cls._settings_instance.bot_settings.vk_login is not None and \
-                    cls._settings_instance.bot_settings.vk_password is not None:
-                print(get_translation("Vk account data received."))
-            else:
-                print(get_translation("Vk account data not received.\n"
-                                      "Note: Command {0}say won't work.").format(
-                    cls._settings_instance.bot_settings.prefix))
 
     @classmethod
     def _setup_ip_address(cls):

@@ -1,13 +1,8 @@
-from os import chdir
-from pathlib import Path
-from random import choice, randint
 from typing import Union
 
 import discord
 from discord import Activity, ActivityType, Role, Member, InvalidData, HTTPException, NotFound, Forbidden, DMChannel
 from discord.ext import commands, tasks
-from vk_api import VkApi
-from vk_api.exceptions import ApiError, Captcha
 
 from commands.poll import Poll
 from components import decorators
@@ -193,124 +188,6 @@ class ChatCommands(commands.Cog):
                 Config.save_config()
                 await ctx.send(add_quotes(get_translation("Changed prefix to '{0}'.").format(new_prefix) +
                                           (" ( ͡° ͜ʖ ͡°)" if check else "")))
-
-    @commands.group(pass_context=True, invoke_without_command=True)
-    @commands.bot_has_permissions(send_messages=True, embed_links=True, view_channel=True)
-    async def say(self, ctx):
-        """Петросян"""
-        vk_login, vk_pass = Config.get_settings().bot_settings.vk_login, Config.get_settings().bot_settings.vk_password
-        if vk_login is not None and vk_pass is not None:
-            if bool(randint(0, 3)):
-                _300_answers = [
-                    'Ну, держи!',
-                    'Ah, shit, here we go again.',
-                    'Ты сам напросился...',
-                    'Не следовало тебе меня спрашивать...',
-                    'Ха-ха-ха-ха.... Извини',
-                    '( ͡° ͜ʖ ͡°)',
-                    'Ну что пацаны, аниме?',
-                    'Ну чё, народ, погнали, на\\*уй! Ё\\*\\*\\*ный в рот!'
-                ]
-                _300_communities = [
-                    -45045130,  # - Хрень, какой-то паблик
-                    -45523862,  # - Томат
-                    -67580761,  # - КБ
-                    -57846937,  # - MDK
-                    -12382740,  # - ЁП
-                    -45745333,  # - 4ch
-                    -76628628,  # - Silvername
-                ]
-                own_id = choice(_300_communities)
-                chdir(Config.get_bot_config_path())
-                try:
-                    # Тырим с вк фотки)
-                    try:
-                        if BotVars.vk_captcha is not None:
-                            raise BotVars.vk_captcha
-                        vk_session = VkApi(vk_login, vk_pass)
-                        vk_session.auth()
-                    except Captcha as ex:
-                        e = discord.Embed(title=get_translation("Vk Check: You need to solve the captcha"),
-                                          color=discord.Color.red())
-                        e.set_image(url=ex.get_url())
-                        await ctx.send(embed=e)
-                        await ctx.send(get_translation("To enter solved captcha use `{0}` command")
-                                       .format(f"{Config.get_settings().bot_settings.prefix}"
-                                               "say captcha <solved_captcha>"))
-                        BotVars.vk_captcha = ex
-                        return
-                    vk = vk_session.get_api()
-                    photos_count = vk.photos.get(owner_id=own_id, album_id="wall", count=1).get('count')
-                    photo_sizes = vk.photos.get(owner_id=own_id,
-                                                album_id="wall",
-                                                count=1,
-                                                offset=randint(0, photos_count) - 1).get('items')[0].get('sizes')
-                    max_photo_height = 0
-                    max_photo_width = 0
-                    photo_url = None
-                    for i in photo_sizes:
-                        if i['height'] > max_photo_height:
-                            max_photo_height = i['height']
-                        if i['width'] > max_photo_width:
-                            max_photo_width = i['width']
-                    for i in photo_sizes:
-                        if i['height'] == max_photo_height and i['width'] == max_photo_width:
-                            photo_url = i['url']
-                            break
-                    if photo_url is None:
-                        for i in photo_sizes:
-                            if i['height'] == max_photo_height:
-                                photo_url = i['url']
-                                break
-
-                    e = discord.Embed(title=choice(_300_answers),
-                                      color=discord.Color.from_rgb(randint(0, 255), randint(0, 255), randint(0, 255)))
-                    e.set_image(url=photo_url)
-                    await ctx.send(embed=e)
-                except ApiError:
-                    e = discord.Embed(title=get_translation("Vk Error: Something went wrong"),
-                                      color=discord.Color.red())
-                    file = discord.File(Path(Config.get_inside_path(), "images/sad_dog.jpg"), filename="image.jpg")
-                    e.set_image(url="attachment://image.jpg")
-                    await ctx.send(embed=e, file=file)
-            else:
-                await ctx.send(get_translation("I could tell you something, but I'm too lazy. ( ͡° ͜ʖ ͡°)\n"
-                                               "Returning to my duties."))
-        else:
-            e = discord.Embed(title=get_translation("Vk Error: Account details not entered"),
-                              color=discord.Color.red())
-            file = discord.File(Path(Config.get_inside_path(), "images/sad_dog.jpg"), filename="image.jpg")
-            e.set_image(url="attachment://image.jpg")
-            await ctx.send(embed=e, file=file)
-
-    @say.command(pass_context=True, name="captcha")
-    @commands.bot_has_permissions(send_messages=True, embed_links=True, view_channel=True)
-    async def s_captcha(self, ctx, *, solved_captcha: str):
-        vk_login, vk_pass = Config.get_settings().bot_settings.vk_login, Config.get_settings().bot_settings.vk_password
-        if BotVars.vk_captcha is not None:
-            if vk_login is not None and vk_pass is not None:
-                try:
-                    BotVars.vk_captcha.try_again(solved_captcha)
-                except Captcha as ex_c:
-                    await ctx.send(add_quotes(get_translation("Captcha not solved!")))
-                    e = discord.Embed(title=get_translation("Vk Check: You need to solve the captcha"),
-                                      color=discord.Color.red())
-                    e.set_image(url=ex_c.get_url())
-                    await ctx.send(embed=e)
-                    await ctx.send(get_translation("To enter solved captcha use `{0}` command")
-                                   .format(f"{Config.get_settings().bot_settings.prefix}say captcha <solved_captcha>"))
-                    BotVars.vk_captcha = ex_c
-                    return
-                BotVars.vk_captcha = None
-                await ctx.send(add_quotes(get_translation("Captcha solved!")))
-            else:
-                e = discord.Embed(title=get_translation("Vk Error: Account details not entered"),
-                                  color=discord.Color.red())
-                file = discord.File(Path(Config.get_inside_path(), "images/sad_dog.jpg"), filename="image.jpg")
-                e.set_image(url="attachment://image.jpg")
-                await ctx.send(embed=e, file=file)
-        else:
-            await ctx.send(add_quotes(get_translation("There is no captcha to solve!")))
 
     async def bot_check(self, ctx):
         # Check if user asks help on each command or subcommand
