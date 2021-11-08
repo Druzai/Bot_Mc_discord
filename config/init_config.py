@@ -347,11 +347,11 @@ class Config:
                     ip_addr.login_attempts = 1
                     while True:
                         ip_addr.code = "".join(sec_choice(CODE_LETTERS)
-                                               for _ in range(Config.get_secure_auth().code_length))
+                                               for _ in range(cls.get_secure_auth().code_length))
                         if ip_addr.code not in [a.code for a in cls.get_auth_users()[i].ip_addresses]:
                             break
                     ip_addr.code_expires_on_date = \
-                        datetime.now() + dt.timedelta(minutes=Config.get_secure_auth().mins_before_code_expires)
+                        datetime.now() + dt.timedelta(minutes=cls.get_secure_auth().mins_before_code_expires)
                 else:
                     ip_addr.expires_on_date = datetime.now() + \
                                               dt.timedelta(days=cls.get_secure_auth().days_before_ip_expires)
@@ -382,13 +382,13 @@ class Config:
                             cls.get_auth_users()[i].ip_addresses[j].login_attempts += 1
                             while True:
                                 code = "".join(sec_choice(CODE_LETTERS)
-                                               for _ in range(Config.get_secure_auth().code_length))
+                                               for _ in range(cls.get_secure_auth().code_length))
                                 if code not in [a.code for a in cls.get_auth_users()[i].ip_addresses]:
                                     break
                             cls.get_auth_users()[i].ip_addresses[j].code = code
                             cls.get_auth_users()[i].ip_addresses[j].code_expires_on_date = \
                                 datetime.now() + \
-                                dt.timedelta(minutes=Config.get_secure_auth().mins_before_code_expires)
+                                dt.timedelta(minutes=cls.get_secure_auth().mins_before_code_expires)
                             cls.get_auth_users()[i].ip_addresses[j].expires_on_date = None
                             return cls.get_auth_users()[i].ip_addresses[j].login_attempts, \
                                    cls.get_auth_users()[i].ip_addresses[j].code
@@ -444,7 +444,7 @@ class Config:
         return cls._settings_instance.bot_settings.rss_feed
 
     @classmethod
-    def get_awaiting_times_settings(cls) -> Timeouts:
+    def get_timeouts_settings(cls) -> Timeouts:
         return cls._settings_instance.bot_settings.timeouts
 
     @classmethod
@@ -882,55 +882,55 @@ class Config:
     @classmethod
     def _setup_timeouts(cls):
         # Timeout between check-ups func
-        if cls._settings_instance.bot_settings.timeouts.await_seconds_in_check_ups < 1:
+        if cls.get_timeouts_settings().await_seconds_in_check_ups < 1:
             cls._need_to_rewrite = True
             print(get_translation("Timeout between check-ups 'Server on/off' set below 1. Change this option."))
             print(get_translation("Note: If your machine has processor with frequency 2-2.5 GHz, "
                                   "you have to set this option at least to '2' seconds "
                                   "or higher for the bot to work properly."))
-            cls._settings_instance.bot_settings.timeouts.await_seconds_in_check_ups = \
+            cls.get_timeouts_settings().await_seconds_in_check_ups = \
                 cls._ask_for_data(
                     get_translation("Set timeout between check-ups 'Server on/off' (in seconds, int)") + "\n> ",
                     try_int=True, int_high_than=1)
         print(get_translation("Timeout between check-ups 'Server on/off' set to {0} sec.")
-              .format(str(cls._settings_instance.bot_settings.timeouts.await_seconds_in_check_ups)))
+              .format(str(cls.get_timeouts_settings().await_seconds_in_check_ups)))
 
         # Timeout for op
-        if cls._settings_instance.bot_settings.timeouts.await_seconds_when_opped < 0:
+        if cls.get_timeouts_settings().await_seconds_when_opped < 0:
             cls._need_to_rewrite = True
             print(get_translation("Timeout for op set below 0. Change this option."))
-            cls._settings_instance.bot_settings.timeouts.await_seconds_when_opped = \
+            cls.get_timeouts_settings().await_seconds_when_opped = \
                 cls._ask_for_data(get_translation("Set timeout for op (0 - for unlimited timeout) (in seconds, int)") +
                                   "\n> ",
                                   try_int=True, int_high_than=0)
         print(get_translation("Timeout for op set to {0} sec.")
-              .format(str(cls._settings_instance.bot_settings.timeouts.await_seconds_when_opped)))
-        if cls._settings_instance.bot_settings.timeouts.await_seconds_when_opped == 0:
+              .format(str(cls.get_timeouts_settings().await_seconds_when_opped)))
+        if cls.get_timeouts_settings().await_seconds_when_opped == 0:
             print(get_translation("Limitation doesn't exist, padawan."))
 
         # Timeout to sleep while bot pinging server for info
-        if cls._settings_instance.bot_settings.timeouts.await_seconds_when_connecting_via_rcon < 0.1:
+        if cls.get_timeouts_settings().await_seconds_when_connecting_via_rcon < 0.1:
             cls._need_to_rewrite = True
             print(get_translation("Timeout while bot pinging server for info set below 0. Change this option."))
-            cls._settings_instance.bot_settings.timeouts.await_seconds_when_connecting_via_rcon = \
+            cls.get_timeouts_settings().await_seconds_when_connecting_via_rcon = \
                 cls._ask_for_data(get_translation(
                     "Set timeout while bot pinging server for info (in seconds, float)") + "\n> ",
                                   try_float=True, float_high_than=0.1)
         print(get_translation("Timeout while bot pinging server for info set to {0} sec.")
-              .format(str(cls._settings_instance.bot_settings.timeouts.await_seconds_when_connecting_via_rcon)))
-        if cls._settings_instance.bot_settings.timeouts.await_seconds_when_connecting_via_rcon == 0:
+              .format(str(cls.get_timeouts_settings().await_seconds_when_connecting_via_rcon)))
+        if cls.get_timeouts_settings().await_seconds_when_connecting_via_rcon == 0:
             print(get_translation("I'm fast as f*ck, boi!"))
 
         # Timeout before message deletion
-        if cls._settings_instance.bot_settings.timeouts.await_seconds_before_message_deletion < 1:
+        if cls.get_timeouts_settings().await_seconds_before_message_deletion < 1:
             cls._need_to_rewrite = True
             print(get_translation(
                 "Timeout before message deletion is set below 1. Change this option."))
-            cls._settings_instance.bot_settings.timeouts.await_seconds_before_message_deletion = \
+            cls.get_timeouts_settings().await_seconds_before_message_deletion = \
                 cls._ask_for_data(get_translation("Set timeout before message deletion (in seconds, int)") + "\n> ",
                                   try_int=True, int_high_than=1)
         print(get_translation("Timeout before message deletion is set to {0} sec.")
-              .format(str(cls._settings_instance.bot_settings.timeouts.await_seconds_before_message_deletion)))
+              .format(str(cls.get_timeouts_settings().await_seconds_before_message_deletion)))
 
     @classmethod
     def _setup_servers(cls):
@@ -1042,189 +1042,184 @@ class Config:
 
     @classmethod
     def _setup_server_watcher(cls):
-        if cls._settings_instance.bot_settings.server_watcher.refresh_delay_of_console_log <= 0.05:
+        if cls.get_server_watcher().refresh_delay_of_console_log <= 0.05:
             print(get_translation("Watcher's delay to refresh doesn't set."))
             print(get_translation("Note: If your machine has processor with frequency 2-2.5 GHz, "
                                   "you have to set this option from '0.5' to '0.9' second "
                                   "for the bot to work properly."))
-            cls._settings_instance.bot_settings.server_watcher.refresh_delay_of_console_log = \
+            cls.get_server_watcher().refresh_delay_of_console_log = \
                 cls._ask_for_data(get_translation("Set delay to refresh (in seconds, float)") + "\n> ",
                                   try_float=True, float_high_than=0.1)
 
-        if cls._settings_instance.bot_settings.server_watcher.number_of_lines_to_check_in_console_log < 1:
+        if cls.get_server_watcher().number_of_lines_to_check_in_console_log < 1:
             print(get_translation("Watcher's number of lines to check in server log doesn't set."))
-            cls._settings_instance.bot_settings.server_watcher.number_of_lines_to_check_in_console_log = \
+            cls.get_server_watcher().number_of_lines_to_check_in_console_log = \
                 cls._ask_for_data(get_translation("Set number of lines to check") + "\n> ", try_int=True,
                                   int_high_than=1)
 
-        if cls._settings_instance.bot_settings.server_watcher.cross_platform_chat.enable_cross_platform_chat is None:
+        if cls.get_cross_platform_chat_settings().enable_cross_platform_chat is None:
             cls._need_to_rewrite = True
             if cls._ask_for_data(get_translation("Would you like to enable cross-platform chat?") + " Y/n\n> ",
                                  "y"):
-                cls._settings_instance.bot_settings.server_watcher.cross_platform_chat.enable_cross_platform_chat = True
+                cls.get_cross_platform_chat_settings().enable_cross_platform_chat = True
 
-                if cls._settings_instance.bot_settings.server_watcher.cross_platform_chat.channel_id is None:
+                if cls.get_cross_platform_chat_settings().channel_id is None:
                     if cls._ask_for_data(
                             get_translation("Channel id not found. Would you like to enter it?") + " Y/n\n> ",
                             "y"):
-                        cls._settings_instance.bot_settings.server_watcher.cross_platform_chat.channel_id = \
+                        cls.get_cross_platform_chat_settings().channel_id = \
                             cls._ask_for_data(get_translation("Enter channel id") + "\n> ")
                     else:
                         print(get_translation("Cross-platform chat wouldn't work. "
                                               "To make it work type '{0}chat <id>' to create link.")
                               .format(cls._settings_instance.bot_settings.prefix))
 
-                if cls._settings_instance.bot_settings.server_watcher.cross_platform_chat.webhook_url is None:
+                if cls.get_cross_platform_chat_settings().webhook_url is None:
                     if cls._ask_for_data(get_translation("Webhook url for cross-platform chat not found. "
                                                          "Would you like to enter it?") + " Y/n\n> ", "y"):
-                        cls._settings_instance.bot_settings.server_watcher.cross_platform_chat.webhook_url = \
+                        cls.get_cross_platform_chat_settings().webhook_url = \
                             cls._ask_for_data(get_translation("Enter webhook url") + "\n> ")
                     else:
                         print(get_translation(
                             "Cross-platform chat wouldn't work. Create webhook and enter it to bot config!"))
             else:
-                cls._settings_instance.bot_settings.server_watcher.cross_platform_chat.enable_cross_platform_chat = False
+                cls.get_cross_platform_chat_settings().enable_cross_platform_chat = False
                 print(get_translation("Cross-platform chat wouldn't work."))
-        if cls._settings_instance.bot_settings.server_watcher.cross_platform_chat.max_words_in_mention is None or \
-                cls._settings_instance.bot_settings.server_watcher.cross_platform_chat.max_words_in_mention < 1 or \
-                cls._settings_instance.bot_settings.server_watcher.cross_platform_chat.max_words_in_mention > 20:
+        if cls.get_cross_platform_chat_settings().max_words_in_mention is None or \
+                cls.get_cross_platform_chat_settings().max_words_in_mention < 1 or \
+                cls.get_cross_platform_chat_settings().max_words_in_mention > 20:
             cls._need_to_rewrite = True
-            cls._settings_instance.bot_settings.server_watcher.cross_platform_chat.max_words_in_mention = \
+            cls.get_cross_platform_chat_settings().max_words_in_mention = \
                 cls._ask_for_data(
                     get_translation("Enter how many words in mention from Minecraft chat bot can parse "
                                     "(0 - handle only mentions with one word) (default - 5, int)") + "\n> ",
                     try_int=True, int_high_than=0, int_low_than=20)
-        if cls._settings_instance.bot_settings.server_watcher.cross_platform_chat. \
-                max_wrong_symbols_in_mention_from_right is None or \
-                cls._settings_instance.bot_settings.server_watcher.cross_platform_chat. \
-                        max_wrong_symbols_in_mention_from_right < 1 or \
-                cls._settings_instance.bot_settings.server_watcher.cross_platform_chat. \
-                        max_wrong_symbols_in_mention_from_right > 20:
+        if cls.get_cross_platform_chat_settings().max_wrong_symbols_in_mention_from_right is None or \
+                cls.get_cross_platform_chat_settings().max_wrong_symbols_in_mention_from_right < 1 or \
+                cls.get_cross_platform_chat_settings().max_wrong_symbols_in_mention_from_right > 20:
             cls._need_to_rewrite = True
-            cls._settings_instance.bot_settings.server_watcher.cross_platform_chat. \
-                max_wrong_symbols_in_mention_from_right = \
+            cls.get_cross_platform_chat_settings().max_wrong_symbols_in_mention_from_right = \
                 cls._ask_for_data(
                     get_translation("Enter how many characters from right side of mention "
                                     "bot can remove to find similar mention in discord"
                                     " (0 - don't try to find similar ones) (default - 5, int)") + "\n> ",
                     try_int=True, int_high_than=0, int_low_than=20)
 
-        if cls._settings_instance.bot_settings.server_watcher.cross_platform_chat.enable_cross_platform_chat:
+        if cls.get_cross_platform_chat_settings().enable_cross_platform_chat:
             print(get_translation("Cross-platform chat enabled."))
         else:
             print(get_translation("Cross-platform chat disabled."))
 
-        if cls._settings_instance.bot_settings.server_watcher.secure_auth.enable_auth_security is None:
+        if cls.get_secure_auth().enable_auth_security is None:
             cls._need_to_rewrite = True
             if cls._ask_for_data(get_translation("Would you like to enable authorization security?") + " Y/n\n> ",
                                  "y"):
-                cls._settings_instance.bot_settings.server_watcher.secure_auth.enable_auth_security = True
+                cls.get_secure_auth().enable_auth_security = True
             else:
-                cls._settings_instance.bot_settings.server_watcher.secure_auth.enable_auth_security = False
-        if cls._settings_instance.bot_settings.server_watcher.secure_auth.max_login_attempts < 1:
+                cls.get_secure_auth().enable_auth_security = False
+        if cls.get_secure_auth().max_login_attempts < 1:
             cls._need_to_rewrite = True
-            cls._settings_instance.bot_settings.server_watcher.secure_auth.max_login_attempts = \
+            cls.get_secure_auth().max_login_attempts = \
                 cls._ask_for_data(get_translation("Enter how many attempts bot will accept connection from "
                                                   "a certain IP address before it bans this IP") + "\n> ",
                                   try_int=True, int_high_than=1)
-        if cls._settings_instance.bot_settings.server_watcher.secure_auth.days_before_ip_expires < 1:
+        if cls.get_secure_auth().days_before_ip_expires < 1:
             cls._need_to_rewrite = True
-            cls._settings_instance.bot_settings.server_watcher.secure_auth.days_before_ip_expires = \
+            cls.get_secure_auth().days_before_ip_expires = \
                 cls._ask_for_data(
                     get_translation("Enter how many days IP address will be valid before it expires (int)") +
                     "\n> ", try_int=True, int_high_than=1)
-        if cls._settings_instance.bot_settings.server_watcher.secure_auth.code_length < 1 or \
-                cls._settings_instance.bot_settings.server_watcher.secure_auth.code_length > 60:
+        if cls.get_secure_auth().code_length < 1 or \
+                cls.get_secure_auth().code_length > 60:
             cls._need_to_rewrite = True
-            cls._settings_instance.bot_settings.server_watcher.secure_auth.code_length = \
+            cls.get_secure_auth().code_length = \
                 cls._ask_for_data(
                     get_translation("Enter how many characters the code should consist of (default - 6, int)") + "\n> ",
                     try_int=True, int_high_than=1, int_low_than=60)
-        if cls._settings_instance.bot_settings.server_watcher.secure_auth.mins_before_code_expires < 1:
+        if cls.get_secure_auth().mins_before_code_expires < 1:
             cls._need_to_rewrite = True
-            cls._settings_instance.bot_settings.server_watcher.secure_auth.mins_before_code_expires = \
+            cls.get_secure_auth().mins_before_code_expires = \
                 cls._ask_for_data(get_translation("Enter how many minutes code will be valid before it expires (int)") +
                                   "\n> ", try_int=True, int_high_than=1)
 
-        if cls._settings_instance.bot_settings.server_watcher.secure_auth.enable_auth_security:
+        if cls.get_secure_auth().enable_auth_security:
             print(get_translation("Secure authorization enabled."))
         else:
             print(get_translation("Secure authorization disabled."))
 
     @classmethod
     def _setup_rss_feed(cls):
-        if cls._settings_instance.bot_settings.rss_feed.enable_rss_feed is None:
+        if cls.get_rss_feed_settings().enable_rss_feed is None:
             cls._need_to_rewrite = True
             if cls._ask_for_data(get_translation("Would you like to enable RSS feed?") + " Y/n\n> ", "y"):
-                cls._settings_instance.bot_settings.rss_feed.enable_rss_feed = True
+                cls.get_rss_feed_settings().enable_rss_feed = True
 
-                if cls._settings_instance.bot_settings.rss_feed.webhook_url is None:
+                if cls.get_rss_feed_settings().webhook_url is None:
                     if cls._ask_for_data(get_translation("Webhook RSS url not found. Would you like to enter it?") +
                                          " Y/n\n> ", "y"):
-                        cls._settings_instance.bot_settings.rss_feed.webhook_url = \
+                        cls.get_rss_feed_settings().webhook_url = \
                             cls._ask_for_data(get_translation("Enter webhook RSS url") + "\n> ")
                     else:
                         print(get_translation("RSS wouldn't work. Create webhook and enter it to bot config!"))
 
-                if cls._settings_instance.bot_settings.rss_feed.rss_url is None:
+                if cls.get_rss_feed_settings().rss_url is None:
                     if cls._ask_for_data(
                             get_translation("RSS url not found. Would you like to enter it?") + " Y/n\n> ", "y"):
-                        cls._settings_instance.bot_settings.rss_feed.rss_url = cls._ask_for_data(
+                        cls.get_rss_feed_settings().rss_url = cls._ask_for_data(
                             get_translation("Enter RSS url") + "\n> ")
                     else:
                         print(get_translation("RSS wouldn't work. Enter url of RSS feed to bot config!"))
 
-                if cls._settings_instance.bot_settings.rss_feed.rss_download_delay < 1:
+                if cls.get_rss_feed_settings().rss_download_delay < 1:
                     print(get_translation("RSS download delay doesn't set."))
-                    cls._settings_instance.bot_settings.rss_feed.rss_download_delay = \
+                    cls.get_rss_feed_settings().rss_download_delay = \
                         cls._ask_for_data(get_translation("Enter RSS download delay (in seconds, int)") + "\n> ",
                                           try_int=True, int_high_than=1)
 
-                cls._settings_instance.bot_settings.rss_feed.rss_last_date = \
+                cls.get_rss_feed_settings().rss_last_date = \
                     datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
             else:
-                cls._settings_instance.bot_settings.rss_feed.enable_rss_feed = False
+                cls.get_rss_feed_settings().enable_rss_feed = False
                 print(get_translation("RSS feed wouldn't work."))
         else:
-            if cls._settings_instance.bot_settings.rss_feed.enable_rss_feed:
+            if cls.get_rss_feed_settings().enable_rss_feed:
                 print(get_translation("RSS feed enabled."))
             else:
                 print(get_translation("RSS feed disabled."))
 
     @classmethod
     def _setup_backups(cls):
-        if cls._settings_instance.bot_settings.backups.automatic_backup is None:
+        if cls.get_backups_settings().automatic_backup is None:
             cls._need_to_rewrite = True
-            cls._settings_instance.bot_settings.backups.automatic_backup = \
+            cls.get_backups_settings().automatic_backup = \
                 cls._ask_for_data(get_translation("Automatic backup isn't set. Would you like to enable them?") +
                                   " Y/n\n> ", "y")
-        if cls._settings_instance.bot_settings.backups.period_of_automatic_backups is None:
+        if cls.get_backups_settings().period_of_automatic_backups is None:
             cls._need_to_rewrite = True
-            cls._settings_instance.bot_settings.backups.period_of_automatic_backups = \
+            cls.get_backups_settings().period_of_automatic_backups = \
                 cls._ask_for_data(get_translation("Set period of automatic backups (in minutes, int)") + "\n> ",
                                   try_int=True, int_high_than=1)
-        if not cls._settings_instance.bot_settings.backups.name_of_the_backups_folder:
+        if not cls.get_backups_settings().name_of_the_backups_folder:
             cls._need_to_rewrite = True
-            cls._settings_instance.bot_settings.backups.name_of_the_backups_folder = \
+            cls.get_backups_settings().name_of_the_backups_folder = \
                 cls._ask_for_data(get_translation("Enter name of the backups folder for each Minecraft server") +
                                   "\n> ")
-        if cls._settings_instance.bot_settings.backups.max_backups_limit_for_server is not None and \
-                cls._settings_instance.bot_settings.backups.max_backups_limit_for_server < 1:
+        if cls.get_backups_settings().max_backups_limit_for_server is not None and \
+                cls.get_backups_settings().max_backups_limit_for_server < 1:
             cls._need_to_rewrite = True
             if cls._ask_for_data(
                     get_translation("Max backups' count limit for server not found. Would you like to set it?") +
                     " Y/n\n> ", "y"):
-                cls._settings_instance.bot_settings.backups.max_backups_limit_for_server = \
+                cls.get_backups_settings().max_backups_limit_for_server = \
                     cls._ask_for_data(get_translation("Set max backups' count limit for server (int)") + "\n> ",
                                       try_int=True, int_high_than=1)
             else:
-                cls._settings_instance.bot_settings.backups.max_backups_limit_for_server = None
-        if cls._settings_instance.bot_settings.backups.size_limit_for_server is not None and \
-                len(cls._settings_instance.bot_settings.backups.size_limit_for_server) > 0 and \
-                cls._settings_instance.bot_settings.backups \
-                        .size_limit_for_server[-2:].upper() not in ["MB", "GB", "TB"]:
-            cls._settings_instance.bot_settings.backups.size_limit_for_server = ""
-        if cls._settings_instance.bot_settings.backups.size_limit_for_server == "":
+                cls.get_backups_settings().max_backups_limit_for_server = None
+        if cls.get_backups_settings().size_limit_for_server is not None and \
+                len(cls.get_backups_settings().size_limit_for_server) > 0 and \
+                cls.get_backups_settings().size_limit_for_server[-2:].upper() not in ["MB", "GB", "TB"]:
+            cls.get_backups_settings().size_limit_for_server = ""
+        if cls.get_backups_settings().size_limit_for_server == "":
             cls._need_to_rewrite = True
             if cls._ask_for_data(get_translation("Backups' size limit for server not found. Would you like to set it?")
                                  + " Y/n\n> ", "y"):
@@ -1238,13 +1233,13 @@ class Config:
                         break
                 size = cls._ask_for_data(get_translation("Backups' size limit for server in {0} (int)")
                                          .format(unit_of_bytes) + "\n> ", try_int=True, int_high_than=1)
-                cls._settings_instance.bot_settings.backups.size_limit_for_server = f"{size}{unit_of_bytes}"
+                cls.get_backups_settings().size_limit_for_server = f"{size}{unit_of_bytes}"
             else:
-                cls._settings_instance.bot_settings.backups.size_limit_for_server = None
-        if cls._settings_instance.bot_settings.backups.compression_method is None:
+                cls.get_backups_settings().size_limit_for_server = None
+        if cls.get_backups_settings().compression_method is None:
             cls._need_to_rewrite = True
-            cls._settings_instance.bot_settings.backups.compression_method = \
-                cls._settings_instance.bot_settings.backups.supported_compression_methods[1]
+            cls.get_backups_settings().compression_method = \
+                cls.get_backups_settings().supported_compression_methods[1]
 
         print(get_translation("Name of the backups folder in which bot will store them - '{0}'.")
-              .format(cls._settings_instance.bot_settings.backups.name_of_the_backups_folder))
+              .format(cls.get_backups_settings().name_of_the_backups_folder))

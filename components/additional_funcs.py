@@ -49,7 +49,7 @@ if len(argv) > 1 and argv[1] == "-g":
 async def send_msg(ctx, msg: str, is_reaction=False):
     if is_reaction:
         await ctx.send(content=msg,
-                       delete_after=Config.get_awaiting_times_settings().await_seconds_before_message_deletion)
+                       delete_after=Config.get_timeouts_settings().await_seconds_before_message_deletion)
     else:
         await ctx.send(msg)
 
@@ -60,10 +60,10 @@ def add_quotes(msg: str) -> str:
 
 async def delete_after_by_msg(message, ctx=None):
     if isinstance(message, Message):
-        await message.delete(delay=Config.get_awaiting_times_settings().await_seconds_before_message_deletion)
+        await message.delete(delay=Config.get_timeouts_settings().await_seconds_before_message_deletion)
     elif isinstance(message, int):
         await (await ctx.channel.fetch_message(message)) \
-            .delete(delay=Config.get_awaiting_times_settings().await_seconds_before_message_deletion)
+            .delete(delay=Config.get_timeouts_settings().await_seconds_before_message_deletion)
 
 
 def get_author_and_mention(ctx, bot: commands.Bot, is_reaction=False):
@@ -150,7 +150,7 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
                           f"{(timedelta_secs % 60):02d}" if timedelta_secs // 60 != 0 else str(timedelta_secs % 60) +
                                                                                            get_translation(" sec"))
         await bot.change_presence(activity=Activity(type=ActivityType.listening, name=output_bot))
-        await asleep(Config.get_awaiting_times_settings().await_seconds_when_connecting_via_rcon)
+        await asleep(Config.get_timeouts_settings().await_seconds_when_connecting_via_rcon)
         with suppress(ConnectionError, socket.error):
             with connect_query() as cl_q:
                 _ = cl_q.basic_stats
@@ -194,7 +194,7 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_re
             await delete_after_by_msg(ctx.message)
         await ctx.send(get_translation("{0}, bot already has poll on `stop`/`restart` command!")
                        .format(ctx.author.mention),
-                       delete_after=Config.get_awaiting_times_settings().await_seconds_before_message_deletion)
+                       delete_after=Config.get_timeouts_settings().await_seconds_before_message_deletion)
         return
 
     try:
@@ -260,7 +260,7 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_re
         if BotVars.watcher_of_log_file.is_running():
             BotVars.watcher_of_log_file.stop()
         while True:
-            await asleep(Config.get_awaiting_times_settings().await_seconds_when_connecting_via_rcon)
+            await asleep(Config.get_timeouts_settings().await_seconds_when_connecting_via_rcon)
             try:
                 with connect_query() as cl_q:
                     _ = cl_q.basic_stats
@@ -338,7 +338,7 @@ class BackupsThread(Thread):
             if not BotVars.is_backing_up and not BotVars.is_restoring and Config.get_backups_settings().automatic_backup:
                 if BotVars.is_loading or BotVars.is_stopping or BotVars.is_restarting:
                     while True:
-                        sleep(Config.get_awaiting_times_settings().await_seconds_when_connecting_via_rcon)
+                        sleep(Config.get_timeouts_settings().await_seconds_when_connecting_via_rcon)
                         if not BotVars.is_loading and not BotVars.is_stopping and not BotVars.is_restarting:
                             break
 
@@ -695,8 +695,8 @@ async def server_checkups(bot: commands.Bot):
                                           .format(datetime.now().strftime("%d/%m/%Y %H:%M:%S"))),
                            is_reaction=True)
             await start_server(ctx=channel, bot=bot, shut_up=True, is_reaction=True)
-    if Config.get_awaiting_times_settings().await_seconds_in_check_ups > 0:
-        await asleep(Config.get_awaiting_times_settings().await_seconds_in_check_ups)
+    if Config.get_timeouts_settings().await_seconds_in_check_ups > 0:
+        await asleep(Config.get_timeouts_settings().await_seconds_in_check_ups)
 
 
 async def bot_status(ctx, is_reaction=False):
@@ -850,7 +850,7 @@ async def bot_clear(ctx, poll: Poll, subcommand: str = None, count: int = None, 
             await delete_after_by_msg(ctx.message)
             await ctx.send(get_translation("{0}, bot already has poll on `clear` command for this channel!")
                            .format(ctx.author.mention),
-                           delete_after=Config.get_awaiting_times_settings().await_seconds_before_message_deletion)
+                           delete_after=Config.get_timeouts_settings().await_seconds_before_message_deletion)
             return
         if await poll.run(ctx=ctx,
                           message=get_translation("this man {0} trying to delete some history"

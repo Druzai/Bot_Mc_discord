@@ -136,7 +136,7 @@ class MinecraftCommands(commands.Cog):
             Config.append_to_op_log(datetime.now().strftime("%d/%m/%Y %H:%M:%S") + " || " + get_translation("Opped ") +
                                     minecraft_nick + (" || " + get_translation("Reason: ") + reasons
                                                       if reasons else ""))
-            await_time_op = Config.get_awaiting_times_settings().await_seconds_when_opped
+            await_time_op = Config.get_timeouts_settings().await_seconds_when_opped
             bot_display_name = get_bot_display_name(self._bot)
             try:
                 with connect_rcon() as cl_r:
@@ -173,8 +173,7 @@ class MinecraftCommands(commands.Cog):
                         if k == "name":
                             to_delete_ops.append(v)
                 while True:
-                    await asleep(
-                        Config.get_awaiting_times_settings().await_seconds_when_connecting_via_rcon)
+                    await asleep(Config.get_timeouts_settings().await_seconds_when_connecting_via_rcon)
                     with suppress(ConnectionError, socket.error):
                         with connect_rcon() as cl_r:
                             bot_message = f"{minecraft_nick}," + get_translation(" you all will be deoped now.")
@@ -413,7 +412,7 @@ class MinecraftCommands(commands.Cog):
             await delete_after_by_msg(ctx.message)
             await ctx.send(get_translation("{0}, bot already has poll on `auth login {1}` command!")
                            .format(ctx.author.mention, nick),
-                           delete_after=Config.get_awaiting_times_settings().await_seconds_before_message_deletion)
+                           delete_after=Config.get_timeouts_settings().await_seconds_before_message_deletion)
             return
         bound_user = None
         for user in Config.get_known_users_list():
@@ -938,7 +937,7 @@ class MinecraftCommands(commands.Cog):
                     await delete_after_by_msg(ctx.message)
                     await ctx.send(get_translation("{0}, bot already has poll on `backup del` command!")
                                    .format(ctx.author.mention),
-                                   delete_after=Config.get_awaiting_times_settings()
+                                   delete_after=Config.get_timeouts_settings()
                                    .await_seconds_before_message_deletion)
                     return
 
@@ -990,7 +989,7 @@ class MinecraftCommands(commands.Cog):
             await delete_after_by_msg(ctx.message)
             await ctx.send(get_translation("{0}, bot already has poll on `backup del all` command!")
                            .format(ctx.author.mention),
-                           delete_after=Config.get_awaiting_times_settings().await_seconds_before_message_deletion)
+                           delete_after=Config.get_timeouts_settings().await_seconds_before_message_deletion)
             return
 
         if await self._IndPoll.timer(ctx, 5, "backup_del_all"):

@@ -96,7 +96,7 @@ class Poll(commands.Cog):
             await ctx.send(f"{ctx.author.mention}, " +
                            get_translation("what are you doing? Time hasn't passed yet. Waiting {0} sec...")
                            .format((datetime.now() - self._await_date[command]).seconds),
-                           delete_after=Config.get_awaiting_times_settings().await_seconds_before_message_deletion)
+                           delete_after=Config.get_timeouts_settings().await_seconds_before_message_deletion)
             return False
 
     def get_polls(self):
