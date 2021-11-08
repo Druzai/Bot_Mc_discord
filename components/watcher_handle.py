@@ -88,7 +88,8 @@ def create_watcher():
 
     BotVars.watcher_of_log_file = Watcher(watch_file=Path(Config.get_selected_server_from_list().working_directory,
                                                           path_to_server_log),
-                                          call_func_on_change=_check_log_file)
+                                          call_func_on_change=_check_log_file,
+                                          server_version=server_version)
 
 
 def create_chat_webhook():
@@ -97,7 +98,7 @@ def create_chat_webhook():
                                                 adapter=RequestsWebhookAdapter())
 
 
-def _check_log_file(file: Path, last_line: str = None):
+def _check_log_file(file: Path, server_version: int, last_line: str = None):
     if Config.get_cross_platform_chat_settings().channel_id is None and \
             not Config.get_secure_auth().enable_auth_security:
         return
@@ -105,6 +106,8 @@ def _check_log_file(file: Path, last_line: str = None):
     last_lines = _get_last_n_lines(file, Config.get_server_watcher().number_of_lines_to_check_in_console_log, last_line)
     if len(last_lines) == 0:
         return last_line
+
+    INFO_line = r"\[Server thread/INFO]" if server_version >= 7 else r"\[INFO]"
 
     if last_line is None:
         if Config.get_secure_auth().enable_auth_security:
@@ -114,7 +117,7 @@ def _check_log_file(file: Path, last_line: str = None):
 
     for line in last_lines:
         if Config.get_cross_platform_chat_settings().channel_id is not None:
-            if search(r"INFO", line) and "*" not in split(r"<([^>]*)>", line, maxsplit=1)[0] and \
+            if search(INFO_line, line) and "*" not in split(r"<([^>]*)>", line, maxsplit=1)[0] and \
                     search(r"<([^>]*)> (.*)", line):
                 player_nick, player_message = search(r"<([^>]*)>", line)[0][1:-1], \
                                               split(r"<([^>]*)>", line, maxsplit=1)[-1].strip()
@@ -267,7 +270,7 @@ def _check_log_file(file: Path, last_line: str = None):
 
         if Config.get_secure_auth().enable_auth_security:
             from components.additional_funcs import connect_rcon, add_quotes
-            if search(r"INFO", line) and "*" not in split(r"[\w ]+\[/\d+\.\d+\.\d+\.\d+:\d+]", line)[0] and \
+            if search(INFO_line, line) and "*" not in split(r"[\w ]+\[/\d+\.\d+\.\d+\.\d+:\d+]", line)[0] and \
                     search(r": [\w ]+\[/\d+\.\d+\.\d+\.\d+:\d+] logged in with entity id \d+ at", line):
                 nick = search(r": [\w ]+\[", line)[0][2:-1]
                 ip_address = search(r"\[/\d+\.\d+\.\d+\.\d+:\d+]", line)[0].split(":")[0][2:]
@@ -318,7 +321,9 @@ def _check_log_file(file: Path, last_line: str = None):
                 Config.save_auth_users()
 
     for line in reversed(last_lines):
-        if search(r"^\[\d+:\d+:\d+]", line):
+        if server_version >= 7 and search(r"^\[\d+:\d+:\d+]", line):
+            return line
+        elif search(r"\d+-\d+-\d+ \d+:\d+:\d+", line):
             return line
 
 
