@@ -9,7 +9,7 @@ from hashlib import md5
 from itertools import chain
 from json import load, dump, JSONDecodeError
 from os import chdir, system, walk, mkdir, remove
-from os.path import basename, join as p_join, getsize
+from os.path import basename, join as p_join, getsize, isfile
 from pathlib import Path
 from random import randint
 from re import search, split, findall, sub, compile
@@ -108,6 +108,8 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
         await send_msg(ctx, add_quotes(get_translation("Loading server.......\nPlease wait)")), is_reaction)
     chdir(Config.get_selected_server_from_list().working_directory)
     try:
+        if not isfile(Config.get_selected_server_from_list().start_file_name):
+            raise FileNotFoundError()
         if platform == "linux" or platform == "linux2":
             if ".sh" not in Config.get_selected_server_from_list().start_file_name:
                 raise NameError()
@@ -118,7 +120,7 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
                 raise NameError()
             startfile(Config.get_selected_server_from_list().start_file_name)
         BotVars.server_start_time = int(datetime.now().timestamp())
-    except (NameError, ValueError):
+    except (NameError, ValueError, FileNotFoundError):
         print(get_translation("Couldn't open script! Check naming and extension of the script!"))
         await send_msg(ctx, add_quotes(get_translation("Couldn't open script because of naming! Retreating...")),
                        is_reaction)
