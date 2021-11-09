@@ -7,6 +7,8 @@ from colorama import Fore, Style
 from discord import Intents, Permissions
 from discord.errors import LoginFailure
 from discord.ext import commands
+from yaml.parser import ParserError
+from yaml.scanner import ScannerError
 
 from commands.chat_commands import ChatCommands
 from commands.minecraft_commands import MinecraftCommands
@@ -59,24 +61,24 @@ def main():
     if len(argv) > 1 and (argv[1] == "-v" or argv[1] == "--version"):
         print(VERSION)
         exit(0)
-    if len(argv) == 1:
-        Config.read_config()
-    bot = commands.Bot(command_prefix=get_prefix, intents=Intents.all())
-    bot.remove_command('help')
-    cog_list = [ChatCommands, MinecraftCommands]
-    poll = Poll(bot)
-    for command in ["clear", "stop", "backup_del", "backup_del_all"]:
-        poll.add_awaiting_command(command)
-    for i in cog_list:
-        bot.add_cog(i(bot, poll))
-    bot.add_cog(poll)
-
-    create_pot_lines(bot)
-
-    if Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
-        BotVars.bot_for_webhooks = bot
-
     try:
+        if len(argv) == 1:
+            Config.read_config()
+        bot = commands.Bot(command_prefix=get_prefix, intents=Intents.all())
+        bot.remove_command('help')
+        cog_list = [ChatCommands, MinecraftCommands]
+        poll = Poll(bot)
+        for command in ["clear", "stop", "backup_del", "backup_del_all"]:
+            poll.add_awaiting_command(command)
+        for i in cog_list:
+            bot.add_cog(i(bot, poll))
+        bot.add_cog(poll)
+
+        create_pot_lines(bot)
+
+        if Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
+            BotVars.bot_for_webhooks = bot
+
         Print_file_handler()
         Config.read_server_info()
         print(get_translation("Server info read!"))
@@ -85,18 +87,24 @@ def main():
         print(get_translation("Bot/Discord Error: Your token is wrong"))
     except RuntimeError as e:
         print(get_translation("Bot Error: {0}").format("".join(e.args)))
+    except (ScannerError, ParserError) as e:
+        print(get_translation("Bot Error: {0}").format(e.problem.capitalize()) +
+              f"\n{Style.DIM}{Fore.RED}{e.problem_mark}{Style.RESET_ALL}")
+    except SystemExit:
+        pass
     except BaseException:
         exc = format_exc().rstrip("\n")
         print(get_translation("Bot/Discord Error: Something went wrong") + " ( ͡° ͜ʖ ͡°)" +
               f"\n{Style.DIM}{Fore.RED}{exc}{Style.RESET_ALL}")
     finally:
-        for thread in threads():
-            if thread.getName() == "BackupsThread":
-                thread.join()
-        if platform == "linux" or platform == "linux2":
-            system("read")
-        elif platform == "win32":
-            system("pause")
+        if len(argv) == 1:
+            for thread in threads():
+                if thread.getName() == "BackupsThread":
+                    thread.join()
+            if platform == "linux" or platform == "linux2":
+                system("read")
+            elif platform == "win32":
+                system("pause")
         exit(0)
 
 

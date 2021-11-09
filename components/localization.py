@@ -26,7 +26,10 @@ def set_locale(locale: str, set_eng_if_error=False) -> Optional[str]:
 
 
 def get_translation(text: str) -> str:
-    return _translation.gettext(text)
+    if _translation is not None:
+        return _translation.gettext(text)
+    else:
+        return text
 
 
 def get_locales():
