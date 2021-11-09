@@ -13,7 +13,7 @@ from pathlib import Path
 from secrets import choice as sec_choice
 from shutil import rmtree
 from string import ascii_letters, digits
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING, Set
 
 from discord import Webhook, Member
 from discord.ext.commands import Bot
@@ -97,6 +97,7 @@ class Ip_address_of_user:
 class Auth_user:
     nick: str = ""
     ip_addresses: List[Ip_address_of_user] = field(default_factory=list)
+    logged_as = None  # Contains IP-address if user logged in otherwise 'None'
 
 
 @dataclass
@@ -426,6 +427,24 @@ class Config:
                         return ip_info
                     if code is not None and ip_info.code == code:
                         return ip_info
+
+    @classmethod
+    def set_user_logged_as(cls, nick: str, logged_as: Optional[str]):
+        for i in range(len(cls.get_auth_users())):
+            if cls.get_auth_users()[i].nick == nick:
+                cls.get_auth_users()[i].logged_as = logged_as
+
+    @classmethod
+    def get_known_user_ips(cls, nick: Optional[str] = None) -> Set[str]:
+        ip_set = set()
+        for user in cls.get_auth_users():
+            if nick is not None and user.nick != nick:
+                continue
+            for ip in user.ip_addresses:
+                ip_set.add(ip.ip_address)
+            if user.nick == nick:
+                break
+        return ip_set
 
     @classmethod
     def add_auth_user(cls, user_nick: str):

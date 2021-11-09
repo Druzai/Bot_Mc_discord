@@ -270,6 +270,14 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None):
 
         if Config.get_secure_auth().enable_auth_security:
             from components.additional_funcs import connect_rcon, add_quotes
+            if search(r"[\w ]+ lost connection:", line):
+                if search(INFO_line, line) and "*" not in split(r"[\w ]+ lost connection:", line)[0] and \
+                        "You logged in from another location" not in split(r"[\w ]+ lost connection:",
+                                                                           line, maxsplit=1)[1]:
+                    nick = split(r"lost connection:", search(r"[\w ]+ lost connection:", line)[0])[0].strip()
+                    Config.set_user_logged_as(nick, None)
+                    Config.save_auth_users()
+
             if search(INFO_line, line) and "*" not in split(r"[\w ]+\[/\d+\.\d+\.\d+\.\d+:\d+]", line)[0] and \
                     search(r": [\w ]+\[/\d+\.\d+\.\d+\.\d+:\d+] logged in with entity id \d+ at", line):
                 nick = search(r": [\w ]+\[", line)[0][2:-1]
@@ -278,27 +286,48 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None):
                     Config.add_auth_user(nick)
                 nick_numb = [i for i in range(len(Config.get_auth_users()))
                              if Config.get_auth_users()[i].nick == nick][0]
-                if ip_address in [ip.ip_address for ip in Config.get_auth_users()[nick_numb].ip_addresses]:
-                    user_attempts, code = Config.update_ip_address(nick, ip_address)
+                is_invasion_to_ban = Config.get_auth_users()[nick_numb].logged_as is not None and \
+                                     ip_address not in Config.get_known_user_ips()
+                is_invasion_to_kick = Config.get_auth_users()[nick_numb].logged_as is not None and \
+                                      ip_address not in Config.get_known_user_ips(nick)
+
+                if not is_invasion_to_ban and not is_invasion_to_kick:
+                    if ip_address in [ip.ip_address for ip in Config.get_auth_users()[nick_numb].ip_addresses]:
+                        user_attempts, code = Config.update_ip_address(nick, ip_address)
+                    else:
+                        user_attempts, code = Config.add_ip_address(nick, ip_address, is_login_attempt=True)
                 else:
-                    user_attempts, code = Config.add_ip_address(nick, ip_address, is_login_attempt=True)
-                if code is not None and user_attempts is not None:
-                    if user_attempts >= Config.get_secure_auth().max_login_attempts + 1:
+                    user_attempts, code = 0, 0
+                if is_invasion_to_ban or is_invasion_to_kick or (code is not None and user_attempts is not None):
+                    if is_invasion_to_ban or user_attempts >= Config.get_secure_auth().max_login_attempts + 1:
+                        if is_invasion_to_ban:
+                            ban_reason = get_translation("Intrusion attempt on already logged in nick\nYour IP: {0}") \
+                                .format(ip_address)
+                        else:
+                            ban_reason = get_translation("Too many login attempts\nYour IP: {0}").format(ip_address)
                         with suppress(ConnectionError, socket.error):
                             with connect_rcon() as cl_r:
-                                cl_r.run(f"ban-ip {ip_address} " +
-                                         get_translation("Too many login attempts\nYour IP: {0}").format(ip_address))
-                            Config.remove_ip_address([nick], ip_address)
-                            msg = get_translation("Too many login attempts: User was banned!\n"
-                                                  "Nick: {0}\nIP: {1}\nTime: {2}") \
+                                cl_r.run(f"ban-ip {ip_address} " + ban_reason)
+                            if is_invasion_to_ban:
+                                ban_reason = get_translation("Intrusion prevented: User was banned!")
+                            else:
+                                Config.remove_ip_address([nick], ip_address)
+                                ban_reason = get_translation("Too many login attempts: User was banned!")
+                            msg = f"{ban_reason}\n" + get_translation("Nick: {0}\nIP: {1}\nTime: {2}") \
                                 .format(nick, ip_address, datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
                             channel = _get_commands_channel()
                             BotVars.bot_for_webhooks.loop.create_task(channel.send(add_quotes(msg)))
                     else:
+                        if is_invasion_to_kick:
+                            kick_reason = get_translation("You don't own this logged in nick")
+                        else:
+                            kick_reason = get_translation("Not authorized\nYour IP: {0}\nCode: {1}").format(ip_address,
+                                                                                                            code)
                         with suppress(ConnectionError, socket.error):
                             with connect_rcon() as cl_r:
-                                cl_r.kick(nick, get_translation("Not authorized\nYour IP: {0}\nCode: {1}")
-                                          .format(ip_address, code))
+                                cl_r.kick(nick, kick_reason)
+                        if is_invasion_to_kick:
+                            continue
                         member = None
                         for user in Config.get_known_users_list():
                             if user.user_minecraft_nick == nick:
@@ -318,6 +347,8 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None):
                         else:
                             channel = _get_commands_channel()
                             BotVars.bot_for_webhooks.loop.create_task(channel.send(msg))
+                else:
+                    Config.set_user_logged_as(nick, ip_address)
                 Config.save_auth_users()
 
     for line in reversed(last_lines):
