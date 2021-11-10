@@ -93,7 +93,7 @@ class MinecraftCommands(commands.Cog):
         doing_opping = BotVars.is_doing_op
         BotVars.is_doing_op = True
         if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and not BotVars.is_restarting:
-            if len(get_server_players()) == 0:
+            if get_server_players().get("current") == 0:
                 await ctx.send(f"{ctx.author.mention} " +
                                get_translation("There are no players on the server").lower() + "!")
                 BotVars.is_doing_op = doing_opping
@@ -121,7 +121,7 @@ class MinecraftCommands(commands.Cog):
                 BotVars.is_doing_op = doing_opping
                 return
 
-            if minecraft_nick not in get_server_players():
+            if minecraft_nick not in get_server_players().get("players"):
                 await ctx.send(get_translation("{0}, I didn't see this nick `{1}` online!")
                                .format(ctx.author.mention, minecraft_nick))
                 BotVars.is_doing_op = doing_opping
@@ -532,7 +532,7 @@ class MinecraftCommands(commands.Cog):
         Config.remove_ip_address(possible_matches, ip)
         Config.save_auth_users()
         try:
-            server_players = get_server_players()
+            server_players = get_server_players().get("players")
             available_players_to_kick = [p for p in possible_matches if p in server_players]
         except (ConnectionError, socket.error):
             available_players_to_kick = []
@@ -564,7 +564,7 @@ class MinecraftCommands(commands.Cog):
 
         nicks_to_revoke = [pl.nick for pl in Config.get_auth_users()]
         try:
-            server_players = get_server_players()
+            server_players = get_server_players().get("players")
             available_players_to_kick = [p for p in nicks_to_revoke if p in server_players]
         except (ConnectionError, socket.error):
             available_players_to_kick = []
@@ -660,7 +660,7 @@ class MinecraftCommands(commands.Cog):
             with connect_rcon() as cl_r:
                 white_list = cl_r.run("whitelist list")
                 if ":" in white_list:
-                    players = white_list.split(':')[1].split(", ")
+                    players = [p.strip() for p in white_list.split(":", maxsplit=1)[1].split(", ")]
                     if " and " in players[-1]:
                         players[-1], last_player = players[-1].split(" and ")
                         players.append(last_player)

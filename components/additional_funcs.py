@@ -23,7 +23,7 @@ from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 from discord import Activity, ActivityType, TextChannel, Message, Status, Member, Role, MessageType
 from discord.ext import commands
 from mcipc.query import Client as Client_q
-from mcipc.rcon import Client as Client_r
+from mcipc.rcon import Client as Client_r, WrongPassword
 from psutil import process_iter, NoSuchProcess, disk_usage
 from requests import post as req_post
 
@@ -200,7 +200,7 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_re
         return
 
     try:
-        players_count = len(get_server_players())
+        players_count = get_server_players().get("current")
     except (ConnectionError, socket.error):
         if len(get_list_of_processes()) == 0:
             print(get_translation("Bot Exception: Couldn't connect to server, because it's stopped"))
@@ -347,7 +347,7 @@ class BackupsThread(Thread):
                 players_count = 0
                 if BotVars.is_server_on:
                     with suppress(ConnectionError, socket.error):
-                        players_count = len(get_server_players())
+                        players_count = get_server_players().get("current")
                     if players_count != 0:
                         if BotVars.is_auto_backup_disable:
                             BotVars.is_auto_backup_disable = False
@@ -647,11 +647,10 @@ def get_half_members_count_with_role(bot: commands.Bot, role: str):
 
 async def server_checkups(bot: commands.Bot):
     try:
-        with connect_query() as cl_q:
-            info = cl_q.full_stats
-        if info.num_players != 0:
+        info = get_server_players()
+        if info.get("current") != 0:
             to_save = False
-            for player in info.players:
+            for player in info.get("players"):
                 if player not in [i.player_minecraft_nick for i in Config.get_server_config().seen_players]:
                     Config.add_to_seen_players_list(player)
                     to_save = True
@@ -672,7 +671,7 @@ async def server_checkups(bot: commands.Bot):
         if not BotVars.is_loading and not BotVars.is_stopping and not BotVars.is_restarting:
             bot.loop.create_task(bot.change_presence(activity=Activity(type=ActivityType.playing,
                                                                        name=Config.get_settings().bot_settings.gaming_status
-                                                                            + ", " + str(info.num_players) +
+                                                                            + ", " + str(info.get("current")) +
                                                                             get_translation(" player(s) online"))))
     except (ConnectionError, socket.error):
         if len(get_list_of_processes()) == 0:
@@ -720,20 +719,22 @@ async def bot_status(ctx, is_reaction=False):
     if BotVars.is_server_on:
         try:
             bot_message = get_translation("server online").capitalize() + "\n" + bot_message
-            with connect_rcon() as cl_r:
-                """rcon check daytime cycle"""
-                time_ticks = int(cl_r.run("time query daytime").split(" ")[-1])
-            message = get_translation("Time in Minecraft: ")
-            if 450 <= time_ticks <= 11616:
-                message += get_translation("Day, ")
-            elif 11617 <= time_ticks <= 13800:
-                message += get_translation("Sunset, ")
-            elif 13801 <= time_ticks <= 22550:
-                message += get_translation("Night, ")
-            else:
-                message += get_translation("Sunrise, ")
-            message += str((6 + time_ticks // 1000) % 24) + ":" + f"{((time_ticks % 1000) * 60 // 1000):02d}\n"
-            bot_message += message + get_translation("Selected server: ") + \
+            if get_server_version() > 7:
+                # Rcon check daytime cycle
+                with connect_rcon() as cl_r:
+                    time_ticks = int(cl_r.run("time query daytime").split(" ")[-1])
+                message = get_translation("Time in Minecraft: ")
+                if 450 <= time_ticks <= 11616:
+                    message += get_translation("Day, ")
+                elif 11617 <= time_ticks <= 13800:
+                    message += get_translation("Sunset, ")
+                elif 13801 <= time_ticks <= 22550:
+                    message += get_translation("Night, ")
+                else:
+                    message += get_translation("Sunrise, ")
+                message += str((6 + time_ticks // 1000) % 24) + ":" + f"{((time_ticks % 1000) * 60 // 1000):02d}\n"
+                bot_message += message
+            bot_message += get_translation("Selected server: ") + \
                            Config.get_selected_server_from_list().server_name + "\n" + states
             await send_msg(ctx, add_quotes(bot_message), is_reaction)
         except (ConnectionError, socket.error):
@@ -750,14 +751,14 @@ async def bot_status(ctx, is_reaction=False):
 
 async def bot_list(ctx, bot: commands.Bot, is_reaction=False):
     try:
-        with connect_query() as cl_q:
-            info = cl_q.full_stats
-        if info.num_players == 0:
+        info = get_server_players()
+        if info.get("current") == 0:
             await send_msg(ctx, add_quotes(get_translation("There are no players on the server")), is_reaction)
         else:
-            await send_msg(ctx, add_quotes(get_translation("There are {0} player(s)"
-                                                           "\nPlayer(s): {1}").format(info.num_players,
-                                                                                      ", ".join(info.players))),
+            await send_msg(ctx, add_quotes(get_translation("There are {0} out of a max of {1} players online"
+                                                           "\nPlayer(s): {2}").format(info.get("current"),
+                                                                                      info.get("max"),
+                                                                                      ", ".join(info.get("players")))),
                            is_reaction)
     except (ConnectionError, socket.error):
         author_mention = get_author_and_mention(ctx, bot, is_reaction)[1]
@@ -1046,9 +1047,16 @@ def make_underscored_line(line):
 
 @contextmanager
 def connect_rcon():
-    with Client_r(Config.get_settings().bot_settings.local_address, BotVars.port_rcon, timeout=1) as cl_r:
-        cl_r.login(BotVars.rcon_pass)
-        yield cl_r
+    try:
+        with Client_r(Config.get_settings().bot_settings.local_address, BotVars.port_rcon, timeout=1) as cl_r:
+            cl_r.login(BotVars.rcon_pass)
+            yield cl_r
+    except WrongPassword:
+        print(get_translation("Bot Error: {0}")
+              .format(get_translation("Rcon password doesn't match with its value in '{0}'!")
+                      .format(Path(Config.get_selected_server_from_list().working_directory +
+                                   "/server.properties").as_posix())))
+        raise ConnectionError()
 
 
 @contextmanager
@@ -1214,7 +1222,7 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
                            get_translation("version of your Minecraft server is lower than `1.7.2` "
                                            "so bot can't send messages from discord to Minecraft!"),
                            is_reaction=True)
-        elif len(get_server_players()) > 0:
+        elif get_server_players().get("current") > 0:
             result_msg = _handle_custom_emojis(message)
             result_msg = await _handle_reply_in_message(message, result_msg)
             result_msg = _handle_urls_and_attachments_in_message(result_msg, message)
@@ -1433,7 +1441,7 @@ def _search_mentions_in_message(message) -> list:
                               if i.user_discord_id == member.id])
 
         players_nicks_from_discord = [i.display_name if i.display_name else i.name for i in message.mentions]
-        server_players = get_server_players()
+        server_players = get_server_players().get("players")
         if len(members_from_roles) > 0:
             nicks = [i for i in nicks if i in server_players]
         # Check @'minecraft_nick' mentions
@@ -1451,10 +1459,19 @@ def get_server_version() -> int:
     return int(matches[1])
 
 
-def get_server_players() -> tuple:
-    with connect_query() as cl_q:
-        players = cl_q.full_stats.players
-    return players
+def get_server_players() -> dict:
+    """Returns dict, keys: current, max, players"""
+    with connect_rcon() as cl_r:
+        plist = cl_r.run("list")
+    curr, max_p = findall(r"\d+", plist.split(":", maxsplit=1)[0])
+    curr, max_p = int(curr), int(max_p)
+    players = [p.strip() for p in plist.split(":", maxsplit=1)[1].strip().split(", ")]
+    if " and " in players[-1]:
+        players[-1], last_player = players[-1].split(" and ")
+        players.append(last_player)
+    with suppress(ValueError):
+        players.remove("")
+    return dict(current=curr, max=max_p, players=players)
 
 
 def shorten_url(url: str, max_length: int):
