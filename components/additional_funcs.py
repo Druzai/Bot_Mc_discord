@@ -119,7 +119,6 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
             if ".bat" not in Config.get_selected_server_from_list().start_file_name:
                 raise NameError()
             startfile(Config.get_selected_server_from_list().start_file_name)
-        BotVars.server_start_time = int(datetime.now().timestamp())
     except (NameError, ValueError, FileNotFoundError):
         print(get_translation("Couldn't open script! Check naming and extension of the script!"))
         await send_msg(ctx, add_quotes(get_translation("Couldn't open script because of naming! Retreating...")),
@@ -259,7 +258,7 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_re
                     await asleep(w)
             cl_r.run("stop")
 
-        if BotVars.watcher_of_log_file.is_running():
+        if BotVars.watcher_of_log_file is not None and BotVars.watcher_of_log_file.is_running():
             BotVars.watcher_of_log_file.stop()
         while True:
             await asleep(Config.get_timeouts_settings().await_seconds_when_connecting_via_rcon)
@@ -297,8 +296,7 @@ def get_list_of_processes() -> list:
             if process_name in proc.name() and ("screen" in parents_name_list or
                                                 basename_of_executable in parents_name_list or
                                                 "python.exe" in parents_name_list) \
-                    and (BotVars.server_start_time is None or
-                         abs(int(proc.create_time()) - BotVars.server_start_time) < 5):
+                    and Config.get_selected_server_from_list().working_directory == proc.cwd():
                 list_proc.append(proc)
     return list_proc
 
@@ -309,7 +307,6 @@ def kill_server():
         for p in list_proc:
             with suppress(NoSuchProcess):
                 p.kill()
-    BotVars.server_start_time = None
 
 
 def get_bot_display_name(bot: commands.Bot):

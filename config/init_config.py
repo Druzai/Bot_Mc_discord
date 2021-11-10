@@ -29,7 +29,6 @@ if TYPE_CHECKING:
 
 class BotVars:
     react_auth: Member = None  # Represents author that added reaction
-    server_start_time: int = None
     is_server_on: bool = False
     is_loading: bool = False
     is_stopping: bool = False
