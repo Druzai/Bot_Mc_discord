@@ -97,7 +97,7 @@ class Ip_address_of_user:
 class Auth_user:
     nick: str = ""
     ip_addresses: List[Ip_address_of_user] = field(default_factory=list)
-    logged_as = None  # Contains IP-address if user logged in otherwise 'None'
+    logged = False
 
 
 @dataclass
@@ -429,10 +429,10 @@ class Config:
                         return ip_info
 
     @classmethod
-    def set_user_logged_as(cls, nick: str, logged_as: Optional[str]):
+    def set_user_logged(cls, nick: str, logged: bool):
         for i in range(len(cls.get_auth_users())):
             if cls.get_auth_users()[i].nick == nick:
-                cls.get_auth_users()[i].logged_as = logged_as
+                cls.get_auth_users()[i].logged = logged
 
     @classmethod
     def get_known_user_ips(cls, nick: Optional[str] = None) -> Set[str]:

@@ -275,7 +275,7 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None):
                         "You logged in from another location" not in split(r"[\w ]+ lost connection:",
                                                                            line, maxsplit=1)[1]:
                     nick = split(r"lost connection:", search(r"[\w ]+ lost connection:", line)[0])[0].strip()
-                    Config.set_user_logged_as(nick, None)
+                    Config.set_user_logged(nick, False)
                     Config.save_auth_users()
 
             if search(INFO_line, line) and "*" not in split(r"[\w ]+\[/\d+\.\d+\.\d+\.\d+:\d+]", line)[0] and \
@@ -286,9 +286,9 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None):
                     Config.add_auth_user(nick)
                 nick_numb = [i for i in range(len(Config.get_auth_users()))
                              if Config.get_auth_users()[i].nick == nick][0]
-                is_invasion_to_ban = Config.get_auth_users()[nick_numb].logged_as is not None and \
+                is_invasion_to_ban = Config.get_auth_users()[nick_numb].logged and \
                                      ip_address not in Config.get_known_user_ips()
-                is_invasion_to_kick = Config.get_auth_users()[nick_numb].logged_as is not None and \
+                is_invasion_to_kick = Config.get_auth_users()[nick_numb].logged and \
                                       ip_address not in Config.get_known_user_ips(nick)
 
                 if not is_invasion_to_ban and not is_invasion_to_kick:
@@ -348,7 +348,7 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None):
                             channel = _get_commands_channel()
                             BotVars.bot_for_webhooks.loop.create_task(channel.send(msg))
                 else:
-                    Config.set_user_logged_as(nick, ip_address)
+                    Config.set_user_logged(nick, True)
                 Config.save_auth_users()
 
     for line in reversed(last_lines):
