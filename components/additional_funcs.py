@@ -4,7 +4,7 @@ import sys
 from ast import literal_eval
 from asyncio import sleep as asleep
 from contextlib import contextmanager, suppress
-from datetime import datetime
+from datetime import datetime, timedelta
 from hashlib import md5
 from itertools import chain
 from json import load, dump, JSONDecodeError
@@ -752,10 +752,28 @@ async def bot_list(ctx, bot: commands.Bot, is_reaction=False):
         if info.get("current") == 0:
             await send_msg(ctx, add_quotes(get_translation("There are no players on the server")), is_reaction)
         else:
-            await send_msg(ctx, add_quotes(get_translation("There are {0} out of a max of {1} players online"
-                                                           "\nPlayer(s): {2}").format(info.get("current"),
-                                                                                      info.get("max"),
-                                                                                      ", ".join(info.get("players")))),
+            players_dict = {p: None for p in info.get("players")}
+            if Config.get_secure_auth().enable_auth_security:
+                for player in Config.get_auth_users():
+                    if player.nick in players_dict.keys() and player.logged:
+                        non_expired_ips = [ip.expires_on_date for ip in player.ip_addresses
+                                           if ip.expires_on_date is not None and datetime.now() < ip.expires_on_date]
+                        if len(non_expired_ips) > 0:
+                            players_dict[player.nick] = max(non_expired_ips) - \
+                                                        timedelta(days=Config.get_secure_auth().days_before_ip_expires)
+            players_list = []
+            w_from = get_translation("from")
+            for k, v in players_dict.items():
+                if v is not None:
+                    if v.day == datetime.now().day:
+                        players_list.append(f"{k} ({w_from} {v.strftime('%H:%M')})")
+                    else:
+                        players_list.append(f"{k} ({w_from} {v.strftime('%d/%m/%y %H:%M')})")
+                else:
+                    players_list.append(k)
+            await send_msg(ctx, add_quotes(get_translation("Players online: {0} / {1}").format(info.get("current"),
+                                                                                               info.get("max")) +
+                                           "\n- " + "\n- ".join(players_list)),
                            is_reaction)
     except (ConnectionError, socket.error):
         author_mention = get_author_and_mention(ctx, bot, is_reaction)[1]
