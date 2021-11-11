@@ -335,7 +335,8 @@ class MinecraftCommands(commands.Cog):
         log = [l for l in log if not l.split("||")[1].lstrip().startswith("Deop")]
         for line in range(len(log)):
             arr = log[line].split("||")
-            log[line] = f"{arr[0]}<{' '.join(arr[1].strip().split()[1:])}>" + \
+            date = datetime.strptime(arr[0].strip(), "%d/%m/%Y %H:%M:%S").strftime(get_translation("%H:%M %d/%m/%Y"))
+            log[line] = f"{date} <{' '.join(arr[1].strip().split()[1:])}>" + \
                         (f": {' '.join(arr[2].strip().split()[1:])}" if len(arr) == 3 else "") + "\n"
         if len("".join(log)) + 6 > 2000:
             limit = 1
@@ -1028,7 +1029,7 @@ class MinecraftCommands(commands.Cog):
             i = 1
             for backup in Config.get_server_config().backups:
                 message += f"[{i}] " + get_translation("Date: ") + \
-                           backup.file_creation_date.strftime("%d/%m/%Y %H:%M:%S")
+                           backup.file_creation_date.strftime(get_translation("%H:%M:%S %d/%m/%Y"))
                 message += "\n\t" + get_translation("Backup size: ") + \
                            get_human_readable_size(
                                get_file_size(Config.get_selected_server_from_list().working_directory,

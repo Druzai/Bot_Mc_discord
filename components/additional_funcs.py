@@ -179,8 +179,7 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
     BotVars.is_server_on = True
     if BotVars.is_restarting:
         BotVars.is_restarting = False
-    Config.get_server_config().states.started_info.set_state_info(str(author),
-                                                                  datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+    Config.get_server_config().states.started_info.set_state_info(str(author), datetime.now())
     Config.save_server_config()
     bot.loop.create_task(bot.change_presence(activity=Activity(type=ActivityType.playing,
                                                                name=Config.get_settings().bot_settings.gaming_status)))
@@ -278,8 +277,7 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_re
     author, author_mention = get_author_and_mention(ctx, bot, is_reaction)
     print(get_translation("Server's off now"))
     await send_msg(ctx, author_mention + "\n" + add_quotes(get_translation("Server's off now")), is_reaction)
-    Config.get_server_config().states.stopped_info.set_state_info(str(author),
-                                                                  datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+    Config.get_server_config().states.stopped_info.set_state_info(str(author), datetime.now())
     Config.save_server_config()
     await bot.change_presence(activity=Activity(type=ActivityType.listening,
                                                 name=Config.get_settings().bot_settings.idle_status))
@@ -690,9 +688,8 @@ async def server_checkups(bot: commands.Bot):
                            msg=add_quotes(get_translation("Bot detected: Server\'s offline!\n"
                                                           "Time: {0}\n"
                                                           "Starting up server again!")
-                                          .format(datetime.now().strftime("%d/%m/%Y %H:%M:%S"))),
-                           is_reaction=True)
-            await start_server(ctx=channel, bot=bot, shut_up=True, is_reaction=True)
+                                          .format(datetime.now().strftime(get_translation("%H:%M:%S %d/%m/%Y")))))
+            await start_server(ctx=channel, bot=bot, shut_up=True)
     if Config.get_timeouts_settings().await_seconds_in_check_ups > 0:
         await asleep(Config.get_timeouts_settings().await_seconds_in_check_ups)
 
@@ -702,11 +699,13 @@ async def bot_status(ctx, is_reaction=False):
     bot_message = ""
     states_info = Config.get_server_config().states
     if states_info.started_info.date is not None and states_info.started_info.user is not None:
-        states += get_translation("Server has been started at {0}, by {1}").format(states_info.started_info.date,
-                                                                                   states_info.started_info.user) + "\n"
+        states += get_translation("Server has been started at {0}, by {1}") \
+                      .format(states_info.started_info.date.strftime(get_translation("%H:%M:%S %d/%m/%Y")),
+                              states_info.started_info.user) + "\n"
     if states_info.stopped_info.date is not None and states_info.stopped_info.user is not None:
-        states += get_translation("Server has been stopped at {0}, by {1}").format(states_info.stopped_info.date,
-                                                                                   states_info.stopped_info.user) + "\n"
+        states += get_translation("Server has been stopped at {0}, by {1}") \
+                      .format(states_info.stopped_info.date.strftime(get_translation("%H:%M:%S %d/%m/%Y")),
+                              states_info.stopped_info.user) + "\n"
     states = states.strip("\n")
     bot_message += get_translation("Server address: ") + Config.get_settings().bot_settings.ip_address + "\n"
     if BotVars.is_backing_up:
@@ -763,12 +762,13 @@ async def bot_list(ctx, bot: commands.Bot, is_reaction=False):
                                                         timedelta(days=Config.get_secure_auth().days_before_ip_expires)
             players_list = []
             w_from = get_translation("from")
+            time_f = get_translation("%H:%M %d/%m/%y")
             for k, v in players_dict.items():
                 if v is not None:
                     if v.day == datetime.now().day:
                         players_list.append(f"{k} ({w_from} {v.strftime('%H:%M')})")
                     else:
-                        players_list.append(f"{k} ({w_from} {v.strftime('%d/%m/%y %H:%M')})")
+                        players_list.append(f"{k} ({w_from} {v.strftime(time_f)})")
                 else:
                     players_list.append(k)
             await send_msg(ctx, add_quotes(get_translation("Players online: {0} / {1}").format(info.get("current"),
@@ -937,7 +937,7 @@ async def bot_backup(ctx, is_reaction=False):
     if len(Config.get_server_config().backups) > 0:
         backup = Config.get_server_config().backups[-1]
         bot_message += "\n\n" + get_translation("Last backup: ") + \
-                       backup.file_creation_date.strftime("%d/%m/%Y %H:%M:%S")
+                       backup.file_creation_date.strftime(get_translation("%H:%M:%S %d/%m/%Y"))
         bot_message += "\n" + get_translation("Backup size: ") + \
                        get_human_readable_size(get_file_size(Config.get_selected_server_from_list().working_directory,
                                                              Config.get_backups_settings().name_of_the_backups_folder,

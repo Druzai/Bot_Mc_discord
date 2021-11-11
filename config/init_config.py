@@ -229,10 +229,17 @@ class Settings:
 @dataclass
 class State_info:
     user: Optional[str] = None
-    date: Optional[str] = None
+    date_stamp: Optional[int] = None
 
-    def set_state_info(self, user: str, date: str):
-        self.user, self.date = user, date
+    def set_state_info(self, user: str, date: datetime):
+        self.user, self.date_stamp = user, int(date.timestamp())
+
+    @property
+    def date(self):
+        if self.date_stamp is not None:
+            return datetime.fromtimestamp(self.date_stamp)
+        else:
+            return None
 
 
 @dataclass
