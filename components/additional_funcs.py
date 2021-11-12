@@ -128,8 +128,8 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
             BotVars.is_restarting = False
         return
     chdir(Config.get_bot_config_path())
-    await asleep(5)
     check_time = datetime.now()
+    await asleep(5)
     while True:
         if len(get_list_of_processes()) == 0:
             await send_msg(ctx, add_quotes(get_translation("Error while loading server! Retreating...")),
@@ -148,7 +148,7 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
             output_bot = get_translation("{0}, elapsed time: ") \
                              .format(Config.get_settings().bot_settings.idle_status) + \
                          (str(timedelta_secs // 60) + ":" +
-                          f"{(timedelta_secs % 60):02d}" if timedelta_secs // 60 != 0 else str(timedelta_secs % 60) +
+                          f"{(timedelta_secs % 60):02d}" if timedelta_secs // 60 != 0 else str(timedelta_secs) +
                                                                                            get_translation(" sec"))
         await bot.change_presence(activity=Activity(type=ActivityType.listening, name=output_bot))
         await asleep(Config.get_timeouts_settings().await_seconds_when_connecting_via_rcon)
@@ -712,6 +712,16 @@ async def bot_status(ctx, is_reaction=False):
         bot_message += get_translation("Server is backing up") + "\n"
     if BotVars.is_restoring:
         bot_message += get_translation("Server is restoring from backup") + "\n"
+    server_info = get_translation("Selected server: {0}") \
+                      .format(Config.get_selected_server_from_list().server_name) + "\n"
+    if Config.get_selected_server_from_list().server_loading_time is not None:
+        loading_time = Config.get_selected_server_from_list().server_loading_time
+        if loading_time // 60 != 0:
+            loading_str = f"{loading_time // 60}{get_translation(' min')} "\
+                          f"{(loading_time % 60):02d}{get_translation(' sec')}"
+        else:
+            loading_str = f"{loading_time}{get_translation(' sec')}"
+        server_info += get_translation("Average server loading time: {0}").format(loading_str) + "\n"
     if BotVars.is_server_on:
         try:
             bot_message = get_translation("server online").capitalize() + "\n" + bot_message
@@ -730,18 +740,15 @@ async def bot_status(ctx, is_reaction=False):
                     message += get_translation("Sunrise, ")
                 message += str((6 + time_ticks // 1000) % 24) + ":" + f"{((time_ticks % 1000) * 60 // 1000):02d}\n"
                 bot_message += message
-            bot_message += get_translation("Selected server: ") + \
-                           Config.get_selected_server_from_list().server_name + "\n" + states
+            bot_message += server_info + states
             await send_msg(ctx, add_quotes(bot_message), is_reaction)
         except (ConnectionError, socket.error):
-            bot_message += get_translation("Server thinking...") + "\n" + get_translation("Selected server: ") + \
-                           Config.get_selected_server_from_list().server_name + "\n" + states
+            bot_message += get_translation("Server thinking...") + "\n" + server_info + states
             await send_msg(ctx, add_quotes(bot_message), is_reaction)
             print(get_translation("Server's down via rcon"))
     else:
         bot_message = get_translation("server offline").capitalize() + "\n" + bot_message
-        bot_message += get_translation("Selected server: ") + Config.get_selected_server_from_list().server_name + \
-                       "\n" + states
+        bot_message += server_info + states
         await send_msg(ctx, add_quotes(bot_message), is_reaction)
 
 
