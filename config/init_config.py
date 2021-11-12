@@ -408,17 +408,18 @@ class Config:
                             return None, None
 
     @classmethod
-    def remove_ip_address(cls, user_nicks: List[str], ip_address: str):
+    def remove_ip_address(cls, ip_address: str, user_nicks: Optional[List[str]] = None):
         ip_info_to_delete = None
         for i in range(len(cls.get_auth_users())):
-            if cls.get_auth_users()[i].nick in user_nicks:
+            if user_nicks is None or cls.get_auth_users()[i].nick in user_nicks:
                 for j in range(len(cls.get_auth_users()[i].ip_addresses)):
                     if cls.get_auth_users()[i].ip_addresses[j].ip_address == ip_address:
                         ip_info_to_delete = cls.get_auth_users()[i].ip_addresses[j]
                         break
                 if ip_info_to_delete is not None:
                     cls.get_auth_users()[i].ip_addresses.remove(ip_info_to_delete)
-                    if len(user_nicks) == 1:
+                    ip_info_to_delete = None
+                    if user_nicks is not None and len(user_nicks) == 1:
                         break
 
     @classmethod
@@ -1146,13 +1147,13 @@ class Config:
             cls._need_to_rewrite = True
             cls.get_secure_auth().max_login_attempts = \
                 cls._ask_for_data(get_translation("Enter how many attempts bot will accept connection from "
-                                                  "a certain IP address before it bans this IP") + "\n> ",
+                                                  "a certain IP-address before it bans this IP") + "\n> ",
                                   try_int=True, int_high_than=1)
         if cls.get_secure_auth().days_before_ip_expires < 1:
             cls._need_to_rewrite = True
             cls.get_secure_auth().days_before_ip_expires = \
                 cls._ask_for_data(
-                    get_translation("Enter how many days IP address will be valid before it expires (int)") +
+                    get_translation("Enter how many days IP-address will be valid before it expires (int)") +
                     "\n> ", try_int=True, int_high_than=1)
         if cls.get_secure_auth().code_length < 1 or \
                 cls.get_secure_auth().code_length > 60:

@@ -407,7 +407,7 @@ class MinecraftCommands(commands.Cog):
         ip_info = Config.get_users_ip_address_info(nick, code=code)
         if ip_info is None:
             await ctx.send(add_quotes(get_translation("Bot couldn't find nick and/or code "
-                                                      "in the IP addresses without access!")))
+                                                      "in the IP-addresses without access!")))
             return
         if len([1 for p in self._IndPoll.get_polls().values() if p.command == f"auth login {nick}"]) > 0:
             await delete_after_by_msg(ctx.message)
@@ -447,22 +447,73 @@ class MinecraftCommands(commands.Cog):
                 Config.save_config()
             Config.update_ip_address(nick, ip_info.ip_address, whitelist=True)
             Config.save_auth_users()
-            await ctx.send(get_translation("{0}, bot gave access to the nick `{1}` with IP address `{2}`!")
+            await ctx.send(get_translation("{0}, bot gave access to the nick `{1}` with IP-address `{2}`!")
                            .format(ctx.author.mention, nick, ip_info.ip_address))
         else:
             await ctx.send(add_quotes(get_translation("Your code for this nick is wrong. Try again.")))
 
     @auth.command(pass_context=True, name="banlist")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @commands.guild_only()
     @decorators.has_role_or_default()
     async def a_banlist(self, ctx):
         banned_ips = get_list_of_banned_ips()
         if len(banned_ips) > 0:
-            await ctx.send(add_quotes(get_translation("List of banned IP addresses:") +
+            await ctx.send(add_quotes(get_translation("List of banned IP-addresses:") +
                                       "\n- " + "\n- ".join(banned_ips)))
         else:
-            await ctx.send(add_quotes(get_translation("There are no banned IP addresses!")))
+            await ctx.send(add_quotes(get_translation("There are no banned IP-addresses!")))
+
+    @auth.command(pass_context=True, name="ban")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @decorators.has_role_or_default()
+    async def a_ban(self, ctx, ip: ip_address, *, reason: str = None):
+        has_admin_rights = False
+        if not isinstance(ctx.channel, discord.DMChannel):
+            with suppress(decorators.MissingAdminPermissions):
+                if decorators.is_admin(ctx):
+                    has_admin_rights = True
+
+        if not has_admin_rights and not Config.get_secure_auth().enable_auth_security:
+            await ctx.send(add_quotes(get_translation("Secure authorization is disabled. Enable it to proceed!")))
+            return
+
+        if not has_admin_rights:
+            if ctx.author.id not in [u.user_discord_id for u in Config.get_known_users_list()]:
+                await ctx.send(get_translation("{0}, you don't have bound nicks, use `{1}assoc` first...")
+                               .format(ctx.author.mention, Config.get_settings().bot_settings.prefix))
+                return
+            bound_nicks = [u.user_minecraft_nick for u in Config.get_known_users_list()
+                           if u.user_discord_id == ctx.author.id]
+            have_ip = False
+            for user in Config.get_auth_users():
+                if user.nick not in bound_nicks:
+                    continue
+                for ip_addr in user.ip_addresses:
+                    if ip_addr.ip_address == ip:
+                        have_ip = True
+                    if have_ip:
+                        break
+                if have_ip:
+                    break
+            if not have_ip:
+                await ctx.send(get_translation("{0}, there are no nicks in your possession "
+                                               "that were logged on with this IP-address").format(ctx.author.mention))
+                return
+
+        try:
+            with connect_rcon() as cl_r:
+                cl_r.run(f"ban-ip {ip} {reason}")
+            reason_str = ""
+            if reason is not None:
+                reason_str = " " + get_translation("with reason '{0}'").format(reason)
+            await ctx.send(add_quotes(get_translation("Banned IP-address {0}{1}!").format(ip, reason_str)))
+            Config.remove_ip_address(ip)
+            Config.save_auth_users()
+        except (ConnectionError, socket.error):
+            if BotVars.is_server_on:
+                await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
+            else:
+                await ctx.send(add_quotes(get_translation("server offline").capitalize()))
 
     @auth.command(pass_context=True, aliases=["pardon"], name="unban")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -470,13 +521,13 @@ class MinecraftCommands(commands.Cog):
     @decorators.has_admin_role()
     async def a_unban(self, ctx, ip: ip_address):
         if len(get_list_of_banned_ips()) == 0:
-            await ctx.send(add_quotes(get_translation("There are no banned IP addresses!")))
+            await ctx.send(add_quotes(get_translation("There are no banned IP-addresses!")))
             return
 
         try:
             with connect_rcon() as cl_r:
                 cl_r.run(f"pardon-ip {ip}")
-            await ctx.send(add_quotes(get_translation("Unbanned IP address {0}!").format(ip)))
+            await ctx.send(add_quotes(get_translation("Unbanned IP-address {0}!").format(ip)))
         except (ConnectionError, socket.error):
             if BotVars.is_server_on:
                 await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
@@ -524,13 +575,13 @@ class MinecraftCommands(commands.Cog):
 
         if len(possible_matches) == 0:
             if has_admin_rights:
-                await ctx.send(get_translation("{0}, there are no nicks that were logged on with this IP address")
+                await ctx.send(get_translation("{0}, there are no nicks that were logged on with this IP-address")
                                .format(ctx.author.mention))
             else:
                 await ctx.send(get_translation("{0}, there are no nicks in your possession "
-                                               "that were logged on with this IP address").format(ctx.author.mention))
+                                               "that were logged on with this IP-address").format(ctx.author.mention))
             return
-        Config.remove_ip_address(possible_matches, ip)
+        Config.remove_ip_address(ip, possible_matches)
         Config.save_auth_users()
         try:
             server_players = get_server_players().get("players")
@@ -538,14 +589,14 @@ class MinecraftCommands(commands.Cog):
         except (ConnectionError, socket.error):
             available_players_to_kick = []
         await ctx.send(f"{ctx.author.mention}\n" +
-                       add_quotes(get_translation("These nicks were revoked with this IP address:") +
+                       add_quotes(get_translation("These nicks were revoked with this IP-address:") +
                                   "\n- " + "\n- ".join(possible_matches)))
         if len(available_players_to_kick) > 0:
             with suppress(ConnectionError, socket.error):
                 with connect_rcon() as cl_r:
                     for p in available_players_to_kick:
                         cl_r.kick(p, get_translation("One of the sessions for this nick has been ended"))
-            await ctx.send(f"{ctx.author.mention}\n" + add_quotes(get_translation("These nicks bound this IP address "
+            await ctx.send(f"{ctx.author.mention}\n" + add_quotes(get_translation("These nicks bound this IP-address "
                                                                                   "were kicked from Minecraft server:")
                                                                   + "\n- " + "\n- ".join(available_players_to_kick)))
 

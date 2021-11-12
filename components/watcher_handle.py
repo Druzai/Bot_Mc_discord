@@ -311,7 +311,7 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None):
                             if is_invasion_to_ban:
                                 ban_reason = get_translation("Intrusion prevented: User was banned!")
                             else:
-                                Config.remove_ip_address([nick], ip_address)
+                                Config.remove_ip_address(ip_address, [nick])
                                 ban_reason = get_translation("Too many login attempts: User was banned!")
                             msg = f"{ban_reason}\n" + get_translation("Nick: {0}\nIP: {1}\nTime: {2}") \
                                 .format(nick, ip_address, datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
@@ -341,7 +341,9 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None):
                         msg = add_quotes(msg) + "\n"
                         msg += get_translation("To proceed enter command `{0}` within {1} min") \
                             .format(f"{Config.get_settings().bot_settings.prefix}auth login {nick} <code>",
-                                    Config.get_secure_auth().mins_before_code_expires)
+                                    Config.get_secure_auth().mins_before_code_expires) + "\n"
+                        msg += get_translation("To ban this IP-address enter command `{0}`")\
+                            .format(f"{Config.get_settings().bot_settings.prefix}auth ban {ip_address} [reason]")
                         if member is not None:
                             BotVars.bot_for_webhooks.loop.create_task(member.send(msg))
                         else:
