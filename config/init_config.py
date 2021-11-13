@@ -183,8 +183,8 @@ class Bot_settings:
     help_arguments: List[str] = field(default_factory=list)
     gaming_status: str = ""
     idle_status: str = ""
-    role: Optional[str] = None
-    admin_role: Optional[str] = None
+    specific_command_role_id: Optional[int] = None
+    admin_role_id: Optional[int] = None
     ip_address: str = ""
     local_address: str = ""
     log_bot_messages: bool = None
@@ -796,35 +796,18 @@ class Config:
 
     @classmethod
     def _setup_roles(cls):
-        if cls._settings_instance.bot_settings.role is not None:
-            command_role = cls._settings_instance.bot_settings.role
-            if command_role:
-                print(get_translation("Role for specific commands is '{0}'.").format(command_role))
-            else:
-                print(get_translation("Role for specific commands doesn't stated."))
+        if cls._settings_instance.bot_settings.specific_command_role_id is not None:
+            print(get_translation("Role for specific commands is set."))
         else:
-            cls._need_to_rewrite = True
-            if cls._ask_for_data(
-                    get_translation("Do you want to set role for some specific commands?") + " Y/n\n> ", "y"):
-                cls._settings_instance.bot_settings.role = \
-                    cls._ask_for_data(get_translation(
-                        "Set discord role for some specific commands such as start, stop, etc.") + "\n> ")
-            else:
-                cls._settings_instance.bot_settings.role = ""
-        if cls._settings_instance.bot_settings.admin_role is not None:
-            command_role = cls._settings_instance.bot_settings.admin_role
-            if command_role:
-                print(get_translation("Admin role for bot is '{0}'.").format(command_role))
-            else:
-                print(get_translation("Admin role for bot doesn't stated. "
-                                      "Bot will check if member has 'Administrator' permission."))
+            print(get_translation("Role for specific commands doesn't stated. "
+                                  "You can set it via command {0}.")
+                  .format(f"{Config.get_settings().bot_settings.prefix}role command <role>"))
+        if cls._settings_instance.bot_settings.admin_role_id:
+            print(get_translation("Admin role for bot is set."))
         else:
-            cls._need_to_rewrite = True
-            if cls._ask_for_data(get_translation("Do you want to set admin role for bot?") + " Y/n\n> ", "y"):
-                cls._settings_instance.bot_settings.admin_role = \
-                    cls._ask_for_data(get_translation("Set discord admin role for bot") + "\n> ")
-            else:
-                cls._settings_instance.bot_settings.admin_role = ""
+            print(get_translation("Admin role for bot doesn't stated. You can set it via command {0}. "
+                                  "Bot will check if member has 'Administrator' permission.")
+                  .format(f"{Config.get_settings().bot_settings.prefix}role admin <role>"))
 
     @classmethod
     def _setup_ip_address(cls):

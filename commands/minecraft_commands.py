@@ -436,7 +436,7 @@ class MinecraftCommands(commands.Cog):
                                                                        "Will you let that happen?")
                                                        .format(ctx.author.mention, nick),
                                                command=f"auth login {nick}",
-                                               needed_role=Config.get_settings().bot_settings.admin_role,
+                                               needed_role=Config.get_settings().bot_settings.admin_role_id,
                                                need_for_voting=1,
                                                timeout=5,
                                                admin_needed=True,
@@ -1006,9 +1006,10 @@ class MinecraftCommands(commands.Cog):
                                                     backup_number - 1].initiator,
                                                 Config.get_selected_server_from_list().server_name),
                                 command="backup_del",
-                                needed_role=Config.get_settings().bot_settings.role,
+                                needed_role=Config.get_settings().bot_settings.specific_command_role_id,
                                 need_for_voting=get_half_members_count_with_role(self._bot,
-                                                                                 Config.get_settings().bot_settings.role),
+                                                                                 Config.get_settings().bot_settings
+                                                                                         .specific_command_role_id),
                                 remove_logs_after=5):
                         return
                 else:
@@ -1053,9 +1054,10 @@ class MinecraftCommands(commands.Cog):
                                 .format(ctx.author.mention,
                                         Config.get_selected_server_from_list().server_name),
                         command="backup_del_all",
-                        needed_role=Config.get_settings().bot_settings.role,
+                        needed_role=Config.get_settings().bot_settings.specific_command_role_id,
                         need_for_voting=get_half_members_count_with_role(self._bot,
-                                                                         Config.get_settings().bot_settings.role),
+                                                                         Config.get_settings().bot_settings
+                                                                                 .specific_command_role_id),
                         remove_logs_after=5):
                 return
         else:
@@ -1147,8 +1149,9 @@ class MinecraftCommands(commands.Cog):
                         self.checkups_task.restart()
                     return
                 else:
-                    if Config.get_settings().bot_settings.role == "" or \
-                            Config.get_settings().bot_settings.role in (e.name for e in payload.member.roles):
+                    if Config.get_settings().bot_settings.specific_command_role_id is None or \
+                            Config.get_settings().bot_settings.specific_command_role_id \
+                            in (e.id for e in payload.member.roles):
                         if payload.emoji.name == self._emoji_symbols.get("start"):
                             await bot_start(channel, self._bot, self._backups_thread, is_reaction=True)
                         elif payload.emoji.name == self._emoji_symbols.get("stop 10"):
@@ -1158,5 +1161,6 @@ class MinecraftCommands(commands.Cog):
                                               backups_thread=self._backups_thread, is_reaction=True)
                     else:
                         await send_error(channel, self._bot,
-                                         commands.MissingRole(Config.get_settings().bot_settings.role),
+                                         commands.MissingRole(Config.get_settings().bot_settings
+                                                              .specific_command_role_id),
                                          is_reaction=True)

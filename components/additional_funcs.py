@@ -1,6 +1,7 @@
 import inspect
 import socket
 import sys
+import typing
 from ast import literal_eval
 from asyncio import sleep as asleep
 from contextlib import contextmanager, suppress
@@ -218,7 +219,7 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_re
                                                               "player(s) on it. Will you let that happen?")
                                               .format(get_author_and_mention(ctx, bot, is_reaction)[1], players_count),
                                       command="stop",
-                                      needed_role=Config.get_settings().bot_settings.role,
+                                      needed_role=Config.get_settings().bot_settings.specific_command_role_id,
                                       remove_logs_after=5):
                     return
             else:
@@ -626,12 +627,12 @@ async def warn_about_auto_backups(ctx, bot: commands.Bot):
                            .format(Config.get_selected_server_from_list().server_name))
 
 
-def get_half_members_count_with_role(bot: commands.Bot, role: str):
+def get_half_members_count_with_role(bot: commands.Bot, role: int):
     count = 0
     for m in bot.guilds[0].members:
         if not m.bot and m.status != Status.offline:
             if role:
-                if role in (e.name for e in m.roles):
+                if role in (e.id for e in m.roles):
                     count += 1
             else:
                 count += 1
@@ -717,7 +718,7 @@ async def bot_status(ctx, is_reaction=False):
     if Config.get_selected_server_from_list().server_loading_time is not None:
         loading_time = Config.get_selected_server_from_list().server_loading_time
         if loading_time // 60 != 0:
-            loading_str = f"{loading_time // 60}{get_translation(' min')} "\
+            loading_str = f"{loading_time // 60}{get_translation(' min')} " \
                           f"{(loading_time % 60):02d}{get_translation(' sec')}"
         else:
             loading_str = f"{loading_time}{get_translation(' sec')}"
@@ -964,7 +965,8 @@ def parse_params_for_help(command_params: dict, string_to_add: str, create_param
     params = {}
     converter = False
     for arg_name, arg_data in command_params.items():
-        if arg_data.annotation != inspect._empty and hasattr(arg_data.annotation, 'converter'):
+        if arg_data.annotation != inspect._empty and hasattr(arg_data.annotation, 'converter') \
+                and isinstance(arg_data.annotation.converter, typing._GenericAlias):
             converter = True
         if create_params_dict:
             if arg_data.annotation != inspect._empty:
@@ -972,6 +974,8 @@ def parse_params_for_help(command_params: dict, string_to_add: str, create_param
                     params[arg_name] = getattr(arg_data.annotation, '__name__', None)
                 elif hasattr(arg_data.annotation, 'converter'):
                     params[arg_name] = sub(r"\w*?\.", "", str(arg_data.annotation.converter))
+                    if not isinstance(arg_data.annotation.converter, typing._GenericAlias):
+                        params[arg_name] = params[arg_name].strip("<>").lstrip("class").strip("' ")
                 else:
                     params[arg_name] = sub(r"\w*?\.", "", str(arg_data.annotation))
             elif arg_data.annotation == inspect._empty and arg_data.default != inspect._empty:
@@ -1144,7 +1148,7 @@ def get_from_server_properties(setting: str):
 
 
 # Handling errors
-async def send_error(ctx, bot, error, is_reaction=False):
+async def send_error(ctx, bot: commands.Bot, error, is_reaction=False):
     author, author_mention = get_author_and_mention(ctx, bot, is_reaction)
     if isinstance(error, commands.MissingRequiredArgument):
         print(get_translation("{0} didn't input the argument").format(author))
@@ -1167,10 +1171,16 @@ async def send_error(ctx, bot, error, is_reaction=False):
                                   .capitalize() + "\n- " + "\n- ".join(missing_perms)),
                        is_reaction)
     elif isinstance(error, commands.MissingRole):
-        print(get_translation("{0} don't have role '{1}' to run command").format(author, error.missing_role))
+        if isinstance(error.missing_role, int):
+            role = bot.guilds[0].get_role(error.missing_role)
+            if role is None:
+                role = "---"
+        else:
+            role = error.missing_role
+        print(get_translation("{0} don't have role '{1}' to run command").format(author, role))
         await send_msg(ctx, f"{author_mention}\n" +
                        add_quotes(get_translation("you don't have role '{0}' to run this command").capitalize()
-                                  .format(error.missing_role)),
+                                  .format(role)),
                        is_reaction)
     elif isinstance(error, commands.CommandNotFound):
         print(get_translation("{0} entered non-existent command").format(author))
@@ -1203,8 +1213,9 @@ async def send_error(ctx, bot, error, is_reaction=False):
     elif isinstance(error, commands.CheckFailure):
         pass
     elif isinstance(error, MissingAdminPermissions):
-        if Config.get_settings().bot_settings.admin_role != "":
-            await send_error(ctx, bot, commands.MissingRole(Config.get_settings().bot_settings.admin_role), is_reaction)
+        if Config.get_settings().bot_settings.admin_role_id is not None:
+            await send_error(ctx, bot,
+                             commands.MissingRole(Config.get_settings().bot_settings.admin_role_id), is_reaction)
         await send_error(ctx, bot, commands.MissingPermissions(['administrator']), is_reaction)
     else:
         print(", ".join(error.args))

@@ -1,7 +1,8 @@
 from typing import Union
 
 import discord
-from discord import Activity, ActivityType, Role, Member, InvalidData, HTTPException, NotFound, Forbidden, DMChannel
+from discord import Activity, ActivityType, Role, Member, TextChannel, \
+    InvalidData, HTTPException, NotFound, Forbidden, DMChannel
 from discord.ext import commands, tasks
 
 from commands.poll import Poll
@@ -12,13 +13,6 @@ from components.additional_funcs import (
 )
 from components.localization import get_translation, get_locales, set_locale, get_current_locale
 from components.rss_feed_handle import *
-
-
-def channel_mention(arg: str):
-    try:
-        return int(arg)
-    except ValueError:
-        return arg
 
 
 class ChatCommands(commands.Cog):
@@ -50,7 +44,6 @@ class ChatCommands(commands.Cog):
     @commands.group(pass_context=True, aliases=["chn"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
-    @decorators.has_role_or_default()
     async def channel(self, ctx):
         try:
             msg = get_translation("Channel {0} set to Minecraft cross-platform chat") \
@@ -70,62 +63,94 @@ class ChatCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def c_chat(self, ctx, channel_id: channel_mention = None):
+    async def c_chat(self, ctx, channel: commands.Greedy[TextChannel] = None):
         if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
             await ctx.channel.send(get_translation("Cross-platform chat is disabled in bot config!"))
             return
 
-        channel_set = False
-        if channel_id is None:
-            Config.get_cross_platform_chat_settings().channel_id = ctx.channel.id
-            channel_set = True
+        if channel is None:
+            channel = ctx.channel
         else:
-            if isinstance(channel_id, int):
-                Config.get_cross_platform_chat_settings().channel_id = channel_id
-                channel_set = True
-            elif channel_id.startswith("<#"):
-                try:
-                    Config.get_cross_platform_chat_settings().channel_id = int(channel_id.strip("<#>"))
-                    channel_set = True
-                except ValueError:
-                    pass
-
-        if channel_set:
-            Config.save_config()
-            await ctx.channel.send(
-                get_translation("Channel {0} set to Minecraft cross-platform chat")
-                    .format((await self._bot.fetch_channel(Config.get_cross_platform_chat_settings()
-                                                           .channel_id)).mention))
-        else:
-            await ctx.channel.send(get_translation("You entered wrong argument!"))
+            channel = channel[0]
+        Config.get_cross_platform_chat_settings().channel_id = channel.id
+        Config.save_config()
+        await ctx.channel.send(get_translation("Channel {0} set to Minecraft cross-platform chat")
+                               .format(channel.mention))
 
     @channel.command(pass_context=True, name="commands")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def c_commands(self, ctx, channel_id: channel_mention = None):
-        channel_set = False
-        if channel_id is None:
-            Config.get_settings().bot_settings.commands_channel_id = ctx.channel.id
-            channel_set = True
+    async def c_commands(self, ctx, channel: commands.Greedy[TextChannel] = None):
+        if channel is None:
+            channel = ctx.channel
         else:
-            if isinstance(channel_id, int):
-                Config.get_settings().bot_settings.commands_channel_id = channel_id
-                channel_set = True
-            elif channel_id.startswith("<#"):
-                try:
-                    Config.get_settings().bot_settings.commands_channel_id = int(channel_id.strip("<#>"))
-                    channel_set = True
-                except ValueError:
-                    pass
+            channel = channel[0]
+        Config.get_settings().bot_settings.commands_channel_id = channel.id
+        Config.save_config()
+        await ctx.channel.send(get_translation("Channel {0} set as commands' channel for bot").format(channel.mention))
 
-        if channel_set:
-            Config.save_config()
-            await ctx.channel.send(get_translation("Channel {0} set as commands' channel for bot")
-                                   .format((await self._bot.fetch_channel(Config.get_settings()
-                                                                          .bot_settings.commands_channel_id)).mention))
-        else:
-            await ctx.channel.send(get_translation("You entered wrong argument!"))
+    @commands.group(pass_context=True, invoke_without_command=True)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    async def role(self, ctx):
+        role = None
+        msg = ""
+        if Config.get_settings().bot_settings.specific_command_role_id is not None:
+            role = self._bot.guilds[0].get_role(Config.get_settings().bot_settings.specific_command_role_id)
+            if role is not None:
+                msg = get_translation("Role {0} set as role for specific commands for bot").format(role.mention)
+        if role is None:
+            msg = get_translation("Role for specific commands not stated")
+        msg += "\n"
+        role = None
+
+        if Config.get_settings().bot_settings.admin_role_id is not None:
+            role = self._bot.guilds[0].get_role(Config.get_settings().bot_settings.admin_role_id)
+            if role is not None:
+                msg += get_translation("Role {0} set as admin role for bot").format(role.mention)
+        if role is None:
+            msg += get_translation("Admin role not stated")
+        await ctx.channel.send(msg)
+
+    @role.group(pass_context=True, name="command", invoke_without_command=True)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_admin_role()
+    async def r_command(self, ctx, role: commands.Greedy[Role]):
+        role = role[0]
+        Config.get_settings().bot_settings.specific_command_role_id = role.id
+        Config.save_config()
+        await ctx.channel.send(
+            get_translation("Role {0} set as role for specific commands for bot").format(role.mention))
+
+    @r_command.command(pass_context=True, name="clear")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_admin_role()
+    async def r_c_clear(self, ctx):
+        Config.get_settings().bot_settings.specific_command_role_id = None
+        Config.save_config()
+        await ctx.channel.send(add_quotes(get_translation("Role for specific commands has been cleared")))
+
+    @role.group(pass_context=True, name="admin", invoke_without_command=True)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_admin_role()
+    async def r_admin(self, ctx, role: commands.Greedy[Role]):
+        role = role[0]
+        Config.get_settings().bot_settings.admin_role_id = role.id
+        Config.save_config()
+        await ctx.channel.send(get_translation("Role {0} set as admin role for bot").format(role.mention))
+
+    @r_admin.command(pass_context=True, name="clear")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_admin_role()
+    async def r_a_clear(self, ctx):
+        Config.get_settings().bot_settings.admin_role_id = None
+        Config.save_config()
+        await ctx.channel.send(add_quotes(get_translation("Admin role has been cleared")))
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -174,10 +199,11 @@ class ChatCommands(commands.Cog):
             await ctx.send(add_quotes(get_translation("Current prefix - '{0}'.")
                                       .format(Config.get_settings().bot_settings.prefix)))
         else:
-            if Config.get_settings().bot_settings.role != "" and \
-                    Config.get_settings().bot_settings.role not in (e.name for e in ctx.author.roles):
+            if Config.get_settings().bot_settings.specific_command_role_id != "" and \
+                    Config.get_settings().bot_settings.specific_command_role_id not in (e.name for e in
+                                                                                        ctx.author.roles):
                 await send_error(ctx, self._bot,
-                                 commands.MissingRole(Config.get_settings().bot_settings.role))
+                                 commands.MissingRole(Config.get_settings().bot_settings.specific_command_role_id))
                 return
 
             if len(new_prefix.split()) > 1:

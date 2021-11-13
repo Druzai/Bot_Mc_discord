@@ -2,7 +2,7 @@ from asyncio import sleep as asleep
 from datetime import datetime
 from enum import Enum, auto
 
-from discord import Color, Embed, Status
+from discord import Color, Embed, Status, Role
 from discord.ext import commands
 
 from components.localization import get_translation
@@ -20,16 +20,16 @@ class Poll(commands.Cog):
     def add_awaiting_command(self, command: str):
         self._await_date[command] = datetime.now()
 
-    async def run(self, ctx, message: str, command: str, need_for_voting=2, needed_role=None,
+    async def run(self, ctx, message: str, command: str, need_for_voting=2, needed_role: int = None,
                   timeout=60 * 60, remove_logs_after=None, admin_needed=False):
         members_count = len([m for m in self._bot.guilds[0].members if not m.bot and m.status != Status.offline])
         if members_count < need_for_voting:
             need_for_voting = members_count
         mention = "@everyone"
-        if needed_role:
-            for role in self._bot.guilds[0].roles:
-                if role.name == needed_role:
-                    mention = role.mention
+        if needed_role is not None:
+            needed_role = self._bot.guilds[0].get_role(needed_role)
+            if needed_role is not None:
+                mention = needed_role.mention
         start_msg = await ctx.send(f"{mention}, {message} " +
                                    get_translation("To win the poll needed {0} vote(s)!").format(str(need_for_voting)))
         poll_msg = await self.make_embed(ctx)
@@ -109,7 +109,7 @@ class Poll(commands.Cog):
         CANCELED = auto()
 
     class PollContent:
-        def __init__(self, ctx, command: str, need_for_voting=2, needed_role=None,
+        def __init__(self, ctx, command: str, need_for_voting=2, needed_role: Role = None,
                      remove_logs_after=0, admin_needed=False):
             self.poll_yes = 0
             self.poll_no = 0
@@ -131,16 +131,16 @@ class Poll(commands.Cog):
                 await channel.send(f"{user.mention}, " + get_translation("you've already voted!"),
                                    delete_after=self.RLA)
                 return False
-            if not self.AN and self.NR and self.NR not in (e.name for e in user.roles):
+            if not self.AN and self.NR and self.NR.id not in (e.id for e in user.roles):
                 await channel.send(f"{user.mention}, " +
-                                   get_translation("you don't have needed '{0}' role").format(self.NR),
+                                   get_translation("you don't have needed '{0}' role").format(self.NR.name),
                                    delete_after=self.RLA)
                 return False
-            if self.AN and self.NR and self.NR not in (e.name for e in user.roles) and \
+            if self.AN and self.NR and self.NR.id not in (e.id for e in user.roles) and \
                     not user.guild_permissions.administrator:
                 if self.NR != "":
                     await channel.send(f"{user.mention}, " +
-                                       get_translation("you don't have needed '{0}' role").format(self.NR),
+                                       get_translation("you don't have needed '{0}' role").format(self.NR.name),
                                        delete_after=self.RLA)
                 await channel.send(f"{user.mention}, " +
                                    get_translation("you don't have permission 'Administrator'"),
@@ -162,9 +162,9 @@ class Poll(commands.Cog):
                 await channel.send(f"{user.mention}, " + get_translation("poll've already finished!"),
                                    delete_after=self.RLA)
                 return
-            if self.NR and self.NR not in (e.name for e in user.roles):
+            if self.NR and self.NR.id not in (e.id for e in user.roles):
                 await channel.send(f"{user.mention}, " +
-                                   get_translation("you don't have needed '{0}' role").format(self.NR),
+                                   get_translation("you don't have needed '{0}' role").format(self.NR.name),
                                    delete_after=self.RLA)
                 return
             self.poll_voted_uniq.pop(user.id)

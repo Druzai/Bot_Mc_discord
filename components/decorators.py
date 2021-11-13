@@ -9,12 +9,15 @@ from config.init_config import Config
 
 def has_role_or_default():
     def predicate(ctx):
-        config_role = Config.get_settings().bot_settings.role
         if isinstance(ctx.channel, DMChannel):
             return True
 
-        if config_role != "" and utils_get(ctx.author.roles, name=config_role) is None:
-            raise MissingRole(config_role)
+        config_role_id = Config.get_settings().bot_settings.specific_command_role_id
+        if config_role_id is None:
+            return True
+
+        if utils_get(ctx.author.roles, id=config_role_id) is None:
+            raise MissingRole(config_role_id)
         return True
 
     return check(predicate)
@@ -28,8 +31,8 @@ def is_admin(ctx):
     if not isinstance(ctx.channel, GuildChannel):
         raise NoPrivateMessage()
 
-    admin_role = Config.get_settings().bot_settings.admin_role
-    role = None if admin_role == "" else utils_get(ctx.author.roles, name=admin_role)
+    admin_role_id = Config.get_settings().bot_settings.admin_role_id
+    role = None if admin_role_id is None else utils_get(ctx.author.roles, id=admin_role_id)
     if role is None and not ctx.author.guild_permissions.administrator:
         raise MissingAdminPermissions()
     return True
