@@ -314,7 +314,7 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None):
                                 Config.remove_ip_address(ip_address, [nick])
                                 ban_reason = get_translation("Too many login attempts: User was banned!")
                             msg = f"{ban_reason}\n" + get_translation("Nick: {0}\nIP: {1}\nTime: {2}") \
-                                .format(nick, ip_address, datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+                                .format(nick, ip_address, datetime.now().strftime(get_translation("%H:%M:%S %d/%m/%Y")))
                             channel = _get_commands_channel()
                             BotVars.bot_for_webhooks.loop.create_task(channel.send(add_quotes(msg)))
                     else:
@@ -337,7 +337,7 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None):
                                               "IP: {1}\nConnection attempts: {2}\nTime: {3}") \
                             .format(nick, ip_address,
                                     f"{user_attempts}/{Config.get_secure_auth().max_login_attempts}",
-                                    datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+                                    datetime.now().strftime(get_translation("%H:%M:%S %d/%m/%Y")))
                         msg = add_quotes(msg) + "\n"
                         msg += get_translation("To proceed enter command `{0}` within {1} min") \
                             .format(f"{Config.get_settings().bot_settings.prefix}auth login {nick} <code>",

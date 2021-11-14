@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
 "POT-Creation-Date: 2021-11-13 17:30+0300\n"
-"PO-Revision-Date: 2021-11-13 17:31+0300\n"
+"PO-Revision-Date: 2021-11-14 12:29+0300\n"
 "Last-Translator: Druzai <astyn37@gmail.com>\n"
 "Language-Team: \n"
 "Language: en\n"
@@ -488,7 +488,7 @@ msgstr "Role mention, like '@Role' or role id if you're developer"
 
 #: ..\_frozen_translations.py:96
 msgid "help_role_admin_clear"
-msgstr "Clears admin role for bot"
+msgstr "Unbinds admin role for bot"
 
 #: ..\_frozen_translations.py:97
 msgid "help_role_command"
@@ -500,7 +500,7 @@ msgstr "Role mention, like '@Role' or role id if you're developer"
 
 #: ..\_frozen_translations.py:99
 msgid "help_role_command_clear"
-msgstr "Clears role for specific commands for bot"
+msgstr "Unbinds role for specific commands for bot"
 
 #: ..\_frozen_translations.py:100
 msgid "help_brief_servers"
