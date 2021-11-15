@@ -82,21 +82,9 @@ Supported 2 languages:
 * Enable the `Server Members Intent` and the `Presence Intent` in section `Privileged Gateway Intents` on the Bot tab of
   your bot's page on the [Discord developer's portal](https://discord.com/developers/applications).
 
-____________
-> Libraries for Python:
+## Build
 
-* [discord](https://github.com/Rapptz/discord.py) - main lib to run bot
-* [cryptography](https://github.com/pyca/cryptography) - lib for encrypting necessary data to config file
-* [mcipc](https://github.com/conqp/mcipc) - lib for easy using query and rcon to connect to minecraft server
-* [pyinstaller](https://github.com/pyinstaller/pyinstaller) - lib to build project to executable file, you can use
-  another one if you can't for some reason, but my makefile works only with this library
-* [psutil](https://github.com/giampaolo/psutil) - lib to check minecraft process and stop it if needed
-* [feedparser](https://github.com/kurtmckee/feedparser) - lib to parse RSS feed files
-* [jsons](https://github.com/ramonhagenaars/jsons) - lib to serialize class from dictionary
-* [omegaconf](https://github.com/omry/omegaconf) - lib to deserialize and serialize class to yaml file
-* [colorama](https://github.com/tartley/colorama) - lib to make ANSI escape character sequences work under Windows
-
-## Lib installation
+### Lib installation
 
 Type in command prompt, you must have [requirements.txt](requirements.txt) in root folder of the project.
 
@@ -104,7 +92,7 @@ Type in command prompt, you must have [requirements.txt](requirements.txt) in ro
 pip install -r requirements.txt
 ```
 
-## Build
+### Build with pyinstaller
 
 Firstly, you have to install pyinstaller via `pip install pyinstaller==4.0`.
 
@@ -122,10 +110,10 @@ For the bot to properly start the minecraft server you have to have `*.bat` (in 
 script) in your root minecraft server directory! Example of file:
 
 ```batch
-rem min_ram, max_ram - consists how many min and max GB you're allocating for server on start up
-rem your_jar_file - jar file that starts up your server. It can be for vanilla: standart server.jar or for modded server: spigot.jar, forge.jar
-rem java_parameters - parameters for minecraft server
 @echo off
+rem min_ram, max_ram - consists how many min and max GB you're allocating for server on start up
+rem your_jar_file - jar file that starts up your server. It can be for vanilla: standard server.jar or for modded server: spigot.jar, forge.jar
+rem java_parameters - parameters for minecraft server
 SET min_ram=1
 SET max_ram=3
 SET your_jar_file=server.jar
@@ -154,7 +142,7 @@ script) in your root minecraft server directory! Example of file:
 
 ```shell
 # min_ram, max_ram - consists how many min and max GB you're allocating for server on start up
-# your_jar_file - jar file that starts up your server. It can be for vanilla: standart server.jar or for modded server: spigot.jar, forge.jar
+# your_jar_file - jar file that starts up your server. It can be for vanilla: standard server.jar or for modded server: spigot.jar, forge.jar
 # java_parameters - parameters for minecraft server
 min_ram='1G'
 max_ram='3G'
@@ -180,5 +168,5 @@ For adding or updating/fixing translations:
 
 ## Tested platforms
 
-* Windows 7 or higher (32/64 bit)
-* Linux (Ubuntu/Debian/CentOS)
+* Windows 7 or higher (64 bit)
+* Linux (Debian-based) (64 bit)
