@@ -100,7 +100,7 @@ def create_chat_webhook():
 
 def _check_log_file(file: Path, server_version: int, last_line: str = None):
     if Config.get_cross_platform_chat_settings().channel_id is None and \
-            not Config.get_secure_auth().enable_auth_security:
+            not Config.get_secure_auth().enable_secure_auth:
         return
 
     last_lines = _get_last_n_lines(file, Config.get_server_watcher().number_of_lines_to_check_in_console_log, last_line)
@@ -110,7 +110,7 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None):
     INFO_line = r"\[Server thread/INFO]" if server_version >= 7 else r"\[INFO]"
 
     if last_line is None:
-        if Config.get_secure_auth().enable_auth_security:
+        if Config.get_secure_auth().enable_secure_auth:
             last_lines = last_lines[-5:]
         else:
             last_lines = last_lines[-2:]
@@ -269,7 +269,7 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None):
 
                 BotVars.webhook_chat.send(player_message, username=player_nick, avatar_url=player_url_pic)
 
-        if Config.get_secure_auth().enable_auth_security:
+        if Config.get_secure_auth().enable_secure_auth:
             from components.additional_funcs import connect_rcon, add_quotes
             if search(r"[\w ]+ lost connection:", line):
                 if search(INFO_line, line) and "*" not in split(r"[\w ]+ lost connection:", line)[0] and \

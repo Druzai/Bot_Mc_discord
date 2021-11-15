@@ -159,7 +159,7 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
             break
     if (Config.get_cross_platform_chat_settings().enable_cross_platform_chat and
         Config.get_cross_platform_chat_settings().channel_id and
-        Config.get_cross_platform_chat_settings().webhook_url) or Config.get_secure_auth().enable_auth_security:
+        Config.get_cross_platform_chat_settings().webhook_url) or Config.get_secure_auth().enable_secure_auth:
         create_watcher()
         BotVars.watcher_of_log_file.start()
     if Config.get_selected_server_from_list().server_loading_time:
@@ -660,7 +660,7 @@ async def server_checkups(bot: commands.Bot):
                 ((Config.get_cross_platform_chat_settings().enable_cross_platform_chat and
                   Config.get_cross_platform_chat_settings().channel_id and
                   Config.get_cross_platform_chat_settings().webhook_url) or
-                 Config.get_secure_auth().enable_auth_security):
+                 Config.get_secure_auth().enable_secure_auth):
             if BotVars.watcher_of_log_file is None:
                 create_watcher()
             BotVars.watcher_of_log_file.start()
@@ -691,7 +691,7 @@ async def server_checkups(bot: commands.Bot):
                                                           "Starting up server again!")
                                           .format(datetime.now().strftime(get_translation("%H:%M:%S %d/%m/%Y")))))
             await start_server(ctx=channel, bot=bot, shut_up=True)
-    if Config.get_secure_auth().enable_auth_security:
+    if Config.get_secure_auth().enable_secure_auth:
         check_if_ips_expired()
     if Config.get_timeouts_settings().await_seconds_in_check_ups > 0:
         await asleep(Config.get_timeouts_settings().await_seconds_in_check_ups)
@@ -762,7 +762,7 @@ async def bot_list(ctx, bot: commands.Bot, is_reaction=False):
             await send_msg(ctx, add_quotes(get_translation("There are no players on the server")), is_reaction)
         else:
             players_dict = {p: None for p in info.get("players")}
-            if Config.get_secure_auth().enable_auth_security:
+            if Config.get_secure_auth().enable_secure_auth:
                 for player in Config.get_auth_users():
                     if player.nick in players_dict.keys() and player.logged:
                         non_expired_ips = [ip.expires_on_date for ip in player.ip_addresses
