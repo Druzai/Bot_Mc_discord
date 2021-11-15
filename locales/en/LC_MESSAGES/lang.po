@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
-"POT-Creation-Date: 2021-11-15 13:09+0300\n"
-"PO-Revision-Date: 2021-11-15 13:09+0300\n"
+"POT-Creation-Date: 2021-11-15 15:32+0300\n"
+"PO-Revision-Date: 2021-11-15 15:32+0300\n"
 "Last-Translator: Druzai <astyn37@gmail.com>\n"
 "Language-Team: \n"
 "Language: en\n"
@@ -17,20 +17,20 @@ msgstr ""
 "X-Generator: Poedit 3.0\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: ..\Discord_bot.py:104 ..\commands\minecraft_commands.py:813
+#: ..\Discord_bot.py:91 ..\commands\minecraft_commands.py:813
 msgid "Server info read!"
 msgstr "Server info read!"
 
-#: ..\Discord_bot.py:107
+#: ..\Discord_bot.py:94
 msgid "Bot/Discord Error: Your token is wrong"
 msgstr "Bot/Discord Error: Your token is wrong"
 
-#: ..\Discord_bot.py:109 ..\Discord_bot.py:111
-#: ..\components\additional_funcs.py:1081
+#: ..\Discord_bot.py:96 ..\Discord_bot.py:98
+#: ..\components\additional_funcs.py:1102
 msgid "Bot Error: {0}"
 msgstr "Bot Error: {0}"
 
-#: ..\Discord_bot.py:117
+#: ..\Discord_bot.py:104
 msgid "Bot/Discord Error: Something went wrong"
 msgstr "Bot/Discord Error: Something went wrong"
 
@@ -867,7 +867,7 @@ msgstr "You didn't provide reply in your message!"
 msgid "Starting RSS feed check"
 msgstr "Starting RSS feed check"
 
-#: ..\commands\minecraft_commands.py:98 ..\components\additional_funcs.py:760
+#: ..\commands\minecraft_commands.py:98 ..\components\additional_funcs.py:762
 msgid "There are no players on the server"
 msgstr "There are no players on the server"
 
@@ -900,8 +900,8 @@ msgid "Opped "
 msgstr "Opped "
 
 #: ..\commands\minecraft_commands.py:137 ..\commands\minecraft_commands.py:1087
-#: ..\commands\minecraft_commands.py:1089 ..\components\additional_funcs.py:954
-#: ..\components\additional_funcs.py:956
+#: ..\commands\minecraft_commands.py:1089 ..\components\additional_funcs.py:957
+#: ..\components\additional_funcs.py:959
 msgid "Reason: "
 msgstr "Reason: "
 
@@ -1122,8 +1122,8 @@ msgstr "Couldn't connect to server, try again("
 #: ..\commands\minecraft_commands.py:684 ..\commands\minecraft_commands.py:699
 #: ..\commands\minecraft_commands.py:722 ..\commands\minecraft_commands.py:737
 #: ..\commands\minecraft_commands.py:752 ..\commands\minecraft_commands.py:767
-#: ..\components\additional_funcs.py:751 ..\components\additional_funcs.py:788
-#: ..\components\additional_funcs.py:1241
+#: ..\components\additional_funcs.py:753 ..\components\additional_funcs.py:790
+#: ..\components\additional_funcs.py:1262
 msgid "server offline"
 msgstr "server offline"
 
@@ -1240,16 +1240,16 @@ msgstr "Use server list, there's no such server number on the list!"
 msgid "List of servers"
 msgstr "List of servers"
 
-#: ..\commands\minecraft_commands.py:846 ..\components\additional_funcs.py:914
+#: ..\commands\minecraft_commands.py:846 ..\components\additional_funcs.py:917
 msgid "Automatic backups enabled"
 msgstr "Automatic backups enabled"
 
-#: ..\commands\minecraft_commands.py:856 ..\components\additional_funcs.py:915
+#: ..\commands\minecraft_commands.py:856 ..\components\additional_funcs.py:918
 msgid "Automatic backups disabled"
 msgstr "Automatic backups disabled"
 
 #: ..\commands\minecraft_commands.py:866 ..\commands\minecraft_commands.py:868
-#: ..\components\additional_funcs.py:916
+#: ..\components\additional_funcs.py:919
 msgid "Automatic backups period set to {0} min"
 msgstr "Automatic backups period set to {0} min"
 
@@ -1261,7 +1261,7 @@ msgstr "Automatic backups period can't be lower than 0!"
 msgid "Compression method set to {0}"
 msgstr "Compression method set to {0}"
 
-#: ..\commands\minecraft_commands.py:884 ..\components\additional_funcs.py:924
+#: ..\commands\minecraft_commands.py:884 ..\components\additional_funcs.py:927
 msgid "Current compression method - {0}"
 msgstr "Current compression method - {0}"
 
@@ -1305,7 +1305,7 @@ msgstr ""
 msgid "Starting restore from backup..."
 msgstr "Starting restore from backup..."
 
-#: ..\commands\minecraft_commands.py:963 ..\config\init_config.py:596
+#: ..\commands\minecraft_commands.py:963 ..\config\init_config.py:598
 msgid "Done!"
 msgstr "Done!"
 
@@ -1361,29 +1361,29 @@ msgid "Date: "
 msgstr "Date: "
 
 #: ..\commands\minecraft_commands.py:1080 ..\components\additional_funcs.py:692
-#: ..\components\additional_funcs.py:704 ..\components\additional_funcs.py:708
-#: ..\components\additional_funcs.py:948 ..\components\watcher_handle.py:317
-#: ..\components\watcher_handle.py:352
+#: ..\components\additional_funcs.py:706 ..\components\additional_funcs.py:710
+#: ..\components\additional_funcs.py:951 ..\components\watcher_handle.py:318
+#: ..\components\watcher_handle.py:353
 msgid "%H:%M:%S %d/%m/%Y"
 msgstr "%H:%M:%S %d/%m/%Y"
 
-#: ..\commands\minecraft_commands.py:1081 ..\components\additional_funcs.py:949
+#: ..\commands\minecraft_commands.py:1081 ..\components\additional_funcs.py:952
 msgid "Backup size: "
 msgstr "Backup size: "
 
-#: ..\commands\minecraft_commands.py:1087 ..\components\additional_funcs.py:954
+#: ..\commands\minecraft_commands.py:1087 ..\components\additional_funcs.py:957
 msgid "Automatic backup"
 msgstr "Automatic backup"
 
-#: ..\commands\minecraft_commands.py:1090 ..\components\additional_funcs.py:957
+#: ..\commands\minecraft_commands.py:1090 ..\components\additional_funcs.py:960
 msgid "Not stated"
 msgstr "Not stated"
 
-#: ..\commands\minecraft_commands.py:1091 ..\components\additional_funcs.py:958
+#: ..\commands\minecraft_commands.py:1091 ..\components\additional_funcs.py:961
 msgid "Initiator: "
 msgstr "Initiator: "
 
-#: ..\commands\minecraft_commands.py:1095 ..\components\additional_funcs.py:960
+#: ..\commands\minecraft_commands.py:1095 ..\components\additional_funcs.py:963
 msgid "The world of the server was restored from this backup"
 msgstr "The world of the server was restored from this backup"
 
@@ -1459,11 +1459,11 @@ msgstr "server have already started!"
 msgid "Bot is restoring server from backup!"
 msgstr "Bot is restoring server from backup!"
 
-#: ..\components\additional_funcs.py:97 ..\components\additional_funcs.py:1250
+#: ..\components\additional_funcs.py:97 ..\components\additional_funcs.py:1271
 msgid "server is loading!"
 msgstr "server is loading!"
 
-#: ..\components\additional_funcs.py:99 ..\components\additional_funcs.py:1247
+#: ..\components\additional_funcs.py:99 ..\components\additional_funcs.py:1268
 msgid "server is stopping!"
 msgstr "server is stopping!"
 
@@ -1633,99 +1633,99 @@ msgstr ""
 "Time: {0}\n"
 "Starting up server again!"
 
-#: ..\components\additional_funcs.py:703
+#: ..\components\additional_funcs.py:705
 msgid "Server has been started at {0}, by {1}"
 msgstr "Server has been started at {0}, by {1}"
 
-#: ..\components\additional_funcs.py:707
+#: ..\components\additional_funcs.py:709
 msgid "Server has been stopped at {0}, by {1}"
 msgstr "Server has been stopped at {0}, by {1}"
 
-#: ..\components\additional_funcs.py:711
+#: ..\components\additional_funcs.py:713
 msgid "Server address: "
 msgstr "Server address: "
 
-#: ..\components\additional_funcs.py:713
+#: ..\components\additional_funcs.py:715
 msgid "Server is backing up"
 msgstr "Server is backing up"
 
-#: ..\components\additional_funcs.py:715
+#: ..\components\additional_funcs.py:717
 msgid "Server is restoring from backup"
 msgstr "Server is restoring from backup"
 
-#: ..\components\additional_funcs.py:716
+#: ..\components\additional_funcs.py:718
 msgid "Selected server: {0}"
 msgstr "Selected server: {0}"
 
-#: ..\components\additional_funcs.py:725
+#: ..\components\additional_funcs.py:727
 msgid "Average server loading time: {0}"
 msgstr "Average server loading time: {0}"
 
-#: ..\components\additional_funcs.py:728
+#: ..\components\additional_funcs.py:730
 msgid "server online"
 msgstr "server online"
 
-#: ..\components\additional_funcs.py:733
+#: ..\components\additional_funcs.py:735
 msgid "Time in Minecraft: "
 msgstr "Time in Minecraft: "
 
-#: ..\components\additional_funcs.py:735
+#: ..\components\additional_funcs.py:737
 msgid "Day, "
 msgstr "Day, "
 
-#: ..\components\additional_funcs.py:737
+#: ..\components\additional_funcs.py:739
 msgid "Sunset, "
 msgstr "Sunset, "
 
-#: ..\components\additional_funcs.py:739
+#: ..\components\additional_funcs.py:741
 msgid "Night, "
 msgstr "Night, "
 
-#: ..\components\additional_funcs.py:741
+#: ..\components\additional_funcs.py:743
 msgid "Sunrise, "
 msgstr "Sunrise, "
 
-#: ..\components\additional_funcs.py:747
+#: ..\components\additional_funcs.py:749
 msgid "Server thinking..."
 msgstr "Server thinking..."
 
-#: ..\components\additional_funcs.py:749
+#: ..\components\additional_funcs.py:751
 msgid "Server's down via rcon"
 msgstr "Server's down via rcon"
 
-#: ..\components\additional_funcs.py:772
+#: ..\components\additional_funcs.py:774
 msgid "from"
 msgstr "from"
 
-#: ..\components\additional_funcs.py:773
+#: ..\components\additional_funcs.py:775
 msgid "%H:%M %d/%m/%y"
 msgstr "%H:%M %d/%m/%y"
 
-#: ..\components\additional_funcs.py:782
+#: ..\components\additional_funcs.py:784
 msgid "Players online: {0} / {1}"
 msgstr "Players online: {0} / {1}"
 
-#: ..\components\additional_funcs.py:803 ..\components\additional_funcs.py:818
+#: ..\components\additional_funcs.py:805 ..\components\additional_funcs.py:820
 msgid "Some player(s) still oped, waiting for them"
 msgstr "Some player(s) still oped, waiting for them"
 
-#: ..\components\additional_funcs.py:822
+#: ..\components\additional_funcs.py:824
 msgid "Restarting server"
 msgstr "Restarting server"
 
-#: ..\components\additional_funcs.py:843
+#: ..\components\additional_funcs.py:845
 msgid "You should mention ONLY members or roles of this server!"
 msgstr "You should mention ONLY members or roles of this server!"
 
-#: ..\components\additional_funcs.py:861 ..\components\additional_funcs.py:904
+#: ..\components\additional_funcs.py:863 ..\components\additional_funcs.py:906
 msgid "Nothing's done!"
 msgstr "Nothing's done!"
 
-#: ..\components\additional_funcs.py:877
+#: ..\components\additional_funcs.py:879
 msgid "{0}, bot already has poll on `clear` command for this channel!"
 msgstr "{0}, bot already has poll on `clear` command for this channel!"
 
-#: ..\components\additional_funcs.py:882
+#: ..\components\additional_funcs.py:884
 msgid ""
 "this man {0} trying to delete some history of this channel. Will you let "
 "that happen?"
@@ -1733,131 +1733,131 @@ msgstr ""
 "this man {0} trying to delete some history of this channel. Will you let "
 "that happen?"
 
-#: ..\components\additional_funcs.py:919
+#: ..\components\additional_funcs.py:922
 msgid "Max backups' count limit for server - {0}"
 msgstr "Max backups' count limit for server - {0}"
 
-#: ..\components\additional_funcs.py:922
+#: ..\components\additional_funcs.py:925
 msgid "Max backups' size limit for server - {0}"
 msgstr "Max backups' size limit for server - {0}"
 
-#: ..\components\additional_funcs.py:928
+#: ..\components\additional_funcs.py:931
 msgid "Backups folder info for '{0}' server:"
 msgstr "Backups folder info for '{0}' server:"
 
-#: ..\components\additional_funcs.py:930
+#: ..\components\additional_funcs.py:933
 msgid "Used - {0}"
 msgstr "Used - {0}"
 
-#: ..\components\additional_funcs.py:931
+#: ..\components\additional_funcs.py:934
 msgid "Free - {0}"
 msgstr "Free - {0}"
 
-#: ..\components\additional_funcs.py:941
+#: ..\components\additional_funcs.py:944
 msgid "Stored backups count - {0}"
 msgstr "Stored backups count - {0}"
 
-#: ..\components\additional_funcs.py:942
+#: ..\components\additional_funcs.py:945
 msgid "Approximate remaining backups count - {0}"
 msgstr "Approximate remaining backups count - {0}"
 
-#: ..\components\additional_funcs.py:947
+#: ..\components\additional_funcs.py:950
 msgid "Last backup: "
 msgstr "Last backup: "
 
-#: ..\components\additional_funcs.py:1035
+#: ..\components\additional_funcs.py:1056
 msgid "Description"
 msgstr "Description"
 
-#: ..\components\additional_funcs.py:1039
+#: ..\components\additional_funcs.py:1060
 msgid "Aliases"
 msgstr "Aliases"
 
-#: ..\components\additional_funcs.py:1042
+#: ..\components\additional_funcs.py:1063
 msgid "Subcommands"
 msgstr "Subcommands"
 
-#: ..\components\additional_funcs.py:1045
+#: ..\components\additional_funcs.py:1066
 msgid "Parameters"
 msgstr "Parameters"
 
-#: ..\components\additional_funcs.py:1082
+#: ..\components\additional_funcs.py:1103
 msgid "Rcon password doesn't match with its value in '{0}'!"
 msgstr "Rcon password doesn't match with its value in '{0}'!"
 
-#: ..\components\additional_funcs.py:1140
+#: ..\components\additional_funcs.py:1161
 msgid "File '{0}' doesn't exist!"
 msgstr "File '{0}' doesn't exist!"
 
-#: ..\components\additional_funcs.py:1154
+#: ..\components\additional_funcs.py:1175
 msgid "{0} didn't input the argument"
 msgstr "{0} didn't input the argument"
 
-#: ..\components\additional_funcs.py:1155
+#: ..\components\additional_funcs.py:1176
 msgid "enter all arguments"
 msgstr "enter all arguments"
 
-#: ..\components\additional_funcs.py:1158
+#: ..\components\additional_funcs.py:1179
 msgid "{0} don't have some permissions to run command"
 msgstr "{0} don't have some permissions to run command"
 
-#: ..\components\additional_funcs.py:1162
+#: ..\components\additional_funcs.py:1183
 msgid "to run this command you don't have these permissions:"
 msgstr "to run this command you don't have these permissions:"
 
-#: ..\components\additional_funcs.py:1166
+#: ..\components\additional_funcs.py:1187
 msgid "Bot doesn't have some permissions"
 msgstr "Bot doesn't have some permissions"
 
-#: ..\components\additional_funcs.py:1170
+#: ..\components\additional_funcs.py:1191
 msgid "to run this command bot don't have these permissions:"
 msgstr "to run this command bot don't have these permissions:"
 
-#: ..\components\additional_funcs.py:1180
+#: ..\components\additional_funcs.py:1201
 msgid "{0} don't have role '{1}' to run command"
 msgstr "{0} don't have role '{1}' to run command"
 
-#: ..\components\additional_funcs.py:1182
+#: ..\components\additional_funcs.py:1203
 msgid "you don't have role '{0}' to run this command"
 msgstr "you don't have role '{0}' to run this command"
 
-#: ..\components\additional_funcs.py:1186
+#: ..\components\additional_funcs.py:1207
 msgid "{0} entered non-existent command"
 msgstr "{0} entered non-existent command"
 
-#: ..\components\additional_funcs.py:1188
+#: ..\components\additional_funcs.py:1209
 msgid "you entered non-existent command"
 msgstr "you entered non-existent command"
 
-#: ..\components\additional_funcs.py:1191
+#: ..\components\additional_funcs.py:1212
 msgid "{0} entered wrong argument(s) of command"
 msgstr "{0} entered wrong argument(s) of command"
 
-#: ..\components\additional_funcs.py:1193
+#: ..\components\additional_funcs.py:1214
 msgid "you entered wrong argument(s) of this command"
 msgstr "you entered wrong argument(s) of this command"
 
-#: ..\components\additional_funcs.py:1196
+#: ..\components\additional_funcs.py:1217
 msgid "{0} entered disabled command"
 msgstr "{0} entered disabled command"
 
-#: ..\components\additional_funcs.py:1198
+#: ..\components\additional_funcs.py:1219
 msgid "you entered disabled command"
 msgstr "you entered disabled command"
 
-#: ..\components\additional_funcs.py:1201
+#: ..\components\additional_funcs.py:1222
 msgid "{0} entered a command that only works in the guild"
 msgstr "{0} entered a command that only works in the guild"
 
-#: ..\components\additional_funcs.py:1203
+#: ..\components\additional_funcs.py:1224
 msgid "this command only works on server"
 msgstr "this command only works on server"
 
-#: ..\components\additional_funcs.py:1206
+#: ..\components\additional_funcs.py:1227
 msgid "{0} triggered a command more than {1} time(s) per {2} sec"
 msgstr "{0} triggered a command more than {1} time(s) per {2} sec"
 
-#: ..\components\additional_funcs.py:1209
+#: ..\components\additional_funcs.py:1230
 msgid ""
 "You triggered this command more than {0} time(s) per {1} sec\n"
 "Try again in {2} sec"
@@ -1865,15 +1865,15 @@ msgstr ""
 "You triggered this command more than {0} time(s) per {1} sec\n"
 "Try again in {2} sec"
 
-#: ..\components\additional_funcs.py:1238
+#: ..\components\additional_funcs.py:1259
 msgid "this chat can't work! Cross-platform chat disabled!"
 msgstr "this chat can't work! Cross-platform chat disabled!"
 
-#: ..\components\additional_funcs.py:1244
+#: ..\components\additional_funcs.py:1265
 msgid "server is restarting!"
 msgstr "server is restarting!"
 
-#: ..\components\additional_funcs.py:1255
+#: ..\components\additional_funcs.py:1276
 msgid ""
 "version of your Minecraft server is lower than `1.7.2` so bot can't send "
 "messages from discord to Minecraft!"
@@ -1881,7 +1881,7 @@ msgstr ""
 "version of your Minecraft server is lower than `1.7.2` so bot can't send "
 "messages from discord to Minecraft!"
 
-#: ..\components\additional_funcs.py:1325
+#: ..\components\additional_funcs.py:1346
 msgid "No players on server!"
 msgstr "No players on server!"
 
@@ -1905,7 +1905,7 @@ msgstr ""
 msgid "Watcher Unhandled Error: {0}"
 msgstr "Watcher Unhandled Error: {0}"
 
-#: ..\components\watcher_handle.py:304
+#: ..\components\watcher_handle.py:305
 msgid ""
 "Intrusion attempt on already logged in nick\n"
 "Your IP: {0}"
@@ -1913,7 +1913,7 @@ msgstr ""
 "Intrusion attempt on already logged in nick\n"
 "Your IP: {0}"
 
-#: ..\components\watcher_handle.py:307
+#: ..\components\watcher_handle.py:308
 msgid ""
 "Too many login attempts\n"
 "Your IP: {0}"
@@ -1921,15 +1921,15 @@ msgstr ""
 "Too many login attempts\n"
 "Your IP: {0}"
 
-#: ..\components\watcher_handle.py:312
+#: ..\components\watcher_handle.py:313
 msgid "Intrusion prevented: User was banned!"
 msgstr "Intrusion prevented: User was banned!"
 
-#: ..\components\watcher_handle.py:315
+#: ..\components\watcher_handle.py:316
 msgid "Too many login attempts: User was banned!"
 msgstr "Too many login attempts: User was banned!"
 
-#: ..\components\watcher_handle.py:316
+#: ..\components\watcher_handle.py:317
 msgid ""
 "Nick: {0}\n"
 "IP: {1}\n"
@@ -1939,11 +1939,11 @@ msgstr ""
 "IP: {1}\n"
 "Time: {2}"
 
-#: ..\components\watcher_handle.py:322
+#: ..\components\watcher_handle.py:323
 msgid "You don't own this logged in nick"
 msgstr "You don't own this logged in nick"
 
-#: ..\components\watcher_handle.py:324
+#: ..\components\watcher_handle.py:325
 msgid ""
 "Not authorized\n"
 "Your IP: {0}\n"
@@ -1953,15 +1953,15 @@ msgstr ""
 "Your IP: {0}\n"
 "Code: {1}"
 
-#: ..\components\watcher_handle.py:338
+#: ..\components\watcher_handle.py:339
 msgid "Status:"
 msgstr "Status:"
 
-#: ..\components\watcher_handle.py:341
+#: ..\components\watcher_handle.py:342
 msgid "Previously used nicknames:"
 msgstr "Previously used nicknames:"
 
-#: ..\components\watcher_handle.py:348
+#: ..\components\watcher_handle.py:349
 msgid ""
 "Connection attempt detected!\n"
 "Nick: {0}\n"
@@ -1975,35 +1975,35 @@ msgstr ""
 "{2}Connection attempts: {3}\n"
 "Time: {4}"
 
-#: ..\components\watcher_handle.py:354
+#: ..\components\watcher_handle.py:355
 msgid "To proceed enter command `{0}` within {1} min"
 msgstr "To proceed enter command `{0}` within {1} min"
 
-#: ..\components\watcher_handle.py:357
+#: ..\components\watcher_handle.py:358
 msgid "To ban this IP-address enter command `{0}`"
 msgstr "To ban this IP-address enter command `{0}`"
 
-#: ..\config\init_config.py:468
+#: ..\config\init_config.py:470
 msgid "Not allowed"
 msgstr "Not allowed"
 
-#: ..\config\init_config.py:471
+#: ..\config\init_config.py:473
 msgid "Session expired"
 msgstr "Session expired"
 
-#: ..\config\init_config.py:473
+#: ..\config\init_config.py:475
 msgid "Access granted"
 msgstr "Access granted"
 
-#: ..\config\init_config.py:571
+#: ..\config\init_config.py:573
 msgid "There are some mismatched backups entries in '{0}':"
 msgstr "There are some mismatched backups entries in '{0}':"
 
-#: ..\config\init_config.py:576
+#: ..\config\init_config.py:578
 msgid "Deleted backup entry named '{0}'"
 msgstr "Deleted backup entry named '{0}'"
 
-#: ..\config\init_config.py:580
+#: ..\config\init_config.py:582
 msgid ""
 "Starting checking backups folder '{0}' for nonexistent files and folder by "
 "using '{1}'"
@@ -2011,15 +2011,15 @@ msgstr ""
 "Starting checking backups folder '{0}' for nonexistent files and folder by "
 "using '{1}'"
 
-#: ..\config\init_config.py:592
+#: ..\config\init_config.py:594
 msgid "Deleted file in path '{0}'"
 msgstr "Deleted file in path '{0}'"
 
-#: ..\config\init_config.py:595
+#: ..\config\init_config.py:597
 msgid "Deleted folder in path '{0}'"
 msgstr "Deleted folder in path '{0}'"
 
-#: ..\config\init_config.py:600
+#: ..\config\init_config.py:602
 msgid ""
 "File '{0}' doesn't exist! Run Minecraft server manually to create one and "
 "accept eula!"
@@ -2027,7 +2027,7 @@ msgstr ""
 "File '{0}' doesn't exist! Run Minecraft server manually to create one and "
 "accept eula!"
 
-#: ..\config\init_config.py:609
+#: ..\config\init_config.py:611
 msgid ""
 "File '{0}' doesn't have any parameters! Accept eula and run Minecraft server "
 "manually to fill it with parameters!"
@@ -2035,7 +2035,7 @@ msgstr ""
 "File '{0}' doesn't have any parameters! Accept eula and run Minecraft server "
 "manually to fill it with parameters!"
 
-#: ..\config\init_config.py:633
+#: ..\config\init_config.py:635
 msgid ""
 "Reminder: For better security you have to change this password for a more "
 "secure one."
@@ -2043,109 +2043,109 @@ msgstr ""
 "Reminder: For better security you have to change this password for a more "
 "secure one."
 
-#: ..\config\init_config.py:656
+#: ..\config\init_config.py:658
 msgid "Note: In '{0}' bot set these parameters:"
 msgstr "Note: In '{0}' bot set these parameters:"
 
-#: ..\config\init_config.py:705 ..\config\init_config.py:717
+#: ..\config\init_config.py:707 ..\config\init_config.py:719
 msgid "Your number lower than {0}!"
 msgstr "Your number lower than {0}!"
 
-#: ..\config\init_config.py:708 ..\config\init_config.py:720
+#: ..\config\init_config.py:710 ..\config\init_config.py:722
 msgid "Your number higher than {0}!"
 msgstr "Your number higher than {0}!"
 
-#: ..\config\init_config.py:712
+#: ..\config\init_config.py:714
 msgid "Your string doesn't contain an integer!"
 msgstr "Your string doesn't contain an integer!"
 
-#: ..\config\init_config.py:724
+#: ..\config\init_config.py:726
 msgid "Your string doesn't contain a fractional number!"
 msgstr "Your string doesn't contain a fractional number!"
 
-#: ..\config\init_config.py:733
+#: ..\config\init_config.py:735
 msgid "File '{0}' wasn't found! Setting up a new one!"
 msgstr "File '{0}' wasn't found! Setting up a new one!"
 
-#: ..\config\init_config.py:735
+#: ..\config\init_config.py:737
 msgid "File '{0}' was found!"
 msgstr "File '{0}' was found!"
 
-#: ..\config\init_config.py:758
+#: ..\config\init_config.py:760
 msgid "Config saved!"
 msgstr "Config saved!"
 
-#: ..\config\init_config.py:759
+#: ..\config\init_config.py:761
 msgid "Config read!"
 msgstr "Config read!"
 
-#: ..\config\init_config.py:775
+#: ..\config\init_config.py:777
 msgid "Bot selected language based on your system language."
 msgstr "Bot selected English based on your system language."
 
-#: ..\config\init_config.py:778
+#: ..\config\init_config.py:780
 msgid "Do you want to change it?"
 msgstr "Do you want to change it?"
 
-#: ..\config\init_config.py:780
+#: ..\config\init_config.py:782
 msgid "Enter one of these two-letter language codes: "
 msgstr "Enter one of these two-letter language codes: "
 
-#: ..\config\init_config.py:786
+#: ..\config\init_config.py:788
 msgid "This language selected!"
 msgstr "English is selected!"
 
-#: ..\config\init_config.py:789
+#: ..\config\init_config.py:791
 msgid "Bot doesn't have such language. Try again."
 msgstr "Bot doesn't have such language. Try again."
 
-#: ..\config\init_config.py:796
+#: ..\config\init_config.py:798
 msgid "Token not founded. Enter token"
 msgstr "Token not founded. Enter token"
 
-#: ..\config\init_config.py:802
+#: ..\config\init_config.py:804
 msgid "Enter bot prefix"
 msgstr "Enter bot prefix"
 
-#: ..\config\init_config.py:803
+#: ..\config\init_config.py:805
 msgid "Bot prefix set to '{0}'."
 msgstr "Bot prefix set to '{0}'."
 
-#: ..\config\init_config.py:811
+#: ..\config\init_config.py:813
 msgid "Default help arguments for each command are {0}."
 msgstr "Default help arguments for each command are {0}."
 
-#: ..\config\init_config.py:813
+#: ..\config\init_config.py:815
 msgid "Would you like to add something else?"
 msgstr "Would you like to add something else?"
 
-#: ..\config\init_config.py:814
+#: ..\config\init_config.py:816
 msgid "Enter new arguments comma separated"
 msgstr "Enter new arguments comma separated"
 
-#: ..\config\init_config.py:817
+#: ..\config\init_config.py:819
 msgid "Arguments added!"
 msgstr "Arguments added!"
 
-#: ..\config\init_config.py:818
+#: ..\config\init_config.py:820
 msgid "Help arguments for each command set to {0}."
 msgstr "Help arguments for each command set to {0}."
 
-#: ..\config\init_config.py:824
+#: ..\config\init_config.py:826
 msgid "Role for specific commands is set."
 msgstr "Role for specific commands is set."
 
-#: ..\config\init_config.py:826
+#: ..\config\init_config.py:828
 msgid ""
 "Role for specific commands doesn't stated. You can set it via command {0}."
 msgstr ""
 "Role for specific commands doesn't stated. You can set it via command {0}."
 
-#: ..\config\init_config.py:830
+#: ..\config\init_config.py:832
 msgid "Admin role for bot is set."
 msgstr "Admin role for bot is set."
 
-#: ..\config\init_config.py:832
+#: ..\config\init_config.py:834
 msgid ""
 "Admin role for bot doesn't stated. You can set it via command {0}. Bot will "
 "check if member has 'Administrator' permission."
@@ -2153,37 +2153,37 @@ msgstr ""
 "Admin role for bot doesn't stated. You can set it via command {0}. Bot will "
 "check if member has 'Administrator' permission."
 
-#: ..\config\init_config.py:841
+#: ..\config\init_config.py:843
 msgid "Enter server's real IP-address or DNS-name"
 msgstr "Enter server's real IP-address or DNS-name"
 
-#: ..\config\init_config.py:842
+#: ..\config\init_config.py:844
 msgid "Server's real IP-address or DNS-name is '{0}'."
 msgstr "Server's real IP-address or DNS-name is '{0}'."
 
-#: ..\config\init_config.py:850
+#: ..\config\init_config.py:852
 msgid "Enter server's local address (default - 'localhost')"
 msgstr "Enter server's local address (default - 'localhost')"
 
-#: ..\config\init_config.py:857
+#: ..\config\init_config.py:859
 msgid "Do you want bot to log messages to '{0}' file?"
 msgstr "Do you want bot to log messages to '{0}' file?"
 
-#: ..\config\init_config.py:865
+#: ..\config\init_config.py:867
 msgid ""
 "Set limit for deletion messages without poll (0 - for disable poll) (int)"
 msgstr ""
 "Set limit for deletion messages without poll (0 - for disable poll) (int)"
 
-#: ..\config\init_config.py:873
+#: ..\config\init_config.py:875
 msgid "Menu message id not found. Would you like to enter it?"
 msgstr "Menu message id not found. Would you like to enter it?"
 
-#: ..\config\init_config.py:876
+#: ..\config\init_config.py:878
 msgid "Enter menu message id"
 msgstr "Enter menu message id"
 
-#: ..\config\init_config.py:879
+#: ..\config\init_config.py:881
 msgid ""
 "Menu via reactions wouldn't work. To make it work type '{0}menu' to create "
 "new menu and its id."
@@ -2191,15 +2191,15 @@ msgstr ""
 "Menu via reactions wouldn't work. To make it work type '{0}menu' to create "
 "new menu and its id."
 
-#: ..\config\init_config.py:887
+#: ..\config\init_config.py:889
 msgid "Commands' channel id not found. Would you like to enter it?"
 msgstr "Commands' channel id not found. Would you like to enter it?"
 
-#: ..\config\init_config.py:890
+#: ..\config\init_config.py:892
 msgid "Enter commands' channel id"
 msgstr "Enter commands' channel id"
 
-#: ..\config\init_config.py:893
+#: ..\config\init_config.py:895
 msgid ""
 "Bot send some push events to the channel it can post. To make it work rigth "
 "type '{0}channel commands' to create a link."
@@ -2207,25 +2207,25 @@ msgstr ""
 "Bot send some push events to the channel it can post. To make it work rigth "
 "type '{0}channel commands' to create a link."
 
-#: ..\config\init_config.py:902
+#: ..\config\init_config.py:904
 msgid "Set gaming status"
 msgstr "Set gaming status"
 
-#: ..\config\init_config.py:906
+#: ..\config\init_config.py:908
 msgid "Set idle status"
 msgstr "Set idle status"
 
-#: ..\config\init_config.py:913
+#: ..\config\init_config.py:915
 msgid "Set default number of times to op for every player (int):"
 msgstr "Set default number of times to op for every player (int):"
 
-#: ..\config\init_config.py:920
+#: ..\config\init_config.py:922
 msgid ""
 "Timeout between check-ups 'Server on/off' set below 1. Change this option."
 msgstr ""
 "Timeout between check-ups 'Server on/off' set below 1. Change this option."
 
-#: ..\config\init_config.py:921
+#: ..\config\init_config.py:923
 msgid ""
 "Note: If your machine has processor with frequency 2-2.5 GHz, you have to "
 "set this option at least to '2' seconds or higher for the bot to work "
@@ -2235,113 +2235,113 @@ msgstr ""
 "set this option at least to '2' seconds or higher for the bot to work "
 "properly."
 
-#: ..\config\init_config.py:926
+#: ..\config\init_config.py:928
 msgid "Set timeout between check-ups 'Server on/off' (in seconds, int)"
 msgstr "Set timeout between check-ups 'Server on/off' (in seconds, int)"
 
-#: ..\config\init_config.py:928
+#: ..\config\init_config.py:930
 msgid "Timeout between check-ups 'Server on/off' set to {0} sec."
 msgstr "Timeout between check-ups 'Server on/off' set to {0} sec."
 
-#: ..\config\init_config.py:934
+#: ..\config\init_config.py:936
 msgid "Timeout for op set below 0. Change this option."
 msgstr "Timeout for op set below 0. Change this option."
 
-#: ..\config\init_config.py:936
+#: ..\config\init_config.py:938
 msgid "Set timeout for op (0 - for unlimited timeout) (in seconds, int)"
 msgstr "Set timeout for op (0 - for unlimited timeout) (in seconds, int)"
 
-#: ..\config\init_config.py:939
+#: ..\config\init_config.py:941
 msgid "Timeout for op set to {0} sec."
 msgstr "Timeout for op set to {0} sec."
 
-#: ..\config\init_config.py:942
+#: ..\config\init_config.py:944
 msgid "Limitation doesn't exist, padawan."
 msgstr "Limitation doesn't exist, padawan."
 
-#: ..\config\init_config.py:947
+#: ..\config\init_config.py:949
 msgid ""
 "Timeout while bot pinging server for info set below 0. Change this option."
 msgstr ""
 "Timeout while bot pinging server for info set below 0. Change this option."
 
-#: ..\config\init_config.py:949
+#: ..\config\init_config.py:951
 msgid "Set timeout while bot pinging server for info (in seconds, float)"
 msgstr "Set timeout while bot pinging server for info (in seconds, float)"
 
-#: ..\config\init_config.py:952
+#: ..\config\init_config.py:954
 msgid "Timeout while bot pinging server for info set to {0} sec."
 msgstr "Timeout while bot pinging server for info set to {0} sec."
 
-#: ..\config\init_config.py:955
+#: ..\config\init_config.py:957
 msgid "I'm fast as f*ck, boi!"
 msgstr "I'm fast as f*ck, boi!"
 
-#: ..\config\init_config.py:960
+#: ..\config\init_config.py:962
 msgid "Timeout before message deletion is set below 1. Change this option."
 msgstr "Timeout before message deletion is set below 1. Change this option."
 
-#: ..\config\init_config.py:963
+#: ..\config\init_config.py:965
 msgid "Set timeout before message deletion (in seconds, int)"
 msgstr "Set timeout before message deletion (in seconds, int)"
 
-#: ..\config\init_config.py:965
+#: ..\config\init_config.py:967
 msgid "Timeout before message deletion is set to {0} sec."
 msgstr "Timeout before message deletion is set to {0} sec."
 
-#: ..\config\init_config.py:972
+#: ..\config\init_config.py:974
 msgid "Selected Minecraft server number is out of range! Bot set it to '1'."
 msgstr "Selected Minecraft server number is out of range! Bot set it to '1'."
 
-#: ..\config\init_config.py:975 ..\config\init_config.py:1002
+#: ..\config\init_config.py:977 ..\config\init_config.py:1004
 msgid "Selected Minecraft server dir set to path '{0}' also known as '{1}'."
 msgstr "Selected Minecraft server dir set to path '{0}' also known as '{1}'."
 
-#: ..\config\init_config.py:981
+#: ..\config\init_config.py:983
 msgid "How much servers you intend to keep?"
 msgstr "How much servers you intend to keep?"
 
-#: ..\config\init_config.py:996
+#: ..\config\init_config.py:998
 msgid "Would you like to delete this server '{0}'?"
 msgstr "Would you like to delete this server '{0}'?"
 
-#: ..\config\init_config.py:1011
+#: ..\config\init_config.py:1013
 msgid "Would you like to change this server '{0}'?"
 msgstr "Would you like to change this server '{0}'?"
 
-#: ..\config\init_config.py:1016
+#: ..\config\init_config.py:1018
 msgid "Configuring new server settings..."
 msgstr "Configuring new server settings..."
 
-#: ..\config\init_config.py:1020 ..\config\init_config.py:1026
+#: ..\config\init_config.py:1022 ..\config\init_config.py:1028
 msgid "Enter server name"
 msgstr "Enter server name"
 
-#: ..\config\init_config.py:1025
+#: ..\config\init_config.py:1027
 msgid "Change server name '{0}'?"
 msgstr "Change server name '{0}'?"
 
-#: ..\config\init_config.py:1028
+#: ..\config\init_config.py:1030
 msgid "Change server working directory '{0}'?"
 msgstr "Change server working directory '{0}'?"
 
-#: ..\config\init_config.py:1032
+#: ..\config\init_config.py:1034
 msgid "Change server start file name '{0}'?"
 msgstr "Change server start file name '{0}'?"
 
-#: ..\config\init_config.py:1041
+#: ..\config\init_config.py:1043
 msgid "Enter server working directory (full path)"
 msgstr "Enter server working directory (full path)"
 
-#: ..\config\init_config.py:1046
+#: ..\config\init_config.py:1048
 msgid "There are no '*.jar' files in this working directory."
 msgstr "There are no '*.jar' files in this working directory."
 
-#: ..\config\init_config.py:1048
+#: ..\config\init_config.py:1050
 msgid "This working directory is wrong."
 msgstr "This working directory is wrong."
 
-#: ..\config\init_config.py:1057
+#: ..\config\init_config.py:1059
 msgid ""
 "Bot detected your operating system is Linux.\n"
 "Bot will search for '*.sh' file.\n"
@@ -2351,7 +2351,7 @@ msgstr ""
 "Bot will search for '*.sh' file.\n"
 "You need to enter file name {0}without{1} file extension!"
 
-#: ..\config\init_config.py:1062
+#: ..\config\init_config.py:1064
 msgid ""
 "Bot detected your operating system is Windows.\n"
 "Bot will search for '*.bat' file.\n"
@@ -2361,7 +2361,7 @@ msgstr ""
 "Bot will search for '*.bat' file.\n"
 "You need to enter file name {0}without{1} file extension!"
 
-#: ..\config\init_config.py:1066
+#: ..\config\init_config.py:1068
 msgid ""
 "Bot couldn't detect your operating system.\n"
 "You need to enter file name {0}with{1} file extension!"
@@ -2369,19 +2369,19 @@ msgstr ""
 "Bot couldn't detect your operating system.\n"
 "You need to enter file name {0}with{1} file extension!"
 
-#: ..\config\init_config.py:1069
+#: ..\config\init_config.py:1071
 msgid "Enter server start file name"
 msgstr "Enter server start file name"
 
-#: ..\config\init_config.py:1074
+#: ..\config\init_config.py:1076
 msgid "This start file doesn't exist."
 msgstr "This start file doesn't exist."
 
-#: ..\config\init_config.py:1079
+#: ..\config\init_config.py:1081
 msgid "Watcher's delay to refresh doesn't set."
 msgstr "Watcher's delay to refresh doesn't set."
 
-#: ..\config\init_config.py:1080
+#: ..\config\init_config.py:1082
 msgid ""
 "Note: If your machine has processor with frequency 2-2.5 GHz, you have to "
 "set this option from '0.5' to '0.9' second for the bot to work properly."
@@ -2389,31 +2389,31 @@ msgstr ""
 "Note: If your machine has processor with frequency 2-2.5 GHz, you have to "
 "set this option from '0.5' to '0.9' second for the bot to work properly."
 
-#: ..\config\init_config.py:1084
+#: ..\config\init_config.py:1086
 msgid "Set delay to refresh (in seconds, float)"
 msgstr "Set delay to refresh (in seconds, float)"
 
-#: ..\config\init_config.py:1088
+#: ..\config\init_config.py:1090
 msgid "Watcher's number of lines to check in server log doesn't set."
 msgstr "Watcher's number of lines to check in server log doesn't set."
 
-#: ..\config\init_config.py:1090
+#: ..\config\init_config.py:1092
 msgid "Set number of lines to check"
 msgstr "Set number of lines to check"
 
-#: ..\config\init_config.py:1095
+#: ..\config\init_config.py:1097
 msgid "Would you like to enable cross-platform chat?"
 msgstr "Would you like to enable cross-platform chat?"
 
-#: ..\config\init_config.py:1101
+#: ..\config\init_config.py:1103
 msgid "Channel id not found. Would you like to enter it?"
 msgstr "Channel id not found. Would you like to enter it?"
 
-#: ..\config\init_config.py:1104
+#: ..\config\init_config.py:1106
 msgid "Enter channel id"
 msgstr "Enter channel id"
 
-#: ..\config\init_config.py:1106
+#: ..\config\init_config.py:1108
 msgid ""
 "Cross-platform chat wouldn't work. To make it work type '{0}chat <id>' to "
 "create link."
@@ -2421,27 +2421,27 @@ msgstr ""
 "Cross-platform chat wouldn't work. To make it work type '{0}chat <id>' to "
 "create link."
 
-#: ..\config\init_config.py:1111
+#: ..\config\init_config.py:1113
 msgid ""
 "Webhook url for cross-platform chat not found. Would you like to enter it?"
 msgstr ""
 "Webhook url for cross-platform chat not found. Would you like to enter it?"
 
-#: ..\config\init_config.py:1114
+#: ..\config\init_config.py:1116
 msgid "Enter webhook url"
 msgstr "Enter webhook url"
 
-#: ..\config\init_config.py:1116
+#: ..\config\init_config.py:1118
 msgid ""
 "Cross-platform chat wouldn't work. Create webhook and enter it to bot config!"
 msgstr ""
 "Cross-platform chat wouldn't work. Create webhook and enter it to bot config!"
 
-#: ..\config\init_config.py:1120
+#: ..\config\init_config.py:1122
 msgid "Cross-platform chat wouldn't work."
 msgstr "Cross-platform chat wouldn't work."
 
-#: ..\config\init_config.py:1127
+#: ..\config\init_config.py:1129
 msgid ""
 "Enter how many words in mention from Minecraft chat bot can parse (0 - "
 "handle only mentions with one word) (default - 5, int)"
@@ -2449,7 +2449,7 @@ msgstr ""
 "Enter how many words in mention from Minecraft chat bot can parse (0 - "
 "handle only mentions with one word) (default - 5, int)"
 
-#: ..\config\init_config.py:1136
+#: ..\config\init_config.py:1138
 msgid ""
 "Enter how many characters from right side of mention bot can remove to find "
 "similar mention in discord (0 - don't try to find similar ones) (default - "
@@ -2459,19 +2459,19 @@ msgstr ""
 "similar mention in discord (0 - don't try to find similar ones) (default - "
 "5, int)"
 
-#: ..\config\init_config.py:1142
+#: ..\config\init_config.py:1144
 msgid "Cross-platform chat enabled."
 msgstr "Cross-platform chat enabled."
 
-#: ..\config\init_config.py:1144
+#: ..\config\init_config.py:1146
 msgid "Cross-platform chat disabled."
 msgstr "Cross-platform chat disabled."
 
-#: ..\config\init_config.py:1148
+#: ..\config\init_config.py:1150
 msgid "Would you like to enable authorization security?"
 msgstr "Would you like to enable authorization security?"
 
-#: ..\config\init_config.py:1156
+#: ..\config\init_config.py:1158
 msgid ""
 "Enter how many attempts bot will accept connection from a certain IP-address "
 "before it bans this IP"
@@ -2479,113 +2479,117 @@ msgstr ""
 "Enter how many attempts bot will accept connection from a certain IP-address "
 "before it bans this IP"
 
-#: ..\config\init_config.py:1163
+#: ..\config\init_config.py:1165
 msgid "Enter how many days IP-address will be valid before it expires (int)"
 msgstr "Enter how many days IP-address will be valid before it expires (int)"
 
-#: ..\config\init_config.py:1170
+#: ..\config\init_config.py:1171
+msgid "Enter in how many days expired IP-address will be deleted (int)"
+msgstr "Enter in how many days expired IP-address will be deleted (int)"
+
+#: ..\config\init_config.py:1178
 msgid "Enter how many characters the code should consist of (default - 6, int)"
 msgstr ""
 "Enter how many characters the code should consist of (default - 6, int)"
 
-#: ..\config\init_config.py:1175
+#: ..\config\init_config.py:1183
 msgid "Enter how many minutes code will be valid before it expires (int)"
 msgstr "Enter how many minutes code will be valid before it expires (int)"
 
-#: ..\config\init_config.py:1179
+#: ..\config\init_config.py:1187
 msgid "Secure authorization enabled."
 msgstr "Secure authorization enabled."
 
-#: ..\config\init_config.py:1181
+#: ..\config\init_config.py:1189
 msgid "Secure authorization disabled."
 msgstr "Secure authorization disabled."
 
-#: ..\config\init_config.py:1187
+#: ..\config\init_config.py:1195
 msgid "Would you like to enable RSS feed?"
 msgstr "Would you like to enable RSS feed?"
 
-#: ..\config\init_config.py:1191
+#: ..\config\init_config.py:1199
 msgid "Webhook RSS url not found. Would you like to enter it?"
 msgstr "Webhook RSS url not found. Would you like to enter it?"
 
-#: ..\config\init_config.py:1194
+#: ..\config\init_config.py:1202
 msgid "Enter webhook RSS url"
 msgstr "Enter webhook RSS url"
 
-#: ..\config\init_config.py:1196
+#: ..\config\init_config.py:1204
 msgid "RSS wouldn't work. Create webhook and enter it to bot config!"
 msgstr "RSS wouldn't work. Create webhook and enter it to bot config!"
 
-#: ..\config\init_config.py:1200
+#: ..\config\init_config.py:1208
 msgid "RSS url not found. Would you like to enter it?"
 msgstr "RSS url not found. Would you like to enter it?"
 
-#: ..\config\init_config.py:1202
+#: ..\config\init_config.py:1210
 msgid "Enter RSS url"
 msgstr "Enter RSS url"
 
-#: ..\config\init_config.py:1204
+#: ..\config\init_config.py:1212
 msgid "RSS wouldn't work. Enter url of RSS feed to bot config!"
 msgstr "RSS wouldn't work. Enter url of RSS feed to bot config!"
 
-#: ..\config\init_config.py:1207
+#: ..\config\init_config.py:1215
 msgid "RSS download delay doesn't set."
 msgstr "RSS download delay doesn't set."
 
-#: ..\config\init_config.py:1209
+#: ..\config\init_config.py:1217
 msgid "Enter RSS download delay (in seconds, int)"
 msgstr "Enter RSS download delay (in seconds, int)"
 
-#: ..\config\init_config.py:1216
+#: ..\config\init_config.py:1224
 msgid "RSS feed wouldn't work."
 msgstr "RSS feed wouldn't work."
 
-#: ..\config\init_config.py:1219
+#: ..\config\init_config.py:1227
 msgid "RSS feed enabled."
 msgstr "RSS feed enabled."
 
-#: ..\config\init_config.py:1221
+#: ..\config\init_config.py:1229
 msgid "RSS feed disabled."
 msgstr "RSS feed disabled."
 
-#: ..\config\init_config.py:1228
+#: ..\config\init_config.py:1236
 msgid "Automatic backup isn't set. Would you like to enable them?"
 msgstr "Automatic backup isn't set. Would you like to enable them?"
 
-#: ..\config\init_config.py:1233
+#: ..\config\init_config.py:1241
 msgid "Set period of automatic backups (in minutes, int)"
 msgstr "Set period of automatic backups (in minutes, int)"
 
-#: ..\config\init_config.py:1238
+#: ..\config\init_config.py:1246
 msgid "Enter name of the backups folder for each Minecraft server"
 msgstr "Enter name of the backups folder for each Minecraft server"
 
-#: ..\config\init_config.py:1244
+#: ..\config\init_config.py:1252
 msgid ""
 "Max backups' count limit for server not found. Would you like to set it?"
 msgstr ""
 "Max backups' count limit for server not found. Would you like to set it?"
 
-#: ..\config\init_config.py:1247
+#: ..\config\init_config.py:1255
 msgid "Set max backups' count limit for server (int)"
 msgstr "Set max backups' count limit for server (int)"
 
-#: ..\config\init_config.py:1257
+#: ..\config\init_config.py:1265
 msgid "Backups' size limit for server not found. Would you like to set it?"
 msgstr "Backups' size limit for server not found. Would you like to set it?"
 
-#: ..\config\init_config.py:1260
+#: ..\config\init_config.py:1268
 msgid "Enter in what unit of measure you will set the limit"
 msgstr "Enter in what unit of measure you will set the limit"
 
-#: ..\config\init_config.py:1264
+#: ..\config\init_config.py:1272
 msgid "You have entered the wrong unit of measure!"
 msgstr "You have entered the wrong unit of measure!"
 
-#: ..\config\init_config.py:1267
+#: ..\config\init_config.py:1275
 msgid "Backups' size limit for server in {0} (int)"
 msgstr "Backups' size limit for server in {0} (int)"
 
-#: ..\config\init_config.py:1277
+#: ..\config\init_config.py:1285
 msgid "Name of the backups folder in which bot will store them - '{0}'."
 msgstr "Name of the backups folder in which bot will store them - '{0}'."

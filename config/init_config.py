@@ -110,6 +110,7 @@ class Secure_authorization:
     enable_auth_security: Optional[bool] = None
     max_login_attempts: int = -1
     days_before_ip_expires: int = -1
+    days_before_ip_will_be_deleted: int = -1
     code_length: int = -1
     mins_before_code_expires: int = -1
 
@@ -1163,6 +1164,12 @@ class Config:
                 cls._ask_for_data(
                     get_translation("Enter how many days IP-address will be valid before it expires (int)") +
                     "\n> ", try_int=True, int_high_than=1)
+        if cls.get_secure_auth().days_before_ip_will_be_deleted < cls.get_secure_auth().days_before_ip_expires:
+            cls._need_to_rewrite = True
+            cls.get_secure_auth().days_before_ip_will_be_deleted = \
+                cls._ask_for_data(
+                    get_translation("Enter in how many days expired IP-address will be deleted (int)") +
+                    "\n> ", try_int=True, int_high_than=cls.get_secure_auth().days_before_ip_expires)
         if cls.get_secure_auth().code_length < 1 or \
                 cls.get_secure_auth().code_length > 60:
             cls._need_to_rewrite = True

@@ -691,6 +691,8 @@ async def server_checkups(bot: commands.Bot):
                                                           "Starting up server again!")
                                           .format(datetime.now().strftime(get_translation("%H:%M:%S %d/%m/%Y")))))
             await start_server(ctx=channel, bot=bot, shut_up=True)
+    if Config.get_secure_auth().enable_auth_security:
+        check_if_ips_expired()
     if Config.get_timeouts_settings().await_seconds_in_check_ups > 0:
         await asleep(Config.get_timeouts_settings().await_seconds_in_check_ups)
 
@@ -900,8 +902,9 @@ async def bot_dm_clear(ctx, bot: commands.Bot, subcommand: str = None, count: in
     if subcommand is None:
         if count < 0:
             message_created = (await ctx.channel.history(limit=-count, oldest_first=True).flatten())[-1]
-        else:
+        elif count == 0:
             await send_msg(ctx, get_translation("Nothing's done!"), True)
+            return
     elif subcommand == "reply":
         message_created = ctx.message.reference.resolved
 
@@ -1000,6 +1003,24 @@ def create_webhooks():
         create_feed_webhook()
     if Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
         create_chat_webhook()
+
+
+def check_if_ips_expired():
+    dict_to_remove = {}
+    for user in Config.get_auth_users():
+        for ip in user.ip_addresses:
+            if ip.expires_on_date is not None and (datetime.now() - ip.expires_on_date).days >= \
+                    Config.get_secure_auth().days_before_ip_will_be_deleted:
+                if dict_to_remove.get(user.nick, None) is None:
+                    dict_to_remove[user.nick] = []
+                dict_to_remove[user.nick].append(ip)
+    if len(dict_to_remove.keys()) > 0:
+        for i in range(len(Config.get_auth_users())):
+            if dict_to_remove.get(Config.get_auth_users()[i].nick, None) is None:
+                continue
+            for address in dict_to_remove[Config.get_auth_users()[i].nick]:
+                Config.get_auth_users()[i].ip_addresses.remove(address)
+        Config.save_auth_users()
 
 
 def parse_subcommands_for_help(command, all_params=False) -> Tuple[List[str], List[str]]:
