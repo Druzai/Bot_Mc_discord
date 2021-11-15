@@ -54,7 +54,7 @@ def get_prefix(bot, msg):
 
 def main():
     if platform == "win32":
-        init(autoreset=True)
+        init()
     if len(argv) > 1 and argv[1] not in ["-v", "--version", "-g"]:
         print("Bot doesn't have this command line argument!")
         exit(0)

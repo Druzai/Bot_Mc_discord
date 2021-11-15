@@ -1515,17 +1515,9 @@ def get_server_version() -> int:
 
 def get_server_players() -> dict:
     """Returns dict, keys: current, max, players"""
-    with connect_rcon() as cl_r:
-        plist = cl_r.run("list")
-    curr, max_p = findall(r"\d+", plist.split(":", maxsplit=1)[0])
-    curr, max_p = int(curr), int(max_p)
-    players = [p.strip() for p in plist.split(":", maxsplit=1)[1].strip().split(", ")]
-    if " and " in players[-1]:
-        players[-1], last_player = players[-1].split(" and ")
-        players.append(last_player)
-    with suppress(ValueError):
-        players.remove("")
-    return dict(current=curr, max=max_p, players=players)
+    with connect_query() as cl_q:
+        info = cl_q.full_stats
+    return dict(current=info.num_players, max=info.max_players, players=info.players)
 
 
 def shorten_url(url: str, max_length: int):
