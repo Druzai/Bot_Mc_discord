@@ -19,7 +19,9 @@
     * Get info about players on the server
     * Work with server whitelist
     * Secure authorization
-        * **Can't guarantee tight security when nickname has spaces**
+        * **Can't guarantee tight security when nickname has spaces** (bot can't kick these players because of minecraft
+          server)
+        * Has options to ban and unban IP-address regardless of whether secure authorization is enabled or not
     * Autoload if the minecraft server crashes
     * Auto backup at specified intervals and forced backup by member
         * Auto deleting backup(s) if backup's limit or space exceeded
@@ -44,8 +46,7 @@
 
 If you want to see help on all bot's commands use `help` command when bot is running.
 
-Note: these commands will require custom optional role if you set it in bot config:
-`start`, `stop`, `restart`, `menu`, `forceload`, `whitelist`, `servers`, `op`, `ops`, `backup`, `channel`, `auth`.
+Note: some commands will require optional role or/and admin role if you set them in bot config.
 
 To enable cross-platform chat you need to enter in bot setup channel id (or use `chat` command) and webhook url!
 And to enable rss feed you also need webhook url!
