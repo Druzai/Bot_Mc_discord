@@ -3,7 +3,7 @@ from contextlib import suppress
 from datetime import datetime
 from os import SEEK_END, stat
 from pathlib import Path
-from re import search, split, findall
+from re import search, split, findall, sub
 from sys import exc_info
 from threading import Thread
 from time import sleep
@@ -114,6 +114,7 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None):
             last_lines = last_lines[-5:]
         else:
             last_lines = last_lines[-2:]
+    last_lines = [sub(r"§[0-9abcdefklmnor]", "", l) for l in last_lines]
 
     for line in last_lines:
         if Config.get_cross_platform_chat_settings().channel_id is not None:
