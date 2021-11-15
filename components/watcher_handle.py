@@ -333,16 +333,28 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None):
                             if user.user_minecraft_nick == nick:
                                 member = [m for m in BotVars.bot_for_webhooks.guilds[0].members
                                           if m.id == user.user_discord_id][0]
+
+                        user_nicks = Config.get_user_nicks(ip_address=ip_address, nick=nick, authorized=True)
+                        status = get_translation("Status:") + f" {user_nicks[nick][0][1]}\n"
+                        used_nicks = None
+                        if (len(user_nicks) != 1 and user_nicks.get(nick, None) is not None) or len(user_nicks) > 1:
+                            used_nicks = get_translation("Previously used nicknames:") + "\n"
+                            for k, v in user_nicks.items():
+                                if k != nick:
+                                    used_nicks += f"- {k}: {v[0][1]}\n"
+                        if used_nicks is not None:
+                            status += used_nicks
+
                         msg = get_translation("Connection attempt detected!\nNick: {0}\n"
-                                              "IP: {1}\nConnection attempts: {2}\nTime: {3}") \
-                            .format(nick, ip_address,
+                                              "IP: {1}\n{2}Connection attempts: {3}\nTime: {4}") \
+                            .format(nick, ip_address, status,
                                     f"{user_attempts}/{Config.get_secure_auth().max_login_attempts}",
                                     datetime.now().strftime(get_translation("%H:%M:%S %d/%m/%Y")))
                         msg = add_quotes(msg) + "\n"
                         msg += get_translation("To proceed enter command `{0}` within {1} min") \
-                            .format(f"{Config.get_settings().bot_settings.prefix}auth login {nick} <code>",
-                                    Config.get_secure_auth().mins_before_code_expires) + "\n"
-                        msg += get_translation("To ban this IP-address enter command `{0}`")\
+                                   .format(f"{Config.get_settings().bot_settings.prefix}auth login {nick} <code>",
+                                           Config.get_secure_auth().mins_before_code_expires) + "\n"
+                        msg += get_translation("To ban this IP-address enter command `{0}`") \
                             .format(f"{Config.get_settings().bot_settings.prefix}auth ban {ip_address} [reason]")
                         if member is not None:
                             BotVars.bot_for_webhooks.loop.create_task(member.send(msg))

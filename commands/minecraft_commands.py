@@ -366,16 +366,11 @@ class MinecraftCommands(commands.Cog):
         if len(Config.get_auth_users()) == 0:
             msg += "-----"
         else:
-            for user in Config.get_auth_users():
-                msg += f"{user.nick}:\n"
-                for ip in user.ip_addresses:
-                    msg += f"\t{ip.ip_address}: "
-                    if ip.expires_on_date is None or ip.expires_on_date < datetime.now() or \
-                            ip.login_attempts is not None:
-                        msg += get_translation("Not allowed")
-                    else:
-                        msg += get_translation("Access granted")
-                    msg += "\n"
+            user_nicks = Config.get_user_nicks()
+            for k, v in user_nicks.items():
+                msg += f"{k}:\n"
+                for ip in v:
+                    msg += f"\t{ip[0]}: {ip[1]}\n"
         await ctx.send(add_quotes(msg))
 
     @auth.command(pass_context=True, name="on")

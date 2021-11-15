@@ -64,6 +64,7 @@ class Cross_platform_chat:
 @dataclass
 class Ip_address_of_user:
     ip_address: str = ""
+    authorized: bool = False
     expires_on_stamp: Optional[int] = None
     login_attempts: Optional[int] = None
     code = ""
@@ -402,6 +403,7 @@ class Config:
                         else:
                             cls.get_auth_users()[i].ip_addresses[j].expires_on_date = \
                                 datetime.now() + dt.timedelta(days=cls.get_secure_auth().days_before_ip_expires)
+                            cls.get_auth_users()[i].ip_addresses[j].authorized = True
                             cls.get_auth_users()[i].ip_addresses[j].login_attempts = None
                             cls.get_auth_users()[i].ip_addresses[j].code = None
                             cls.get_auth_users()[i].ip_addresses[j].code_expires_on_date = None
@@ -452,6 +454,29 @@ class Config:
             if user.nick == nick:
                 break
         return ip_set
+
+    @classmethod
+    def get_user_nicks(cls, ip_address: str = None, nick: str = None, authorized: bool = False):
+        nicks_dict = {}
+        for user in cls.get_auth_users():
+            nicks_dict[user.nick] = []
+            for ip in user.ip_addresses:
+                if ip_address is not None and ip.ip_address != ip_address:
+                    continue
+                if (ip.expires_on_date is None or ip.expires_on_date < datetime.now() or
+                    ip.login_attempts is not None) and not ip.authorized:
+                    if not authorized or (nick is not None and user.nick == nick):
+                        nicks_dict[user.nick].append([ip.ip_address, get_translation("Not allowed")])
+                elif (ip.expires_on_date is None or ip.expires_on_date < datetime.now() or
+                      ip.login_attempts is not None) and ip.authorized:
+                    nicks_dict[user.nick].append([ip.ip_address, get_translation("Session expired")])
+                else:
+                    nicks_dict[user.nick].append([ip.ip_address, get_translation("Access granted")])
+                if ip.ip_address == ip_address:
+                    break
+            if len(nicks_dict[user.nick]) == 0:
+                nicks_dict.pop(user.nick)
+        return nicks_dict
 
     @classmethod
     def add_auth_user(cls, user_nick: str):
