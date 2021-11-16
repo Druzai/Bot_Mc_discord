@@ -3,7 +3,7 @@ discord.py==1.7.3
 mcipc==1.4.0
 psutil==5.8.0
 feedparser==6.0.8
-jsons==1.5.0
-omegaconf==2.1.0
+jsons==1.6.0
+omegaconf==2.1.1
 colorama==0.4.4
-requests==2.25.1
+requests==2.26.0
