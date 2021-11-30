@@ -114,13 +114,14 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
         if platform == "linux" or platform == "linux2":
             if ".sh" not in Config.get_selected_server_from_list().start_file_name:
                 raise NameError()
-            system("screen -dmS " + Config.get_selected_server_from_list().server_name.replace(" ", "_") +
-                   " ./" + Config.get_selected_server_from_list().start_file_name)
+            system(f"screen -dmS {Config.get_selected_server_from_list().server_name.replace(' ', '_')} "
+                   f"./{Config.get_selected_server_from_list().start_file_name}")
         elif platform == "win32":
             if ".bat" not in Config.get_selected_server_from_list().start_file_name:
                 raise NameError()
             startfile(Config.get_selected_server_from_list().start_file_name)
     except (NameError, ValueError, FileNotFoundError):
+        chdir(Config.get_bot_config_path())
         print(get_translation("Couldn't open script! Check naming and extension of the script!"))
         await send_msg(ctx, add_quotes(get_translation("Couldn't open script because of naming! Retreating...")),
                        is_reaction)

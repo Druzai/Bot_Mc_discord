@@ -7,7 +7,7 @@ from datetime import datetime
 from glob import glob
 from json import load
 from locale import getdefaultlocale
-from os import mkdir, listdir, remove
+from os import mkdir, listdir, remove, getcwd
 from os.path import isfile, isdir
 from pathlib import Path
 from secrets import choice as sec_choice
@@ -276,7 +276,7 @@ class Server_config:
 
 
 class Config:
-    _current_bot_path: str = path.dirname(sys.argv[0])
+    _current_bot_path: str = getcwd()
     _config_name = "bot_config.yml"
     _settings_instance: Settings = Settings()
     _auth_users_name = "auth_users.yml"
