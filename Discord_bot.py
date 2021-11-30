@@ -73,12 +73,8 @@ def main():
         for i in cog_list:
             bot.add_cog(i(bot, poll))
         bot.add_cog(poll)
-
+        BotVars.bot_for_webhooks = bot
         create_pot_lines(bot)
-
-        if Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
-            BotVars.bot_for_webhooks = bot
-
         Print_file_handler()
         Config.read_server_info()
         print(get_translation("Server info read!"))

@@ -41,6 +41,7 @@
         * Custom emojis are converted to text with their own text name
         * Most of the standard unicode emojis are not processed by the vanilla minecraft server
 * Setting up optional rss feed. Bot will send new items of feed to discord text channel via webhook
+    * Currently checks published date in isoformat
 
 ## Commands
 
