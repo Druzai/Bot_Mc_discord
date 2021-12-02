@@ -1,4 +1,3 @@
-from os import system
 from sys import platform, exit, argv
 from threading import enumerate as threads
 from traceback import format_exc
@@ -7,6 +6,7 @@ from colorama import Fore, Style
 from discord import Intents, Permissions
 from discord.errors import LoginFailure
 from discord.ext import commands
+from pynput import keyboard
 from yaml.parser import ParserError
 from yaml.scanner import ScannerError
 
@@ -101,10 +101,10 @@ def main():
             for thread in threads():
                 if thread.getName() == "BackupsThread":
                     thread.join()
-            if platform == "linux" or platform == "linux2":
-                system("read")
-            elif platform == "win32":
-                system("pause")
+            print(get_translation("Press any key to continue..."))
+            with keyboard.Listener(on_release=lambda _: False) as listener:
+                listener.join()
+            print(get_translation("Bot is stopping..."))
         exit(0)
 
 
