@@ -289,11 +289,13 @@ class Config:
     _system_lang = None
 
     @classmethod
-    def read_config(cls):
+    def read_config(cls, change_servers=False):
         file_exists = False
         if isfile(cls._config_name):
             cls._settings_instance = cls._load_from_yaml(Path(cls._current_bot_path, cls._config_name), Settings)
             file_exists = True
+        if change_servers:
+            cls._settings_instance.ask_to_change_servers_list = True
         cls._setup_config(file_exists)
         cls.read_auth_users()
 
@@ -984,6 +986,9 @@ class Config:
             return
 
         cls._need_to_rewrite = True
+        if len(cls._settings_instance.servers_list) > 0:
+            print(get_translation("There is/are {0} server(s) in bot config")
+                  .format(len(cls._settings_instance.servers_list)))
         new_servers_number = cls._ask_for_data(get_translation("How much servers you intend to keep?") + "\n> ",
                                                try_int=True, int_high_than=1)
         if new_servers_number >= len(cls._settings_instance.servers_list):

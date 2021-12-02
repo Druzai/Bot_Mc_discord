@@ -56,15 +56,18 @@ def main():
     Config.init_with_system_language()
     if platform == "win32":
         init()
-    if len(argv) > 1 and argv[1] not in ["-v", "--version", "-g"]:
-        print("Bot doesn't have this command line argument!")
+    if len(argv) > 1 and argv[1] not in ["-h", "--help", "-v", "--version", "-g", "-cs"]:
+        print(get_translation("Bot doesn't have this command line argument!"))
+        exit(0)
+    if len(argv) > 1 and (argv[1] == "-h" or argv[1] == "--help"):
+        print(get_translation("bot_help"))
         exit(0)
     if len(argv) > 1 and (argv[1] == "-v" or argv[1] == "--version"):
         print(VERSION)
         exit(0)
     try:
-        if len(argv) == 1:
-            Config.read_config()
+        if len(argv) == 1 or (len(argv) > 1 and argv[1] == "-cs"):
+            Config.read_config(change_servers=(len(argv) > 1 and argv[1] == "-cs"))
         bot = commands.Bot(command_prefix=get_prefix, intents=Intents.all())
         bot.remove_command('help')
         cog_list = [ChatCommands, MinecraftCommands]
@@ -94,7 +97,7 @@ def main():
         print(get_translation("Bot/Discord Error: Something went wrong") + " ( ͡° ͜ʖ ͡°)" +
               f"\n{Style.DIM}{Fore.RED}{exc}{Style.RESET_ALL}")
     finally:
-        if len(argv) == 1:
+        if len(argv) == 1 or (len(argv) > 1 and argv[1] == "-cs"):
             for thread in threads():
                 if thread.getName() == "BackupsThread":
                     thread.join()
