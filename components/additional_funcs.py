@@ -1560,12 +1560,19 @@ def stop_music(sound, name="@a"):
     return f"/stopsound {name} music {sound}"
 
 
-class Print_file_handler:
-    def __init__(self):
-        if Config.get_settings().bot_settings.log_bot_messages:
-            self.file = open(Config.get_bot_log_name(), "a", encoding="utf8")
-        else:
-            self.file = None
+def setup_print_handlers():
+    if Config.get_settings().bot_settings.log_bot_messages:
+        file = open(Config.get_bot_log_name(), "a", encoding="utf8")
+    else:
+        file = None
+    Output_file_handler(file)
+    if file is not None:
+        Error_file_handler(file)
+
+
+class Output_file_handler:
+    def __init__(self, file=None):
+        self.file = file
         self.stdout = sys.stdout
         sys.stdout = self
 
@@ -1588,6 +1595,30 @@ class Print_file_handler:
         self.flush()
         if kwargs.pop('flush', False):
             self.stdout.flush()
+
+    def flush(self):
+        if self.file is not None:
+            self.file.flush()
+
+
+class Error_file_handler:
+    def __init__(self, file=None):
+        self.file = file
+        self.stderr = sys.stderr
+        sys.stderr = self
+
+    def __del__(self):
+        sys.stderr = self.stderr
+        if self.file is not None:
+            self.file.close()
+
+    def write(self, data, **kwargs):
+        if self.file is not None:
+            self.file.write(data)
+        self.stderr.write(data)
+        self.flush()
+        if kwargs.pop('flush', False):
+            self.stderr.flush()
 
     def flush(self):
         if self.file is not None:

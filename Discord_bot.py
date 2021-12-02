@@ -13,7 +13,7 @@ from yaml.scanner import ScannerError
 from commands.chat_commands import ChatCommands
 from commands.minecraft_commands import MinecraftCommands
 from commands.poll import Poll
-from components.additional_funcs import Print_file_handler
+from components.additional_funcs import setup_print_handlers
 from components.localization import get_translation, RuntimeTextHandler
 from config.init_config import Config, BotVars
 
@@ -68,6 +68,7 @@ def main():
     try:
         if len(argv) == 1 or (len(argv) > 1 and argv[1] == "-cs"):
             Config.read_config(change_servers=(len(argv) > 1 and argv[1] == "-cs"))
+            setup_print_handlers()
         bot = commands.Bot(command_prefix=get_prefix, intents=Intents.all())
         bot.remove_command('help')
         cog_list = [ChatCommands, MinecraftCommands]
@@ -79,7 +80,6 @@ def main():
         bot.add_cog(poll)
         BotVars.bot_for_webhooks = bot
         create_pot_lines(bot)
-        Print_file_handler()
         Config.read_server_info()
         print(get_translation("Server info read!"))
         bot.run(Config.get_settings().bot_settings.token)
