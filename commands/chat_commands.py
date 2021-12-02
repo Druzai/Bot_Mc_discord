@@ -172,7 +172,7 @@ class ChatCommands(commands.Cog):
     async def language(self, ctx, set_language: str = ""):
         """Get/Select language"""
         if len(set_language) > 0:
-            if set_locale(set_language):
+            if not set_locale(set_language):
                 await ctx.send(add_quotes(get_translation("Bot doesn't have this language!\n"
                                                           "Check list of available languages via {0}language")
                                           .format(Config.get_settings().bot_settings.prefix)))

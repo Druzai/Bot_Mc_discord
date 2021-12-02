@@ -1,11 +1,10 @@
 import gettext
 import sys
-from os import path, listdir
+from os import path, listdir, getcwd
 from pathlib import Path
 from sys import argv
-from typing import Optional
 
-_locales_path = "."
+_locales_path = getcwd()
 if getattr(sys, 'frozen', False):
     _locales_path = sys._MEIPASS
 _locales_path = Path(_locales_path + "/locales").as_posix()

@@ -788,8 +788,7 @@ class Config:
                     lang = cls._ask_for_data(get_translation("Enter one of these two-letter language codes: ") +
                                              "\n- " + "\n- ".join([f"{ln.capitalize()} ({get_translation(ln)})"
                                                                    for ln in get_locales()]) + "\n> ")
-                    output = set_locale(lang)
-                    if not output:
+                    if set_locale(lang):
                         cls._settings_instance.bot_settings.language = lang.lower()
                         print(get_translation("This language selected!"))
                         break

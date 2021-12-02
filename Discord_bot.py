@@ -53,7 +53,8 @@ def get_prefix(bot, msg):
 
 
 def main():
-    Config.init_with_system_language()
+    if len(argv) == 1 or (len(argv) > 1 and argv[1] not in ["-v", "--version", "-g"]):
+        Config.init_with_system_language()
     if platform == "win32":
         init()
     if len(argv) > 1 and argv[1] not in ["-h", "--help", "-v", "--version", "-g", "-cs"]:
@@ -78,8 +79,8 @@ def main():
         for i in cog_list:
             bot.add_cog(i(bot, poll))
         bot.add_cog(poll)
-        BotVars.bot_for_webhooks = bot
         create_pot_lines(bot)
+        BotVars.bot_for_webhooks = bot
         Config.read_server_info()
         print(get_translation("Server info read!"))
         bot.run(Config.get_settings().bot_settings.token)
