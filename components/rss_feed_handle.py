@@ -21,15 +21,18 @@ async def check_on_rss_feed():
     send = False
     parsed = parse(Config.get_rss_feed_settings().rss_url)
     with suppress(KeyError, AttributeError):
+        new_date = datetime_from
         entries = parsed.entries
         entries.reverse()
         for entry in entries:
-            if datetime.fromtimestamp(mktime(entry.published_parsed)) > datetime_from:
+            entry_date = datetime.fromtimestamp(mktime(entry.published_parsed))
+            if entry_date > datetime_from:
                 send = True
                 BotVars.webhook_rss.send(entry.link)
+                if entry_date > new_date:
+                    new_date = entry_date
         if send:
-            Config.get_rss_feed_settings().rss_last_date = datetime \
-                .fromtimestamp(mktime(parsed.entries[-1].published_parsed)).isoformat()
+            Config.get_rss_feed_settings().rss_last_date = new_date.isoformat()
             Config.save_config()
     await asleep(Config.get_rss_feed_settings().rss_download_delay)
 

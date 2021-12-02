@@ -887,7 +887,7 @@ async def bot_clear(ctx, poll: Poll, subcommand: str = None, count: int = None, 
                                   .format(ctx.author.mention),
                           command="clear",
                           remove_logs_after=5):
-            if count < 0 or subcommand == "reply":
+            if subcommand == "all" or subcommand == "reply" or count < 0:
                 await ctx.channel.purge(limit=None, check=check_condition, after=message_created, bulk=False)
             else:
                 await ctx.channel.purge(limit=1, bulk=False)
