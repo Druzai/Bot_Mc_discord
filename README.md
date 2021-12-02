@@ -3,7 +3,7 @@
 </p>
 
 <h1 align="center">
-   Bot for minecraft server in discord
+   Bot for Minecraft Server in discord
 </h1>
 
 [![Build with pyinstaller and release](https://github.com/Druzai/Bot_Mc_discord/actions/workflows/pyinstaller_build.yml/badge.svg?branch=master)](https://github.com/Druzai/Bot_Mc_discord/actions/workflows/pyinstaller_build.yml)
@@ -41,7 +41,6 @@
         * Custom emojis are converted to text with their own text name
         * Most of the standard unicode emojis are not processed by the vanilla minecraft server
 * Setting up optional rss feed. Bot will send new items of feed to discord text channel via webhook
-    * Currently checks published date in isoformat
 
 ## Commands
 
@@ -75,7 +74,7 @@ Supported 2 languages:
 * [Python 3.8-3.9](https://www.python.org/downloads/)
 * For Linux required [screen](https://linuxize.com/post/how-to-use-linux-screen/) command
 * Minecraft server not lower than version `1.0.0`
-    * Run server 2 times to accept eula and generate server.properties
+    * Run server 1 or 2 times to accept eula and generate server.properties
     * Enable query and rcon in `server.properties` (unnecessary, bot can enable it if file `server.properties` exists)
 
 ### Required bot permissions
@@ -118,8 +117,7 @@ rem java_parameters - parameters for minecraft server
 SET min_ram=1
 SET max_ram=3
 SET your_jar_file=server.jar
-SET java_parameters=-d64 -server -XX:+AggressiveOpts
-rem                                                  ... and so on :)
+SET java_parameters=
 chcp 65001
 cls
 title Minecraft Server Console (%max_ram%Gb RAM)
@@ -148,12 +146,12 @@ script) in your root minecraft server directory! Example of file:
 min_ram='1G'
 max_ram='3G'
 your_jar_file='server.jar'
-java_parameters='-d64 -server -XX:+AggressiveOpts' # ... and so on :)
+java_parameters=''
 java -Xms${min_ram} -Xmx${max_ram} ${java_parameters} -Dfile.encoding=UTF-8 -jar ${your_jar_file} nogui
 ```
 
 For server process bot will start virtual terminal session via `screen` command. You can connect to it
-via `screen -r %server_name%`. Server name you can find in list of virtual sessions - `screen -ls`.
+via `screen -r %your_session_name%`. Server name you can find in list of virtual sessions - `screen -ls`.
 
 ## Localization
 
