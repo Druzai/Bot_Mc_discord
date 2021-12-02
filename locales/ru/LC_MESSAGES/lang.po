@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
-"POT-Creation-Date: 2021-12-02 03:46+0300\n"
-"PO-Revision-Date: 2021-12-02 03:53+0300\n"
+"POT-Creation-Date: 2021-12-02 11:34+0300\n"
+"PO-Revision-Date: 2021-12-02 11:35+0300\n"
 "Last-Translator: Druzai <astyn37@gmail.com>\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -18,11 +18,11 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
 
-#: ..\Discord_bot.py:72
+#: ..\Discord_bot.py:70
 msgid "Bot doesn't have this command line argument!"
 msgstr "Бот не имеет такого аргумента командной строки!"
 
-#: ..\Discord_bot.py:75
+#: ..\Discord_bot.py:73
 msgid "bot_help"
 msgstr ""
 "Бот для майнкрафт сервера\n"
@@ -31,28 +31,28 @@ msgstr ""
 "  -v, --version\tПечатает версию бота и выходит.\n"
 "  -cs          \tДля изменения майнкрафт серверов в конфиге бота."
 
-#: ..\Discord_bot.py:96 ..\commands\minecraft_commands.py:813
+#: ..\Discord_bot.py:94 ..\commands\minecraft_commands.py:813
 msgid "Server info read!"
 msgstr "Информация о сервере прочтена!"
 
-#: ..\Discord_bot.py:99
+#: ..\Discord_bot.py:97
 msgid "Bot/Discord Error: Your token is wrong"
 msgstr "Ошибка бота/дискорда: Ваш токен не правильный"
 
-#: ..\Discord_bot.py:101 ..\Discord_bot.py:103
+#: ..\Discord_bot.py:99 ..\Discord_bot.py:101
 #: ..\components\additional_funcs.py:1103
 msgid "Bot Error: {0}"
 msgstr "Ошибка бота: {0}"
 
-#: ..\Discord_bot.py:109
+#: ..\Discord_bot.py:107
 msgid "Bot/Discord Error: Something went wrong"
 msgstr "Ошибка бота/дискорда: Что-то пошло не так"
 
-#: ..\Discord_bot.py:116
+#: ..\Discord_bot.py:114
 msgid "Press any key to continue..."
 msgstr "Для продолжения нажмите любую клавишу..."
 
-#: ..\Discord_bot.py:119
+#: ..\Discord_bot.py:117
 msgid "Bot is stopping..."
 msgstr "Бот останавливается..."
 
@@ -1933,6 +1933,13 @@ msgstr ""
 #: ..\components\additional_funcs.py:1347
 msgid "No players on server!"
 msgstr "На сервере нет игроков!"
+
+#: ..\components\rss_feed_handle.py:17
+msgid ""
+"Date from bot config is invalid. Bot will use current date for checking..."
+msgstr ""
+"Недопустимая дата из конфигурации бота. Бот будет использовать текущую дату "
+"для проверки..."
 
 #: ..\components\watcher_handle.py:51
 msgid "Watcher Error: File '{0}' wasn't found!"

@@ -1227,7 +1227,7 @@ class Config:
                                           try_int=True, int_high_than=1)
 
                 cls.get_rss_feed_settings().rss_last_date = \
-                    datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
+                    datetime.now().replace(microsecond=0).isoformat()
             else:
                 cls.get_rss_feed_settings().enable_rss_feed = False
                 print(get_translation("RSS feed wouldn't work."))

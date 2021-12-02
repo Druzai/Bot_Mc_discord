@@ -1,24 +1,36 @@
 from asyncio import sleep as asleep
+from contextlib import suppress
 from datetime import datetime
+from time import mktime
 
 from discord import Webhook, RequestsWebhookAdapter
 from feedparser import parse
 
+from components.localization import get_translation
 from config.init_config import Config, BotVars
 
 
 async def check_on_rss_feed():
-    datetime_from = datetime.fromisoformat(Config.get_rss_feed_settings().rss_last_date)
+    try:
+        datetime_from = datetime.fromisoformat(Config.get_rss_feed_settings().rss_last_date)
+    except (ValueError, TypeError):
+        print(get_translation("Date from bot config is invalid. Bot will use current date for checking..."))
+        datetime_from = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    if datetime_from.tzinfo is not None:
+        datetime_from = datetime.fromtimestamp(datetime_from.timestamp())
     send = False
-    entries = parse(Config.get_rss_feed_settings().rss_url).entries
-    entries.reverse()
-    for entry in entries:
-        if datetime.fromisoformat(entry.published) > datetime_from:
-            send = True
-            BotVars.webhook_rss.send(entry.link)
-    if send:
-        Config.get_rss_feed_settings().rss_last_date = entries[-1].published
-        Config.save_config()
+    parsed = parse(Config.get_rss_feed_settings().rss_url)
+    with suppress(KeyError, AttributeError):
+        entries = parsed.entries
+        entries.reverse()
+        for entry in entries:
+            if datetime.fromtimestamp(mktime(entry.published_parsed)) > datetime_from:
+                send = True
+                BotVars.webhook_rss.send(entry.link)
+        if send:
+            Config.get_rss_feed_settings().rss_last_date = datetime \
+                .fromtimestamp(mktime(parsed.entries[-1].published_parsed)).isoformat()
+            Config.save_config()
     await asleep(Config.get_rss_feed_settings().rss_download_delay)
 
 
