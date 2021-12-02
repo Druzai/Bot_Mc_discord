@@ -15,14 +15,13 @@ _current_locale = ""
 _translation = None
 
 
-def set_locale(locale: str, set_eng_if_error=False) -> Optional[str]:
+def set_locale(locale: str, set_eng_if_error=False):
     global _translation, _current_locale
     if locale.lower() in _locales or set_eng_if_error:
-        _translation = gettext.translation("lang", localedir=_locales_path,
-                                           languages=["en" if set_eng_if_error else locale.lower()])
-        _current_locale = "en" if set_eng_if_error else locale.lower()
-    else:
-        return locale
+        _current_locale = "en" if locale.lower() not in _locales and set_eng_if_error else locale.lower()
+        _translation = gettext.translation("lang", localedir=_locales_path, languages=[_current_locale])
+        return _current_locale
+    return None
 
 
 def get_translation(text: str) -> str:

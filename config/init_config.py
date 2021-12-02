@@ -286,6 +286,7 @@ class Config:
     _op_log_name = "op.log"
     _bot_log_name = "bot.log"
     _need_to_rewrite = False
+    _system_lang = None
 
     @classmethod
     def read_config(cls):
@@ -314,6 +315,11 @@ class Config:
             return sys._MEIPASS
         elif __file__:
             return cls._current_bot_path
+
+    @classmethod
+    def init_with_system_language(cls):
+        lang = getdefaultlocale()[0].split('_')[0].lower()
+        cls._system_lang = set_locale(lang, set_eng_if_error=True)
 
     @classmethod
     def get_bot_config_path(cls) -> str:
@@ -763,19 +769,17 @@ class Config:
     @classmethod
     def _setup_language(cls):
         if cls._settings_instance.bot_settings.language is None or \
-                set_locale(cls._settings_instance.bot_settings.language):
+                not set_locale(cls._settings_instance.bot_settings.language):
             if cls._settings_instance.bot_settings.language is not None and \
-                    set_locale(cls._settings_instance.bot_settings.language):
-                print("Language setting in bot config is wrong! Setting up language again...")
+                    not set_locale(cls._settings_instance.bot_settings.language):
+                print(get_translation("Language setting in bot config is wrong! Setting up language again..."))
 
             cls._need_to_rewrite = True
-            lang = getdefaultlocale()[0].split('_')[0].lower()
-            output = set_locale(lang, set_eng_if_error=True)
-            if output:
+            if not cls._system_lang:
                 print("Bot doesn't have your system language. So bot selected English.")
             else:
                 print(get_translation("Bot selected language based on your system language."))
-            cls._settings_instance.bot_settings.language = "en" if output else lang.lower()
+            cls._settings_instance.bot_settings.language = cls._system_lang if cls._system_lang else "en"
 
             if cls._ask_for_data(get_translation("Do you want to change it?") + " Y/n\n> ", "y"):
                 while True:

@@ -53,6 +53,7 @@ def get_prefix(bot, msg):
 
 
 def main():
+    Config.init_with_system_language()
     if platform == "win32":
         init()
     if len(argv) > 1 and argv[1] not in ["-v", "--version", "-g"]:
