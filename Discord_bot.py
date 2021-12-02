@@ -6,7 +6,7 @@ from colorama import Fore, Style
 from discord import Intents, Permissions
 from discord.errors import LoginFailure
 from discord.ext import commands
-from pynput import keyboard
+from sshkeyboard import listen_keyboard, stop_listening
 from yaml.parser import ParserError
 from yaml.scanner import ScannerError
 
@@ -102,8 +102,7 @@ def main():
                 if thread.getName() == "BackupsThread":
                     thread.join()
             print(get_translation("Press any key to continue..."))
-            with keyboard.Listener(on_release=lambda _: False) as listener:
-                listener.join()
+            listen_keyboard(on_press=lambda e: stop_listening())
             print(get_translation("Bot is stopping..."))
         exit(0)
 
