@@ -2,6 +2,7 @@ import inspect
 import socket
 import sys
 import typing
+from traceback import print_exception
 from ast import literal_eval
 from asyncio import sleep as asleep
 from contextlib import contextmanager, suppress
@@ -134,6 +135,7 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
     await asleep(5)
     while True:
         if len(get_list_of_processes()) == 0:
+            print(get_translation("Error while loading server! Retreating..."))
             await send_msg(ctx, add_quotes(get_translation("Error while loading server! Retreating...")),
                            is_reaction)
             bot.loop.create_task(bot.change_presence(activity=Activity(type=ActivityType.listening,
@@ -1240,7 +1242,9 @@ async def send_error(ctx, bot: commands.Bot, error, is_reaction=False):
                              commands.MissingRole(Config.get_settings().bot_settings.admin_role_id), is_reaction)
         await send_error(ctx, bot, commands.MissingPermissions(['administrator']), is_reaction)
     else:
-        print(", ".join(error.args))
+        print(get_translation("Ignoring exception in command '{0}{1}':")
+              .format(Config.get_settings().bot_settings.prefix, ctx.command))
+        print_exception(type(error), error, error.__traceback__, file=sys.stderr)
         await send_msg(ctx, f"{author_mention}\n" +
                        add_quotes(", ".join([str(a) for a in error.original.args])), is_reaction)
 
