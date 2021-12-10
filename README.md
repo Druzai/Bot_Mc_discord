@@ -53,10 +53,7 @@ And to enable rss feed you also need webhook url!
 
 [How to create webhook and get its url.](https://github.com/Akizo96/de.isekaidev.discord.wbbBridge/wiki/How-to-get-Webhook-ID-&-Token)
 
-For minecraft server version lower than `1.17` for cross-platform chat to work properly you have to have
-argument `-Dfile.encoding=UTF-8` when you're executing `*.bat` or `*.sh` script (necessary for Windows).
-
-For minecraft server version lower than `1.7.2` cross-platform chat currently work only from minecraft to discord,
+For minecraft server lower than version `1.7.2` cross-platform chat currently work only from minecraft to discord,
 because these minecraft servers don't have a `tellraw` command!
 
 **For backups: remember that if there are files in backups dir that not in server config, they will be deleted! And vice
@@ -101,6 +98,12 @@ Type in command prompt `make` in root directory of the project to build it.
 Executable file will be in `/build_dist`.
 
 ## Run
+
+**Important! If you running minecraft server between versions  `1.7.2` and `1.18` make sure you have this command line
+argument `-Dlog4j2.formatMsgNoLookups=true` when starting the server to avoid critical security vulnerability!**
+
+For minecraft server lower than version `1.17` for cross-platform chat to work properly you have to have
+argument `-Dfile.encoding=UTF-8` when you're executing `*.bat` or `*.sh` script (necessary for Windows).
 
 ### Windows
 
