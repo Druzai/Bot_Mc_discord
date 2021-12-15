@@ -1402,12 +1402,10 @@ def _handle_urls_and_attachments_in_message(result_msg, message, only_replace_li
             i = 1
             for link in temp_arr:
                 if only_replace_links:
-                    temp_split.insert(i,
-                                      shorten_url(link, 30) if "tenor" not in link and "view" not in link else "[gif]")
+                    temp_split.insert(i, "[gif]" if "tenor" in link and "view" in link else shorten_url(link, 30))
                 else:
-                    temp_split.insert(i,
-                                      (shorten_url(link, 30) if "tenor" not in link and "view" not in link else "[gif]",
-                                       link if len(link) < 257 else get_clck_ru_url(link)))
+                    temp_split.insert(i, ("[gif]" if "tenor" in link and "view" in link else shorten_url(link, 30),
+                                          link if len(link) < 257 else get_clck_ru_url(link)))
                 i += 2
         else:
             temp_split.append(msg)
@@ -1527,7 +1525,7 @@ def get_server_players() -> dict:
 
 def shorten_url(url: str, max_length: int):
     if len(url) > max_length:
-        return url[:max_length] + "..."
+        return f"{url[:max_length]}..."
     else:
         return url
 

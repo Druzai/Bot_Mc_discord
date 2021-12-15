@@ -332,7 +332,7 @@ class MinecraftCommands(commands.Cog):
         if "".join(log) == "":
             await ctx.send(add_quotes(get_translation("There is no ops' history yet...")))
             return
-        log = [l for l in log if not l.split("||")[1].lstrip().startswith("Deop")]
+        log = [lg for lg in log if not lg.split("||")[1].lstrip().startswith("Deop")]
         for line in range(len(log)):
             arr = log[line].split("||")
             date = datetime.strptime(arr[0].strip(), "%d/%m/%Y %H:%M:%S").strftime(get_translation("%H:%M %d/%m/%Y"))
