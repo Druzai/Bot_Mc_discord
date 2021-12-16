@@ -6,9 +6,8 @@ block_cipher = None
 
 
 def get_datas():
-    data = [('images/sad_dog.jpg', 'images')]
-    data.extend([(f"./locales/{d}/LC_MESSAGES/lang.mo", f"locales/{d}/LC_MESSAGES") for d in os.listdir("locales") if
-                 path.isdir(path.join("locales", d))])
+    data = [(f"./locales/{d}/LC_MESSAGES/lang.mo", f"locales/{d}/LC_MESSAGES") for d in os.listdir("locales") if
+            path.isdir(path.join("locales", d))]
     return data
 
 
