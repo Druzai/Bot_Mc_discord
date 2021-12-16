@@ -1098,8 +1098,8 @@ def make_underscored_line(line):
 @contextmanager
 def connect_rcon():
     try:
-        with Client_r(Config.get_settings().bot_settings.local_address, BotVars.port_rcon, timeout=1) as cl_r:
-            cl_r.login(BotVars.rcon_pass)
+        with Client_r(Config.get_settings().bot_settings.local_address,
+                      BotVars.port_rcon, passwd=BotVars.rcon_pass, timeout=1) as cl_r:
             yield cl_r
     except WrongPassword:
         print(get_translation("Bot Error: {0}")

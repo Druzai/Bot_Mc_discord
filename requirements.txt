@@ -1,6 +1,6 @@
 cryptography==3.3.2
 discord.py==1.7.3
-mcipc==1.4.0
+mcipc==1.5.4
 psutil==5.8.0
 feedparser==6.0.8
 jsons==1.6.0
