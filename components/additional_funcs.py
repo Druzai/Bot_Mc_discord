@@ -2,14 +2,13 @@ import inspect
 import socket
 import sys
 import typing
-from traceback import print_exception
 from ast import literal_eval
 from asyncio import sleep as asleep
 from contextlib import contextmanager, suppress
 from datetime import datetime, timedelta
 from hashlib import md5
 from itertools import chain
-from json import load, dump, JSONDecodeError
+from json import load, dump, dumps, JSONDecodeError
 from os import chdir, system, walk, mkdir, remove
 from os.path import basename, join as p_join, getsize, isfile
 from pathlib import Path
@@ -17,8 +16,10 @@ from random import randint
 from re import search, split, findall, sub, compile
 from shutil import rmtree
 from sys import platform, argv
+from textwrap import wrap
 from threading import Thread, Event
 from time import sleep
+from traceback import print_exception
 from typing import Tuple, List
 from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 
@@ -40,6 +41,8 @@ if platform == "win32":
     from os import startfile
 
 UNITS = ("B", "KB", "MB", "GB", "TB", "PB")
+MAX_RCON_COMMAND_STR_LENGTH = 1446
+MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH = MAX_RCON_COMMAND_STR_LENGTH - 9 - 2
 
 if len(argv) > 1 and argv[1] == "-g":
     from components.localization import RuntimeTextHandler
@@ -1289,10 +1292,11 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
             # Building object for tellraw
             res_obj = [""]
             if result_msg.get("reply", None) is not None:
-                if len(result_msg.get("reply")) == 3:
+                if isinstance(result_msg["reply"][-1], list):
                     res_obj.extend([{"text": result_msg.get("reply")[0], "color": "gray"},
-                                    {"text": result_msg.get("reply")[1], "color": "dark_gray"}])
-                    _build_if_urls_in_message(res_obj, result_msg.get("reply")[2], "gray")
+                                    {"text": result_msg.get("reply")[1], "color": "dark_gray"},
+                                    {"text": result_msg.get("reply")[2], "color": "gray"}])
+                    _build_if_urls_in_message(res_obj, result_msg.get("reply")[-1], "gray")
                 else:
                     _build_if_urls_in_message(res_obj, result_msg.get("reply"), "gray")
             content_name = "contents" if server_version >= 16 else "value"
@@ -1309,30 +1313,17 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
                 result_before = _handle_custom_emojis(before_message)
                 result_before = _handle_urls_and_attachments_in_message(result_before, before_message, True)
                 res_obj.append({"text": "*", "color": "gold",
-                                "hoverEvent": {"action": "show_text", content_name: result_before.get("content")}})
+                                "hoverEvent": {"action": "show_text",
+                                               content_name: shorten_string(result_before.get("content"), 250)}})
             _build_if_urls_in_message(res_obj, result_msg.get("content"), None)
+            res_obj = _handle_long_tellraw_object(res_obj)
 
             with connect_rcon() as cl_r:
                 if server_version > 7:
-                    cl_r.tellraw("@a", res_obj)
+                    for obj in res_obj:
+                        cl_r.tellraw("@a", obj)
                 else:
-                    res = []
-                    for elem in res_obj:
-                        if elem == "":
-                            res += [[""]]
-                        elif isinstance(elem, dict):
-                            if elem["text"] != "*" and "\n" in elem["text"]:
-                                first_elem = True
-                                for split_str in elem["text"].split("\n"):
-                                    split_elem = elem.copy()
-                                    split_elem["text"] = split_str
-                                    if first_elem:
-                                        res[-1] += [split_elem]
-                                        first_elem = False
-                                    else:
-                                        res += [["", split_elem]]
-                            else:
-                                res[-1] += [elem]
+                    res = _split_tellraw_object(res_obj)
                     for tellraw in res:
                         cl_r.tellraw("@a", tellraw)
 
@@ -1352,6 +1343,93 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
 
     if delete_user_message and need_to_delete_on_error:
         await delete_after_by_msg(message)
+
+
+def _handle_long_tellraw_object(tellraw_obj):
+    if len(dumps(tellraw_obj)) <= MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH:
+        return [tellraw_obj]
+
+    calc_size = 6
+    res = []
+    for elem in tellraw_obj:
+        if elem == "":
+            res += [[""]]
+        elif isinstance(elem, dict):
+            calc_size += len(dumps(elem))
+            if calc_size <= MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH:
+                res[-1] += [elem]
+                continue
+            if len(dumps(elem)) + 6 <= MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH:
+                res += [["", elem]]
+                calc_size = len(dumps(elem)) + 6
+            else:
+                use_slice = False
+                if "\n" not in elem["text"] and " " not in elem["text"]:
+                    use_slice = True
+                if use_slice:
+                    for sliced_str in wrap(elem["text"], 1100, drop_whitespace=True):
+                        split_elem = elem.copy()
+                        split_elem["text"] = sliced_str
+                        res += [["", split_elem]]
+                    continue
+                for split_str in elem["text"].split("\n"):
+                    split_elem = elem.copy()
+                    split_elem["text"] = split_str
+                    if len(dumps(split_elem)) + 6 > MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH:
+                        split_array = [""]
+                        for split_ws_str in split_str.split(" "):
+                            if len(split_array[-1] + split_ws_str) > 1100:
+                                split_array += [split_ws_str]
+                                continue
+                            split_array[-1] = f"{split_array[-1]} {split_ws_str}"
+                        for split_str_ws in split_array:
+                            split_elem = elem.copy()
+                            split_elem["text"] = split_str_ws
+                            res += [["", split_elem]]
+                    else:
+                        added_split = res[-1].copy()
+                        added_dict = added_split[-1].copy()
+                        added_dict["text"] += f"\n{split_str}"
+                        added_split[-1] = added_dict
+                        if len(dumps(added_split)) > MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH:
+                            res += [["", split_elem]]
+                        else:
+                            if res[-1][-1].get("text", "") in ["> ", "*"]:
+                                res[-1] += [split_elem]
+                            else:
+                                res[-1] = added_split
+    for elem_res in range(len(res)):
+        for i in [1, -1]:
+            if len(res[elem_res][i]["text"].strip(" \n")) == 0:
+                del res[elem_res][i]
+            else:
+                res[elem_res][i]["text"] = res[elem_res][i]["text"].strip(" \n")
+    return res
+
+
+def _split_tellraw_object(tellraw_obj):
+    if not isinstance(tellraw_obj, list):
+        tellraw_obj = [tellraw_obj]
+
+    res = []
+    for obj in tellraw_obj:
+        for elem in obj:
+            if elem == "":
+                res += [[""]]
+            elif isinstance(elem, dict):
+                if elem["text"] != "*" and "\n" in elem["text"]:
+                    first_elem = True
+                    for split_str in elem["text"].split("\n"):
+                        split_elem = elem.copy()
+                        split_elem["text"] = split_str
+                        if first_elem:
+                            res[-1] += [split_elem]
+                            first_elem = False
+                        else:
+                            res += [["", split_elem]]
+                else:
+                    res[-1] += [elem]
+    return res
 
 
 def _handle_custom_emojis(message):
@@ -1381,7 +1459,7 @@ async def _handle_reply_in_message(message, result_msg):
         else:
             # Reply to discord user
             nick = (await message.guild.fetch_member(reply_msg.author.id)).display_name
-            result_msg["reply"] = ["\n -> <", nick, f"> {cnt}"]
+            result_msg["reply"] = ["\n -> <", nick, "> ", cnt]
     return result_msg
 
 
@@ -1402,9 +1480,9 @@ def _handle_urls_and_attachments_in_message(result_msg, message, only_replace_li
             i = 1
             for link in temp_arr:
                 if only_replace_links:
-                    temp_split.insert(i, "[gif]" if "tenor" in link and "view" in link else shorten_url(link, 30))
+                    temp_split.insert(i, "[gif]" if "tenor" in link and "view" in link else shorten_string(link, 30))
                 else:
-                    temp_split.insert(i, ("[gif]" if "tenor" in link and "view" in link else shorten_url(link, 30),
+                    temp_split.insert(i, ("[gif]" if "tenor" in link and "view" in link else shorten_string(link, 30),
                                           link if len(link) < 257 else get_clck_ru_url(link)))
                 i += 2
         else:
@@ -1425,7 +1503,7 @@ def _handle_urls_and_attachments_in_message(result_msg, message, only_replace_li
             temp_split.append("\n")
 
         if isinstance(ms, list):
-            result_msg[key] = [ms[0], ms[1], "".join(temp_split) if only_replace_links else temp_split]
+            result_msg[key] = [ms[0], ms[1], ms[2], "".join(temp_split) if only_replace_links else temp_split]
         else:
             result_msg[key] = "".join(temp_split) if only_replace_links else temp_split
     return result_msg
@@ -1523,11 +1601,11 @@ def get_server_players() -> dict:
     return dict(current=info.num_players, max=info.max_players, players=info.players)
 
 
-def shorten_url(url: str, max_length: int):
-    if len(url) > max_length:
-        return f"{url[:max_length]}..."
+def shorten_string(string: str, max_length: int):
+    if len(string) > max_length:
+        return f"{string[:max_length].strip(' ')}..."
     else:
-        return url
+        return string
 
 
 def get_clck_ru_url(url: str):
