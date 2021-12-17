@@ -1201,7 +1201,7 @@ async def send_error(ctx, bot: commands.Bot, error, is_reaction=False):
         if isinstance(error.missing_role, int):
             role = bot.guilds[0].get_role(error.missing_role)
             if role is None:
-                role = "---"
+                role = "@deleted-role"
         else:
             role = error.missing_role
         print(get_translation("{0} don't have role '{1}' to run command").format(author, role))
@@ -1400,6 +1400,8 @@ def _handle_long_tellraw_object(tellraw_obj):
                                 res[-1] = added_split
     for elem_res in range(len(res)):
         for i in [1, -1]:
+            if elem_res == 0 and i == 1:
+                continue
             if len(res[elem_res][i]["text"].strip(" \n")) == 0:
                 del res[elem_res][i]
             else:

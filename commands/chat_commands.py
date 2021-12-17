@@ -1,8 +1,9 @@
 from typing import Union
 
 import discord
-from discord import Activity, ActivityType, Role, Member, TextChannel, \
-    InvalidData, HTTPException, NotFound, Forbidden, DMChannel
+from discord import (
+    Activity, ActivityType, Role, Member, TextChannel, InvalidData, HTTPException, NotFound, Forbidden, DMChannel
+)
 from discord.ext import commands, tasks
 
 from commands.poll import Poll
@@ -12,7 +13,8 @@ from components.additional_funcs import (
     parse_subcommands_for_help, find_subcommand, make_underscored_line, create_webhooks, bot_dm_clear
 )
 from components.localization import get_translation, get_locales, set_locale, get_current_locale
-from components.rss_feed_handle import *
+from components.rss_feed_handle import check_on_rss_feed
+from config.init_config import Config
 
 
 class ChatCommands(commands.Cog):
