@@ -1,4 +1,4 @@
-cryptography==3.3.2
+cryptography==3.4.8
 discord.py==1.7.3
 mcipc==1.5.4
 psutil==5.8.0
