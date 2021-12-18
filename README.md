@@ -99,8 +99,9 @@ Executable file will be in `/build_dist`.
 
 ## Run
 
-**Important! If you running minecraft server between versions  `1.7.2` and `1.18` make sure you have this command line
-argument `-Dlog4j2.formatMsgNoLookups=true` when starting the server to avoid critical security vulnerability!**
+**Important! If you running minecraft server between versions  `1.7.2` and `1.18` to avoid critical security
+vulnerability `Log4Shell` do instructions stated in
+this [link](https://www.minecraft.net/en-us/article/important-message--security-vulnerability-java-edition)!**
 
 For minecraft server lower than version `1.17` for cross-platform chat to work properly you have to have
 argument `-Dfile.encoding=UTF-8` when you're executing `*.bat` or `*.sh` script (necessary for Windows).
