@@ -1144,7 +1144,7 @@ msgstr ""
 
 #: ..\commands\minecraft_commands.py:503
 msgid "with reason '{0}'"
-msgstr "по причине '{0}'!"
+msgstr "по причине '{0}'"
 
 #: ..\commands\minecraft_commands.py:504
 msgid "Banned IP-address {0}{1}!"

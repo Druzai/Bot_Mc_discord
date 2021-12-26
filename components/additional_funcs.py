@@ -88,15 +88,14 @@ def get_author_and_mention(ctx, bot: commands.Bot, is_reaction=False):
 async def send_status(ctx, is_reaction=False):
     if BotVars.is_server_on:
         if BotVars.is_backing_up:
-            await send_msg(ctx, add_quotes(get_translation("Bot is backing up server!").capitalize()), is_reaction)
+            await send_msg(ctx, add_quotes(get_translation("Bot is backing up server!")), is_reaction)
         else:
             await send_msg(ctx, add_quotes(get_translation("server have already started!").capitalize()), is_reaction)
     else:
         if BotVars.is_backing_up:
-            await send_msg(ctx, add_quotes(get_translation("Bot is backing up server!").capitalize()), is_reaction)
+            await send_msg(ctx, add_quotes(get_translation("Bot is backing up server!")), is_reaction)
         elif BotVars.is_restoring:
-            await send_msg(ctx, add_quotes(get_translation("Bot is restoring server from backup!").capitalize()),
-                           is_reaction)
+            await send_msg(ctx, add_quotes(get_translation("Bot is restoring server from backup!")), is_reaction)
         elif BotVars.is_loading:
             await send_msg(ctx, add_quotes(get_translation("server is loading!").capitalize()), is_reaction)
         elif BotVars.is_stopping:
@@ -1012,20 +1011,31 @@ def create_webhooks():
 
 
 def check_if_ips_expired():
-    dict_to_remove = {}
+    removed = True
+    remove_empty_nicks = []
+    remove_old_ips = {}
     for user in Config.get_auth_users():
+        if len(user.ip_addresses) == 0:
+            remove_empty_nicks.append(user)
+            continue
         for ip in user.ip_addresses:
             if ip.expires_on_date is not None and (datetime.now() - ip.expires_on_date).days >= \
                     Config.get_secure_auth().days_before_ip_will_be_deleted:
-                if dict_to_remove.get(user.nick, None) is None:
-                    dict_to_remove[user.nick] = []
-                dict_to_remove[user.nick].append(ip)
-    if len(dict_to_remove.keys()) > 0:
+                if remove_old_ips.get(user.nick, None) is None:
+                    remove_old_ips[user.nick] = []
+                remove_old_ips[user.nick].append(ip)
+    if len(remove_empty_nicks) > 0:
+        for user in remove_empty_nicks:
+            Config.get_auth_users().remove(user)
+        removed = True
+    if len(remove_old_ips.keys()) > 0:
         for i in range(len(Config.get_auth_users())):
-            if dict_to_remove.get(Config.get_auth_users()[i].nick, None) is None:
+            if remove_old_ips.get(Config.get_auth_users()[i].nick, None) is None:
                 continue
-            for address in dict_to_remove[Config.get_auth_users()[i].nick]:
+            for address in remove_old_ips[Config.get_auth_users()[i].nick]:
                 Config.get_auth_users()[i].ip_addresses.remove(address)
+        removed = True
+    if removed:
         Config.save_auth_users()
 
 
@@ -1202,6 +1212,8 @@ async def send_error(ctx, bot: commands.Bot, error, is_reaction=False):
             role = bot.guilds[0].get_role(error.missing_role)
             if role is None:
                 role = "@deleted-role"
+            else:
+                role = role.name
         else:
             role = error.missing_role
         print(get_translation("{0} don't have role '{1}' to run command").format(author, role))
