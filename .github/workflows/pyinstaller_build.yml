@@ -11,14 +11,15 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
+      tag: ${{ steps.commit.outputs.SOURCE_TAG }}
     steps:
       - name: Clone repository
         uses: actions/checkout@v2
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python 3.8
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: 3.8
 
       - name: Install dependencies
         run: |
@@ -87,10 +88,10 @@ jobs:
         with:
           upload_url: ${{ needs.create_release.outputs.upload_url }}
           asset_path: ./dist_build/Discord_bot
-          asset_name: Discord_bot_linux_x64
+          asset_name: Discord_bot_linux_x64_v${{ needs.create_release.outputs.tag }}
           asset_content_type: application/x-executable
 
-      - name: Upload release asset with windows
+      - name: Upload release asset with Windows
         if: matrix.os == 'windows-latest'
         uses: actions/upload-release-asset@v1
         env:
@@ -98,6 +99,6 @@ jobs:
         with:
           upload_url: ${{ needs.create_release.outputs.upload_url }}
           asset_path: ./dist_build/Discord_bot.exe
-          asset_name: Discord_bot_windows_x64.exe
+          asset_name: Discord_bot_windows_x64_v${{ needs.create_release.outputs.tag }}.exe
           asset_content_type: application/vnd.microsoft.portable-executable
 
