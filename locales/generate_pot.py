@@ -8,7 +8,7 @@ def set_utf8(python_home: str):
     changed = False
     for i in range(len(file_contents)):
         if "open(options.outfile" in file_contents[i] and "encoding" not in file_contents[i]:
-            file_contents[i] = f"{file_contents[i][:-2]}, encoding='utf8')\n"
+            file_contents[i] = f"{file_contents[i][:-2]}, encoding='UTF-8')\n"
             changed = True
     if changed:
         with open(f"{python_home}\\Tools\\i18n\\pygettext.py", "w") as f:

@@ -117,17 +117,25 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
         if platform == "linux" or platform == "linux2":
             if ".sh" not in Config.get_selected_server_from_list().start_file_name:
                 raise NameError()
-            system(f"screen -dmS {Config.get_selected_server_from_list().server_name.replace(' ', '_')} "
-                   f"./{Config.get_selected_server_from_list().start_file_name}")
+            code = system(f"screen -dmS {Config.get_selected_server_from_list().server_name.replace(' ', '_')} "
+                          f"./{Config.get_selected_server_from_list().start_file_name}")
+            if code != 0:
+                raise ReferenceError()
         elif platform == "win32":
             if ".bat" not in Config.get_selected_server_from_list().start_file_name:
                 raise NameError()
             startfile(Config.get_selected_server_from_list().start_file_name)
-    except (NameError, ValueError, FileNotFoundError):
+    except (NameError, ValueError, FileNotFoundError, ReferenceError) as ex:
         chdir(Config.get_bot_config_path())
-        print(get_translation("Couldn't open script! Check naming and extension of the script!"))
-        await send_msg(ctx, add_quotes(get_translation("Couldn't open script because of naming! Retreating...")),
-                       is_reaction)
+        if ex.__class__ is not ReferenceError:
+            print(get_translation("Couldn't open script! Check naming and extension of the script!"))
+            await send_msg(ctx, add_quotes(get_translation("Couldn't open script because of naming! Retreating...")),
+                           is_reaction)
+        else:
+            print(get_translation("Couldn't open script because there is no command 'screen'! "
+                                  "Install it via packet manager!"))
+            await send_msg(ctx, add_quotes(get_translation("Couldn't open script because command 'screen' "
+                                                           "wasn't installed! Retreating...")), is_reaction)
         BotVars.is_loading = False
         if BotVars.is_restarting:
             BotVars.is_restarting = False
@@ -328,6 +336,7 @@ class BackupsThread(Thread):
         self._skip = Event()
         self._bot = bot
         self._terminate = False
+        self._backing_up = False
 
     def run(self):
         while True:
@@ -339,6 +348,7 @@ class BackupsThread(Thread):
                 continue
 
             if not BotVars.is_backing_up and not BotVars.is_restoring and Config.get_backups_settings().automatic_backup:
+                self._backing_up = True
                 if BotVars.is_loading or BotVars.is_stopping or BotVars.is_restarting:
                     while True:
                         sleep(Config.get_timeouts_settings().await_seconds_when_connecting_via_rcon)
@@ -367,6 +377,7 @@ class BackupsThread(Thread):
                                             Config.get_backups_settings().compression_method), None)
                     Config.add_backup_info(file_name=file_name)
                     Config.save_server_config()
+                    print(get_translation("Backup completed!"))
 
                 if BotVars.is_server_on and players_count == 0:
                     if not BotVars.is_auto_backup_disable:
@@ -375,14 +386,17 @@ class BackupsThread(Thread):
                 if not BotVars.is_server_on:
                     if not BotVars.is_auto_backup_disable:
                         BotVars.is_auto_backup_disable = True
+                self._backing_up = False
 
     def skip(self):
         self._skip.set()
 
-    def join(self, timeout=None):
+    def join(self, timeout=0.5):
+        while self._backing_up:
+            sleep(1.0)
         self._terminate = True
         self.skip()
-        sleep(0.5)
+        sleep(max(timeout, 0.5))
 
 
 def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path: str, compression,

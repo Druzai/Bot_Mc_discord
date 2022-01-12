@@ -31,7 +31,7 @@ class ChatCommands(commands.Cog):
         print("------")
         await self._bot.change_presence(activity=Activity(type=ActivityType.watching, name="nsfw"))
         create_webhooks()
-        if Config.get_rss_feed_settings().enable_rss_feed:
+        if Config.get_rss_feed_settings().enable_rss_feed and not self.rss_feed_task.is_running():
             self.rss_feed_task.start()
         print(get_translation("Bot is ready!"))
         print(get_translation("To stop the bot, press Ctrl + C"))
