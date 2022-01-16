@@ -429,10 +429,11 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
             with connect_query() as cl_q:
                 if cl_q.full_stats:
                     use_rcon = True
-    if use_rcon:
-        bot_display_name = get_bot_display_name(bot)
 
     if use_rcon:
+        bot_display_name = get_bot_display_name(bot)
+        server_version = get_server_version(patch=True)
+
         tellraw = ["", {"text": "<"}, {"text": bot_display_name, "color": "dark_gray"}, {"text": "> "}]
         if forced:
             tellraw.append({"text": get_translation("Starting backup triggered by {0}...")
@@ -441,6 +442,11 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
             tellraw.append({"text": get_translation("Starting automatic backup..."), "color": "aqua"})
         with connect_rcon() as cl_r:
             cl_r.tellraw("@a", tellraw)
+            if server_version[0] > 2 or (server_version[0] == 2 and server_version[1] >= 4):
+                cl_r.run("save-off")
+            _ = cl_r.run("save-all flush")
+            if server_version[0] < 2 or (server_version[0] == 2 and server_version[1] < 4):
+                cl_r.run("save-off")
     # Create zip file with output of percents
     with ZipFile(Path(f"{zip_path}/{zip_name}.zip"), mode="w", compression=comp) as z:
         for root, _, files in walk(dir_path):
@@ -490,6 +496,7 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
                           else f"(x{world_folder_size / backup_size:.1f})"))
     if use_rcon:
         with connect_rcon() as cl_r:
+            cl_r.run("save-on")
             cl_r.tellraw("@a",
                          ["", {"text": "<"}, {"text": bot_display_name, "color": "dark_gray"}, {"text": "> "},
                           {"text": get_translation("Backup completed!"), "color": "green"}])
@@ -1614,11 +1621,18 @@ def _search_mentions_in_message(message) -> list:
     return set(nicks)
 
 
-def get_server_version() -> int:
-    """Gets minor version of server"""
+def get_server_version(patch=False) -> int:
+    """Gets minor version and patch version of server"""
     with connect_query() as cl_q:
         version = cl_q.full_stats.version
+    if "snapshot" in version.lower() or search(r"\d+w\d+a", version) or "release" in version.lower():
+        raise ValueError("Minecraft server is not in release state!")
     matches = findall(r"\d+", version)
+    if patch:
+        if len(matches) < 3:
+            return int(matches[1]), 0
+        else:
+            return int(matches[1]), int(matches[2])
     return int(matches[1])
 
 
