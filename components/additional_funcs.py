@@ -262,13 +262,13 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_re
                 else:
                     bot_message = get_translation("Server\'s restarting in {0} seconds").format(str(how_many_sec))
 
-                bot_display_name = get_bot_display_name(bot)
-                cl_r.tellraw("@a", ["", {"text": "<"}, {"text": bot_display_name, "color": "dark_gray"},
-                                    {"text": "> " + bot_message}])
+                tellraw_init = ["", {"text": "<"}, {"text": get_bot_display_name(bot), "color": "dark_gray"},
+                                {"text": "> "}]
+                cl_r.tellraw("@a", tellraw_init + [{"text": bot_message}])
                 for i in range(how_many_sec, -1, -w):
-                    cl_r.tellraw("@a", ["", {"text": "<"}, {"text": bot_display_name, "color": "dark_gray"},
-                                        {"text": "> " + get_translation("{0} sec to go").format(str(i))}])
-                    await asleep(w)
+                    if i != 0:
+                        cl_r.tellraw("@a", tellraw_init + [{"text": get_translation("{0} sec to go").format(str(i))}])
+                        await asleep(w)
             cl_r.run("stop")
 
         if BotVars.watcher_of_log_file is not None and BotVars.watcher_of_log_file.is_running():
@@ -431,30 +431,32 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
                     use_rcon = True
 
     if use_rcon:
-        bot_display_name = get_bot_display_name(bot)
         server_version = get_server_version(patch=True)
 
-        tellraw_init = ["", {"text": "<"}, {"text": bot_display_name, "color": "dark_gray"}, {"text": "> "}]
+        tellraw_init = ["", {"text": "<"}, {"text": get_bot_display_name(bot), "color": "dark_gray"}, {"text": "> "}]
         tellraw_msg = tellraw_init.copy()
         if forced:
-            tellraw_msg.append({"text": get_translation("Starting backup triggered by {0}...")
+            tellraw_msg.append({"text": get_translation("Starting backup triggered by {0} in 3 seconds...")
                                .format(f"{user.display_name}#{user.discriminator}"), "color": "yellow"})
         else:
-            tellraw_msg.append({"text": get_translation("Starting automatic backup..."), "color": "aqua"})
+            tellraw_msg.append({"text": get_translation("Starting automatic backup in 3 seconds..."),
+                                "color": "dark_aqua"})
+        with connect_rcon() as cl_r:
+            cl_r.tellraw("@a", tellraw_msg)
+        sleep(3.0)
         with suppress(socket.timeout):
             with connect_rcon(timeout=60) as cl_r:
-                cl_r.tellraw("@a", tellraw_msg)
-                cl_r.tellraw("@a", tellraw_init + [{"text": get_translation("Please don't do anything!"),
-                                                    "color": "dark_purple"}])
+                cl_r.tellraw("@a", tellraw_init +
+                             [{"text": get_translation("Saving chunks..."), "color": "light_purple"}])
                 if server_version[0] > 2 or (server_version[0] == 2 and server_version[1] >= 4):
                     cl_r.run("save-off")
                 _ = cl_r.run("save-all flush")
-        if server_version[0] < 2 or (server_version[0] == 2 and server_version[1] < 4):
-            with connect_rcon() as cl_r:
-                cl_r.run("save-off")
         with connect_rcon() as cl_r:
-            cl_r.tellraw("@a", tellraw_init + [{"text": get_translation("You can go back to your business..."),
-                                                "color": "dark_green"}])
+            if server_version[0] < 2 or (server_version[0] == 2 and server_version[1] < 4):
+                cl_r.run("save-off")
+            cl_r.tellraw("@a", tellraw_init + [{"text": get_translation("Chunks saved!"), "color": "dark_green"}])
+            cl_r.tellraw("@a", tellraw_init +
+                         [{"text": get_translation("Creating zip-archive for backup!"), "color": "light_purple"}])
     # Create zip file with output of percents
     with ZipFile(Path(f"{zip_path}/{zip_name}.zip"), mode="w", compression=comp) as z:
         for root, _, files in walk(dir_path):
@@ -505,9 +507,7 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
     if use_rcon:
         with connect_rcon() as cl_r:
             cl_r.run("save-on")
-            cl_r.tellraw("@a",
-                         ["", {"text": "<"}, {"text": bot_display_name, "color": "dark_gray"}, {"text": "> "},
-                          {"text": get_translation("Backup completed!"), "color": "green"}])
+            cl_r.tellraw("@a", tellraw_init + [{"text": get_translation("Backup completed!"), "color": "dark_green"}])
     BotVars.is_backing_up = False
 
 
@@ -534,7 +534,7 @@ def calculate_space_for_current_server():
     bc_folder_bytes = get_folder_size(Config.get_selected_server_from_list().working_directory,
                                       Config.get_backups_settings().name_of_the_backups_folder)
     limit = Config.get_backups_settings().size_limit
-    if limit is not None:
+    if limit is not None and limit - bc_folder_bytes < disk_bytes_free:
         return limit - bc_folder_bytes, bc_folder_bytes
     else:
         return disk_bytes_free, bc_folder_bytes
@@ -593,9 +593,7 @@ def handle_backups_limit_and_size(bot: commands.Bot, auto_backups=False):
     # If not enough free space
     while True:
         free, used = calculate_space_for_current_server()
-        if average_backup_size < free:
-            break
-        if Config.get_backups_settings().size_limit is not None and \
+        if Config.get_backups_settings().size_limit is not None and average_backup_size < free and \
                 Config.get_backups_settings().size_limit > used + average_backup_size:
             break
         if not auto_backups:
