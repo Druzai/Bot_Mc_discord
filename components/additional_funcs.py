@@ -434,19 +434,27 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
         bot_display_name = get_bot_display_name(bot)
         server_version = get_server_version(patch=True)
 
-        tellraw = ["", {"text": "<"}, {"text": bot_display_name, "color": "dark_gray"}, {"text": "> "}]
+        tellraw_init = ["", {"text": "<"}, {"text": bot_display_name, "color": "dark_gray"}, {"text": "> "}]
+        tellraw_msg = tellraw_init.copy()
         if forced:
-            tellraw.append({"text": get_translation("Starting backup triggered by {0}...")
-                           .format(f"{user.display_name}#{user.discriminator}"), "color": "yellow"})
+            tellraw_msg.append({"text": get_translation("Starting backup triggered by {0}...")
+                               .format(f"{user.display_name}#{user.discriminator}"), "color": "yellow"})
         else:
-            tellraw.append({"text": get_translation("Starting automatic backup..."), "color": "aqua"})
+            tellraw_msg.append({"text": get_translation("Starting automatic backup..."), "color": "aqua"})
+        with suppress(socket.timeout):
+            with connect_rcon(timeout=60) as cl_r:
+                cl_r.tellraw("@a", tellraw_msg)
+                cl_r.tellraw("@a", tellraw_init + [{"text": get_translation("Please don't do anything!"),
+                                                    "color": "dark_purple"}])
+                if server_version[0] > 2 or (server_version[0] == 2 and server_version[1] >= 4):
+                    cl_r.run("save-off")
+                _ = cl_r.run("save-all flush")
+        if server_version[0] < 2 or (server_version[0] == 2 and server_version[1] < 4):
+            with connect_rcon() as cl_r:
+                cl_r.run("save-off")
         with connect_rcon() as cl_r:
-            cl_r.tellraw("@a", tellraw)
-            if server_version[0] > 2 or (server_version[0] == 2 and server_version[1] >= 4):
-                cl_r.run("save-off")
-            _ = cl_r.run("save-all flush")
-            if server_version[0] < 2 or (server_version[0] == 2 and server_version[1] < 4):
-                cl_r.run("save-off")
+            cl_r.tellraw("@a", tellraw_init + [{"text": get_translation("You can go back to your business..."),
+                                                "color": "dark_green"}])
     # Create zip file with output of percents
     with ZipFile(Path(f"{zip_path}/{zip_name}.zip"), mode="w", compression=comp) as z:
         for root, _, files in walk(dir_path):
@@ -1130,10 +1138,10 @@ def make_underscored_line(line):
 
 
 @contextmanager
-def connect_rcon():
+def connect_rcon(timeout=1):
     try:
         with Client_r(Config.get_settings().bot_settings.local_address,
-                      BotVars.port_rcon, passwd=BotVars.rcon_pass, timeout=1) as cl_r:
+                      BotVars.port_rcon, passwd=BotVars.rcon_pass, timeout=timeout) as cl_r:
             yield cl_r
     except WrongPassword:
         print(get_translation("Bot Error: {0}")
