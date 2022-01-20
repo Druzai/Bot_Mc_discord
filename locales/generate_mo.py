@@ -11,7 +11,7 @@ def generate_mo_files(python_home=None):
             if platform == "linux" or platform == "linux2":
                 system_code = system("msgfmt -o lang.mo lang")
             elif platform == "win32":
-                system_code = system(f"python {python_home}\\Tools\\i18n\\msgfmt.py -o lang.mo lang")
+                system_code = system(f"python \"{python_home}\\Tools\\i18n\\msgfmt.py\" -o lang.mo lang")
             if system_code != 0:
                 return system_code
             chdir("../..")

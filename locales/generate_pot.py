@@ -26,7 +26,7 @@ def generate_pot_file():
         chdir("locales")
         python_home = "\\".join(os_file.split("\\")[:-2])
         set_utf8(python_home)
-        system_code = system(f"python {python_home}\\Tools\\i18n\\pygettext.py "
+        system_code = system(f"python \"{python_home}\\Tools\\i18n\\pygettext.py\" "
                              "-d lang -o lang.pot -v -k get_translation ..\\*.py ..\\*\\*.py")
     else:
         print("Your system - unknown.")
