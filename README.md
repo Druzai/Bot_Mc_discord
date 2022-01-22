@@ -68,7 +68,7 @@ Supported 2 languages:
 
 ## Requirements
 
-* [Python 3.8-3.9](https://www.python.org/downloads/)
+* [Python 3.8-3.10](https://www.python.org/downloads/)
 * For Linux required [screen](https://linuxize.com/post/how-to-use-linux-screen/) command
 * Minecraft server not lower than version `1.0.0`
     * Run server 1 or 2 times to accept eula and generate server.properties
@@ -101,16 +101,16 @@ Executable file will be in `/build_dist`.
 
 **Important! If you running minecraft server between versions  `1.7.2` and `1.18` to avoid critical security
 vulnerability `Log4Shell` do instructions stated in
-this [link](https://www.minecraft.net/en-us/article/important-message--security-vulnerability-java-edition)!**
+this [article](https://www.minecraft.net/en-us/article/important-message--security-vulnerability-java-edition)!**
 
 For minecraft server lower than version `1.17` for cross-platform chat to work properly you have to have
-argument `-Dfile.encoding=UTF-8` when you're executing `*.bat` or `*.sh` script (necessary for Windows).
+argument `-Dfile.encoding=UTF-8` when you're executing `*.bat`, `*.cmd`, shortcut or `*.sh` script (necessary for Windows).
 
 ### Windows
 
 Just start bot executable file.
 
-For the bot to properly start the minecraft server you have to have `*.bat` (in bot setting you can set name for this
+For the bot to properly start the minecraft server you have to have `*.bat` or `*.cmd` (in bot setting you can set name for this
 script) in your root minecraft server directory! Example of file:
 
 ```batch
@@ -129,6 +129,13 @@ echo java -Xms%min_ram%G -Xmx%max_ram%G %java_parameters% -jar %your_jar_file% n
 java -Xms%min_ram%G -Xmx%max_ram%G %java_parameters% -Dfile.encoding=UTF-8 -jar %your_jar_file% nogui
 exit /b
 ```
+
+Also, if you don't want the server console to pop up in front of other windows at startup, you'll need to create shortcut by doing these steps:
+
+- Create a shortcut to the `*.bat` or `*.cmd` file. To do so, right click on the file, click `Create Shortcut`
+- Right click on the shortcut and choose `Properties`
+- In the `Run`: drop down, choose `Minimized`
+- Click `OK`
 
 ### Linux
 

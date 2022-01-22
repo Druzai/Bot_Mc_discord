@@ -122,7 +122,11 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
             if code != 0:
                 raise ReferenceError()
         elif platform == "win32":
-            if ".bat" not in Config.get_selected_server_from_list().start_file_name:
+            is_file_exists = False
+            for ext in [".bat", ".cmd", ".lnk"]:
+                if ext in Config.get_selected_server_from_list().start_file_name:
+                    is_file_exists = True
+            if not is_file_exists:
                 raise NameError()
             startfile(Config.get_selected_server_from_list().start_file_name)
     except (NameError, ValueError, FileNotFoundError, ReferenceError) as ex:

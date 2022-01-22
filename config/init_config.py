@@ -897,7 +897,7 @@ class Config:
                     cls._ask_for_data(get_translation("Enter commands' channel id") + "\n> ",
                                       try_int=True, int_high_than=0)
             else:
-                print(get_translation("Bot send some push events to the channel it can post. To make it work rigth type"
+                print(get_translation("Bot send some push events to the channel it can post. To make it work right type"
                                       " '{0}channel commands' to create a link.")
                       .format(cls._settings_instance.bot_settings.prefix))
 
@@ -1059,29 +1059,40 @@ class Config:
 
     @classmethod
     def _get_server_start_file_name(cls, working_directory: str):
-        file_extension = None
+        file_extensions = [None]
+        existing_files = []
         BOLD = '\033[1m'
         END = '\033[0m'
         if sys.platform == "linux" or sys.platform == "linux2":
-            file_extension = ".sh"
+            file_extensions = [".sh"]
             print(get_translation("Bot detected your operating system is Linux.\n"
                                   "Bot will search for '*.sh' file.\n"
                                   "You need to enter file name {0}without{1} file extension!").format(BOLD, END))
         elif sys.platform == "win32":
-            file_extension = ".bat"
+            file_extensions = [".bat", ".cmd", ".lnk", ".bat.lnk", ".cmd.lnk"]
             print(get_translation("Bot detected your operating system is Windows.\n"
-                                  "Bot will search for '*.bat' file.\n"
+                                  "Bot will search for '*.bat' file, '*.cmd' file or shortcut.\n"
                                   "You need to enter file name {0}without{1} file extension!").format(BOLD, END))
         else:
             print(get_translation("Bot couldn't detect your operating system.\n"
                                   "You need to enter file name {0}with{1} file extension!").format(BOLD, END))
         while True:
-            start_file_name = cls._ask_for_data(get_translation("Enter server start file name") + "\n> ") + \
-                              (file_extension if file_extension is not None else '')
-            if Path(working_directory, start_file_name).is_file():
-                return start_file_name
-            else:
+            start_file_name = cls._ask_for_data(get_translation("Enter server start file name") + "\n> ")
+            for ext in file_extensions:
+                start_file_name_with_ext = start_file_name + (ext if ext is not None else '')
+                if Path(working_directory, start_file_name_with_ext).is_file():
+                    existing_files.append(start_file_name_with_ext)
+            if len(existing_files) == 0:
                 print(get_translation("This start file doesn't exist."))
+            elif len(existing_files) > 1:
+                print(get_translation("Bot found several files that match search conditions:") +
+                      "\n- " + "\n- ".join(existing_files))
+                while True:
+                    chosen_file_name = input(get_translation("Type the chosen one") + "\n> ")
+                    if chosen_file_name in existing_files:
+                        return chosen_file_name
+            else:
+                return existing_files.pop()
 
     @classmethod
     def _setup_server_watcher(cls):
