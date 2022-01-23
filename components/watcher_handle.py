@@ -10,7 +10,7 @@ from time import sleep
 from traceback import format_exc
 
 from colorama import Fore, Style
-from discord import Webhook, RequestsWebhookAdapter, TextChannel
+from discord import Webhook, RequestsWebhookAdapter, TextChannel, Role
 
 from components.localization import get_translation
 from config.init_config import Config, BotVars
@@ -142,7 +142,7 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None):
                                     mention = mention[:-symbols_number]
                                 found = False
                                 # Check mention of everyone and here
-                                for mention_pattern in ["a", "e", "everyone", "p", "here"]:
+                                for mention_pattern in ["a", "all", "e", "everyone", "p", "here"]:
                                     if mention_pattern == mention:
                                         mentions[i_mention] = [mention_pattern]
                                         if cut_right_string is not None:
@@ -205,7 +205,7 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None):
                         else:
                             raise ValueError("mention[0] is not string or list!")
 
-                        if (mention[0] if not is_list else mention[0][0]) in ["a", "e", "everyone"]:
+                        if (mention[0] if not is_list else mention[0][0]) in ["e", "everyone"]:
                             if len(mention) == 3:
                                 split_arr[insert_numb] = f"{mention[2]}{split_arr[insert_numb]}"
                             split_arr.insert(insert_numb, "@everyone")
@@ -217,6 +217,23 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None):
                             split_arr.insert(insert_numb, "@here")
                             if "@a" not in mention_nicks:
                                 mention_nicks.append("@a")
+                        elif (mention[0] if not is_list else mention[0][0]) in ["a", "all"]:
+                            if len(mention) == 3:
+                                split_arr[insert_numb] = f"{mention[2]}{split_arr[insert_numb]}"
+
+                            if Config.get_settings().bot_settings.specific_command_role_id is None:
+                                possible_role = []
+                            else:
+                                possible_role = [r for r in BotVars.bot_for_webhooks.guilds[0].roles
+                                                 if r.id == Config.get_settings().bot_settings.specific_command_role_id]
+                            if len(possible_role) != 0:
+                                split_arr.insert(insert_numb, possible_role[0].mention)
+                                if "@a" not in mention_nicks:
+                                    mention_nicks = _get_members_nicks_of_the_role(possible_role[0], mention_nicks)
+                            else:
+                                split_arr.insert(insert_numb, "@everyone")
+                                if "@a" not in mention_nicks:
+                                    mention_nicks.append("@a")
                         elif len(mention) > 1 and isinstance(mention[1], list):
                             if not is_list:
                                 if len(mention) == 3:
@@ -245,10 +262,14 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None):
                                 split_arr.insert(insert_numb,
                                                  mention[1].mention if len(mention) > 1 and
                                                                        mention[1] is not None else f"@{mention[0][0]}")
+                            if "@a" not in mention_nicks:
+                                if isinstance(mention[1], Role):
+                                    mention_nicks = _get_members_nicks_of_the_role(mention[1], mention_nicks)
                         insert_numb += 2
                     player_message = "".join(split_arr)
 
                     if len(mention_nicks) > 0:
+                        mention_nicks = set(mention_nicks)
                         from components.additional_funcs import announce, connect_rcon, times
 
                         with suppress(ConnectionError, socket.error):
@@ -380,6 +401,15 @@ def _get_commands_channel():
         channel = [ch for ch in BotVars.bot_for_webhooks.guilds[0].channels
                    if isinstance(ch, TextChannel)][0]
     return channel
+
+
+def _get_members_nicks_of_the_role(role: Role, mention_nicks: list):
+    for member in role.members:
+        possible_user = [u.user_minecraft_nick for u in Config.get_settings().known_users
+                         if member.id == u.user_discord_id]
+        if len(possible_user) != 0:
+            mention_nicks.extend(possible_user)
+    return mention_nicks
 
 
 def _get_last_n_lines(file, number_of_lines, last_line):
