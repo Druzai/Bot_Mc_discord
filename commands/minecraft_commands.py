@@ -433,7 +433,7 @@ class MinecraftCommands(commands.Cog):
                                                command=f"auth login {nick}",
                                                needed_role=Config.get_settings().bot_settings.admin_role_id,
                                                need_for_voting=1,
-                                               timeout=5,
+                                               timeout=Config.get_secure_auth().mins_before_code_expires * 60,
                                                admin_needed=True,
                                                remove_logs_after=5):
                     return
