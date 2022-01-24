@@ -205,7 +205,7 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
 
 async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_restart=False, is_reaction=False):
     no_connection = False
-    players_count = 0
+    players_info = None
 
     if "stop" in [p.command for p in poll.get_polls().values()]:
         if not is_reaction:
@@ -216,7 +216,7 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_re
         return
 
     try:
-        players_count = get_server_players().get("current")
+        players_info = get_server_players()
     except (ConnectionError, socket.error):
         if len(get_list_of_processes()) == 0:
             print(get_translation("Bot Exception: Couldn't connect to server, because it's stopped"))
@@ -229,19 +229,32 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_re
         no_connection = True
 
     if not no_connection:
-        if players_count > 0:
-            if await poll.timer(ctx, 5, "stop"):
+        if players_info["current"] > 0:
+            logged_only_author_accounts = None
+            author_id = ctx.author.id if not is_reaction else BotVars.react_auth.id
+            if len(Config.get_known_users_list()) > 0:
+                for player in players_info["players"]:
+                    possible_player = [u.user_discord_id for u in Config.get_known_users_list()
+                                       if u.user_minecraft_nick == player]
+                    if len(possible_player) > 0 and author_id == possible_player[0]:
+                        logged_only_author_accounts = True
+                    else:
+                        logged_only_author_accounts = False
+                        break
+
+            if not logged_only_author_accounts and await poll.timer(ctx, 5, "stop"):
                 if not await poll.run(ctx=ctx,
                                       message=get_translation("this man {0} trying to stop the server with {1} "
                                                               "player(s) on it. Will you let that happen?")
-                                              .format(get_author_and_mention(ctx, bot, is_reaction)[1], players_count),
+                                              .format(get_author_and_mention(ctx, bot, is_reaction)[1],
+                                                      players_info["current"]),
                                       command="stop",
                                       needed_role=Config.get_settings().bot_settings.specific_command_role_id,
                                       remove_logs_after=5):
                     return
-            else:
+            elif not logged_only_author_accounts:
                 await delete_after_by_msg(ctx.message)
-        if players_count == 0:
+        elif players_info["current"] == 0:
             how_many_sec = 0
 
         BotVars.is_stopping = True
