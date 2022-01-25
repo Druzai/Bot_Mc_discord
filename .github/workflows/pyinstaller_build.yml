@@ -30,6 +30,13 @@ jobs:
         id: commit
         run: echo "::set-output name=SOURCE_TAG::$(python3 Discord_bot.py -v)"
 
+      - name: Get release notes
+        uses: yashanand1910/standard-release-notes@v1.2.1
+        id: release_notes
+        with:
+          changelog_path: ./CHANGELOG.md
+          version: ${{ steps.commit.outputs.SOURCE_TAG }}
+
       - name: Create release
         id: create_release
         uses: actions/create-release@v1
@@ -38,6 +45,7 @@ jobs:
         with:
           tag_name: ${{ steps.commit.outputs.SOURCE_TAG }}
           release_name: ${{ steps.commit.outputs.SOURCE_TAG }}
+          body: ${{ steps.release_notes.outputs.release_notes }}
           draft: false
           prerelease: false
 
