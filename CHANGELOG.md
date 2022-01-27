@@ -2,7 +2,7 @@
 
 All important changes to this project will be documented in this file.
 
-### [1.2.4](https://github.com/Druzai/Bot_Mc_discord/compare/1.2.3...1.2.4)
+### [1.2.4 Unreleased](https://github.com/Druzai/Bot_Mc_discord/compare/1.2.3...1.2.4) (2022-xx-xx)
 
 #### Improvements:
 
@@ -14,7 +14,7 @@ All important changes to this project will be documented in this file.
 * Fixed mentions from minecraft to discord ([#25](https://github.com/Druzai/Bot_Mc_discord/issues/25))
 * Bot created a poll if you were initiator of stopping the server and only your accounts were logged in ([#24](https://github.com/Druzai/Bot_Mc_discord/issues/24))
 
-### [1.2.3](https://github.com/Druzai/Bot_Mc_discord/compare/1.2.2...1.2.3)
+### [1.2.3](https://github.com/Druzai/Bot_Mc_discord/compare/1.2.2...1.2.3) (2021-12-19)
 
 ### Added information about `Log4Shell` exploit in README
 
@@ -25,7 +25,7 @@ All important changes to this project will be documented in this file.
 * Added more extended printing of exceptions in bot commands
 * Added handling very long messages from discord in cross-platform chat
 
-### [1.2.2](https://github.com/Druzai/Bot_Mc_discord/compare/1.2.1...1.2.2)
+### [1.2.2](https://github.com/Druzai/Bot_Mc_discord/compare/1.2.1...1.2.2) (2021-12-02)
 
 #### Improvements:
 
@@ -39,7 +39,7 @@ All important changes to this project will be documented in this file.
 * Fixed getting bot's current working directory
 * Fixed executing command `clear all`
 
-### [1.2.1](https://github.com/Druzai/Bot_Mc_discord/compare/1.2.0...1.2.1)
+### [1.2.1](https://github.com/Druzai/Bot_Mc_discord/compare/1.2.0...1.2.1) (2021-11-16)
 
 ### Updated some dependencies
 
@@ -47,7 +47,7 @@ All important changes to this project will be documented in this file.
 
 * Changed `enable_auth_security` to `enable_secure_auth`
 
-## [1.2.0](https://github.com/Druzai/Bot_Mc_discord/compare/1.1.4...1.2.0)
+## [1.2.0](https://github.com/Druzai/Bot_Mc_discord/compare/1.1.4...1.2.0) (2021-11-15)
 
 #### Improvements:
 
@@ -66,7 +66,7 @@ All important changes to this project will be documented in this file.
     * Moved setting `cross_platform_chat` and subsettings: `enable_cross_platform_chat`, `channel_id`, `webhook_url` in new setting `server_watcher`
     * Moved subsettings: `refresh_delay_of_console_log`, `number_of_lines_to_check_in_console_log` in new setting `server_watcher`
 
-### [1.1.4](https://github.com/Druzai/Bot_Mc_discord/compare/1.1.3...1.1.4)
+### [1.1.4](https://github.com/Druzai/Bot_Mc_discord/compare/1.1.3...1.1.4) (2021-10-26)
 
 #### Improvements:
 
@@ -78,13 +78,13 @@ All important changes to this project will be documented in this file.
 * Printing servers' list
 * Showing replies from discord
 
-### [1.1.3](https://github.com/Druzai/Bot_Mc_discord/compare/1.1.2...1.1.3)
+### [1.1.3](https://github.com/Druzai/Bot_Mc_discord/compare/1.1.2...1.1.3) (2021-10-17)
 
 ### Hotfix
 
 Fixed cross-platform chat on Linux
 
-### [1.1.2](https://github.com/Druzai/Bot_Mc_discord/compare/1.1.1...1.1.2)
+### [1.1.2](https://github.com/Druzai/Bot_Mc_discord/compare/1.1.1...1.1.2) (2021-10-17)
 
 #### Improvements:
 
@@ -98,13 +98,13 @@ Fixed cross-platform chat on Linux
 * Fixed small errors
 * Fixed printing of ANSI escape sequences on Windows
 
-### [1.1.1](https://github.com/Druzai/Bot_Mc_discord/compare/1.1.0...1.1.1)
+### [1.1.1](https://github.com/Druzai/Bot_Mc_discord/compare/1.1.0...1.1.1) (2021-10-01)
 
 ### Hotfix
 
 Fixed stop/restart in menu
 
-## [1.1.0](https://github.com/Druzai/Bot_Mc_discord/compare/1.0.1...1.1.0)
+## [1.1.0](https://github.com/Druzai/Bot_Mc_discord/compare/1.0.1...1.1.0) (2021-09-27)
 
 #### Improvements:
 
@@ -117,7 +117,7 @@ Fixed stop/restart in menu
 * Fixed detection in command clear, when passing a positive number and member mention
 * Fixed small bugs
 
-### [1.0.1](https://github.com/Druzai/Bot_Mc_discord/compare/1.0.0...1.0.1)
+### [1.0.1](https://github.com/Druzai/Bot_Mc_discord/compare/1.0.0...1.0.1) (2021-09-16)
 
 #### Improvements:
 
@@ -125,7 +125,7 @@ Fixed stop/restart in menu
 * Added printing full names of languages when list of bot's languages is returned
 * Misc fixes
 
-## [1.0.0](https://github.com/Druzai/Bot_Mc_discord/compare/0.4.0...1.0.0)
+## [1.0.0](https://github.com/Druzai/Bot_Mc_discord/compare/0.4.0...1.0.0) (2021-09-15)
 
 ## Major version, at last
 
@@ -147,7 +147,7 @@ Fixed stop/restart in menu
   a new one
 * Changed file extension of config files from `.yaml` to `.yml`
 
-## [0.4.0](https://github.com/Druzai/Bot_Mc_discord/compare/0.2.1...0.4.0)
+## [0.4.0](https://github.com/Druzai/Bot_Mc_discord/compare/0.2.1...0.4.0) (2021-08-39)
 
 ### Stable release with huge changes
 
