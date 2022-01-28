@@ -20,7 +20,7 @@ from components.additional_funcs import (
     make_underscored_line, get_human_readable_size, create_zip_archive, restore_from_zip_archive, get_file_size,
     BackupsThread, get_folder_size, send_message_of_deleted_backup, handle_backups_limit_and_size, bot_backup,
     delete_after_by_msg, get_half_members_count_with_role, warn_about_auto_backups, get_archive_uncompressed_size,
-    get_bot_display_name, get_list_of_banned_ips
+    get_bot_display_name, get_list_of_banned_ips, get_server_version
 )
 from components.localization import get_translation
 from config.init_config import BotVars, Config
@@ -175,15 +175,23 @@ class MinecraftCommands(commands.Cog):
                 while True:
                     await asleep(Config.get_timeouts_settings().await_seconds_when_connecting_via_rcon)
                     with suppress(ConnectionError, socket.error):
+                        version = get_server_version(patch=True)
+                        if version[0] < 13:
+                            if version[0] > 3 or (version[0] == 3 and version[1] > 0):
+                                gamemode = 0
+                            else:
+                                gamemode = 3
+                        else:
+                            gamemode = "survival"
                         with connect_rcon() as cl_r:
                             bot_message = f"{minecraft_nick}," + get_translation(" you all will be deoped now.")
                             cl_r.tellraw("@a", ["", {"text": "<"}, {"text": bot_display_name, "color": "dark_gray"},
                                                 {"text": "> " + bot_message}])
                             for player in to_delete_ops:
                                 cl_r.deop(player)
-                            list = cl_r.run("list").split(":")[1].split(", ")
-                            for player in list:
-                                cl_r.run(f"gamemode 0 {player}")
+                            cl_r.run(f"gamemode {gamemode} @a")
+                            if version[0] > 3 or (version[0] == 3 and version[1] > 0):
+                                cl_r.run(f"defaultgamemode {gamemode}")
                         break
                 Config.append_to_op_log(
                     datetime.now().strftime("%d/%m/%Y %H:%M:%S") + " || " + get_translation("Deopped all ") +
