@@ -263,30 +263,40 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_re
                                        ("\n" + get_translation("Please wait {0} sec.").format(str(how_many_sec))
                                         if how_many_sec > 0 else "")), is_reaction)
 
-        with connect_rcon() as cl_r:
-            if how_many_sec != 0:
-                w = 1
-                if how_many_sec > 5:
-                    while True:
-                        w += 1
-                        if how_many_sec % w == 0 and w <= 10:
-                            break
-                        elif how_many_sec % w == 0 and w > 10:
-                            how_many_sec += 1
-                            w = 1
-                if not is_restart:
-                    bot_message = get_translation("Server\'s shutting down in {0} seconds").format(str(how_many_sec))
-                else:
-                    bot_message = get_translation("Server\'s restarting in {0} seconds").format(str(how_many_sec))
+        with suppress(ConnectionError, socket.error):
+            server_version = get_server_version()
+            with connect_rcon() as cl_r:
+                if how_many_sec != 0:
+                    w = 1
+                    if how_many_sec > 5:
+                        while True:
+                            w += 1
+                            if how_many_sec % w == 0 and w <= 10:
+                                break
+                            elif how_many_sec % w == 0 and w > 10:
+                                how_many_sec += 1
+                                w = 1
+                    if not is_restart:
+                        bot_message = get_translation("Server\'s shutting down in {0} seconds") \
+                            .format(str(how_many_sec))
+                    else:
+                        bot_message = get_translation("Server\'s restarting in {0} seconds").format(str(how_many_sec))
 
-                tellraw_init = ["", {"text": "<"}, {"text": get_bot_display_name(bot), "color": "dark_gray"},
-                                {"text": "> "}]
-                cl_r.tellraw("@a", tellraw_init + [{"text": bot_message}])
-                for i in range(how_many_sec, -1, -w):
-                    if i != 0:
-                        cl_r.tellraw("@a", tellraw_init + [{"text": get_translation("{0} sec to go").format(str(i))}])
-                        await asleep(w)
-            cl_r.run("stop")
+                    if server_version < 7:
+                        cl_r.run(f"say {bot_message}")
+                    else:
+                        tellraw_init = ["", {"text": "<"}, {"text": get_bot_display_name(bot), "color": "dark_gray"},
+                                        {"text": "> "}]
+                        cl_r.tellraw("@a", tellraw_init + [{"text": bot_message}])
+                    for i in range(how_many_sec, -1, -w):
+                        if i != 0:
+                            if server_version < 7:
+                                cl_r.run(f"say {get_translation('{0} sec to go').format(str(i))}")
+                            else:
+                                cl_r.tellraw("@a",
+                                             tellraw_init + [{"text": get_translation("{0} sec to go").format(str(i))}])
+                            await asleep(w)
+                cl_r.run("stop")
 
         if BotVars.watcher_of_log_file is not None and BotVars.watcher_of_log_file.is_running():
             BotVars.watcher_of_log_file.stop()
@@ -458,22 +468,40 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
         else:
             tellraw_msg.append({"text": get_translation("Starting automatic backup in 3 seconds..."),
                                 "color": "dark_aqua"})
-        with connect_rcon() as cl_r:
-            cl_r.tellraw("@a", tellraw_msg)
+        with suppress(ConnectionError, socket.error):
+            with connect_rcon() as cl_r:
+                if server_version[0] < 7:
+                    if forced:
+                        msg = get_translation("Starting backup triggered by {0} in 3 seconds...") \
+                            .format(f"{user.display_name}#{user.discriminator}")
+                        cl_r.run(f"say {msg}")
+                    else:
+                        cl_r.run(f"say {get_translation('Starting automatic backup in 3 seconds...')}")
+                else:
+                    cl_r.tellraw("@a", tellraw_msg)
         sleep(3.0)
-        with suppress(socket.timeout):
+        with suppress(ConnectionError, socket.error):
             with connect_rcon(timeout=60) as cl_r:
-                cl_r.tellraw("@a", tellraw_init +
-                             [{"text": get_translation("Saving chunks..."), "color": "light_purple"}])
+                if server_version[0] < 7:
+                    cl_r.run(f"say {get_translation('Saving chunks...')}")
+                else:
+                    cl_r.tellraw("@a", tellraw_init +
+                                 [{"text": get_translation("Saving chunks..."), "color": "light_purple"}])
                 if server_version[0] > 2 or (server_version[0] == 2 and server_version[1] >= 4):
                     cl_r.run("save-off")
                 _ = cl_r.run("save-all flush")
-        with connect_rcon() as cl_r:
-            if server_version[0] < 2 or (server_version[0] == 2 and server_version[1] < 4):
-                cl_r.run("save-off")
-            cl_r.tellraw("@a", tellraw_init + [{"text": get_translation("Chunks saved!"), "color": "dark_green"}])
-            cl_r.tellraw("@a", tellraw_init +
-                         [{"text": get_translation("Creating zip-archive for backup!"), "color": "light_purple"}])
+        with suppress(ConnectionError, socket.error):
+            with connect_rcon() as cl_r:
+                if server_version[0] < 2 or (server_version[0] == 2 and server_version[1] < 4):
+                    cl_r.run("save-off")
+                if server_version[0] < 7:
+                    cl_r.run(f"say {get_translation('Chunks saved!')}")
+                    cl_r.run(f"say {get_translation('Creating zip-archive for backup!')}")
+                else:
+                    cl_r.tellraw("@a", tellraw_init + [{"text": get_translation("Chunks saved!"),
+                                                        "color": "dark_green"}])
+                    cl_r.tellraw("@a", tellraw_init + [{"text": get_translation("Creating zip-archive for backup!"),
+                                                        "color": "light_purple"}])
     # Create zip file with output of percents
     with ZipFile(Path(f"{zip_path}/{zip_name}.zip"), mode="w", compression=comp) as z:
         for root, _, files in walk(dir_path):
@@ -522,9 +550,14 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
                           if round(world_folder_size / backup_size, 1).is_integer()
                           else f"(x{world_folder_size / backup_size:.1f})"))
     if use_rcon:
-        with connect_rcon() as cl_r:
-            cl_r.run("save-on")
-            cl_r.tellraw("@a", tellraw_init + [{"text": get_translation("Backup completed!"), "color": "dark_green"}])
+        with suppress(ConnectionError, socket.error):
+            with connect_rcon() as cl_r:
+                cl_r.run("save-on")
+                if server_version[0] < 7:
+                    cl_r.run(f"say {get_translation('Backup completed!')}")
+                else:
+                    cl_r.tellraw("@a", tellraw_init + [{"text": get_translation("Backup completed!"),
+                                                        "color": "dark_green"}])
     BotVars.is_backing_up = False
 
 
@@ -582,10 +615,13 @@ def send_message_of_deleted_backup(bot: commands.Bot, reason: str, backup=None):
     else:
         msg = get_translation("Deleted all backups because of {0}").format(reason)
     with suppress(ConnectionError, socket.error):
+        server_version = get_server_version()
         with connect_rcon() as cl_r:
-            cl_r.tellraw("@a",
-                         ["", {"text": "<"}, {"text": get_bot_display_name(bot), "color": "dark_gray"}, {"text": "> "},
-                          {"text": msg, "color": "red"}])
+            if server_version < 7:
+                cl_r.run(f"say {msg}")
+            else:
+                cl_r.tellraw("@a", ["", {"text": "<"}, {"text": get_bot_display_name(bot), "color": "dark_gray"},
+                                    {"text": "> "}, {"text": msg, "color": "red"}])
     print(msg)
 
 
