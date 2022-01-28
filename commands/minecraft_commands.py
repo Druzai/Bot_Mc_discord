@@ -20,7 +20,7 @@ from components.additional_funcs import (
     make_underscored_line, get_human_readable_size, create_zip_archive, restore_from_zip_archive, get_file_size,
     BackupsThread, get_folder_size, send_message_of_deleted_backup, handle_backups_limit_and_size, bot_backup,
     delete_after_by_msg, get_half_members_count_with_role, warn_about_auto_backups, get_archive_uncompressed_size,
-    get_bot_display_name, get_list_of_banned_ips, get_server_version
+    get_bot_display_name, get_list_of_banned_ips, get_server_version, DISCORD_SYMBOLS_IN_MESSAGE_LIMIT
 )
 from components.localization import get_translation
 from config.init_config import BotVars, Config
@@ -346,14 +346,18 @@ class MinecraftCommands(commands.Cog):
             date = datetime.strptime(arr[0].strip(), "%d/%m/%Y %H:%M:%S").strftime(get_translation("%H:%M %d/%m/%Y"))
             log[line] = f"{date} <{' '.join(arr[1].strip().split()[1:])}>" + \
                         (f": {' '.join(arr[2].strip().split()[1:])}" if len(arr) == 3 else "") + "\n"
-        if len("".join(log)) + 6 > 2000:
-            limit = 1
-            while True:
-                if len("".join(log[:-limit])) + 6 <= 2000:
-                    break
-                limit += 1
-            await ctx.send(add_quotes("".join(log[:-limit])))
-            await ctx.send(add_quotes("".join(log[-limit:])))
+        if len("".join(log)) + 6 > DISCORD_SYMBOLS_IN_MESSAGE_LIMIT:
+            msg = ""
+            msg_length = 0
+            for line in log:
+                if msg_length + len(line) + 6 > DISCORD_SYMBOLS_IN_MESSAGE_LIMIT:
+                    await ctx.send(add_quotes(msg))
+                    msg = ""
+                    msg_length = 0
+                msg += line
+                msg_length += len(line)
+            if len(msg) > 0:
+                await ctx.send(add_quotes(msg))
         else:
             await ctx.send(add_quotes("".join(log)))
 
