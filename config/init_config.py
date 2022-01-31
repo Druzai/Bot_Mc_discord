@@ -613,6 +613,7 @@ class Config:
         BotVars.port_query = None
         BotVars.port_rcon = None
         BotVars.rcon_pass = None
+        force_gamemode = None
         with open(filepath, "r", encoding="utf8") as f:
             lines = f.readlines()
             if len(lines) < 3:
@@ -630,7 +631,9 @@ class Config:
                     BotVars.port_rcon = int(i.split("=")[1])
                 if i.find("rcon.password") >= 0:
                     BotVars.rcon_pass = i.split("=")[1].strip()
-        if not enable_query or not enable_rcon or not BotVars.rcon_pass:
+                if i.find("force-gamemode") >= 0:
+                    force_gamemode = literal_eval(i.split("=")[1].capitalize())
+        if not enable_query or not enable_rcon or not BotVars.rcon_pass or not force_gamemode:
             changed_parameters = []
             rewritten_rcon_pass = False
             if not enable_query:
@@ -642,10 +645,13 @@ class Config:
                 changed_parameters.append(f"rcon.password={BotVars.rcon_pass}")
                 changed_parameters.append(get_translation("Reminder: For better security "
                                                           "you have to change this password for a more secure one."))
+            if force_gamemode == False:
+                changed_parameters.append("force-gamemode=true")
             with open(filepath, "r", encoding="utf8") as f:
                 properties_file = f.readlines()
             for i in range(len(properties_file)):
-                if "enable-query" in properties_file[i] or "enable-rcon" in properties_file[i]:
+                if "enable-query" in properties_file[i] or "enable-rcon" in properties_file[i] or \
+                        "force-gamemode" in properties_file[i]:
                     properties_file[i] = f"{properties_file[i].split('=')[0]}=true\n"
                 if "rcon.password" in properties_file[i]:
                     rewritten_rcon_pass = True
