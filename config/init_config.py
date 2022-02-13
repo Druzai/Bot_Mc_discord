@@ -793,9 +793,9 @@ class Config:
                 while True:
                     lang = cls._ask_for_data(get_translation("Enter one of these two-letter language codes: ") +
                                              "\n- " + "\n- ".join([f"{ln.capitalize()} ({get_translation(ln)})"
-                                                                   for ln in get_locales()]) + "\n> ")
+                                                                   for ln in get_locales()]) + "\n> ").lower()
                     if set_locale(lang):
-                        cls._settings_instance.bot_settings.language = lang.lower()
+                        cls._settings_instance.bot_settings.language = lang
                         print(get_translation("This language selected!"))
                         break
                     else:
@@ -834,9 +834,9 @@ class Config:
     @classmethod
     def _setup_roles(cls):
         if cls._settings_instance.bot_settings.specific_command_role_id is not None:
-            print(get_translation("Role for specific commands is set."))
+            print(get_translation("Role for commands that manage minecraft server is set."))
         else:
-            print(get_translation("Role for specific commands doesn't stated. "
+            print(get_translation("Role for commands that manage minecraft server doesn't stated. "
                                   "You can set it via command {0}.")
                   .format(f"{Config.get_settings().bot_settings.prefix}role command <role>"))
         if cls._settings_instance.bot_settings.admin_role_id:

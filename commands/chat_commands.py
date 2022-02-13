@@ -101,9 +101,10 @@ class ChatCommands(commands.Cog):
         if Config.get_settings().bot_settings.specific_command_role_id is not None:
             role = self._bot.guilds[0].get_role(Config.get_settings().bot_settings.specific_command_role_id)
             if role is not None:
-                msg = get_translation("Role {0} set as role for specific commands for bot").format(role.mention)
+                msg = get_translation("Role {0} set as role for commands that manage minecraft server") \
+                    .format(role.mention)
         if role is None:
-            msg = get_translation("Role for specific commands not stated")
+            msg = get_translation("Role for commands that manage minecraft server not stated")
         msg += "\n"
         role = None
 
@@ -124,7 +125,7 @@ class ChatCommands(commands.Cog):
         Config.get_settings().bot_settings.specific_command_role_id = role.id
         Config.save_config()
         await ctx.channel.send(
-            get_translation("Role {0} set as role for specific commands for bot").format(role.mention))
+            get_translation("Role {0} set as role for commands that manage minecraft server").format(role.mention))
 
     @r_command.command(pass_context=True, name="clear")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -133,7 +134,8 @@ class ChatCommands(commands.Cog):
     async def r_c_clear(self, ctx):
         Config.get_settings().bot_settings.specific_command_role_id = None
         Config.save_config()
-        await ctx.channel.send(add_quotes(get_translation("Role for specific commands has been cleared")))
+        await ctx.channel.send(add_quotes(get_translation("Role for commands that manage "
+                                                          "minecraft server has been cleared")))
 
     @role.group(pass_context=True, name="admin", invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)

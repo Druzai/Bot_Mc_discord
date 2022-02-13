@@ -108,7 +108,8 @@ async def send_status(ctx, is_reaction=False):
 
 async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=False, is_reaction=False):
     BotVars.is_loading = True
-    print(get_translation("Loading server"))
+    author, author_mention = get_author_and_mention(ctx, bot, is_reaction)
+    print(get_translation("Loading server by request of {0}").format(author))
     if ctx and not shut_up:
         await send_msg(ctx, add_quotes(get_translation("Loading server.......\nPlease wait)")), is_reaction)
     chdir(Config.get_selected_server_from_list().working_directory)
@@ -186,7 +187,6 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
     else:
         Config.get_selected_server_from_list().server_loading_time = (datetime.now() - check_time).seconds
     Config.save_config()
-    author, author_mention = get_author_and_mention(ctx, bot, is_reaction)
     if ctx and not shut_up:
         await send_msg(ctx, author_mention + "\n" + add_quotes(get_translation("Server's on now")), is_reaction)
         print(get_translation("Server on!"))
@@ -229,6 +229,7 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_re
             return
         no_connection = True
 
+    author, author_mention = get_author_and_mention(ctx, bot, is_reaction)
     if not no_connection:
         if players_info["current"] > 0:
             logged_only_author_accounts = None
@@ -259,7 +260,7 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_re
             how_many_sec = 0
 
         BotVars.is_stopping = True
-        print(get_translation("Stopping server"))
+        print(get_translation("Stopping server by request of {0}").format(author))
         await send_msg(ctx, add_quotes(get_translation("Stopping server") + "......." +
                                        ("\n" + get_translation("Please wait {0} sec.").format(str(how_many_sec))
                                         if how_many_sec > 0 else "")), is_reaction)
@@ -316,7 +317,6 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_re
     kill_server()
     BotVars.is_stopping = False
     BotVars.is_server_on = False
-    author, author_mention = get_author_and_mention(ctx, bot, is_reaction)
     print(get_translation("Server's off now"))
     await send_msg(ctx, author_mention + "\n" + add_quotes(get_translation("Server's off now")), is_reaction)
     Config.get_server_config().states.stopped_info.set_state_info(str(author), datetime.now())
@@ -759,6 +759,7 @@ async def server_checkups(bot: commands.Bot):
         if len(get_list_of_processes()) == 0:
             if BotVars.is_server_on:
                 BotVars.is_server_on = False
+                print(get_translation("Server unexpectedly stopped!"))
             if BotVars.watcher_of_log_file is not None and BotVars.watcher_of_log_file.is_running():
                 BotVars.watcher_of_log_file.stop()
         if not BotVars.is_loading and not BotVars.is_stopping and not BotVars.is_restarting:

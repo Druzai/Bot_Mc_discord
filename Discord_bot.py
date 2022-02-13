@@ -93,6 +93,8 @@ def main():
               f"\n{Style.DIM}{Fore.RED}{e.problem_mark}{Style.RESET_ALL}")
     except SystemExit:
         pass
+    except KeyboardInterrupt:
+        pass
     except BaseException:
         exc = format_exc().rstrip("\n")
         print(get_translation("Bot/Discord Error: Something went wrong") + " ( ͡° ͜ʖ ͡°)" +

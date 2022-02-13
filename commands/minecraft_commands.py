@@ -162,8 +162,8 @@ class MinecraftCommands(commands.Cog):
                             "So {0}, I opped you, but I'm not going to pretend like I did it to win favors upstairs. "
                             "I'll come in {1} min, deop everyone and we're even. "
                             "I don't give a shit why you want this op and mind my own business. "
-                            "If you want to be opped, well, you must have your reasons...")
-                            .format(ctx.author.mention, str(await_time_op // 60)))
+                            "If you want to be opped, well, you must have your reasons..."
+                        ).format(ctx.author.mention, str(await_time_op // 60)))
                 await asleep(await_time_op)
                 if minecraft_nick != BotVars.op_deop_list[-1]:
                     return
