@@ -221,11 +221,12 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None):
                             if len(mention) == 3:
                                 split_arr[insert_numb] = f"{mention[2]}{split_arr[insert_numb]}"
 
-                            if Config.get_settings().bot_settings.specific_command_role_id is None:
+                            if Config.get_settings().bot_settings.managing_commands_role_id is None:
                                 possible_role = []
                             else:
-                                possible_role = [r for r in BotVars.bot_for_webhooks.guilds[0].roles
-                                                 if r.id == Config.get_settings().bot_settings.specific_command_role_id]
+                                possible_role = \
+                                    [r for r in BotVars.bot_for_webhooks.guilds[0].roles
+                                     if r.id == Config.get_settings().bot_settings.managing_commands_role_id]
                             if len(possible_role) != 0:
                                 split_arr.insert(insert_numb, possible_role[0].mention)
                                 if "@a" not in mention_nicks:

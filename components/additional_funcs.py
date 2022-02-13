@@ -251,7 +251,7 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_re
                                               .format(get_author_and_mention(ctx, bot, is_reaction)[1],
                                                       players_info["current"]),
                                       command="stop",
-                                      needed_role=Config.get_settings().bot_settings.specific_command_role_id,
+                                      needed_role=Config.get_settings().bot_settings.managing_commands_role_id,
                                       remove_logs_after=5):
                     return
             elif not logged_only_author_accounts:

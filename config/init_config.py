@@ -185,7 +185,7 @@ class Bot_settings:
     help_arguments: List[str] = field(default_factory=list)
     gaming_status: str = ""
     idle_status: str = ""
-    specific_command_role_id: Optional[int] = None
+    managing_commands_role_id: Optional[int] = None
     admin_role_id: Optional[int] = None
     ip_address: str = ""
     local_address: str = ""
@@ -833,7 +833,7 @@ class Config:
 
     @classmethod
     def _setup_roles(cls):
-        if cls._settings_instance.bot_settings.specific_command_role_id is not None:
+        if cls._settings_instance.bot_settings.managing_commands_role_id is not None:
             print(get_translation("Role for commands that manage minecraft server is set."))
         else:
             print(get_translation("Role for commands that manage minecraft server doesn't stated. "

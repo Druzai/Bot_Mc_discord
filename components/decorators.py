@@ -12,7 +12,7 @@ def has_role_or_default():
         if isinstance(ctx.channel, DMChannel):
             return True
 
-        config_role_id = Config.get_settings().bot_settings.specific_command_role_id
+        config_role_id = Config.get_settings().bot_settings.managing_commands_role_id
         if config_role_id is None:
             return True
 

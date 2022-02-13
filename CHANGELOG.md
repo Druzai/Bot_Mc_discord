@@ -13,6 +13,11 @@ All important changes to this project will be documented in this file.
 
 * Fixed mentions from minecraft to discord ([#25](https://github.com/Druzai/Bot_Mc_discord/issues/25))
 * Bot created a poll if you were initiator of stopping the server and only your accounts were logged in ([#24](https://github.com/Druzai/Bot_Mc_discord/issues/24))
+* Added resetting gamemode in `op` command
+
+#### Breaking changes:
+
+* Changed `specific_command_role_id` to `managing_commands_role_id`
 
 ### [1.2.3](https://github.com/Druzai/Bot_Mc_discord/compare/1.2.2...1.2.3) (2021-12-19)
 

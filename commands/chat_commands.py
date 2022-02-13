@@ -98,8 +98,8 @@ class ChatCommands(commands.Cog):
     async def role(self, ctx):
         role = None
         msg = ""
-        if Config.get_settings().bot_settings.specific_command_role_id is not None:
-            role = self._bot.guilds[0].get_role(Config.get_settings().bot_settings.specific_command_role_id)
+        if Config.get_settings().bot_settings.managing_commands_role_id is not None:
+            role = self._bot.guilds[0].get_role(Config.get_settings().bot_settings.managing_commands_role_id)
             if role is not None:
                 msg = get_translation("Role {0} set as role for commands that manage minecraft server") \
                     .format(role.mention)
@@ -122,7 +122,7 @@ class ChatCommands(commands.Cog):
     @decorators.has_admin_role()
     async def r_command(self, ctx, role: commands.Greedy[Role]):
         role = role[0]
-        Config.get_settings().bot_settings.specific_command_role_id = role.id
+        Config.get_settings().bot_settings.managing_commands_role_id = role.id
         Config.save_config()
         await ctx.channel.send(
             get_translation("Role {0} set as role for commands that manage minecraft server").format(role.mention))
@@ -132,7 +132,7 @@ class ChatCommands(commands.Cog):
     @commands.guild_only()
     @decorators.has_admin_role()
     async def r_c_clear(self, ctx):
-        Config.get_settings().bot_settings.specific_command_role_id = None
+        Config.get_settings().bot_settings.managing_commands_role_id = None
         Config.save_config()
         await ctx.channel.send(add_quotes(get_translation("Role for commands that manage "
                                                           "minecraft server has been cleared")))
@@ -203,11 +203,11 @@ class ChatCommands(commands.Cog):
             await ctx.send(add_quotes(get_translation("Current prefix - '{0}'.")
                                       .format(Config.get_settings().bot_settings.prefix)))
         else:
-            if Config.get_settings().bot_settings.specific_command_role_id != "" and \
-                    Config.get_settings().bot_settings.specific_command_role_id not in (e.name for e in
-                                                                                        ctx.author.roles):
+            if Config.get_settings().bot_settings.managing_commands_role_id != "" and \
+                    Config.get_settings().bot_settings.managing_commands_role_id not in (e.name for e in
+                                                                                         ctx.author.roles):
                 await send_error(ctx, self._bot,
-                                 commands.MissingRole(Config.get_settings().bot_settings.specific_command_role_id))
+                                 commands.MissingRole(Config.get_settings().bot_settings.managing_commands_role_id))
                 return
 
             if len(new_prefix.split()) > 1:
