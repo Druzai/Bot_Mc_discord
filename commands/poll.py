@@ -1,8 +1,9 @@
 from asyncio import sleep as asleep
+from contextlib import suppress
 from datetime import datetime
 from enum import Enum, auto
 
-from discord import Color, Embed, Status, Role
+from discord import Color, Embed, Status, Role, NotFound, Forbidden, HTTPException
 from discord.ext import commands
 
 from components.localization import get_translation
@@ -41,8 +42,15 @@ class Poll(commands.Cog):
             seconds += 1
             if timeout <= seconds:
                 current_poll.cancel()
-        await start_msg.delete()
-        await poll_msg.delete()
+            if seconds % 10 == 0:
+                try:
+                    _ = await ctx.fetch_message(poll_msg.id)
+                except (NotFound, Forbidden, HTTPException):
+                    current_poll.cancel()
+        with suppress(NotFound, Forbidden, HTTPException):
+            await start_msg.delete()
+        with suppress(NotFound, Forbidden, HTTPException):
+            await poll_msg.delete()
         del self._polls[poll_msg.id]
         if current_poll.state == Poll.States.CANCELED:
             await ctx.send("`" + get_translation("Poll result: canceled!") + "`", delete_after=remove_logs_after)
