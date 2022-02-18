@@ -14,6 +14,7 @@ All important changes to this project will be documented in this file.
 * Fixed mentions from minecraft to discord ([#25](https://github.com/Druzai/Bot_Mc_discord/issues/25))
 * Bot created a poll if you were initiator of stopping the server and only your accounts were logged in ([#24](https://github.com/Druzai/Bot_Mc_discord/issues/24))
 * Added resetting gamemode in `op` command
+* Disabled deleting user message in cross-platform chat when server is down or there are no players on it
 
 #### Breaking changes:
 
@@ -152,7 +153,7 @@ Fixed stop/restart in menu
   a new one
 * Changed file extension of config files from `.yaml` to `.yml`
 
-## [0.4.0](https://github.com/Druzai/Bot_Mc_discord/compare/0.2.1...0.4.0) (2021-08-39)
+## [0.4.0](https://github.com/Druzai/Bot_Mc_discord/compare/0.2.1...0.4.0) (2021-08-30)
 
 ### Stable release with huge changes
 

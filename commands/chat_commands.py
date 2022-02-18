@@ -161,14 +161,14 @@ class ChatCommands(commands.Cog):
         if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
             return
 
-        await handle_message_for_chat(message, self._bot, True)
+        await handle_message_for_chat(message, self._bot)
 
     @commands.Cog.listener()
     async def on_message_edit(self, before, after):
         if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
             return
 
-        await handle_message_for_chat(after, self._bot, False, on_edit=True, before_message=before)
+        await handle_message_for_chat(after, self._bot, on_edit=True, before_message=before)
 
     @commands.command(pass_context=True, aliases=["lang"])
     @commands.bot_has_permissions(send_messages=True, view_channel=True)

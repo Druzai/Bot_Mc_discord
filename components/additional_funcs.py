@@ -1346,14 +1346,13 @@ async def send_error(ctx, bot: commands.Bot, error, is_reaction=False):
                        add_quotes(", ".join([str(a) for a in error.original.args])), is_reaction)
 
 
-async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, on_edit=False, before_message=None):
+async def handle_message_for_chat(message, bot, on_edit=False, before_message=None):
     if message.author == bot.user or message.content.startswith(Config.get_settings().bot_settings.prefix) or str(
             message.author.discriminator) == "0000" or (len(message.content) == 0 and len(message.attachments) == 0) \
             or message.channel.id != int(Config.get_cross_platform_chat_settings().channel_id):
         return
 
     author_mention = get_author_and_mention(message, bot, False)[1]
-    delete_user_message = True
 
     if not Config.get_cross_platform_chat_settings().channel_id or \
             not Config.get_cross_platform_chat_settings().webhook_url:
@@ -1434,9 +1433,6 @@ async def handle_message_for_chat(message, bot, need_to_delete_on_error: bool, o
         else:
             await send_msg(message.channel, f"{author_mention}, " +
                            get_translation("No players on server!").lower(), True)
-
-    if delete_user_message and need_to_delete_on_error:
-        await delete_after_by_msg(message)
 
 
 def _handle_long_tellraw_object(tellraw_obj):
