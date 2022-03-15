@@ -276,10 +276,10 @@ class ChatCommands(commands.Cog):
             emb.set_footer(text=get_translation("Values in [square brackets] are optional.\n"
                                                 "Values in <angle brackets> have to be provided by you.\n"
                                                 "The | sign means one or the other.\n"
-                                                "Use {prefix}help command for more info.\n"
-                                                "Or {prefix}command {arg_list} for short.")
+                                                "Use '{prefix}help' command for more info.\n"
+                                                "Or '{prefix}command {arg_list}' for short.")
                            .format(prefix=Config.get_settings().bot_settings.prefix,
-                                   arg_list=str(Config.get_settings().bot_settings.help_arguments)))
+                                   arg_list=" | ".join(Config.get_settings().bot_settings.help_arguments)))
             await ctx.send(embed=emb)
 
     @commands.group(pass_context=True, aliases=["cls"], invoke_without_command=True)

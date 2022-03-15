@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
-"POT-Creation-Date: 2022-02-13 18:02+0300\n"
-"PO-Revision-Date: 2022-02-13 18:09+0300\n"
+"POT-Creation-Date: 2022-03-15 00:05+0300\n"
+"PO-Revision-Date: 2022-03-15 00:07+0300\n"
 "Last-Translator: Druzai <astyn37@gmail.com>\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -18,11 +18,11 @@ msgstr ""
 "Generated-By: pygettext.py 1.5\n"
 "X-Generator: Poedit 3.0.1\n"
 
-#: ..\Discord_bot.py:84
+#: ..\Discord_bot.py:85
 msgid "Bot doesn't have this command line argument!"
 msgstr "Бот не имеет такого аргумента командной строки!"
 
-#: ..\Discord_bot.py:87
+#: ..\Discord_bot.py:88
 msgid "bot_help"
 msgstr ""
 "Бот для майнкрафт сервера\n"
@@ -31,28 +31,28 @@ msgstr ""
 "  -v, --version\tПечатает версию бота и выходит.\n"
 "  -cs          \tДля изменения майнкрафт серверов в конфиге бота."
 
-#: ..\Discord_bot.py:108 ..\commands\minecraft_commands.py:825
+#: ..\Discord_bot.py:109 ..\commands\minecraft_commands.py:825
 msgid "Server info read!"
 msgstr "Информация о сервере прочтена!"
 
-#: ..\Discord_bot.py:111
+#: ..\Discord_bot.py:112
 msgid "Bot/Discord Error: Your token is wrong"
 msgstr "Ошибка бота/дискорда: Ваш токен не правильный"
 
-#: ..\Discord_bot.py:113 ..\Discord_bot.py:115
-#: ..\components\additional_funcs.py:1200
+#: ..\Discord_bot.py:114 ..\Discord_bot.py:116
+#: ..\components\additional_funcs.py:1201
 msgid "Bot Error: {0}"
 msgstr "Ошибка бота: {0}"
 
-#: ..\Discord_bot.py:123
+#: ..\Discord_bot.py:124
 msgid "Bot/Discord Error: Something went wrong"
 msgstr "Ошибка бота/дискорда: Что-то пошло не так"
 
-#: ..\Discord_bot.py:130
+#: ..\Discord_bot.py:131
 msgid "Press any key to continue..."
 msgstr "Для продолжения нажмите любую клавишу..."
 
-#: ..\Discord_bot.py:132
+#: ..\Discord_bot.py:133
 msgid "Bot is stopping..."
 msgstr "Бот останавливается..."
 
@@ -882,14 +882,14 @@ msgid ""
 "Values in [square brackets] are optional.\n"
 "Values in <angle brackets> have to be provided by you.\n"
 "The | sign means one or the other.\n"
-"Use {prefix}help command for more info.\n"
-"Or {prefix}command {arg_list} for short."
+"Use '{prefix}help' command for more info.\n"
+"Or '{prefix}command {arg_list}' for short."
 msgstr ""
 "Значения в [квадратных скобках] необязательны.\n"
 "Значения в <угловых скобках> должны быть предоставлены вами.\n"
 "Знак | означает одно из них.\n"
-"Для получения дополнительной информации используйте команду {prefix}help.\n"
-"Или для удобства - {prefix}команда {arg_list}."
+"Для получения дополнительной информации используйте команду '{prefix}help'.\n"
+"Или для удобства - '{prefix}команда {arg_list}'."
 
 #: ..\commands\chat_commands.py:316
 msgid "You didn't provide reply in your message!"
@@ -899,7 +899,7 @@ msgstr "Вы не прикрепили ответ к вашему сообщен
 msgid "Starting RSS feed check"
 msgstr "Запускаем проверку RSS-канала"
 
-#: ..\commands\minecraft_commands.py:98 ..\components\additional_funcs.py:849
+#: ..\commands\minecraft_commands.py:98 ..\components\additional_funcs.py:850
 msgid "There are no players on the server"
 msgstr "На сервере нет игроков"
 
@@ -933,8 +933,8 @@ msgstr "Op'нут "
 
 #: ..\commands\minecraft_commands.py:137 ..\commands\minecraft_commands.py:1099
 #: ..\commands\minecraft_commands.py:1101
-#: ..\components\additional_funcs.py:1044
-#: ..\components\additional_funcs.py:1046
+#: ..\components\additional_funcs.py:1045
+#: ..\components\additional_funcs.py:1047
 msgid "Reason: "
 msgstr "Причина: "
 
@@ -946,8 +946,8 @@ msgstr " вы op'нуты на"
 msgid " min"
 msgstr " мин"
 
-#: ..\commands\minecraft_commands.py:146 ..\components\additional_funcs.py:172
-#: ..\components\additional_funcs.py:522 ..\components\additional_funcs.py:541
+#: ..\commands\minecraft_commands.py:146 ..\components\additional_funcs.py:173
+#: ..\components\additional_funcs.py:523 ..\components\additional_funcs.py:542
 msgid " sec"
 msgstr " сек"
 
@@ -1164,7 +1164,7 @@ msgstr "Не удалось подключиться к серверу, попр
 #: ..\commands\minecraft_commands.py:696 ..\commands\minecraft_commands.py:711
 #: ..\commands\minecraft_commands.py:734 ..\commands\minecraft_commands.py:749
 #: ..\commands\minecraft_commands.py:764 ..\commands\minecraft_commands.py:779
-#: ..\components\additional_funcs.py:840 ..\components\additional_funcs.py:877
+#: ..\components\additional_funcs.py:841 ..\components\additional_funcs.py:878
 #: ..\components\additional_funcs.py:1364
 msgid "server offline"
 msgstr "сервер не в сети"
@@ -1284,16 +1284,16 @@ msgstr "Воспользуйтесь списком серверов, таког
 msgid "List of servers"
 msgstr "Список серверов"
 
-#: ..\commands\minecraft_commands.py:858 ..\components\additional_funcs.py:1004
+#: ..\commands\minecraft_commands.py:858 ..\components\additional_funcs.py:1005
 msgid "Automatic backups enabled"
 msgstr "Автоматическое резервное копирование включено"
 
-#: ..\commands\minecraft_commands.py:868 ..\components\additional_funcs.py:1005
+#: ..\commands\minecraft_commands.py:868 ..\components\additional_funcs.py:1006
 msgid "Automatic backups disabled"
 msgstr "Автоматическое резервное копирование выключено"
 
 #: ..\commands\minecraft_commands.py:878 ..\commands\minecraft_commands.py:880
-#: ..\components\additional_funcs.py:1006
+#: ..\components\additional_funcs.py:1007
 msgid "Automatic backups period set to {0} min"
 msgstr "Период автоматического резервного копирования поставлен в {0} мин"
 
@@ -1305,7 +1305,7 @@ msgstr "Период автоматического резервного коп�
 msgid "Compression method set to {0}"
 msgstr "Метод сжатия установлен как {0}"
 
-#: ..\commands\minecraft_commands.py:896 ..\components\additional_funcs.py:1014
+#: ..\commands\minecraft_commands.py:896 ..\components\additional_funcs.py:1015
 msgid "Current compression method - {0}"
 msgstr "Текущий метод сжатия - {0}"
 
@@ -1405,35 +1405,35 @@ msgstr "Список резервных копий сервера '{0}':"
 msgid "Date: "
 msgstr "Дата: "
 
-#: ..\commands\minecraft_commands.py:1092 ..\components\additional_funcs.py:779
-#: ..\components\additional_funcs.py:793 ..\components\additional_funcs.py:797
-#: ..\components\additional_funcs.py:1038 ..\components\watcher_handle.py:339
-#: ..\components\watcher_handle.py:374
+#: ..\commands\minecraft_commands.py:1092 ..\components\additional_funcs.py:780
+#: ..\components\additional_funcs.py:794 ..\components\additional_funcs.py:798
+#: ..\components\additional_funcs.py:1039 ..\components\watcher_handle.py:340
+#: ..\components\watcher_handle.py:375
 msgid "%H:%M:%S %d/%m/%Y"
 msgstr "%H:%M:%S %d.%m.%Y"
 
 #: ..\commands\minecraft_commands.py:1093
-#: ..\components\additional_funcs.py:1039
+#: ..\components\additional_funcs.py:1040
 msgid "Backup size: "
 msgstr "Размер копии: "
 
 #: ..\commands\minecraft_commands.py:1099
-#: ..\components\additional_funcs.py:1044
+#: ..\components\additional_funcs.py:1045
 msgid "Automatic backup"
 msgstr "Автоматическое копирование"
 
 #: ..\commands\minecraft_commands.py:1102
-#: ..\components\additional_funcs.py:1047
+#: ..\components\additional_funcs.py:1048
 msgid "Not stated"
 msgstr "Не указана"
 
 #: ..\commands\minecraft_commands.py:1103
-#: ..\components\additional_funcs.py:1048
+#: ..\components\additional_funcs.py:1049
 msgid "Initiator: "
 msgstr "Создал: "
 
 #: ..\commands\minecraft_commands.py:1107
-#: ..\components\additional_funcs.py:1050
+#: ..\components\additional_funcs.py:1051
 msgid "The world of the server was restored from this backup"
 msgstr "Мир сервера был восстановлен из этой копии"
 
@@ -1533,15 +1533,15 @@ msgstr ""
 "Загружаем сервер.......\n"
 "Пожалуйста, ожидайте)"
 
-#: ..\components\additional_funcs.py:137
+#: ..\components\additional_funcs.py:138
 msgid "Couldn't open script! Check naming and extension of the script!"
 msgstr "Не удалось запустить скрипт! Проверьте имя и расширение скрипта!"
 
-#: ..\components\additional_funcs.py:138
+#: ..\components\additional_funcs.py:139
 msgid "Couldn't open script because of naming! Retreating..."
 msgstr "Не удалось запустить скрипт из-за названия! Отбой..."
 
-#: ..\components\additional_funcs.py:141
+#: ..\components\additional_funcs.py:142
 msgid ""
 "Couldn't open script because there is no command 'screen'! Install it via "
 "packet manager!"
@@ -1549,52 +1549,52 @@ msgstr ""
 "Не удалось запустить скрипт, так как нет команды 'screen'! Установите её "
 "через пакетный менеджер!"
 
-#: ..\components\additional_funcs.py:143
+#: ..\components\additional_funcs.py:144
 msgid ""
 "Couldn't open script because command 'screen' wasn't installed! Retreating..."
 msgstr ""
 "Не удалось запустить скрипт, так как команда 'screen' не установлена! "
 "Отбой..."
 
-#: ..\components\additional_funcs.py:154 ..\components\additional_funcs.py:155
+#: ..\components\additional_funcs.py:155 ..\components\additional_funcs.py:156
 msgid "Error while loading server! Retreating..."
 msgstr "Ошибка пока загружается сервер! Отбой..."
 
-#: ..\components\additional_funcs.py:166
+#: ..\components\additional_funcs.py:167
 msgid "Loading: "
 msgstr "Загрузка: "
 
-#: ..\components\additional_funcs.py:168
+#: ..\components\additional_funcs.py:169
 msgid "{0}, elapsed time: "
 msgstr "{0}, прошедшее время: "
 
-#: ..\components\additional_funcs.py:191
+#: ..\components\additional_funcs.py:192
 msgid "Server's on now"
 msgstr "Сервер сейчас запущен"
 
-#: ..\components\additional_funcs.py:192
+#: ..\components\additional_funcs.py:193
 msgid "Server on!"
 msgstr "Сервер запущен!"
 
-#: ..\components\additional_funcs.py:194
+#: ..\components\additional_funcs.py:195
 msgid "Kept you waiting, huh?"
 msgstr "Заставил тебя ждать, а?"
 
-#: ..\components\additional_funcs.py:214
+#: ..\components\additional_funcs.py:215
 msgid "{0}, bot already has poll on `stop`/`restart` command!"
 msgstr "{0}, у бота уже есть опрос по команде `stop`/`restart`!"
 
-#: ..\components\additional_funcs.py:223
+#: ..\components\additional_funcs.py:224
 msgid "Bot Exception: Couldn't connect to server, because it's stopped"
 msgstr ""
 "Исключение бота: Не удалось подключиться к серверу, потому что он остановлен"
 
-#: ..\components\additional_funcs.py:225
+#: ..\components\additional_funcs.py:226
 msgid "Couldn't connect to server to shut it down! Server stopped..."
 msgstr ""
 "Не удалось подключиться к серверу, чтобы выключить его! Сервер остановлен..."
 
-#: ..\components\additional_funcs.py:249
+#: ..\components\additional_funcs.py:250
 msgid ""
 "this man {0} trying to stop the server with {1} player(s) on it. Will you "
 "let that happen?"
@@ -1602,75 +1602,75 @@ msgstr ""
 "этот человек {0} пытается остановить сервер с {1} игрок(ами) на нём. Дадите "
 "ли вы этому произойти?"
 
-#: ..\components\additional_funcs.py:263
+#: ..\components\additional_funcs.py:264
 msgid "Stopping server by request of {0}"
 msgstr "Останавливаем сервер по запросу {0}"
 
-#: ..\components\additional_funcs.py:264
+#: ..\components\additional_funcs.py:265
 msgid "Stopping server"
 msgstr "Останавливаем сервер"
 
-#: ..\components\additional_funcs.py:265
+#: ..\components\additional_funcs.py:266
 msgid "Please wait {0} sec."
 msgstr "Пожалуйста, ожидайте {0} сек."
 
-#: ..\components\additional_funcs.py:282
+#: ..\components\additional_funcs.py:283
 msgid "Server's shutting down in {0} seconds"
 msgstr "Сервер выключается через {0} секунд"
 
-#: ..\components\additional_funcs.py:285
+#: ..\components\additional_funcs.py:286
 msgid "Server's restarting in {0} seconds"
 msgstr "Сервер перезагружается через {0} секунд"
 
-#: ..\components\additional_funcs.py:299
+#: ..\components\additional_funcs.py:300
 msgid "{0} sec to go"
 msgstr "Осталось {0} сек"
 
-#: ..\components\additional_funcs.py:313
+#: ..\components\additional_funcs.py:314
 msgid "Bot Exception: Couldn't connect to server, so killing it now..."
 msgstr ""
 "Исключение бота: Не удалось подключиться к серверу, поэтому насильно его "
 "сейчас выключаем..."
 
-#: ..\components\additional_funcs.py:315
+#: ..\components\additional_funcs.py:316
 msgid "Couldn't connect to server to shut it down! Killing it now..."
 msgstr ""
 "Не удалось подключиться к серверу, чтобы выключить его! Насильно его сейчас "
 "выключаем..."
 
-#: ..\components\additional_funcs.py:320 ..\components\additional_funcs.py:321
+#: ..\components\additional_funcs.py:321 ..\components\additional_funcs.py:322
 msgid "Server's off now"
 msgstr "Сервер сейчас остановлен"
 
-#: ..\components\additional_funcs.py:395
+#: ..\components\additional_funcs.py:396
 msgid "Starting auto backup"
 msgstr "Запуск автоматического резервного копирования"
 
-#: ..\components\additional_funcs.py:408 ..\components\additional_funcs.py:560
+#: ..\components\additional_funcs.py:409 ..\components\additional_funcs.py:561
 msgid "Backup completed!"
 msgstr "Резервное копирование завершено!"
 
-#: ..\components\additional_funcs.py:467 ..\components\additional_funcs.py:476
+#: ..\components\additional_funcs.py:468 ..\components\additional_funcs.py:477
 msgid "Starting backup triggered by {0} in 3 seconds..."
 msgstr "Запуск резервного копирования по требованию {0} через 3 секунды..."
 
-#: ..\components\additional_funcs.py:470
+#: ..\components\additional_funcs.py:471
 msgid "Starting automatic backup in 3 seconds..."
 msgstr "Запуск автоматического резервного копирования через 3 секунды..."
 
-#: ..\components\additional_funcs.py:490
+#: ..\components\additional_funcs.py:491
 msgid "Saving chunks..."
 msgstr "Сохраняем чанки..."
 
-#: ..\components\additional_funcs.py:502
+#: ..\components\additional_funcs.py:503
 msgid "Chunks saved!"
 msgstr "Чанки сохранены!"
 
-#: ..\components\additional_funcs.py:504
+#: ..\components\additional_funcs.py:505
 msgid "Creating zip-archive for backup!"
 msgstr "Создание zip-архива для резервного копирования!"
 
-#: ..\components\additional_funcs.py:548
+#: ..\components\additional_funcs.py:549
 msgid ""
 "Done in {0}\n"
 "Compression method: {1}"
@@ -1678,27 +1678,27 @@ msgstr ""
 "Сделано за {0}\n"
 "Метод сжатия: {1}"
 
-#: ..\components\additional_funcs.py:611
+#: ..\components\additional_funcs.py:612
 msgid "Deleted auto backup '{0}.zip' because of {1}"
 msgstr "Удалена автоматическая резервная копия '{0}.zip' из-за {1}"
 
-#: ..\components\additional_funcs.py:613
+#: ..\components\additional_funcs.py:614
 msgid "Deleted backup '{0}.zip' made by {1} because of {2}"
 msgstr "Удалена резервная копия '{0}.zip', сделанная {1}, из-за {2}"
 
-#: ..\components\additional_funcs.py:617
+#: ..\components\additional_funcs.py:618
 msgid "Deleted all backups because of {0}"
 msgstr "Удалены все резервные копии из-за {0}"
 
-#: ..\components\additional_funcs.py:637 ..\components\additional_funcs.py:638
+#: ..\components\additional_funcs.py:638 ..\components\additional_funcs.py:639
 msgid "backups' count limit"
 msgstr "предела количества резервных копий"
 
-#: ..\components\additional_funcs.py:654 ..\components\additional_funcs.py:655
+#: ..\components\additional_funcs.py:655 ..\components\additional_funcs.py:656
 msgid "lack of space"
 msgstr "нехватки места"
 
-#: ..\components\additional_funcs.py:710
+#: ..\components\additional_funcs.py:711
 msgid ""
 "Bot has backups only from members for '{0}' server, so keep in mind, that "
 "bot will delete oldest backup on next auto backup!"
@@ -1707,15 +1707,15 @@ msgstr ""
 "поэтому имейте в виду, что бот удалит самую старую копию при следующем "
 "автоматическом резервном копировании!"
 
-#: ..\components\additional_funcs.py:757
+#: ..\components\additional_funcs.py:758
 msgid " player(s) online"
 msgstr " игрок(ов) в сети"
 
-#: ..\components\additional_funcs.py:762
+#: ..\components\additional_funcs.py:763
 msgid "Server unexpectedly stopped!"
 msgstr "Сервер был неожиданно остановлен!"
 
-#: ..\components\additional_funcs.py:776
+#: ..\components\additional_funcs.py:777
 msgid ""
 "Bot detected: Server's offline!\n"
 "Time: {0}\n"
@@ -1725,99 +1725,99 @@ msgstr ""
 "Время: {0}\n"
 "Снова запускаем сервер!"
 
-#: ..\components\additional_funcs.py:792
+#: ..\components\additional_funcs.py:793
 msgid "Server has been started at {0}, by {1}"
 msgstr "Сервер был запущен пользователем {1} в {0}"
 
-#: ..\components\additional_funcs.py:796
+#: ..\components\additional_funcs.py:797
 msgid "Server has been stopped at {0}, by {1}"
 msgstr "Сервер был остановлен пользователем {1} в {0}"
 
-#: ..\components\additional_funcs.py:800
+#: ..\components\additional_funcs.py:801
 msgid "Server address: "
 msgstr "Адрес сервера: "
 
-#: ..\components\additional_funcs.py:802
+#: ..\components\additional_funcs.py:803
 msgid "Server is backing up"
 msgstr "Создаётся резервная копия сервера"
 
-#: ..\components\additional_funcs.py:804
+#: ..\components\additional_funcs.py:805
 msgid "Server is restoring from backup"
 msgstr "Сервер восстанавливается из резервной копии"
 
-#: ..\components\additional_funcs.py:805
+#: ..\components\additional_funcs.py:806
 msgid "Selected server: {0}"
 msgstr "Выбранный сервер: {0}"
 
-#: ..\components\additional_funcs.py:814
+#: ..\components\additional_funcs.py:815
 msgid "Average server loading time: {0}"
 msgstr "Среднее время загрузки сервера: {0}"
 
-#: ..\components\additional_funcs.py:817
+#: ..\components\additional_funcs.py:818
 msgid "server online"
 msgstr "сервер в сети"
 
-#: ..\components\additional_funcs.py:822
+#: ..\components\additional_funcs.py:823
 msgid "Time in Minecraft: "
 msgstr "Время в майнкрафте: "
 
-#: ..\components\additional_funcs.py:824
+#: ..\components\additional_funcs.py:825
 msgid "Day, "
 msgstr "День, "
 
-#: ..\components\additional_funcs.py:826
+#: ..\components\additional_funcs.py:827
 msgid "Sunset, "
 msgstr "Закат, "
 
-#: ..\components\additional_funcs.py:828
+#: ..\components\additional_funcs.py:829
 msgid "Night, "
 msgstr "Ночь, "
 
-#: ..\components\additional_funcs.py:830
+#: ..\components\additional_funcs.py:831
 msgid "Sunrise, "
 msgstr "Восход, "
 
-#: ..\components\additional_funcs.py:836
+#: ..\components\additional_funcs.py:837
 msgid "Server thinking..."
 msgstr "Сервер думает..."
 
-#: ..\components\additional_funcs.py:838
+#: ..\components\additional_funcs.py:839
 msgid "Server's down via rcon"
 msgstr "Сервер упал по rcon'у"
 
-#: ..\components\additional_funcs.py:861
+#: ..\components\additional_funcs.py:862
 msgid "from"
 msgstr "с"
 
-#: ..\components\additional_funcs.py:862
+#: ..\components\additional_funcs.py:863
 msgid "%H:%M %d/%m/%y"
 msgstr "%H:%M %d.%m.%y"
 
-#: ..\components\additional_funcs.py:871
+#: ..\components\additional_funcs.py:872
 msgid "Players online: {0} / {1}"
 msgstr "Игроков в сети: {0} / {1}"
 
-#: ..\components\additional_funcs.py:892 ..\components\additional_funcs.py:907
+#: ..\components\additional_funcs.py:893 ..\components\additional_funcs.py:908
 msgid "Some player(s) still oped, waiting for them"
 msgstr "Некоторые игроки всё ещё op'нуты, ожидаем их"
 
-#: ..\components\additional_funcs.py:911
+#: ..\components\additional_funcs.py:912
 msgid "Restarting server"
 msgstr "Перезагружаем сервер"
 
-#: ..\components\additional_funcs.py:932
+#: ..\components\additional_funcs.py:933
 msgid "You should mention ONLY members or roles of this server!"
 msgstr "Вы можете упоминать ТОЛЬКО пользователей и роли этого сервера!"
 
-#: ..\components\additional_funcs.py:950 ..\components\additional_funcs.py:993
+#: ..\components\additional_funcs.py:951 ..\components\additional_funcs.py:994
 msgid "Nothing's done!"
 msgstr "Ничего не сделано!"
 
-#: ..\components\additional_funcs.py:966
+#: ..\components\additional_funcs.py:967
 msgid "{0}, bot already has poll on `clear` command for this channel!"
 msgstr "{0}, у бота уже есть опрос по команде `clear` для данного канала!"
 
-#: ..\components\additional_funcs.py:971
+#: ..\components\additional_funcs.py:972
 msgid ""
 "this man {0} trying to delete some history of this channel. Will you let "
 "that happen?"
@@ -1825,131 +1825,131 @@ msgstr ""
 "этот человек {0} пытается удалить часть истории этого канала. Дадите ли вы "
 "этому произойти?"
 
-#: ..\components\additional_funcs.py:1009
+#: ..\components\additional_funcs.py:1010
 msgid "Max backups' count limit for server - {0}"
 msgstr "Максимальный предел количества копий для сервера - {0}"
 
-#: ..\components\additional_funcs.py:1012
+#: ..\components\additional_funcs.py:1013
 msgid "Max backups' size limit for server - {0}"
 msgstr "Максимальный предел размера копий для сервера - {0}"
 
-#: ..\components\additional_funcs.py:1018
+#: ..\components\additional_funcs.py:1019
 msgid "Backups folder info for '{0}' server:"
 msgstr "Информация о папке резервных копий для сервера '{0}':"
 
-#: ..\components\additional_funcs.py:1020
+#: ..\components\additional_funcs.py:1021
 msgid "Used - {0}"
 msgstr "Занято - {0}"
 
-#: ..\components\additional_funcs.py:1021
+#: ..\components\additional_funcs.py:1022
 msgid "Free - {0}"
 msgstr "Свободно - {0}"
 
-#: ..\components\additional_funcs.py:1031
+#: ..\components\additional_funcs.py:1032
 msgid "Stored backups count - {0}"
 msgstr "Количество сохранённых копий - {0}"
 
-#: ..\components\additional_funcs.py:1032
+#: ..\components\additional_funcs.py:1033
 msgid "Approximate remaining backups count - {0}"
 msgstr "Приблизительное количество оставшихся копий - {0}"
 
-#: ..\components\additional_funcs.py:1037
+#: ..\components\additional_funcs.py:1038
 msgid "Last backup: "
 msgstr "Последняя резервная копия: "
 
-#: ..\components\additional_funcs.py:1154
+#: ..\components\additional_funcs.py:1155
 msgid "Description"
 msgstr "Описание"
 
-#: ..\components\additional_funcs.py:1158
+#: ..\components\additional_funcs.py:1159
 msgid "Aliases"
 msgstr "Псевдонимы"
 
-#: ..\components\additional_funcs.py:1161
+#: ..\components\additional_funcs.py:1162
 msgid "Subcommands"
 msgstr "Подкоманды"
 
-#: ..\components\additional_funcs.py:1164
+#: ..\components\additional_funcs.py:1165
 msgid "Parameters"
 msgstr "Параметры"
 
-#: ..\components\additional_funcs.py:1201
+#: ..\components\additional_funcs.py:1202
 msgid "Rcon password doesn't match with its value in '{0}'!"
 msgstr "Пароль Rcon не совпадает с его значением в '{0}'!"
 
-#: ..\components\additional_funcs.py:1259
+#: ..\components\additional_funcs.py:1260
 msgid "File '{0}' doesn't exist!"
 msgstr "Файл '{0}' не существует!"
 
-#: ..\components\additional_funcs.py:1273
+#: ..\components\additional_funcs.py:1274
 msgid "{0} didn't input the argument"
 msgstr "{0} не ввёл аргумент"
 
-#: ..\components\additional_funcs.py:1274
+#: ..\components\additional_funcs.py:1275
 msgid "enter all arguments"
 msgstr "введите все аргументы"
 
-#: ..\components\additional_funcs.py:1277
+#: ..\components\additional_funcs.py:1278
 msgid "{0} don't have some permissions to run command"
 msgstr "{0} не имеет некоторых прав доступа чтобы использовать команду"
 
-#: ..\components\additional_funcs.py:1281
+#: ..\components\additional_funcs.py:1282
 msgid "to run this command you don't have these permissions:"
 msgstr "чтобы использовать эту команду у вас нету этих прав доступа:"
 
-#: ..\components\additional_funcs.py:1285
+#: ..\components\additional_funcs.py:1286
 msgid "Bot doesn't have some permissions"
 msgstr "Бот не имеет некоторых прав доступа"
 
-#: ..\components\additional_funcs.py:1289
+#: ..\components\additional_funcs.py:1290
 msgid "to run this command bot don't have these permissions:"
 msgstr "чтобы использовать эту команду у бота нету этих прав доступа:"
 
-#: ..\components\additional_funcs.py:1301
+#: ..\components\additional_funcs.py:1302
 msgid "{0} don't have role '{1}' to run command"
 msgstr "{0} не имеет роли '{1}' для использования команды"
 
-#: ..\components\additional_funcs.py:1303
+#: ..\components\additional_funcs.py:1304
 msgid "you don't have role '{0}' to run this command"
 msgstr "вы не имеете роли '{0}' для использования этой команды"
 
-#: ..\components\additional_funcs.py:1307
+#: ..\components\additional_funcs.py:1308
 msgid "{0} entered non-existent command"
 msgstr "{0} ввёл несуществующую команду"
 
-#: ..\components\additional_funcs.py:1309
+#: ..\components\additional_funcs.py:1310
 msgid "you entered non-existent command"
 msgstr "вы ввели несуществующую команду"
 
-#: ..\components\additional_funcs.py:1312
+#: ..\components\additional_funcs.py:1313
 msgid "{0} entered wrong argument(s) of command"
 msgstr "{0} неверно ввёл аргумент(ы) команды"
 
-#: ..\components\additional_funcs.py:1314
+#: ..\components\additional_funcs.py:1315
 msgid "you entered wrong argument(s) of this command"
 msgstr "вы неверно ввели аргумент(ы) этой команды"
 
-#: ..\components\additional_funcs.py:1317
+#: ..\components\additional_funcs.py:1318
 msgid "{0} entered disabled command"
 msgstr "{0} ввёл отключенную команду"
 
-#: ..\components\additional_funcs.py:1319
+#: ..\components\additional_funcs.py:1320
 msgid "you entered disabled command"
 msgstr "вы ввели отключенную команду"
 
-#: ..\components\additional_funcs.py:1322
+#: ..\components\additional_funcs.py:1323
 msgid "{0} entered a command that only works in the guild"
 msgstr "{0} ввёл команду, которая работает только в гильдии"
 
-#: ..\components\additional_funcs.py:1324
+#: ..\components\additional_funcs.py:1325
 msgid "this command only works on server"
 msgstr "эта команда работает только на сервере"
 
-#: ..\components\additional_funcs.py:1327
+#: ..\components\additional_funcs.py:1328
 msgid "{0} triggered a command more than {1} time(s) per {2} sec"
 msgstr "{0} вызвал команду больше чем {1} раз(а) за {2} сек"
 
-#: ..\components\additional_funcs.py:1330
+#: ..\components\additional_funcs.py:1331
 msgid ""
 "You triggered this command more than {0} time(s) per {1} sec\n"
 "Try again in {2} sec"
@@ -1957,7 +1957,7 @@ msgstr ""
 "Вы вызвали эту команду больше чем {0} раз(а) за {1} сек\n"
 "Попробуйте снова через {2} сек"
 
-#: ..\components\additional_funcs.py:1342
+#: ..\components\additional_funcs.py:1343
 msgid "Ignoring exception in command '{0}{1}':"
 msgstr "Игнорируем исключение в команде '{0}{1}':"
 
@@ -2008,7 +2008,7 @@ msgstr ""
 msgid "Watcher Unhandled Error: {0}"
 msgstr "Необработанная ошибка наблюдателя: {0}"
 
-#: ..\components\watcher_handle.py:326
+#: ..\components\watcher_handle.py:327
 msgid ""
 "Intrusion attempt on already logged in nick\n"
 "Your IP: {0}"
@@ -2016,7 +2016,7 @@ msgstr ""
 "Попытка вторжения на уже вошедший ник\n"
 "Ваш IP: {0}"
 
-#: ..\components\watcher_handle.py:329
+#: ..\components\watcher_handle.py:330
 msgid ""
 "Too many login attempts\n"
 "Your IP: {0}"
@@ -2024,15 +2024,15 @@ msgstr ""
 "Слишком много попыток авторизации\n"
 "Ваш IP: {0}"
 
-#: ..\components\watcher_handle.py:334
+#: ..\components\watcher_handle.py:335
 msgid "Intrusion prevented: User was banned!"
 msgstr "Вторжение предотвращено: Пользователь был забанен!"
 
-#: ..\components\watcher_handle.py:337
+#: ..\components\watcher_handle.py:338
 msgid "Too many login attempts: User was banned!"
 msgstr "Слишком много попыток авторизации: Пользователь был забанен!"
 
-#: ..\components\watcher_handle.py:338
+#: ..\components\watcher_handle.py:339
 msgid ""
 "Nick: {0}\n"
 "IP: {1}\n"
@@ -2042,11 +2042,11 @@ msgstr ""
 "IP: {1}\n"
 "Время: {2}"
 
-#: ..\components\watcher_handle.py:344
+#: ..\components\watcher_handle.py:345
 msgid "You don't own this logged in nick"
 msgstr "Вы не являетесь владельцем этого зашедшего ника"
 
-#: ..\components\watcher_handle.py:346
+#: ..\components\watcher_handle.py:347
 msgid ""
 "Not authorized\n"
 "Your IP: {0}\n"
@@ -2056,15 +2056,15 @@ msgstr ""
 "Ваш IP: {0}\n"
 "Код: {1}"
 
-#: ..\components\watcher_handle.py:360
+#: ..\components\watcher_handle.py:361
 msgid "Status:"
 msgstr "Статус:"
 
-#: ..\components\watcher_handle.py:363
+#: ..\components\watcher_handle.py:364
 msgid "Previously used nicknames:"
 msgstr "Ранее использовал ники:"
 
-#: ..\components\watcher_handle.py:370
+#: ..\components\watcher_handle.py:371
 msgid ""
 "Connection attempt detected!\n"
 "Nick: {0}\n"
@@ -2078,11 +2078,11 @@ msgstr ""
 "{2}Попыток подключения: {3}\n"
 "Время: {4}"
 
-#: ..\components\watcher_handle.py:376
+#: ..\components\watcher_handle.py:377
 msgid "To proceed enter command `{0}` within {1} min"
 msgstr "Чтобы продолжить, введите команду `{0}` в течение {1} мин"
 
-#: ..\components\watcher_handle.py:379
+#: ..\components\watcher_handle.py:380
 msgid "To ban this IP-address enter command `{0}`"
 msgstr "Чтобы забанить этот IP-адрес, введите команду `{0}`"
 

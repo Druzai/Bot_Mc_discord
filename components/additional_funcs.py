@@ -128,6 +128,7 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
             for ext in [".bat", ".cmd", ".lnk"]:
                 if ext in Config.get_selected_server_from_list().start_file_name:
                     is_file_exists = True
+                    break
             if not is_file_exists:
                 raise NameError()
             startfile(Config.get_selected_server_from_list().start_file_name)
@@ -290,14 +291,13 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_re
                         tellraw_init = ["", {"text": "<"}, {"text": get_bot_display_name(bot), "color": "dark_gray"},
                                         {"text": "> "}]
                         cl_r.tellraw("@a", tellraw_init + [{"text": bot_message}])
-                    for i in range(how_many_sec, -1, -w):
-                        if i != 0:
-                            if server_version < 7:
-                                cl_r.run(f"say {get_translation('{0} sec to go').format(str(i))}")
-                            else:
-                                cl_r.tellraw("@a",
-                                             tellraw_init + [{"text": get_translation("{0} sec to go").format(str(i))}])
-                            await asleep(w)
+                    for i in range(how_many_sec, 0, -w):
+                        if server_version < 7:
+                            cl_r.run(f"say {get_translation('{0} sec to go').format(str(i))}")
+                        else:
+                            cl_r.tellraw("@a",
+                                         tellraw_init + [{"text": get_translation("{0} sec to go").format(str(i))}])
+                        await asleep(w)
                 cl_r.run("stop")
 
         if BotVars.watcher_of_log_file is not None and BotVars.watcher_of_log_file.is_running():
@@ -1650,9 +1650,9 @@ def _build_if_urls_in_message(res_obj, obj, default_text_color):
             res_obj.append({"text": obj})
 
 
-def _search_mentions_in_message(message) -> list:
+def _search_mentions_in_message(message) -> set:
     if len(message.mentions) == 0 and len(message.role_mentions) == 0 and not message.mention_everyone:
-        return []
+        return set()
 
     nicks = []
     if message.mention_everyone:
