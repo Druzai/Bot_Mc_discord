@@ -34,6 +34,8 @@
 * Creating optional cross-platform chat between discord text channel and minecraft server via bot and webhook
     * Supported mentions in discord and minecraft (also for better recognition you can create list of associations
       between discord member and minecraft nick)
+    * Supported edited messages from discord and editing messages from minecraft (message should start with single
+      asterix)
     * Supported discord reply in message
     * Supported url links (shortens if link longer than 256 symbols)
     * Supported attached files to message in discord

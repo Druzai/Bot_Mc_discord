@@ -10,11 +10,12 @@ from commands.poll import Poll
 from components import decorators
 from components.additional_funcs import (
     handle_message_for_chat, send_error, bot_clear, add_quotes, parse_params_for_help, send_help_of_command,
-    parse_subcommands_for_help, find_subcommand, make_underscored_line, create_webhooks, bot_dm_clear
+    parse_subcommands_for_help, find_subcommand, make_underscored_line, create_webhooks, bot_dm_clear,
+    delete_after_by_msg, send_msg
 )
 from components.localization import get_translation, get_locales, set_locale, get_current_locale
 from components.rss_feed_handle import check_on_rss_feed
-from config.init_config import Config
+from config.init_config import Config, BotVars
 
 
 class ChatCommands(commands.Cog):
@@ -155,6 +156,69 @@ class ChatCommands(commands.Cog):
         Config.get_settings().bot_settings.admin_role_id = None
         Config.save_config()
         await ctx.channel.send(add_quotes(get_translation("Admin role has been cleared")))
+
+    @commands.group(pass_context=True, invoke_without_command=True)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    async def edit(self, ctx, *, edited_message: str):
+        if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
+            await send_msg(ctx, add_quotes(get_translation("Cross-platform chat is disabled in bot config!")), True)
+        elif Config.get_settings().bot_settings.server_watcher.cross_platform_chat.channel_id is None:
+            await send_msg(ctx, add_quotes(
+                get_translation("Channel for Minecraft cross-platform chat is not found or unreachable!")), True)
+        elif ctx.message.reference is not None and ctx.message.reference.resolved.author.discriminator != "0000":
+            await send_msg(ctx, add_quotes(get_translation("You can't edit messages from "
+                                                           "other members with this command!")), True)
+        elif ctx.channel.id == Config.get_settings().bot_settings.server_watcher.cross_platform_chat.channel_id:
+            last_message = None
+            if ctx.message.reference is not None:
+                associated_member_id = [u.user_discord_id for u in Config.get_known_users_list()
+                                        if u.user_minecraft_nick == ctx.message.reference.resolved.author.name]
+                if len(associated_member_id) > 0 and associated_member_id[0] == ctx.message.author.id:
+                    last_message = ctx.message.reference.resolved
+                else:
+                    await send_msg(ctx, get_translation("{0}, this nick isn't bound to you, use `{1}assoc` first...")
+                                   .format(ctx.author.mention, Config.get_settings().bot_settings.prefix), True)
+            else:
+                associated_nicks = [u.user_minecraft_nick for u in Config.get_known_users_list()
+                                    if u.user_discord_id == ctx.author.id]
+                if len(associated_nicks) > 0:
+                    async for message in ctx.channel.history(limit=100):
+                        if message.author.discriminator == "0000" and message.author.name in associated_nicks:
+                            last_message = message
+                            break
+                    if last_message is None:
+                        await send_msg(ctx, add_quotes(
+                            get_translation("The bot couldn't find any messages sent by your "
+                                            "bound Minecraft accounts in the last 100 messages!")), True)
+                else:
+                    await send_msg(ctx, get_translation("{0}, you have no bound nicks").format(ctx.author.mention),
+                                   True)
+
+            if last_message is not None:
+                try:
+                    # TODO: In discord.py 2.0 will be added 'message.attachments' to 'webhook.edit_message'
+                    BotVars.webhook_chat.edit_message(message_id=last_message.id,
+                                                      content=edited_message)
+                    await handle_message_for_chat(ctx.message, self._bot, on_edit=True,
+                                                  before_message=last_message, edit_command=True)
+                except Forbidden:
+                    error_msg = get_translation("Can't edit this message, it's not owned "
+                                                "by cross-platform chat webhook!")
+                    webhook_found = False
+                    for i in (await self._bot.guilds[0].webhooks()):
+                        if i.id == last_message.author.id:
+                            webhook_found = True
+                            error_msg += "\n" + get_translation("Owner: ") + f"<@{i.id}>"
+                            break
+                    if not webhook_found:
+                        error_msg += "\n" + get_translation("Owner: ") + last_message.author.name
+
+                    await send_msg(ctx, error_msg, True)
+        else:
+            await send_msg(ctx, add_quotes(get_translation("You're not in channel for Minecraft cross-platform chat!")),
+                           True)
+        await delete_after_by_msg(ctx.message)
 
     @commands.Cog.listener()
     async def on_message(self, message):

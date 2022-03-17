@@ -6,8 +6,9 @@ All important changes to this project will be documented in this file.
 
 #### Improvements:
 
-* Added saving all data on the server to disk before backing up
+* **Important!** Added saving all data on the server to disk before backing up
 * Added handling `.cmd` script and shortcut to `.bat` or `.cmd` script as start file on Windows
+* Added edition of messages from Minecraft in Discord channel and edit webhook messages from Discord ([#27](https://github.com/Druzai/Bot_Mc_discord/issues/27))
 
 #### Fixed:
 
@@ -15,6 +16,7 @@ All important changes to this project will be documented in this file.
 * Bot created a poll if you were initiator of stopping the server and only your accounts were logged in ([#24](https://github.com/Druzai/Bot_Mc_discord/issues/24))
 * Added resetting gamemode in `op` command
 * Disabled deleting user message in cross-platform chat when server is down or there are no players on it
+* Fixed slow bot response sending a message from sync function
 
 #### Breaking changes:
 

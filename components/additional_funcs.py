@@ -20,7 +20,7 @@ from textwrap import wrap
 from threading import Thread, Event
 from time import sleep
 from traceback import print_exception
-from typing import Tuple, List
+from typing import Tuple, List, Union
 from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 
 from discord import Activity, ActivityType, TextChannel, Message, Status, Member, Role, MessageType
@@ -1346,10 +1346,13 @@ async def send_error(ctx, bot: commands.Bot, error, is_reaction=False):
                        add_quotes(", ".join([str(a) for a in error.original.args])), is_reaction)
 
 
-async def handle_message_for_chat(message, bot, on_edit=False, before_message=None):
-    if message.author == bot.user or message.content.startswith(Config.get_settings().bot_settings.prefix) or str(
-            message.author.discriminator) == "0000" or (len(message.content) == 0 and len(message.attachments) == 0) \
-            or message.channel.id != int(Config.get_cross_platform_chat_settings().channel_id):
+async def handle_message_for_chat(message: Message, bot: commands.Bot,
+                                  on_edit=False, before_message: Message = None, edit_command: bool = False):
+    if message.author == bot.user or (message.content.startswith(Config.get_settings().bot_settings.prefix) and
+                                      not edit_command) or \
+            str(message.author.discriminator) == "0000" or \
+            (len(message.content) == 0 and len(message.attachments) == 0) \
+            or message.channel.id != Config.get_cross_platform_chat_settings().channel_id:
         return
 
     author_mention = get_author_and_mention(message, bot, False)[1]
@@ -1378,9 +1381,10 @@ async def handle_message_for_chat(message, bot, on_edit=False, before_message=No
                                            "so bot can't send messages from discord to Minecraft!"),
                            is_reaction=True)
         elif get_server_players().get("current") > 0:
-            result_msg = _handle_custom_emojis(message)
-            result_msg = await _handle_reply_in_message(message, result_msg)
-            result_msg = _handle_urls_and_attachments_in_message(result_msg, message)
+            result_msg = _handle_custom_emojis(message, edit_command=edit_command)
+            if not edit_command:
+                result_msg = await _handle_reply_in_message(message, result_msg)
+            result_msg = _handle_urls_and_attachments_in_message(result_msg, message, edit_command=edit_command)
 
             # Building object for tellraw
             res_obj = [""]
@@ -1393,15 +1397,27 @@ async def handle_message_for_chat(message, bot, on_edit=False, before_message=No
                 else:
                     _build_if_urls_in_message(res_obj, result_msg.get("reply"), "gray")
             content_name = "contents" if server_version >= 16 else "value"
-            hover_string = ["", {"text": f"{message.author.display_name}\n"
-                                         f"{message.author.name}#{message.author.discriminator}"}]
-            if server_version > 11:
-                hover_string += [{"text": "\nShift + "}, {"keybind": "key.attack"}]
-            res_obj += [{"text": "<"},
-                        {"text": message.author.display_name, "color": "dark_gray",
-                         "insertion": f"@{message.author.display_name}",
-                         "hoverEvent": {"action": "show_text", content_name: hover_string}},
-                        {"text": "> "}]
+            if not edit_command:
+                hover_string = ["", {"text": f"{message.author.display_name}\n"
+                                             f"{message.author.name}#{message.author.discriminator}"}]
+                if server_version > 11:
+                    hover_string += [{"text": "\nShift + "}, {"keybind": "key.attack"}]
+                res_obj += [{"text": "<"},
+                            {"text": message.author.display_name, "color": "dark_gray",
+                             "insertion": f"@{message.author.display_name}",
+                             "hoverEvent": {"action": "show_text", content_name: hover_string}},
+                            {"text": "> "}]
+            else:
+                hover_string = ["", {"text": f"{before_message.author.name}\n" +
+                                             get_translation("Type: Player") +
+                                             f"\n{get_offline_uuid(before_message.author.name)}"}]
+                if server_version > 11:
+                    hover_string += [{"text": "\nShift + "}, {"keybind": "key.attack"}]
+                res_obj += [{"text": "<"},
+                            {"text": before_message.author.name,
+                             "insertion": f"/tell {before_message.author.name} ",
+                             "hoverEvent": {"action": "show_text", content_name: hover_string}},
+                            {"text": "> "}]
             if on_edit:
                 result_before = _handle_custom_emojis(before_message)
                 result_before = _handle_urls_and_attachments_in_message(result_before, before_message, True)
@@ -1420,7 +1436,6 @@ async def handle_message_for_chat(message, bot, on_edit=False, before_message=No
                     for tellraw in res:
                         cl_r.tellraw("@a", tellraw)
 
-            delete_user_message = False
             nicks = _search_mentions_in_message(message)
             if len(nicks) > 0:
                 with suppress(ConnectionError, socket.error):
@@ -1524,27 +1539,29 @@ def _split_tellraw_object(tellraw_obj):
     return res
 
 
-def _handle_custom_emojis(message):
+def _handle_custom_emojis(message, edit_command=False):
     result_msg = {}
-    content = message.clean_content
-    if search(r"<:\w+:\d+>", content.replace("​", "").strip()):
-        temp_split = split(r"<:\w+:\d+>", content.replace("​", "").strip())
-        temp_arr = list(findall(r"<:\w+:\d+>", content.replace("​", "").strip()))
+    # TODO: In discord.py 2.0 'replace("​", "")' can be omitted
+    content = message.clean_content.replace("​", "").strip()
+    if edit_command:
+        content = content.strip(f"{Config.get_settings().bot_settings.prefix}edit ")
+    if search(r"<:\w+:\d+>", content):
+        temp_split = split(r"<:\w+:\d+>", content)
+        temp_arr = list(findall(r"<:\w+:\d+>", content))
         i = 1
         for emoji in temp_arr:
             temp_split.insert(i, findall(r"\w+", emoji)[0])
             i += 2
         result_msg["content"] = "".join(temp_split)
     else:
-        result_msg["content"] = content.replace("​", "").strip()
+        result_msg["content"] = content
     return result_msg
 
 
 async def _handle_reply_in_message(message, result_msg):
     if message.reference is not None:
         reply_msg = message.reference.resolved
-        cnt = reply_msg.clean_content.strip()
-        cnt = cnt.replace("​", "")
+        cnt = reply_msg.clean_content.replace("​", "").strip()
         if reply_msg.author.discriminator == "0000":
             # reply to Minecraft player
             result_msg["reply"] = f"\n -> <{reply_msg.author.display_name}> {cnt}"
@@ -1555,8 +1572,9 @@ async def _handle_reply_in_message(message, result_msg):
     return result_msg
 
 
-def _handle_urls_and_attachments_in_message(result_msg, message, only_replace_links=False):
-    attachments = _handle_attachments_in_message(message)
+def _handle_urls_and_attachments_in_message(result_msg, message, only_replace_links=False, edit_command=False):
+    # TODO: For now 'webhook.edit_message' doesn't support attachments, wait for discord.py 2.0
+    attachments = _handle_attachments_in_message(message) if not edit_command else {}
     for key, ms in result_msg.items():
         if isinstance(ms, list):
             msg = ms.copy()
@@ -1678,7 +1696,7 @@ def _search_mentions_in_message(message) -> set:
     return set(nicks)
 
 
-def get_server_version(patch=False) -> int:
+def get_server_version(patch=False) -> Union[Tuple[int, int], int]:
     """Gets minor version and patch version of server"""
     with connect_query() as cl_q:
         version = cl_q.full_stats.version
