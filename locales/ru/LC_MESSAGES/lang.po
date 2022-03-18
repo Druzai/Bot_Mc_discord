@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
-"POT-Creation-Date: 2022-03-18 16:38+0300\n"
-"PO-Revision-Date: 2022-03-18 16:39+0300\n"
+"POT-Creation-Date: 2022-03-18 17:19+0300\n"
+"PO-Revision-Date: 2022-03-18 17:20+0300\n"
 "Last-Translator: Druzai <astyn37@gmail.com>\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -18,11 +18,11 @@ msgstr ""
 "Generated-By: pygettext.py 1.5\n"
 "X-Generator: Poedit 3.0.1\n"
 
-#: ..\Discord_bot.py:94
+#: ..\Discord_bot.py:86
 msgid "Bot doesn't have this command line argument!"
 msgstr "Бот не имеет такого аргумента командной строки!"
 
-#: ..\Discord_bot.py:97
+#: ..\Discord_bot.py:89
 msgid "bot_help"
 msgstr ""
 "Бот для майнкрафт сервера\n"
@@ -31,28 +31,28 @@ msgstr ""
 "  -v, --version\tПечатает версию бота и выходит.\n"
 "  -cs          \tДля изменения майнкрафт серверов в конфиге бота."
 
-#: ..\Discord_bot.py:118 ..\commands\minecraft_commands.py:818
+#: ..\Discord_bot.py:110 ..\commands\minecraft_commands.py:818
 msgid "Server info read!"
 msgstr "Информация о сервере прочтена!"
 
-#: ..\Discord_bot.py:121
+#: ..\Discord_bot.py:113
 msgid "Bot/Discord Error: Your token is wrong"
 msgstr "Ошибка бота/дискорда: Ваш токен не правильный"
 
-#: ..\Discord_bot.py:123 ..\Discord_bot.py:125
+#: ..\Discord_bot.py:115 ..\Discord_bot.py:117
 #: ..\components\additional_funcs.py:1200
 msgid "Bot Error: {0}"
 msgstr "Ошибка бота: {0}"
 
-#: ..\Discord_bot.py:133
+#: ..\Discord_bot.py:125
 msgid "Bot/Discord Error: Something went wrong"
 msgstr "Ошибка бота/дискорда: Что-то пошло не так"
 
-#: ..\Discord_bot.py:140
+#: ..\Discord_bot.py:132
 msgid "Press any key to continue..."
 msgstr "Для продолжения нажмите любую клавишу..."
 
-#: ..\Discord_bot.py:142
+#: ..\Discord_bot.py:134
 msgid "Bot is stopping..."
 msgstr "Бот останавливается..."
 
@@ -791,7 +791,7 @@ msgid "View Server Insights"
 msgstr "Просмотр статистику сервера"
 
 #: ..\commands\chat_commands.py:29
-msgid "Logged in discord as"
+msgid "Logged in Discord as"
 msgstr "Авторизовался в дискорде как"
 
 #: ..\commands\chat_commands.py:31
@@ -828,13 +828,13 @@ msgid "Cross-platform chat is disabled in bot config!"
 msgstr "Кроссплатформенный чат отключен в конфиге бота!"
 
 #: ..\commands\chat_commands.py:105 ..\commands\chat_commands.py:129
-msgid "Role {0} set as role for commands that manage minecraft server"
+msgid "Role {0} set as role for commands that manage Minecraft server"
 msgstr ""
 "Роль {0} задана в качестве роли для команд, которые управляют майнкрафт "
 "сервером"
 
 #: ..\commands\chat_commands.py:108
-msgid "Role for commands that manage minecraft server not stated"
+msgid "Role for commands that manage Minecraft server not stated"
 msgstr "Роль для команд, которые управляют майнкрафт сервером, не задана"
 
 #: ..\commands\chat_commands.py:115 ..\commands\chat_commands.py:149
@@ -846,7 +846,7 @@ msgid "Admin role not stated"
 msgstr "Роль админа не указана"
 
 #: ..\commands\chat_commands.py:138
-msgid "Role for commands that manage minecraft server has been cleared"
+msgid "Role for commands that manage Minecraft server has been cleared"
 msgstr "Роль для команд, которые управляют майнкрафт сервером, была очищена"
 
 #: ..\commands\chat_commands.py:158
@@ -1123,7 +1123,7 @@ msgid "Session expiration time in days - {0}"
 msgstr "Время истечения сессии в днях - {0}"
 
 #: ..\commands\minecraft_commands.py:375
-msgid "Сode expiration time in minutes - {0}"
+msgid "Code expiration time in minutes - {0}"
 msgstr "Время истечения кода в минутах - {0}"
 
 #: ..\commands\minecraft_commands.py:378
@@ -2016,7 +2016,7 @@ msgstr "сервер перезагружается!"
 #: ..\components\additional_funcs.py:1380
 msgid ""
 "version of your Minecraft server is lower than `1.7.2` so bot can't send "
-"messages from discord to Minecraft!"
+"messages from Discord to Minecraft!"
 msgstr ""
 "версия вашего майнкрафт сервера ниже, чем `1.7.2`, поэтому бот не может "
 "отправлять сообщения из дискорда в майнкрафт!"
@@ -2291,12 +2291,12 @@ msgid "Help arguments for each command set to {0}."
 msgstr "Аргументы справки для каждой команды - {0}."
 
 #: ..\config\init_config.py:837
-msgid "Role for commands that manage minecraft server is set."
+msgid "Role for commands that manage Minecraft server is set."
 msgstr "Роль для команд, которые управляют майнкрафт сервером, указана."
 
 #: ..\config\init_config.py:839
 msgid ""
-"Role for commands that manage minecraft server doesn't stated. You can set "
+"Role for commands that manage Minecraft server doesn't stated. You can set "
 "it via command {0}."
 msgstr ""
 "Роль для команд, которые управляют майнкрафт сервером, не указана. Вы можете "
@@ -2654,7 +2654,7 @@ msgstr ""
 #: ..\config\init_config.py:1169
 msgid ""
 "Enter how many characters from right side of mention bot can remove to find "
-"similar mention in discord (0 - don't try to find similar ones) (default - "
+"similar mention in Discord (0 - don't try to find similar ones) (default - "
 "5, int)"
 msgstr ""
 "Введите сколько символов из правой части упоминания бот может удалить, чтобы "

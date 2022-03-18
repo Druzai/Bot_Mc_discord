@@ -834,9 +834,9 @@ class Config:
     @classmethod
     def _setup_roles(cls):
         if cls._settings_instance.bot_settings.managing_commands_role_id is not None:
-            print(get_translation("Role for commands that manage minecraft server is set."))
+            print(get_translation("Role for commands that manage Minecraft server is set."))
         else:
-            print(get_translation("Role for commands that manage minecraft server doesn't stated. "
+            print(get_translation("Role for commands that manage Minecraft server doesn't stated. "
                                   "You can set it via command {0}.")
                   .format(f"{Config.get_settings().bot_settings.prefix}role command <role>"))
         if cls._settings_instance.bot_settings.admin_role_id:
@@ -1167,7 +1167,7 @@ class Config:
             cls.get_cross_platform_chat_settings().max_wrong_symbols_in_mention_from_right = \
                 cls._ask_for_data(
                     get_translation("Enter how many characters from right side of mention "
-                                    "bot can remove to find similar mention in discord"
+                                    "bot can remove to find similar mention in Discord"
                                     " (0 - don't try to find similar ones) (default - 5, int)") + "\n> ",
                     try_int=True, int_high_than=0, int_low_than=21)
 

@@ -372,7 +372,7 @@ class MinecraftCommands(commands.Cog):
             .format(Config.get_secure_auth().max_login_attempts)
         msg += "\n" + get_translation("Session expiration time in days - {0}") \
             .format(Config.get_secure_auth().days_before_ip_expires)
-        msg += "\n" + get_translation("Сode expiration time in minutes - {0}") \
+        msg += "\n" + get_translation("Code expiration time in minutes - {0}") \
             .format(Config.get_secure_auth().mins_before_code_expires)
 
         msg += "\n\n" + get_translation("Information about authorized users:") + "\n"

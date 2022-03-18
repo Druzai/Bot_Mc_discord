@@ -1378,7 +1378,7 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
         if server_version < 7:
             await send_msg(message.channel, f"{author_mention}, " +
                            get_translation("version of your Minecraft server is lower than `1.7.2` "
-                                           "so bot can't send messages from discord to Minecraft!"),
+                                           "so bot can't send messages from Discord to Minecraft!"),
                            is_reaction=True)
         elif get_server_players().get("current") > 0:
             result_msg = _handle_custom_emojis(message, edit_command=edit_command)
