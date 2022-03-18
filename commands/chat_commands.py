@@ -157,7 +157,7 @@ class ChatCommands(commands.Cog):
         Config.save_config()
         await ctx.channel.send(add_quotes(get_translation("Admin role has been cleared")))
 
-    @commands.group(pass_context=True, invoke_without_command=True)
+    @commands.group(pass_context=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     async def edit(self, ctx, *, edited_message: str):

@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
-"POT-Creation-Date: 2022-03-17 12:25+0300\n"
-"PO-Revision-Date: 2022-03-17 12:25+0300\n"
+"POT-Creation-Date: 2022-03-18 16:38+0300\n"
+"PO-Revision-Date: 2022-03-18 16:39+0300\n"
 "Last-Translator: Druzai <astyn37@gmail.com>\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -18,11 +18,11 @@ msgstr ""
 "Generated-By: pygettext.py 1.5\n"
 "X-Generator: Poedit 3.0.1\n"
 
-#: ..\Discord_bot.py:86
+#: ..\Discord_bot.py:94
 msgid "Bot doesn't have this command line argument!"
 msgstr "Бот не имеет такого аргумента командной строки!"
 
-#: ..\Discord_bot.py:89
+#: ..\Discord_bot.py:97
 msgid "bot_help"
 msgstr ""
 "Бот для майнкрафт сервера\n"
@@ -31,28 +31,28 @@ msgstr ""
 "  -v, --version\tПечатает версию бота и выходит.\n"
 "  -cs          \tДля изменения майнкрафт серверов в конфиге бота."
 
-#: ..\Discord_bot.py:110 ..\commands\minecraft_commands.py:825
+#: ..\Discord_bot.py:118 ..\commands\minecraft_commands.py:818
 msgid "Server info read!"
 msgstr "Информация о сервере прочтена!"
 
-#: ..\Discord_bot.py:113
+#: ..\Discord_bot.py:121
 msgid "Bot/Discord Error: Your token is wrong"
 msgstr "Ошибка бота/дискорда: Ваш токен не правильный"
 
-#: ..\Discord_bot.py:115 ..\Discord_bot.py:117
+#: ..\Discord_bot.py:123 ..\Discord_bot.py:125
 #: ..\components\additional_funcs.py:1200
 msgid "Bot Error: {0}"
 msgstr "Ошибка бота: {0}"
 
-#: ..\Discord_bot.py:125
+#: ..\Discord_bot.py:133
 msgid "Bot/Discord Error: Something went wrong"
 msgstr "Ошибка бота/дискорда: Что-то пошло не так"
 
-#: ..\Discord_bot.py:132
+#: ..\Discord_bot.py:140
 msgid "Press any key to continue..."
 msgstr "Для продолжения нажмите любую клавишу..."
 
-#: ..\Discord_bot.py:134
+#: ..\Discord_bot.py:142
 msgid "Bot is stopping..."
 msgstr "Бот останавливается..."
 
@@ -89,26 +89,26 @@ msgid "PB"
 msgstr "ПБ"
 
 #: ..\_frozen_translations.py:9
-msgid "help_brief_assoc"
+msgid "help_brief_associate"
 msgstr "Создаёт ссылку из дискорда в майнкрафт"
 
 #: ..\_frozen_translations.py:10
-msgid "help_assoc"
+msgid "help_associate"
 msgstr ""
 "**Только для админа!**\n"
 "Связывает пользователя в дискорде с ником в майнкрафте или удаляет связь\n"
 "Для более корректной работы других команд это лучше настроить!"
 
 #: ..\_frozen_translations.py:11
-msgid "help_assoc_assoc_command"
+msgid "help_associate_assoc_command"
 msgstr "Команда для связывания или разрыва ссылки: '+=' или '-='"
 
 #: ..\_frozen_translations.py:12
-msgid "help_assoc_discord_mention"
+msgid "help_associate_discord_mention"
 msgstr "Упоминание пользователя в дискорде, пример: '@Пользователь'"
 
 #: ..\_frozen_translations.py:13
-msgid "help_assoc_minecraft_nick"
+msgid "help_associate_minecraft_nick"
 msgstr "Ник в майнкрафте, который вы хотите связать"
 
 #: ..\_frozen_translations.py:14
@@ -549,246 +549,244 @@ msgid "help_role_command_clear"
 msgstr "Отвязывает роль для команд, которые управляют майнкрафт сервером"
 
 #: ..\_frozen_translations.py:103
-msgid "help_brief_servers"
+msgid "help_brief_server"
 msgstr "Управление майнкрафт серверами бота (͠◉_◉᷅ )"
 
 #: ..\_frozen_translations.py:104
-msgid "help_servers"
-msgstr "Управление доступными майнкрафт серверами бота"
+msgid "help_server"
+msgstr ""
+"Управление доступными майнкрафт серверами бота\n"
+"Возвращает выбранное название сервера"
 
 #: ..\_frozen_translations.py:105
-msgid "help_servers_list"
+msgid "help_server_list"
 msgstr "Возвращает список доступных майнкрафт серверов бота"
 
 #: ..\_frozen_translations.py:106
-msgid "help_servers_select"
+msgid "help_server_select"
 msgstr "Выбирает сервер из доступных майнкрафт серверов бота"
 
 #: ..\_frozen_translations.py:107
-msgid "help_servers_select_selected_server"
+msgid "help_server_select_selected_server"
 msgstr "Номер сервера из '{prefix}servers list'"
 
 #: ..\_frozen_translations.py:108
-msgid "help_servers_show"
-msgstr "Возвращает выбранное название сервера"
-
-#: ..\_frozen_translations.py:109
 msgid "help_brief_start"
 msgstr "Запускает сервер"
 
-#: ..\_frozen_translations.py:110
+#: ..\_frozen_translations.py:109
 msgid "help_start"
 msgstr "Запускает выбранный сервер"
 
-#: ..\_frozen_translations.py:111
+#: ..\_frozen_translations.py:110
 msgid "help_brief_status"
 msgstr "Возвращает статус сервера"
 
-#: ..\_frozen_translations.py:112
+#: ..\_frozen_translations.py:111
 msgid "help_status"
 msgstr ""
 "Возвращает статус выбранного сервера, имя выбранного сервера, информацию о "
 "том, когда сервер был запущен и остановлен, если это произошло"
 
-#: ..\_frozen_translations.py:113
+#: ..\_frozen_translations.py:112
 msgid "help_brief_stop"
 msgstr "Останавливает сервер"
 
-#: ..\_frozen_translations.py:114
+#: ..\_frozen_translations.py:113
 msgid "help_stop"
 msgstr ""
 "Останавливает выбранный сервер через количество секунд, указанное в "
 "аргументе\n"
 "Без аргументов начинает остановку сразу"
 
-#: ..\_frozen_translations.py:115
+#: ..\_frozen_translations.py:114
 msgid "help_stop_timeout"
 msgstr "Время ожидания перед началом остановки, в секундах"
 
-#: ..\_frozen_translations.py:116
+#: ..\_frozen_translations.py:115
 msgid "help_brief_whitelist"
 msgstr "Команда whitelist из майнрафта"
 
-#: ..\_frozen_translations.py:117
+#: ..\_frozen_translations.py:116
 msgid "help_whitelist"
 msgstr ""
 "Реализует весь функционал команды 'whitelist' из майнкрафта\n"
 "Вкратце эта команда позволяет разрешать доступ только тем игрокам, ники "
 "которых есть в списке"
 
-#: ..\_frozen_translations.py:118
+#: ..\_frozen_translations.py:117
 msgid "help_whitelist_add"
 msgstr "Добавляет ник майнкрафта в whitelist"
 
-#: ..\_frozen_translations.py:119
+#: ..\_frozen_translations.py:118
 msgid "help_whitelist_add_minecraft_nick"
 msgstr "Ник игрока майнкрафта"
 
-#: ..\_frozen_translations.py:120
+#: ..\_frozen_translations.py:119
 msgid "help_whitelist_del"
 msgstr "Удаляет ник майнкрафта из whitelist'а"
 
-#: ..\_frozen_translations.py:121
+#: ..\_frozen_translations.py:120
 msgid "help_whitelist_del_minecraft_nick"
 msgstr "Ник игрока майнкрафта"
 
-#: ..\_frozen_translations.py:122
+#: ..\_frozen_translations.py:121
 msgid "help_whitelist_list"
 msgstr "Возвращает список игроков в whitelist'е"
 
-#: ..\_frozen_translations.py:123
+#: ..\_frozen_translations.py:122
 msgid "help_whitelist_off"
 msgstr "Выключает whitelist"
 
-#: ..\_frozen_translations.py:124
+#: ..\_frozen_translations.py:123
 msgid "help_whitelist_on"
 msgstr "Включает whitelist"
 
-#: ..\_frozen_translations.py:125
+#: ..\_frozen_translations.py:124
 msgid "help_whitelist_reload"
 msgstr "Перезагружает whitelist"
 
-#: ..\_frozen_translations.py:126
+#: ..\_frozen_translations.py:125
 msgid "Add Reactions"
 msgstr "Добавлять реакции"
 
-#: ..\_frozen_translations.py:127
+#: ..\_frozen_translations.py:126
 msgid "Administrator"
 msgstr "Администратор"
 
-#: ..\_frozen_translations.py:128
+#: ..\_frozen_translations.py:127
 msgid "Attach Files"
 msgstr "Прикреплять файлы"
 
-#: ..\_frozen_translations.py:129
+#: ..\_frozen_translations.py:128
 msgid "Ban Members"
 msgstr "Банить участников"
 
-#: ..\_frozen_translations.py:130
+#: ..\_frozen_translations.py:129
 msgid "Change Nickname"
 msgstr "Изменить никнейм"
 
-#: ..\_frozen_translations.py:131
+#: ..\_frozen_translations.py:130
 msgid "Connect"
 msgstr "Подключаться"
 
-#: ..\_frozen_translations.py:132
+#: ..\_frozen_translations.py:131
 msgid "Create Instant Invite"
 msgstr "Создание приглашения"
 
-#: ..\_frozen_translations.py:133
+#: ..\_frozen_translations.py:132
 msgid "Deafen Members"
 msgstr "Отключать участникам звук"
 
-#: ..\_frozen_translations.py:134
+#: ..\_frozen_translations.py:133
 msgid "Embed Links"
 msgstr "Встраивать ссылки"
 
-#: ..\_frozen_translations.py:135
+#: ..\_frozen_translations.py:134
 msgid "External Emojis"
 msgstr "Внешние эмодзи"
 
-#: ..\_frozen_translations.py:136
+#: ..\_frozen_translations.py:135
 msgid "Kick Members"
 msgstr "Выгонять участников"
 
-#: ..\_frozen_translations.py:137
+#: ..\_frozen_translations.py:136
 msgid "Manage Channels"
 msgstr "Управлять каналами"
 
-#: ..\_frozen_translations.py:138
+#: ..\_frozen_translations.py:137
 msgid "Manage Emojis"
 msgstr "Управлять эмодзи и стикерами"
 
-#: ..\_frozen_translations.py:139
+#: ..\_frozen_translations.py:138
 msgid "Manage Server"
 msgstr "Управлять сервером"
 
-#: ..\_frozen_translations.py:140
+#: ..\_frozen_translations.py:139
 msgid "Manage Messages"
 msgstr "Управлять сообщениями"
 
-#: ..\_frozen_translations.py:141
+#: ..\_frozen_translations.py:140
 msgid "Manage Nicknames"
 msgstr "Управлять никнеймами"
 
-#: ..\_frozen_translations.py:142
+#: ..\_frozen_translations.py:141
 msgid "Manage Permissions"
 msgstr "Управлять ролями доступа"
 
-#: ..\_frozen_translations.py:143
+#: ..\_frozen_translations.py:142
 msgid "Manage Roles"
 msgstr "Управлять ролями"
 
-#: ..\_frozen_translations.py:144
+#: ..\_frozen_translations.py:143
 msgid "Manage Webhooks"
 msgstr "Управлять вебхуками (webhooks)"
 
-#: ..\_frozen_translations.py:145
+#: ..\_frozen_translations.py:144
 msgid "Mention Everyone"
 msgstr "Упоминание @everyone, @here и всех ролей"
 
-#: ..\_frozen_translations.py:146
+#: ..\_frozen_translations.py:145
 msgid "Move Members"
 msgstr "Перемещать участников"
 
-#: ..\_frozen_translations.py:147
+#: ..\_frozen_translations.py:146
 msgid "Mute Members"
 msgstr "Отключать участникам микрофон"
 
-#: ..\_frozen_translations.py:148
+#: ..\_frozen_translations.py:147
 msgid "Priority Speaker"
 msgstr "Приоритетный режим"
 
-#: ..\_frozen_translations.py:149
+#: ..\_frozen_translations.py:148
 msgid "Read Message History"
 msgstr "Читать историю сообщений"
 
-#: ..\_frozen_translations.py:150
+#: ..\_frozen_translations.py:149
 msgid "Read Messages"
 msgstr "Читать сообщения"
 
-#: ..\_frozen_translations.py:151
+#: ..\_frozen_translations.py:150
 msgid "Request To Speak"
 msgstr "Разрешение на включение микрофона"
 
-#: ..\_frozen_translations.py:152
+#: ..\_frozen_translations.py:151
 msgid "Send Messages"
 msgstr "Отправлять сообщения"
 
-#: ..\_frozen_translations.py:153
+#: ..\_frozen_translations.py:152
 msgid "Send Tts Messages"
 msgstr "Отправка сообщений text-to-speech"
 
-#: ..\_frozen_translations.py:154
+#: ..\_frozen_translations.py:153
 msgid "Speak"
 msgstr "Говорить"
 
-#: ..\_frozen_translations.py:155
+#: ..\_frozen_translations.py:154
 msgid "Stream"
 msgstr "Видео"
 
-#: ..\_frozen_translations.py:156
+#: ..\_frozen_translations.py:155
 msgid "Use External Emojis"
 msgstr "Использовать внешние эмодзи"
 
-#: ..\_frozen_translations.py:157
+#: ..\_frozen_translations.py:156
 msgid "Use Slash Commands"
 msgstr "Использовать команды приложения"
 
-#: ..\_frozen_translations.py:158
+#: ..\_frozen_translations.py:157
 msgid "Use Voice Activation"
 msgstr "Использовать режим активации по голосу"
 
-#: ..\_frozen_translations.py:159
+#: ..\_frozen_translations.py:158
 msgid "View Audit Log"
 msgstr "Просматривать журнал аудита"
 
-#: ..\_frozen_translations.py:160
+#: ..\_frozen_translations.py:159
 msgid "View Channel"
 msgstr "Просматривать каналы"
 
-#: ..\_frozen_translations.py:161
+#: ..\_frozen_translations.py:160
 msgid "View Server Insights"
 msgstr "Просмотр статистику сервера"
 
@@ -861,7 +859,7 @@ msgstr ""
 "Вы не можете редактировать сообщения от других пользователей с помощью этой "
 "команды!"
 
-#: ..\commands\chat_commands.py:180 ..\commands\minecraft_commands.py:111
+#: ..\commands\chat_commands.py:180 ..\commands\minecraft_commands.py:112
 msgid "{0}, this nick isn't bound to you, use `{1}assoc` first..."
 msgstr "{0}, этот ник не привязан к вам, воспользуйся `{1}assoc` сначала..."
 
@@ -873,7 +871,7 @@ msgstr ""
 "Бот не смог найти никаких сообщений, отправленных вашими связанными "
 "майнкрафт аккаунтами среди последних 100 сообщений!"
 
-#: ..\commands\chat_commands.py:195 ..\commands\minecraft_commands.py:278
+#: ..\commands\chat_commands.py:195 ..\commands\minecraft_commands.py:279
 msgid "{0}, you have no bound nicks"
 msgstr "{0}, у вас нет привязанных ников"
 
@@ -953,11 +951,11 @@ msgstr "Вы не прикрепили ответ к вашему сообщен
 msgid "Starting RSS feed check"
 msgstr "Запускаем проверку RSS-канала"
 
-#: ..\commands\minecraft_commands.py:98 ..\components\additional_funcs.py:849
+#: ..\commands\minecraft_commands.py:99 ..\components\additional_funcs.py:849
 msgid "There are no players on the server"
 msgstr "На сервере нет игроков"
 
-#: ..\commands\minecraft_commands.py:103
+#: ..\commands\minecraft_commands.py:104
 msgid ""
 "{0}, I didn't see this nick on server, son! Go to the server via this nick "
 "before..."
@@ -965,53 +963,53 @@ msgstr ""
 "{0}, я не видел этого ника на сервере, сынок! Отметься на сервере перед "
 "этим..."
 
-#: ..\commands\minecraft_commands.py:119
+#: ..\commands\minecraft_commands.py:120
 msgid "{0}, you had run out of attempts to get opped for `{1}` nick!"
 msgstr "{0}, вы исчерпали кол-во попыток op'нуться для данного `{1}` ника!"
 
-#: ..\commands\minecraft_commands.py:125
+#: ..\commands\minecraft_commands.py:126
 msgid "{0}, I didn't see this nick `{1}` online!"
 msgstr "{0}, я не видел в сети данный ник `{1}`!"
 
-#: ..\commands\minecraft_commands.py:131
+#: ..\commands\minecraft_commands.py:132
 msgid "{0}, you've already been opped!"
 msgstr "{0}, вы уже были op'нуты!"
 
-#: ..\commands\minecraft_commands.py:136
+#: ..\commands\minecraft_commands.py:137
 msgid "Opped "
 msgstr "Op'нут "
 
-#: ..\commands\minecraft_commands.py:137 ..\commands\minecraft_commands.py:1099
-#: ..\commands\minecraft_commands.py:1101
+#: ..\commands\minecraft_commands.py:138 ..\commands\minecraft_commands.py:1097
+#: ..\commands\minecraft_commands.py:1100
 #: ..\components\additional_funcs.py:1044
 #: ..\components\additional_funcs.py:1046
 msgid "Reason: "
 msgstr "Причина: "
 
-#: ..\commands\minecraft_commands.py:143
+#: ..\commands\minecraft_commands.py:144
 msgid " you've opped for"
 msgstr " вы op'нуты на"
 
-#: ..\commands\minecraft_commands.py:144
+#: ..\commands\minecraft_commands.py:145
 msgid " min"
 msgstr " мин"
 
-#: ..\commands\minecraft_commands.py:146 ..\components\additional_funcs.py:173
+#: ..\commands\minecraft_commands.py:147 ..\components\additional_funcs.py:173
 #: ..\components\additional_funcs.py:522 ..\components\additional_funcs.py:541
 msgid " sec"
 msgstr " сек"
 
-#: ..\commands\minecraft_commands.py:153
+#: ..\commands\minecraft_commands.py:154
 msgid "{0}, server isn't working (at least I've tried), try again later..."
 msgstr ""
 "{0}, а сервак-то не работает (по крайней мере я пытался), попробуй-ка "
 "позже..."
 
-#: ..\commands\minecraft_commands.py:156
+#: ..\commands\minecraft_commands.py:157
 msgid "Now {0} is an operator!"
 msgstr "Теперь {0} - оператор!"
 
-#: ..\commands\minecraft_commands.py:161
+#: ..\commands\minecraft_commands.py:162
 msgid ""
 "So {0}, I opped you, but I'm not going to pretend like I did it to win "
 "favors upstairs. I'll come in {1} min, deop everyone and we're even. I don't "
@@ -1023,23 +1021,23 @@ msgstr ""
 "op'ка сдалась, но я в чужие дела не лезу, если хочешь получить, значит есть "
 "на что..."
 
-#: ..\commands\minecraft_commands.py:187
+#: ..\commands\minecraft_commands.py:188
 msgid " you all will be deoped now."
 msgstr " вы все сейчас будете deop'нуты."
 
-#: ..\commands\minecraft_commands.py:197
+#: ..\commands\minecraft_commands.py:198
 msgid "Deopped all "
 msgstr "Deop'нул всех "
 
-#: ..\commands\minecraft_commands.py:198
+#: ..\commands\minecraft_commands.py:199
 msgid "|| Note: "
 msgstr "|| Заметка: "
 
-#: ..\commands\minecraft_commands.py:199
+#: ..\commands\minecraft_commands.py:200
 msgid " people deoped in belated list"
 msgstr " людей deop'нуто в задерживающем списке"
 
-#: ..\commands\minecraft_commands.py:200
+#: ..\commands\minecraft_commands.py:201
 msgid ""
 "Well, {0}, your time is over... and not only yours...\n"
 "As they say \"Cheeki breeki i v damké!\""
@@ -1047,115 +1045,115 @@ msgstr ""
 "Ну что, {0}, кончилось твоё время... и не только твоё...\n"
 "Как говорится \"Чики-брики и в дамки!\""
 
-#: ..\commands\minecraft_commands.py:204
+#: ..\commands\minecraft_commands.py:205
 msgid "{0}, you have no time limit, but you are all doomed..."
 msgstr "{0}, у вас нет ограничения по времени, но вы все обречены..."
 
-#: ..\commands\minecraft_commands.py:223
+#: ..\commands\minecraft_commands.py:224
 msgid "Wrong 1-st argument! You can mention ONLY members of this server."
 msgstr ""
 "Неправильный 1-й аргумент! Вы можете упоминать ТОЛЬКО пользователей этого "
 "сервера."
 
-#: ..\commands\minecraft_commands.py:229 ..\commands\minecraft_commands.py:336
+#: ..\commands\minecraft_commands.py:230 ..\commands\minecraft_commands.py:337
 msgid "Wrong 1-st argument used!"
 msgstr "Использован неверный 1-й аргумент!"
 
-#: ..\commands\minecraft_commands.py:232
+#: ..\commands\minecraft_commands.py:233
 msgid "Wrong command syntax! Right example: `{0}assoc @me +=/-= My_nick`."
 msgstr ""
 "Неправильный синтаксис команды! Правильный пример: `{0}assoc @me +=/-= "
 "Мой_ник`."
 
-#: ..\commands\minecraft_commands.py:241
+#: ..\commands\minecraft_commands.py:242
 msgid "This nick is already associated with nick `{0}`."
 msgstr "Этот ник уже ассоциирован с ником `{0}`."
 
-#: ..\commands\minecraft_commands.py:246
+#: ..\commands\minecraft_commands.py:247
 msgid "Now {0} associates with nick `{1}` in Minecraft."
 msgstr "Теперь {0} ассоциируется с ником `{1}` в майнкрафте."
 
-#: ..\commands\minecraft_commands.py:253
+#: ..\commands\minecraft_commands.py:254
 msgid "Now link {0} -> {1} do not exist!"
 msgstr "Теперь связь {0} -> {1} не существует!"
 
-#: ..\commands\minecraft_commands.py:256
+#: ..\commands\minecraft_commands.py:257
 msgid "Bot don't have `mention to nick` link already!"
 msgstr "У бота уже нету `упоминание - ник` связи!"
 
-#: ..\commands\minecraft_commands.py:271
+#: ..\commands\minecraft_commands.py:272
 msgid "Syntax:"
 msgstr "Синтаксис:"
 
-#: ..\commands\minecraft_commands.py:293 ..\commands\minecraft_commands.py:312
+#: ..\commands\minecraft_commands.py:294 ..\commands\minecraft_commands.py:313
 msgid "{0}, bot has these data on your nicks and number of remaining uses:"
 msgstr ""
 "{0}, у бота есть такие данные по никам и кол-ву оставшихся использований:"
 
-#: ..\commands\minecraft_commands.py:321
+#: ..\commands\minecraft_commands.py:322
 msgid "not seen on server"
 msgstr "не замечен на сервере"
 
-#: ..\commands\minecraft_commands.py:337
+#: ..\commands\minecraft_commands.py:338
 msgid "Integer must be above 0!"
 msgstr "Целое число должно быть больше 0!"
 
-#: ..\commands\minecraft_commands.py:341
+#: ..\commands\minecraft_commands.py:342
 msgid "There is no ops' history yet..."
 msgstr "Истории op'ок пока нет..."
 
-#: ..\commands\minecraft_commands.py:346
+#: ..\commands\minecraft_commands.py:347
 msgid "%H:%M %d/%m/%Y"
 msgstr "%H:%M %d.%m.%Y"
 
-#: ..\commands\minecraft_commands.py:368 ..\commands\minecraft_commands.py:395
+#: ..\commands\minecraft_commands.py:369 ..\commands\minecraft_commands.py:396
 msgid "Secure authorization on"
 msgstr "Безопасная авторизация включена"
 
-#: ..\commands\minecraft_commands.py:369 ..\commands\minecraft_commands.py:404
+#: ..\commands\minecraft_commands.py:370 ..\commands\minecraft_commands.py:405
 msgid "Secure authorization off"
 msgstr "Безопасная авторизация выключена"
 
-#: ..\commands\minecraft_commands.py:370
+#: ..\commands\minecraft_commands.py:371
 msgid "Login attempts allowed - {0}"
 msgstr "Разрешено попыток входа - {0}"
 
-#: ..\commands\minecraft_commands.py:372
+#: ..\commands\minecraft_commands.py:373
 msgid "Session expiration time in days - {0}"
 msgstr "Время истечения сессии в днях - {0}"
 
-#: ..\commands\minecraft_commands.py:374
+#: ..\commands\minecraft_commands.py:375
 msgid "Сode expiration time in minutes - {0}"
 msgstr "Время истечения кода в минутах - {0}"
 
-#: ..\commands\minecraft_commands.py:377
+#: ..\commands\minecraft_commands.py:378
 msgid "Information about authorized users:"
 msgstr "Информация об авторизованных пользователях:"
 
-#: ..\commands\minecraft_commands.py:411 ..\commands\minecraft_commands.py:484
-#: ..\commands\minecraft_commands.py:550 ..\commands\minecraft_commands.py:616
+#: ..\commands\minecraft_commands.py:412 ..\commands\minecraft_commands.py:485
+#: ..\commands\minecraft_commands.py:551 ..\commands\minecraft_commands.py:617
 msgid "Secure authorization is disabled. Enable it to proceed!"
 msgstr "Безопасная авторизация выключена. Включите её чтобы продолжить!"
 
-#: ..\commands\minecraft_commands.py:416
+#: ..\commands\minecraft_commands.py:417
 msgid "Bot couldn't find nick and/or code in the IP-addresses without access!"
 msgstr "Бот не нашёл ник и/или код в IP-адресах без доступа!"
 
-#: ..\commands\minecraft_commands.py:421
+#: ..\commands\minecraft_commands.py:422
 msgid "{0}, bot already has poll on `auth login {1}` command!"
 msgstr "{0}, у бота уже есть опрос по команде `auth login {1}`!"
 
-#: ..\commands\minecraft_commands.py:432
+#: ..\commands\minecraft_commands.py:433
 msgid "You don't have this nick in associations!"
 msgstr "У вас этот ник не в ассоциациях!"
 
-#: ..\commands\minecraft_commands.py:437
+#: ..\commands\minecraft_commands.py:438
 msgid "This code expired! Try to login again to get another one!"
 msgstr ""
 "Этот код просрочен! Попытайтесь авторизоваться ещё раз, чтобы получить "
 "другой код!"
 
-#: ..\commands\minecraft_commands.py:441
+#: ..\commands\minecraft_commands.py:442
 msgid ""
 "this man {0} trying to login as `{1}`. Bot requesting create link {0} -> "
 "{1}. Will you let that happen?"
@@ -1163,27 +1161,27 @@ msgstr ""
 "этот человек {0} пытается зайти как `{1}`. Бот запрашивает разрешение "
 "создать связь {0} -> {1}. Дадите ли вы этому произойти?"
 
-#: ..\commands\minecraft_commands.py:457
+#: ..\commands\minecraft_commands.py:458
 msgid "{0}, bot gave access to the nick `{1}` with IP-address `{2}`!"
 msgstr "{0}, бот дал доступ нику `{1}` с IP-адресом `{2}`!"
 
-#: ..\commands\minecraft_commands.py:460
+#: ..\commands\minecraft_commands.py:461
 msgid "Your code for this nick is wrong. Try again."
 msgstr "Ваш код для этого ника неправильный. Попробуйте снова."
 
-#: ..\commands\minecraft_commands.py:468
+#: ..\commands\minecraft_commands.py:469
 msgid "List of banned IP-addresses:"
 msgstr "Список забаненных IP-адресов:"
 
-#: ..\commands\minecraft_commands.py:471 ..\commands\minecraft_commands.py:531
+#: ..\commands\minecraft_commands.py:472 ..\commands\minecraft_commands.py:532
 msgid "There are no banned IP-addresses!"
 msgstr "Нет забаненных IP-адресов!"
 
-#: ..\commands\minecraft_commands.py:489 ..\commands\minecraft_commands.py:566
+#: ..\commands\minecraft_commands.py:490 ..\commands\minecraft_commands.py:567
 msgid "{0}, you don't have bound nicks, use `{1}assoc` first..."
 msgstr "{0}, этот ник не привязан к вам, воспользуйся `{1}assoc` сначала..."
 
-#: ..\commands\minecraft_commands.py:506 ..\commands\minecraft_commands.py:588
+#: ..\commands\minecraft_commands.py:507 ..\commands\minecraft_commands.py:589
 msgid ""
 "{0}, there are no nicks in your possession that were logged on with this IP-"
 "address"
@@ -1191,88 +1189,88 @@ msgstr ""
 "{0}, нет ников в вашем распоряжении, которые авторизовывались по этому IP-"
 "адресу"
 
-#: ..\commands\minecraft_commands.py:515
+#: ..\commands\minecraft_commands.py:516
 msgid "with reason '{0}'"
 msgstr "по причине '{0}'"
 
-#: ..\commands\minecraft_commands.py:516
+#: ..\commands\minecraft_commands.py:517
 msgid "Banned IP-address {0}{1}!"
 msgstr "Забанен IP-адрес {0}{1}!"
 
-#: ..\commands\minecraft_commands.py:521 ..\commands\minecraft_commands.py:540
-#: ..\commands\minecraft_commands.py:694 ..\commands\minecraft_commands.py:709
-#: ..\commands\minecraft_commands.py:732 ..\commands\minecraft_commands.py:747
-#: ..\commands\minecraft_commands.py:762 ..\commands\minecraft_commands.py:777
+#: ..\commands\minecraft_commands.py:522 ..\commands\minecraft_commands.py:541
+#: ..\commands\minecraft_commands.py:695 ..\commands\minecraft_commands.py:710
+#: ..\commands\minecraft_commands.py:733 ..\commands\minecraft_commands.py:748
+#: ..\commands\minecraft_commands.py:763 ..\commands\minecraft_commands.py:778
 msgid "Couldn't connect to server, try again("
 msgstr "Не удалось подключиться к серверу, попробуйте еще раз("
 
-#: ..\commands\minecraft_commands.py:523 ..\commands\minecraft_commands.py:542
-#: ..\commands\minecraft_commands.py:696 ..\commands\minecraft_commands.py:711
-#: ..\commands\minecraft_commands.py:734 ..\commands\minecraft_commands.py:749
-#: ..\commands\minecraft_commands.py:764 ..\commands\minecraft_commands.py:779
+#: ..\commands\minecraft_commands.py:524 ..\commands\minecraft_commands.py:543
+#: ..\commands\minecraft_commands.py:697 ..\commands\minecraft_commands.py:712
+#: ..\commands\minecraft_commands.py:735 ..\commands\minecraft_commands.py:750
+#: ..\commands\minecraft_commands.py:765 ..\commands\minecraft_commands.py:780
 #: ..\components\additional_funcs.py:840 ..\components\additional_funcs.py:877
 #: ..\components\additional_funcs.py:1366
 msgid "server offline"
 msgstr "сервер не в сети"
 
-#: ..\commands\minecraft_commands.py:537
+#: ..\commands\minecraft_commands.py:538
 msgid "Unbanned IP-address {0}!"
 msgstr "Разбанен IP-адрес {0}!"
 
-#: ..\commands\minecraft_commands.py:554 ..\commands\minecraft_commands.py:620
+#: ..\commands\minecraft_commands.py:555 ..\commands\minecraft_commands.py:621
 msgid "Bot has no users who tried to enter or entered Minecraft server!"
 msgstr ""
 "У бота нет пользователей, кто пытался войти или вошёл на майнкрафт сервер!"
 
-#: ..\commands\minecraft_commands.py:585
+#: ..\commands\minecraft_commands.py:586
 msgid "{0}, there are no nicks that were logged on with this IP-address"
 msgstr "{0}, нет ников, которые авторизовывались по этому IP-адресу"
 
-#: ..\commands\minecraft_commands.py:599
+#: ..\commands\minecraft_commands.py:600
 msgid "These nicks were revoked with this IP-address:"
 msgstr "Эти ники были отозваны с этим IP-адресом:"
 
-#: ..\commands\minecraft_commands.py:605
+#: ..\commands\minecraft_commands.py:606
 msgid "One of the sessions for this nick has been ended"
 msgstr "Одна из сессий у этого ника была завершена"
 
-#: ..\commands\minecraft_commands.py:606
+#: ..\commands\minecraft_commands.py:607
 msgid "These nicks bound this IP-address were kicked from Minecraft server:"
 msgstr "Эти ники, связанные этим IP-адресом, были кикнуты с майнкрафт сервера:"
 
-#: ..\commands\minecraft_commands.py:633
+#: ..\commands\minecraft_commands.py:634
 msgid "All these nicks were revoked:"
 msgstr "Все эти ники были отозванны:"
 
-#: ..\commands\minecraft_commands.py:639
+#: ..\commands\minecraft_commands.py:640
 msgid "All sessions for this nick have been ended"
 msgstr "Все сессии у этого ника были завершены"
 
-#: ..\commands\minecraft_commands.py:641
+#: ..\commands\minecraft_commands.py:642
 msgid "These nicks were kicked from Minecraft server:"
 msgstr "Эти ники были кикнуты с майнкрафт сервера:"
 
-#: ..\commands\minecraft_commands.py:649 ..\commands\minecraft_commands.py:660
+#: ..\commands\minecraft_commands.py:650 ..\commands\minecraft_commands.py:661
 msgid "Forceload on"
 msgstr "Автоматический перезапуск при падении сервера включен"
 
-#: ..\commands\minecraft_commands.py:651 ..\commands\minecraft_commands.py:669
+#: ..\commands\minecraft_commands.py:652 ..\commands\minecraft_commands.py:670
 msgid "Forceload off"
 msgstr "Автоматический перезапуск при падении сервера выключен"
 
-#: ..\commands\minecraft_commands.py:676 ..\commands\minecraft_commands.py:786
+#: ..\commands\minecraft_commands.py:677
 msgid "Wrong syntax, subcommands:"
 msgstr "Неверный синтаксис, подкоманды:"
 
-#: ..\commands\minecraft_commands.py:691
+#: ..\commands\minecraft_commands.py:692
 msgid "Added {0} to the whitelist"
 msgstr "{0} добавлен в whitelist"
 
-#: ..\commands\minecraft_commands.py:706
+#: ..\commands\minecraft_commands.py:707
 msgid "Removed {0} from the whitelist"
 msgstr "{0} удалён из whitelist"
 
-#: ..\commands\minecraft_commands.py:726
+#: ..\commands\minecraft_commands.py:727
 msgid ""
 "There are {0} players in whitelist\n"
 "{1}"
@@ -1280,28 +1278,28 @@ msgstr ""
 "В whitelist {0} игроков\n"
 "{1}"
 
-#: ..\commands\minecraft_commands.py:729
+#: ..\commands\minecraft_commands.py:730
 msgid "There are no whitelisted players"
 msgstr "В whitelist нет игроков"
 
-#: ..\commands\minecraft_commands.py:744
+#: ..\commands\minecraft_commands.py:745
 msgid "Turned on the whitelist"
 msgstr "Whitelist включен"
 
-#: ..\commands\minecraft_commands.py:759
+#: ..\commands\minecraft_commands.py:760
 msgid "Turned off the whitelist"
 msgstr "Whitelist выключен"
 
-#: ..\commands\minecraft_commands.py:774
+#: ..\commands\minecraft_commands.py:775
 msgid "Reloaded the whitelist"
 msgstr "Whitelist перезагружен"
 
-#: ..\commands\minecraft_commands.py:794 ..\commands\minecraft_commands.py:819
-#: ..\commands\minecraft_commands.py:822
+#: ..\commands\minecraft_commands.py:787 ..\commands\minecraft_commands.py:812
+#: ..\commands\minecraft_commands.py:815
 msgid "Selected server"
 msgstr "Выбранный сервер"
 
-#: ..\commands\minecraft_commands.py:805
+#: ..\commands\minecraft_commands.py:798
 msgid ""
 "My, you have chosen selected server, insane?)\n"
 " ...Patsan ramsi poputal"
@@ -1309,7 +1307,7 @@ msgstr ""
 "Боже, вы выбрали выбранный сервер, совсем?)\n"
 " ...Пацан рамсы попутал"
 
-#: ..\commands\minecraft_commands.py:809
+#: ..\commands\minecraft_commands.py:802
 msgid ""
 "You can't change servers, while some instance(s) is/are still running\n"
 "Please stop them, before trying again"
@@ -1318,44 +1316,44 @@ msgstr ""
 "работают\n"
 "Пожалуйста, остановите их, прежде чем пытаться снова"
 
-#: ..\commands\minecraft_commands.py:824
+#: ..\commands\minecraft_commands.py:817
 msgid "Server properties read!"
 msgstr "Настройки сервера прочтены!"
 
-#: ..\commands\minecraft_commands.py:827
+#: ..\commands\minecraft_commands.py:820
 msgid "Use server list, there's no such server number on the list!"
 msgstr "Воспользуйтесь списком серверов, такого номера сервера в списке нет!"
 
-#: ..\commands\minecraft_commands.py:835
+#: ..\commands\minecraft_commands.py:829
 msgid "List of servers"
 msgstr "Список серверов"
 
-#: ..\commands\minecraft_commands.py:858 ..\components\additional_funcs.py:1004
+#: ..\commands\minecraft_commands.py:853 ..\components\additional_funcs.py:1004
 msgid "Automatic backups enabled"
 msgstr "Автоматическое резервное копирование включено"
 
-#: ..\commands\minecraft_commands.py:868 ..\components\additional_funcs.py:1005
+#: ..\commands\minecraft_commands.py:863 ..\components\additional_funcs.py:1005
 msgid "Automatic backups disabled"
 msgstr "Автоматическое резервное копирование выключено"
 
-#: ..\commands\minecraft_commands.py:878 ..\commands\minecraft_commands.py:880
+#: ..\commands\minecraft_commands.py:873 ..\commands\minecraft_commands.py:875
 #: ..\components\additional_funcs.py:1006
 msgid "Automatic backups period set to {0} min"
 msgstr "Период автоматического резервного копирования поставлен в {0} мин"
 
-#: ..\commands\minecraft_commands.py:883
+#: ..\commands\minecraft_commands.py:878
 msgid "Automatic backups period can't be lower than 0!"
 msgstr "Период автоматического резервного копирования не может быть ниже 0!"
 
-#: ..\commands\minecraft_commands.py:894
+#: ..\commands\minecraft_commands.py:889
 msgid "Compression method set to {0}"
 msgstr "Метод сжатия установлен как {0}"
 
-#: ..\commands\minecraft_commands.py:896 ..\components\additional_funcs.py:1014
+#: ..\commands\minecraft_commands.py:891 ..\components\additional_funcs.py:1014
 msgid "Current compression method - {0}"
 msgstr "Текущий метод сжатия - {0}"
 
-#: ..\commands\minecraft_commands.py:899
+#: ..\commands\minecraft_commands.py:894
 msgid ""
 "Bot doesn't have such compression method!\n"
 "Supported:"
@@ -1363,11 +1361,11 @@ msgstr ""
 "Бот не имеет такого метода сжатия!\n"
 "Поддерживаемые:"
 
-#: ..\commands\minecraft_commands.py:906
+#: ..\commands\minecraft_commands.py:901
 msgid "Supported compression methods:"
 msgstr "Поддерживаемые методы сжатия:"
 
-#: ..\commands\minecraft_commands.py:919
+#: ..\commands\minecraft_commands.py:914
 msgid ""
 "Can't create backup because of {0}\n"
 "Delete some backups to proceed!"
@@ -1375,11 +1373,11 @@ msgstr ""
 "Не возможно создать резервную копию из-за {0}\n"
 "Удалите некоторые копии, чтобы продолжить!"
 
-#: ..\commands\minecraft_commands.py:924
+#: ..\commands\minecraft_commands.py:919
 msgid "Starting backup..."
 msgstr "Начинаем резервное копирование..."
 
-#: ..\commands\minecraft_commands.py:958
+#: ..\commands\minecraft_commands.py:953
 msgid ""
 "There are not enough space on disk to restore from backup!\n"
 "Free - {0}\n"
@@ -1391,31 +1389,31 @@ msgstr ""
 "Требуется не менее - {1}\n"
 "Удалите некоторые копии, чтобы продолжить!"
 
-#: ..\commands\minecraft_commands.py:964
+#: ..\commands\minecraft_commands.py:959
 msgid "Starting restore from backup..."
 msgstr "Начинаем восстановление из резервной копии..."
 
-#: ..\commands\minecraft_commands.py:975 ..\config\init_config.py:606
+#: ..\commands\minecraft_commands.py:970 ..\config\init_config.py:606
 msgid "Done!"
 msgstr "Сделано!"
 
-#: ..\commands\minecraft_commands.py:978 ..\commands\minecraft_commands.py:1035
+#: ..\commands\minecraft_commands.py:973 ..\commands\minecraft_commands.py:1030
 msgid ""
 "Bot doesn't have backup with this number in backups list for current server!"
 msgstr ""
 "Бот не имеет резервной копии с этим номером в списке копий для данного "
 "сервера!"
 
-#: ..\commands\minecraft_commands.py:989 ..\commands\minecraft_commands.py:1044
-#: ..\commands\minecraft_commands.py:1111
+#: ..\commands\minecraft_commands.py:984 ..\commands\minecraft_commands.py:1039
+#: ..\commands\minecraft_commands.py:1110
 msgid "There are no backups for '{0}' server!"
 msgstr "На '{0}' сервере нет резервных копий!"
 
-#: ..\commands\minecraft_commands.py:997
+#: ..\commands\minecraft_commands.py:992
 msgid "{0}, bot already has poll on `backup del` command!"
 msgstr "{0}, у бота уже есть опрос по команде `backup del`!"
 
-#: ..\commands\minecraft_commands.py:1006
+#: ..\commands\minecraft_commands.py:1001
 msgid ""
 "this man {0} trying to delete {1} backup by {2} of '{3}' server. Will you "
 "let that happen?"
@@ -1423,15 +1421,15 @@ msgstr ""
 "этот человек {0} пытается удалить {1} резервную копию от {2} сервера '{3}'. "
 "Дадите ли вы этому произойти?"
 
-#: ..\commands\minecraft_commands.py:1032
+#: ..\commands\minecraft_commands.py:1027
 msgid "Deleted backup {0}.zip of '{1}' server"
 msgstr "Удалена резервная копия {0}.zip сервера '{1}'"
 
-#: ..\commands\minecraft_commands.py:1050
+#: ..\commands\minecraft_commands.py:1045
 msgid "{0}, bot already has poll on `backup del all` command!"
 msgstr "{0}, у бота уже есть опрос по команде `backup del all`!"
 
-#: ..\commands\minecraft_commands.py:1058
+#: ..\commands\minecraft_commands.py:1053
 msgid ""
 "this man {0} trying to delete all backups of '{1}' server. Will you let that "
 "happen?"
@@ -1439,55 +1437,55 @@ msgstr ""
 "этот человек {0} пытается удалить все резервные копии сервера '{1}'. Дадите "
 "ли вы этому произойти?"
 
-#: ..\commands\minecraft_commands.py:1079
+#: ..\commands\minecraft_commands.py:1074
 msgid "Deleted all backups of '{0}' server"
 msgstr "Удалены все резервные копии сервера '{0}'"
 
-#: ..\commands\minecraft_commands.py:1087
+#: ..\commands\minecraft_commands.py:1082
 msgid "List of backups for '{0}' server:"
 msgstr "Список резервных копий сервера '{0}':"
 
-#: ..\commands\minecraft_commands.py:1091
+#: ..\commands\minecraft_commands.py:1089
 msgid "Date: "
 msgstr "Дата: "
 
-#: ..\commands\minecraft_commands.py:1092 ..\components\additional_funcs.py:779
+#: ..\commands\minecraft_commands.py:1090 ..\components\additional_funcs.py:779
 #: ..\components\additional_funcs.py:793 ..\components\additional_funcs.py:797
 #: ..\components\additional_funcs.py:1038 ..\components\watcher_handle.py:374
 #: ..\components\watcher_handle.py:409
 msgid "%H:%M:%S %d/%m/%Y"
 msgstr "%H:%M:%S %d.%m.%Y"
 
-#: ..\commands\minecraft_commands.py:1093
+#: ..\commands\minecraft_commands.py:1091
 #: ..\components\additional_funcs.py:1039
 msgid "Backup size: "
 msgstr "Размер копии: "
 
-#: ..\commands\minecraft_commands.py:1099
+#: ..\commands\minecraft_commands.py:1098
 #: ..\components\additional_funcs.py:1044
 msgid "Automatic backup"
 msgstr "Автоматическое копирование"
 
-#: ..\commands\minecraft_commands.py:1102
+#: ..\commands\minecraft_commands.py:1101
 #: ..\components\additional_funcs.py:1047
 msgid "Not stated"
 msgstr "Не указана"
 
-#: ..\commands\minecraft_commands.py:1103
+#: ..\commands\minecraft_commands.py:1102
 #: ..\components\additional_funcs.py:1048
 msgid "Initiator: "
 msgstr "Создал: "
 
-#: ..\commands\minecraft_commands.py:1107
+#: ..\commands\minecraft_commands.py:1106
 #: ..\components\additional_funcs.py:1050
 msgid "The world of the server was restored from this backup"
 msgstr "Мир сервера был восстановлен из этой копии"
 
-#: ..\commands\minecraft_commands.py:1121
+#: ..\commands\minecraft_commands.py:1120
 msgid "List of commands via reactions"
 msgstr "Список команд через реакции"
 
-#: ..\commands\minecraft_commands.py:1138
+#: ..\commands\minecraft_commands.py:1137
 msgid "Starting Minecraft server check-ups"
 msgstr "Запускаем проверки майнкрафт сервера"
 

@@ -8,19 +8,26 @@ All important changes to this project will be documented in this file.
 
 * **Important!** Added saving all data on the server to disk before backing up
 * Added handling `.cmd` script and shortcut to `.bat` or `.cmd` script as start file on Windows
-* Added edition of messages from Minecraft in Discord channel and edit webhook messages from Discord ([#27](https://github.com/Druzai/Bot_Mc_discord/issues/27))
+* Added editing messages from Minecraft in Discord channel and edit webhook messages from Discord ([#27](https://github.com/Druzai/Bot_Mc_discord/issues/27))
 
 #### Fixed:
 
-* Fixed mentions from minecraft to discord ([#25](https://github.com/Druzai/Bot_Mc_discord/issues/25))
+* Fixed mentions from Minecraft to Discord ([#25](https://github.com/Druzai/Bot_Mc_discord/issues/25))
 * Bot created a poll if you were initiator of stopping the server and only your accounts were logged in ([#24](https://github.com/Druzai/Bot_Mc_discord/issues/24))
 * Added resetting gamemode in `op` command
 * Disabled deleting user message in cross-platform chat when server is down or there are no players on it
-* Fixed slow bot response sending a message from sync function
+* Fixed slow bot response when sending a message from synchronous function
+* Added additional spaces when there are more than 9 items in list to display in command output
+* Reduced 'backup force' command cooldown to 15 seconds
+* Changed commands:
+  * Renamed `servers` to `server` and alias `servs` to `serv`
+  * Moved logic from `servers show` to `server`
+  * Added alias `associate` to `assoc`
+  * Added alias `ls` to all `list` subcommands
 
 #### Breaking changes:
 
-* Changed `specific_command_role_id` to `managing_commands_role_id`
+* Changed `specific_command_role_id` to `managing_commands_role_id` in bot's configuration file
 
 ### [1.2.3](https://github.com/Druzai/Bot_Mc_discord/compare/1.2.2...1.2.3) (2021-12-19)
 
@@ -31,7 +38,7 @@ All important changes to this project will be documented in this file.
 * Updated mcipc from `1.4.0` to `1.5.4`
 * Updated cryptography from `3.3.2` to `3.4.8`
 * Added more extended printing of exceptions in bot commands
-* Added handling very long messages from discord in cross-platform chat
+* Added handling very long messages from Discord in cross-platform chat
 
 ### [1.2.2](https://github.com/Druzai/Bot_Mc_discord/compare/1.2.1...1.2.2) (2021-12-02)
 
@@ -53,7 +60,7 @@ All important changes to this project will be documented in this file.
 
 #### Fixed:
 
-* Changed `enable_auth_security` to `enable_secure_auth`
+* Changed `enable_auth_security` to `enable_secure_auth` in bot's configuration file
 
 ## [1.2.0](https://github.com/Druzai/Bot_Mc_discord/compare/1.1.4...1.2.0) (2021-11-15)
 
@@ -64,7 +71,7 @@ All important changes to this project will be documented in this file.
 
 #### Fixed:
 
-* Fixed wrong parsed `\n` by minecraft client `1.7.*`
+* Fixed wrong parsed `\n` by Minecraft client `1.7.*`
 
 #### Breaking changes:
 
@@ -79,12 +86,12 @@ All important changes to this project will be documented in this file.
 #### Improvements:
 
 * Added administrator role
-* Added compatibility with old minecraft versions
+* Added compatibility with old Minecraft versions
 
 #### Fixed:
 
 * Printing servers' list
-* Showing replies from discord
+* Showing replies from Discord
 
 ### [1.1.3](https://github.com/Druzai/Bot_Mc_discord/compare/1.1.2...1.1.3) (2021-10-17)
 
@@ -96,10 +103,10 @@ Fixed cross-platform chat on Linux
 
 #### Improvements:
 
-* Added short mentions from minecraft for `@everyone` and `@here`, `@a` and `@p` accordingly
+* Added short mentions from Minecraft for `@everyone` and `@here`, `@a` and `@p` accordingly
 * Added subcommand `ops history/hist`
 * Added optional logging to file
-* Extended mention handling from minecraft chat
+* Extended mention handling from Minecraft chat
 
 #### Fixed:
 

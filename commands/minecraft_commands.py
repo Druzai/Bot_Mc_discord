@@ -20,7 +20,8 @@ from components.additional_funcs import (
     make_underscored_line, get_human_readable_size, create_zip_archive, restore_from_zip_archive, get_file_size,
     BackupsThread, get_folder_size, send_message_of_deleted_backup, handle_backups_limit_and_size, bot_backup,
     delete_after_by_msg, get_half_members_count_with_role, warn_about_auto_backups, get_archive_uncompressed_size,
-    get_bot_display_name, get_list_of_banned_ips, get_server_version, DISCORD_SYMBOLS_IN_MESSAGE_LIMIT
+    get_bot_display_name, get_list_of_banned_ips, get_server_version, DISCORD_SYMBOLS_IN_MESSAGE_LIMIT,
+    get_number_of_digits
 )
 from components.localization import get_translation
 from config.init_config import BotVars, Config
@@ -209,11 +210,11 @@ class MinecraftCommands(commands.Cog):
         else:
             await send_status(ctx)
 
-    @commands.command(pass_context=True)
+    @commands.command(pass_context=True, aliases=["assoc"])
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
-    async def assoc(self, ctx, discord_mention: str, assoc_command: str, minecraft_nick: str):
+    async def associate(self, ctx, discord_mention: str, assoc_command: str, minecraft_nick: str):
         """
         Associates discord user with nick in Minecraft
         syntax: Nick_Discord +=/-= Nick_minecraft
@@ -710,7 +711,7 @@ class MinecraftCommands(commands.Cog):
             else:
                 await ctx.send(add_quotes(get_translation("server offline").capitalize()))
 
-    @whitelist.command(pass_context=True, name="list")
+    @whitelist.command(pass_context=True, name="list", aliases=["ls"])
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
@@ -778,24 +779,16 @@ class MinecraftCommands(commands.Cog):
             else:
                 await ctx.send(add_quotes(get_translation("server offline").capitalize()))
 
-    @commands.group(pass_context=True, aliases=["servs"], invoke_without_command=True)
+    @commands.group(pass_context=True, aliases=["serv"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def servers(self, ctx):
-        await ctx.send(add_quotes(get_translation("Wrong syntax, subcommands:") + " select, list, show"))
-        raise commands.UserInputError()
-
-    @servers.command(pass_context=True, name="show")
-    @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @commands.guild_only()
-    @decorators.has_role_or_default()
-    async def s_show(self, ctx):
+    async def server(self, ctx):
         await ctx.send(add_quotes(get_translation("Selected server") + ": " +
                                   Config.get_selected_server_from_list().server_name +
                                   f" [{str(Config.get_settings().selected_server_number)}]"))
 
-    @servers.command(pass_context=True, name="select")
+    @server.command(pass_context=True, name="select")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
@@ -827,16 +820,18 @@ class MinecraftCommands(commands.Cog):
             await ctx.send(add_quotes(get_translation("Use server list, there's no such "
                                                       "server number on the list!")))
 
-    @servers.command(pass_context=True, name="list")
+    @server.command(pass_context=True, name="list", aliases=["ls"])
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
     async def s_list(self, ctx):
+        total_numb = get_number_of_digits(len(Config.get_settings().servers_list))
         send_ = "```" + get_translation("List of servers") + ":"
         for i in range(1, len(Config.get_settings().servers_list) + 1):
-            send_ += "\n[" + (make_underscored_line(i)
-                              if i == Config.get_settings().selected_server_number else str(i)) + "] " + \
-                     Config.get_settings().servers_list[i - 1].server_name
+            first_additional_space = (total_numb - get_number_of_digits(i)) * " "
+            send_ += f"\n{first_additional_space}[" + \
+                     (make_underscored_line(i) if i == Config.get_settings().selected_server_number else str(i)) + \
+                     "] " + Config.get_settings().servers_list[i - 1].server_name
         send_ += "```"
         await ctx.send(send_)
 
@@ -899,7 +894,7 @@ class MinecraftCommands(commands.Cog):
             await ctx.send(add_quotes(get_translation("Bot doesn't have such compression method!\nSupported:") + "\n- "
                                       + "\n- ".join(Config.get_backups_settings().supported_compression_methods)))
 
-    @b_method.command(name="list")
+    @b_method.command(pass_context=True, name="list", aliases=["ls"])
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     async def b_m_list(self, ctx):
@@ -909,7 +904,7 @@ class MinecraftCommands(commands.Cog):
     @backup.command(pass_context=True, name="force")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
-    @commands.cooldown(rate=1, per=60)
+    @commands.cooldown(rate=1, per=15)
     @decorators.has_role_or_default()
     async def b_force(self, ctx, *, reason: str = None):
         if not BotVars.is_loading and not BotVars.is_stopping and \
@@ -980,7 +975,7 @@ class MinecraftCommands(commands.Cog):
         else:
             await send_status(ctx)
 
-    @backup.group(pass_context=True, name="del", invoke_without_command=True)
+    @backup.group(pass_context=True, name="del", aliases=["remove"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
@@ -1079,7 +1074,7 @@ class MinecraftCommands(commands.Cog):
         await ctx.send(add_quotes(get_translation("Deleted all backups of '{0}' server")
                                   .format(Config.get_selected_server_from_list().server_name)))
 
-    @backup.command(pass_context=True, name="list")
+    @backup.command(pass_context=True, name="list", aliases=["ls"])
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     async def b_list(self, ctx):
@@ -1087,20 +1082,24 @@ class MinecraftCommands(commands.Cog):
             message = get_translation("List of backups for '{0}' server:") \
                           .format(Config.get_selected_server_from_list().server_name) + "\n"
             i = 1
+            total_numb = get_number_of_digits(len(Config.get_server_config().backups))
+            additional_space = (total_numb - 1) * " "
             for backup in Config.get_server_config().backups:
-                message += f"[{i}] " + get_translation("Date: ") + \
+                first_additional_space = (total_numb - get_number_of_digits(i)) * " "
+                message += f"{first_additional_space}[{i}] " + get_translation("Date: ") + \
                            backup.file_creation_date.strftime(get_translation("%H:%M:%S %d/%m/%Y"))
-                message += "\n\t" + get_translation("Backup size: ") + \
+                message += f"\n\t{additional_space}" + get_translation("Backup size: ") + \
                            get_human_readable_size(
                                get_file_size(Config.get_selected_server_from_list().working_directory,
                                              Config.get_backups_settings().name_of_the_backups_folder,
                                              f"{backup.file_name}.zip"))
                 if backup.reason is None and backup.initiator is None:
-                    message += "\n\t" + get_translation("Reason: ") + get_translation("Automatic backup")
+                    message += f"\n\t{additional_space}" + get_translation("Reason: ") + \
+                               get_translation("Automatic backup")
                 else:
-                    message += "\n\t" + get_translation("Reason: ") + \
+                    message += f"\n\t{additional_space}" + get_translation("Reason: ") + \
                                (backup.reason if backup.reason else get_translation("Not stated"))
-                    message += "\n\t" + get_translation("Initiator: ") + backup.initiator
+                    message += f"\n\t{additional_space}" + get_translation("Initiator: ") + backup.initiator
                 message += "\n"
                 if backup.restored_from:
                     message += "\t" + \

@@ -1757,6 +1757,14 @@ def stop_music(sound, name="@a"):
     return f"/stopsound {name} music {sound}"
 
 
+def get_number_of_digits(number: int):
+    count = 0
+    while number > 0:
+        number //= 10
+        count += 1
+    return count
+
+
 def setup_print_handlers():
     if Config.get_settings().bot_settings.log_bot_messages:
         file = open(Config.get_bot_log_name(), "a", encoding="utf8")
