@@ -64,12 +64,13 @@ def add_quotes(msg: str) -> str:
     return f"```{msg}```"
 
 
-async def delete_after_by_msg(message, ctx=None):
+async def delete_after_by_msg(message, ctx=None, without_delay=False):
     if isinstance(message, Message):
-        await message.delete(delay=Config.get_timeouts_settings().await_seconds_before_message_deletion)
+        await message.delete(
+            delay=Config.get_timeouts_settings().await_seconds_before_message_deletion if not without_delay else None)
     elif isinstance(message, int):
-        await (await ctx.channel.fetch_message(message)) \
-            .delete(delay=Config.get_timeouts_settings().await_seconds_before_message_deletion)
+        await (await ctx.channel.fetch_message(message)).delete(
+            delay=Config.get_timeouts_settings().await_seconds_before_message_deletion if not without_delay else None)
 
 
 def get_author_and_mention(ctx, bot: commands.Bot, is_reaction=False):

@@ -1116,7 +1116,7 @@ class MinecraftCommands(commands.Cog):
     @commands.guild_only()
     @decorators.has_role_or_default()
     async def menu(self, ctx):
-        await ctx.channel.purge(limit=1)
+        await delete_after_by_msg(ctx.message, without_delay=True)
         emb = discord.Embed(title=get_translation("List of commands via reactions"),
                             color=discord.Color.teal())
         for key, value in self._emoji_symbols.items():

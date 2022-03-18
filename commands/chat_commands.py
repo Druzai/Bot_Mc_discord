@@ -327,7 +327,7 @@ class ChatCommands(commands.Cog):
 
             await send_help_of_command(ctx, command)
         else:
-            await ctx.channel.purge(limit=1)
+            await delete_after_by_msg(ctx.message, without_delay=True)
             emb = discord.Embed(title=get_translation("List of all commands, prefix - {0}")
                                 .format(Config.get_settings().bot_settings.prefix),
                                 color=discord.Color.gold())
