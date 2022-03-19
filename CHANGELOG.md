@@ -9,6 +9,7 @@ All important changes to this project will be documented in this file.
 * **Important!** Added saving all data on the server to disk before backing up
 * Added handling `.cmd` script and shortcut to `.bat` or `.cmd` script as start file on Windows
 * Added editing messages from Minecraft in Discord channel and edit webhook messages from Discord ([#27](https://github.com/Druzai/Bot_Mc_discord/issues/27))
+* Added check for edited messages whether they are stored in cache or not
 
 #### Fixed:
 
@@ -19,15 +20,15 @@ All important changes to this project will be documented in this file.
 * Fixed slow bot response when sending a message from synchronous function
 * Added additional spaces when there are more than 9 items in list to display in command output
 * Reduced 'backup force' command cooldown to 15 seconds
+
+#### Breaking changes:
+
+* Changed `specific_command_role_id` to `managing_commands_role_id` in bot's configuration file
 * Changed commands:
   * Renamed `servers` to `server` and alias `servs` to `serv`
   * Moved logic from `servers show` to `server`
   * Added alias `associate` to `assoc`
   * Added alias `ls` to all `list` subcommands
-
-#### Breaking changes:
-
-* Changed `specific_command_role_id` to `managing_commands_role_id` in bot's configuration file
 
 ### [1.2.3](https://github.com/Druzai/Bot_Mc_discord/compare/1.2.2...1.2.3) (2021-12-19)
 

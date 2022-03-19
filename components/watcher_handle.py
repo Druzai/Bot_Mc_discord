@@ -144,6 +144,8 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None):
                                     if len(add_string) > 0 else mentions[i_mention][0].lower()
                                 cut_right_string = None
                                 if symbols_number > 0:
+                                    if symbols_number == len(mention):
+                                        break
                                     cut_right_string = mention[-symbols_number:]
                                     mention = mention[:-symbols_number]
                                 found = False
@@ -269,14 +271,15 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None):
                                 split_arr.insert(insert_numb,
                                                  mention[1].mention if len(mention) > 1 and
                                                                        mention[1] is not None else f"@{mention[0][0]}")
-                            if "@a" not in mention_nicks:
-                                if isinstance(mention[1], Role):
-                                    mention_nicks = _get_members_nicks_of_the_role(mention[1], mention_nicks)
+                            if "@a" not in mention_nicks and len(mention) > 1 and isinstance(mention[1], Role):
+                                mention_nicks = _get_members_nicks_of_the_role(mention[1], mention_nicks)
                         insert_numb += 2
                     player_message = "".join(split_arr)
 
                     if len(mention_nicks) > 0:
                         mention_nicks = set(mention_nicks)
+                        with suppress(KeyError):
+                            mention_nicks.remove(player_nick)
                         from components.additional_funcs import announce, connect_rcon, times
 
                         with suppress(ConnectionError, socket.error):

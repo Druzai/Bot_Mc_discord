@@ -1350,10 +1350,8 @@ async def send_error(ctx, bot: commands.Bot, error, is_reaction=False):
 async def handle_message_for_chat(message: Message, bot: commands.Bot,
                                   on_edit=False, before_message: Message = None, edit_command: bool = False):
     if message.author == bot.user or (message.content.startswith(Config.get_settings().bot_settings.prefix) and
-                                      not edit_command) or \
-            str(message.author.discriminator) == "0000" or \
-            (len(message.content) == 0 and len(message.attachments) == 0) \
-            or message.channel.id != Config.get_cross_platform_chat_settings().channel_id:
+                                      not edit_command) or str(message.author.discriminator) == "0000" or \
+            (len(message.content) == 0 and len(message.attachments) == 0):
         return
 
     author_mention = get_author_and_mention(message, bot, False)[1]
@@ -1420,11 +1418,14 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
                              "hoverEvent": {"action": "show_text", content_name: hover_string}},
                             {"text": "> "}]
             if on_edit:
-                result_before = _handle_custom_emojis(before_message)
-                result_before = _handle_urls_and_attachments_in_message(result_before, before_message, True)
-                res_obj.append({"text": "*", "color": "gold",
-                                "hoverEvent": {"action": "show_text",
-                                               content_name: shorten_string(result_before.get("content"), 250)}})
+                if before_message is not None:
+                    result_before = _handle_custom_emojis(before_message)
+                    result_before = _handle_urls_and_attachments_in_message(result_before, before_message, True)
+                    res_obj.append({"text": "*", "color": "gold",
+                                    "hoverEvent": {"action": "show_text",
+                                                   content_name: shorten_string(result_before.get("content"), 250)}})
+                else:
+                    res_obj.append({"text": "*", "color": "gold"})
             _build_if_urls_in_message(res_obj, result_msg.get("content"), None)
             res_obj = _handle_long_tellraw_object(res_obj)
 

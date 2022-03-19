@@ -163,13 +163,13 @@ class ChatCommands(commands.Cog):
     async def edit(self, ctx, *, edited_message: str):
         if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
             await send_msg(ctx, add_quotes(get_translation("Cross-platform chat is disabled in bot config!")), True)
-        elif Config.get_settings().bot_settings.server_watcher.cross_platform_chat.channel_id is None:
+        elif Config.get_cross_platform_chat_settings().channel_id is None:
             await send_msg(ctx, add_quotes(
                 get_translation("Channel for Minecraft cross-platform chat is not found or unreachable!")), True)
         elif ctx.message.reference is not None and ctx.message.reference.resolved.author.discriminator != "0000":
             await send_msg(ctx, add_quotes(get_translation("You can't edit messages from "
                                                            "other members with this command!")), True)
-        elif ctx.channel.id == Config.get_settings().bot_settings.server_watcher.cross_platform_chat.channel_id:
+        elif ctx.channel.id == Config.get_cross_platform_chat_settings().channel_id:
             last_message = None
             if ctx.message.reference is not None:
                 associated_member_id = [u.user_discord_id for u in Config.get_known_users_list()
@@ -222,17 +222,18 @@ class ChatCommands(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
-            return
-
-        await handle_message_for_chat(message, self._bot)
+        if Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
+                message.channel.id == Config.get_cross_platform_chat_settings().channel_id:
+            await handle_message_for_chat(message, self._bot)
 
     @commands.Cog.listener()
-    async def on_message_edit(self, before, after):
-        if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
-            return
-
-        await handle_message_for_chat(after, self._bot, on_edit=True, before_message=before)
+    async def on_raw_message_edit(self, payload):
+        if Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
+                payload.channel_id == Config.get_cross_platform_chat_settings().channel_id:
+            after_channel = await self._bot.fetch_channel(payload.channel_id)
+            after_message = await after_channel.fetch_message(payload.message_id)
+            await handle_message_for_chat(after_message, self._bot,
+                                          on_edit=True, before_message=payload.cached_message)
 
     @commands.command(pass_context=True, aliases=["lang"])
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
