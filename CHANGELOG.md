@@ -2,7 +2,7 @@
 
 All important changes to this project will be documented in this file.
 
-### [1.2.4 Unreleased](https://github.com/Druzai/Bot_Mc_discord/compare/1.2.3...1.2.4) (2022-xx-xx)
+## [1.3.0 Unreleased](https://github.com/Druzai/Bot_Mc_discord/compare/1.2.3...1.3.0) (2022-xx-xx)
 
 #### Improvements:
 
@@ -19,14 +19,18 @@ All important changes to this project will be documented in this file.
 * Disabled deleting user message in cross-platform chat when server is down or there are no players on it
 * Fixed slow bot response when sending a message from synchronous function
 * Added additional spaces when there are more than 9 items in list to display in command output
-* Reduced 'backup force' command cooldown to 15 seconds
+* Reduced `backup force` command cooldown to 15 seconds
 
 #### Breaking changes:
 
 * Changed `specific_command_role_id` to `managing_commands_role_id` in bot's configuration file
 * Changed commands:
   * Renamed `servers` to `server` and alias `servs` to `serv`
-  * Moved logic from `servers show` to `server`
+  * Moved logic:
+    * From `servers show` to `server`
+    * From `ops history` to `op history`
+    * From `ops` to `op info`
+  * Created commands: `associate add` and `associate del`
   * Added alias `associate` to `assoc`
   * Added alias `ls` to all `list` subcommands
 

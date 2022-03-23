@@ -177,7 +177,8 @@ class ChatCommands(commands.Cog):
                 if len(associated_member_id) > 0 and associated_member_id[0] == ctx.message.author.id:
                     last_message = ctx.message.reference.resolved
                 else:
-                    await send_msg(ctx, get_translation("{0}, this nick isn't bound to you, use `{1}assoc` first...")
+                    await send_msg(ctx,
+                                   get_translation("{0}, this nick isn't bound to you, use `{1}associate add` first...")
                                    .format(ctx.author.mention, Config.get_settings().bot_settings.prefix), True)
             else:
                 associated_nicks = [u.user_minecraft_nick for u in Config.get_known_users_list()

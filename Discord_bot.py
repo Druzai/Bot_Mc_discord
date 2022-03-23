@@ -91,9 +91,7 @@ def main():
     except (ScannerError, ParserError) as e:
         print(get_translation("Bot Error: {0}").format(e.problem.capitalize()) +
               f"\n{Style.DIM}{Fore.RED}{e.problem_mark}{Style.RESET_ALL}")
-    except SystemExit:
-        pass
-    except KeyboardInterrupt:
+    except (SystemExit, KeyboardInterrupt):
         pass
     except BaseException:
         exc = format_exc().rstrip("\n")
@@ -105,7 +103,7 @@ def main():
                 if thread.getName() == "BackupsThread":
                     thread.join()
             print(get_translation("Press any key to continue..."))
-            listen_keyboard(on_press=lambda e: stop_listening())
+            listen_keyboard(on_press=lambda: stop_listening())
             print(get_translation("Bot is stopping..."))
         exit(0)
 

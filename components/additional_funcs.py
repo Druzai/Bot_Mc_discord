@@ -3,7 +3,7 @@ import socket
 import sys
 import typing
 from ast import literal_eval
-from asyncio import sleep as asleep
+from asyncio import sleep as asleep, Task, CancelledError
 from contextlib import contextmanager, suppress
 from datetime import datetime, timedelta
 from hashlib import md5
@@ -107,6 +107,11 @@ async def send_status(ctx, is_reaction=False):
                            is_reaction)
 
 
+def _ignore_some_tasks_errors(task: Task):
+    with suppress(CancelledError, ConnectionResetError):
+        task.result()
+
+
 async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=False, is_reaction=False):
     BotVars.is_loading = True
     author, author_mention = get_author_and_mention(ctx, bot, is_reaction)
@@ -202,8 +207,10 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
         BotVars.is_restarting = False
     Config.get_server_config().states.started_info.set_state_info(str(author), datetime.now())
     Config.save_server_config()
-    bot.loop.create_task(bot.change_presence(activity=Activity(type=ActivityType.playing,
-                                                               name=Config.get_settings().bot_settings.gaming_status)))
+    task = bot.loop.create_task(
+        bot.change_presence(activity=Activity(type=ActivityType.playing,
+                                              name=Config.get_settings().bot_settings.gaming_status)))
+    task.add_done_callback(_ignore_some_tasks_errors)
 
 
 async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_restart=False, is_reaction=False):
@@ -322,8 +329,10 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_re
     await send_msg(ctx, author_mention + "\n" + add_quotes(get_translation("Server's off now")), is_reaction)
     Config.get_server_config().states.stopped_info.set_state_info(str(author), datetime.now())
     Config.save_server_config()
-    await bot.change_presence(activity=Activity(type=ActivityType.listening,
-                                                name=Config.get_settings().bot_settings.idle_status))
+    task = bot.loop.create_task(
+        bot.change_presence(activity=Activity(type=ActivityType.listening,
+                                              name=Config.get_settings().bot_settings.idle_status)))
+    task.add_done_callback(_ignore_some_tasks_errors)
 
 
 def get_list_of_processes() -> list:
@@ -462,14 +471,16 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
     if use_rcon:
         server_version = get_server_version(patch=True)
 
-        tellraw_init = ["", {"text": "<"}, {"text": get_bot_display_name(bot), "color": "dark_gray"}, {"text": "> "}]
-        tellraw_msg = tellraw_init.copy()
-        if forced:
-            tellraw_msg.append({"text": get_translation("Starting backup triggered by {0} in 3 seconds...")
-                               .format(f"{user.display_name}#{user.discriminator}"), "color": "yellow"})
-        else:
-            tellraw_msg.append({"text": get_translation("Starting automatic backup in 3 seconds..."),
-                                "color": "dark_aqua"})
+        if server_version[0] > 6:
+            tellraw_init = ["", {"text": "<"}, {"text": get_bot_display_name(bot), "color": "dark_gray"},
+                            {"text": "> "}]
+            tellraw_msg = tellraw_init.copy()
+            if forced:
+                tellraw_msg.append({"text": get_translation("Starting backup triggered by {0} in 3 seconds...")
+                                   .format(f"{user.display_name}#{user.discriminator}"), "color": "yellow"})
+            else:
+                tellraw_msg.append({"text": get_translation("Starting automatic backup in 3 seconds..."),
+                                    "color": "dark_aqua"})
         with suppress(ConnectionError, socket.error):
             with connect_rcon() as cl_r:
                 if server_version[0] < 7:
@@ -752,10 +763,11 @@ async def server_checkups(bot: commands.Bot):
                 create_watcher()
             BotVars.watcher_of_log_file.start()
         if not BotVars.is_loading and not BotVars.is_stopping and not BotVars.is_restarting:
-            bot.loop.create_task(bot.change_presence(activity=Activity(type=ActivityType.playing,
-                                                                       name=Config.get_settings().bot_settings.gaming_status
-                                                                            + ", " + str(info.get("current")) +
-                                                                            get_translation(" player(s) online"))))
+            task = bot.loop.create_task(bot.change_presence(
+                activity=Activity(type=ActivityType.playing,
+                                  name=Config.get_settings().bot_settings.gaming_status
+                                       + ", " + str(info.get("current")) + get_translation(" player(s) online"))))
+            task.add_done_callback(_ignore_some_tasks_errors)
     except (ConnectionError, socket.error):
         if len(get_list_of_processes()) == 0:
             if BotVars.is_server_on:
@@ -764,10 +776,11 @@ async def server_checkups(bot: commands.Bot):
             if BotVars.watcher_of_log_file is not None and BotVars.watcher_of_log_file.is_running():
                 BotVars.watcher_of_log_file.stop()
         if not BotVars.is_loading and not BotVars.is_stopping and not BotVars.is_restarting:
-            bot.loop.create_task(bot.change_presence(activity=Activity(type=ActivityType.listening,
-                                                                       name=Config.get_settings().bot_settings.idle_status +
-                                                                            (" 🤔" if len(
-                                                                                get_list_of_processes()) != 0 else ""))))
+            task = bot.loop.create_task(
+                bot.change_presence(activity=Activity(type=ActivityType.listening,
+                                                      name=Config.get_settings().bot_settings.idle_status +
+                                                           (" 🤔" if len(get_list_of_processes()) != 0 else ""))))
+            task.add_done_callback(_ignore_some_tasks_errors)
         if Config.get_settings().bot_settings.forceload and not BotVars.is_stopping \
                 and not BotVars.is_loading and not BotVars.is_restarting:
             channel = bot.guilds[0].get_channel(Config.get_settings().bot_settings.commands_channel_id)
@@ -1050,6 +1063,97 @@ async def bot_backup(ctx, is_reaction=False):
         if backup.restored_from:
             bot_message += "\n\t" + get_translation("The world of the server was restored from this backup")
     await send_msg(ctx, add_quotes(bot_message), is_reaction)
+
+
+async def bot_associate(ctx, bot: commands.Bot, discord_mention: Member, assoc_command: str, minecraft_nick: str):
+    comm_operators = ["add", "del"]
+    need_to_save = False
+
+    if assoc_command == comm_operators[0]:
+        if minecraft_nick in [u.user_minecraft_nick for u in Config.get_known_users_list()]:
+            associated_member = [u.user_discord_id for u in Config.get_known_users_list()
+                                 if u.user_minecraft_nick == minecraft_nick][0]
+            associated_member = await bot.guilds[0].fetch_member(associated_member)
+            await ctx.send(get_translation("This nick is already associated with member {0}.")
+                           .format(associated_member.mention))
+        else:
+            need_to_save = True
+            Config.add_to_known_users_list(minecraft_nick, discord_mention.id)
+            await ctx.send(get_translation("Now {0} associates with nick `{1}` in Minecraft.")
+                           .format(discord_mention.mention, minecraft_nick))
+    else:
+        if minecraft_nick in [u.user_minecraft_nick for u in Config.get_known_users_list()] and \
+                discord_mention.id in [u.user_discord_id for u in Config.get_known_users_list()]:
+            need_to_save = True
+            Config.remove_from_known_users_list(minecraft_nick, discord_mention.id)
+            await ctx.send(get_translation("Now link {0} -> `{1}` do not exist!")
+                           .format(discord_mention.mention, minecraft_nick))
+        else:
+            await ctx.send(get_translation("Bot don't have `mention to nick` link already!"))
+    if need_to_save:
+        Config.save_config()
+
+
+async def bot_associate_info(ctx, for_me: bool, show: str = None):
+    if show is not None:
+        message = get_translation("{0}, bot has this data on nicks and number of remaining uses:") \
+                      .format(ctx.author.mention) + "\n```"
+    else:
+        message = get_translation("{0}, bot has this data on nicks:").format(ctx.author.mention) + "\n```"
+
+    if for_me:
+        if ctx.author.id not in [u.user_discord_id for u in Config.get_known_users_list()]:
+            return get_translation("{0}, you have no bound nicks").format(ctx.author.mention)
+
+        user_nicks = [u.user_minecraft_nick for u in Config.get_known_users_list()
+                      if u.user_discord_id == ctx.author.id]
+        user_players_data = {}
+
+        if show is not None:
+            for m_nick in user_nicks:
+                for p in Config.get_seen_players_list():
+                    if p.player_minecraft_nick == m_nick:
+                        user_players_data.update({p.player_minecraft_nick: p.number_of_times_to_op})
+                        user_nicks.remove(m_nick)
+        if show is None or show == "all":
+            user_players_data.update({n: -1 for n in user_nicks})
+
+        for k, v in user_players_data.items():
+            if show is not None:
+                message += f"- {k}: {str(v) if v >= 0 else get_translation('not seen on server')}\n"
+            else:
+                message += f"- {k}\n"
+    else:
+        users_to_nicks = {}
+        for user in Config.get_known_users_list():
+            if users_to_nicks.get(user.user_discord_id, None) is None:
+                users_to_nicks.update({user.user_discord_id: []})
+            users_to_nicks[user.user_discord_id].append(user.user_minecraft_nick)
+
+        if show is not None:
+            for user_id in users_to_nicks.keys():
+                for p in Config.get_seen_players_list():
+                    if p.player_minecraft_nick in users_to_nicks[user_id]:
+                        users_to_nicks[user_id].remove(p.player_minecraft_nick)
+                        users_to_nicks[user_id].append({p.player_minecraft_nick: p.number_of_times_to_op})
+
+        for k, v in users_to_nicks.items():
+            if not len(v) or (show is not None and show == "seen" and all([isinstance(i, str) for i in v])):
+                continue
+            member = await ctx.guild.fetch_member(k)
+            message += f"{member.display_name}#{member.discriminator}:\n"
+            for item in v:
+                if show is None:
+                    message += f"- {item}\n"
+                elif show == "all" and isinstance(item, str):
+                    message += f"- {item}: " + get_translation("not seen on server") + "\n"
+                elif isinstance(item, dict):
+                    message += f"- {list(item.items())[0][0]}: {str(list(item.items())[0][1])}\n"
+
+    if message[-3:] == "```":
+        message += "-----"
+    message += "```"
+    return message
 
 
 def parse_params_for_help(command_params: dict, string_to_add: str, create_params_dict=False) -> Tuple[str, dict]:

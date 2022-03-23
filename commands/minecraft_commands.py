@@ -8,7 +8,7 @@ from random import randint
 from re import search
 from sys import argv
 
-import discord
+from discord import Embed, Color as d_Color, DMChannel, Member
 from discord.ext import commands, tasks
 from psutil import disk_usage
 
@@ -21,7 +21,7 @@ from components.additional_funcs import (
     BackupsThread, get_folder_size, send_message_of_deleted_backup, handle_backups_limit_and_size, bot_backup,
     delete_after_by_msg, get_half_members_count_with_role, warn_about_auto_backups, get_archive_uncompressed_size,
     get_bot_display_name, get_list_of_banned_ips, get_server_version, DISCORD_SYMBOLS_IN_MESSAGE_LIMIT,
-    get_number_of_digits
+    get_number_of_digits, bot_associate, bot_associate_info
 )
 from components.localization import get_translation
 from config.init_config import BotVars, Config
@@ -40,7 +40,8 @@ class MinecraftCommands(commands.Cog):
     def __init__(self, bot: commands.Bot, poll: Poll):
         self._bot: commands.Bot = bot
         self._IndPoll: Poll = poll
-        self.checkups_task.start()
+        if not self.checkups_task.is_running():
+            self.checkups_task.start()
         self._backups_thread = BackupsThread(self._bot)
         if len(argv) == 1:
             self._backups_thread.start()
@@ -83,14 +84,11 @@ class MinecraftCommands(commands.Cog):
         """Restart server"""
         await bot_restart(ctx, timeout, self._bot, self._IndPoll, self._backups_thread)
 
-    @commands.command(pass_context=True)
+    @commands.group(pass_context=True, invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
     async def op(self, ctx, minecraft_nick: str, *, reasons: str = ""):
-        """
-        Op command
-        :param reasons: comment"""
         doing_opping = BotVars.is_doing_op
         BotVars.is_doing_op = True
         if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and not BotVars.is_restarting:
@@ -109,7 +107,7 @@ class MinecraftCommands(commands.Cog):
             if minecraft_nick not in [u.user_minecraft_nick for u in Config.get_known_users_list()] or \
                     ctx.author.id not in [u.user_discord_id for u in Config.get_known_users_list()
                                           if u.user_minecraft_nick == minecraft_nick]:
-                await ctx.send(get_translation("{0}, this nick isn't bound to you, use `{1}assoc` first...")
+                await ctx.send(get_translation("{0}, this nick isn't bound to you, use `{1}associate add` first...")
                                .format(ctx.author.mention, Config.get_settings().bot_settings.prefix))
                 BotVars.is_doing_op = doing_opping
                 return
@@ -210,132 +208,14 @@ class MinecraftCommands(commands.Cog):
         else:
             await send_status(ctx)
 
-    @commands.command(pass_context=True, aliases=["assoc"])
-    @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @commands.guild_only()
-    @decorators.has_admin_role()
-    async def associate(self, ctx, discord_mention: str, assoc_command: str, minecraft_nick: str):
-        """
-        Associates discord user with nick in Minecraft
-        syntax: Nick_Discord +=/-= Nick_minecraft
-        """
-        comm_operators = ["+=", "-="]
-        if not discord_mention.startswith("<@!"):
-            await ctx.send(get_translation("Wrong 1-st argument! You can mention ONLY members of this server."))
-            return
-        need_to_save = False
-        try:
-            discord_id = int(discord_mention[3:-1])
-        except ValueError:
-            await ctx.send(get_translation("Wrong 1-st argument used!"))
-            return
-        if assoc_command not in comm_operators:
-            await ctx.send(get_translation("Wrong command syntax! Right example: `{0}assoc @me +=/-= My_nick`.")
-                           .format(Config.get_settings().bot_settings.prefix))
-            return
-
-        if assoc_command == comm_operators[0]:
-            if minecraft_nick in [u.user_minecraft_nick for u in Config.get_known_users_list()]:
-                associated_member = [u.user_discord_id for u in Config.get_known_users_list()
-                                     if u.user_minecraft_nick == minecraft_nick][0]
-                associated_member = await self._bot.guilds[0].fetch_member(associated_member)
-                await ctx.send(get_translation("This nick is already associated with nick `{0}`.")
-                               .format(associated_member.mention))
-            else:
-                need_to_save = True
-                Config.add_to_known_users_list(minecraft_nick, discord_id)
-                await ctx.send(get_translation("Now {0} associates with nick `{1}` in Minecraft.")
-                               .format(discord_mention, minecraft_nick))
-        else:
-            if minecraft_nick in [u.user_minecraft_nick for u in Config.get_known_users_list()] and \
-                    discord_id in [u.user_discord_id for u in Config.get_known_users_list()]:
-                need_to_save = True
-                Config.remove_from_known_users_list(minecraft_nick, discord_id)
-                await ctx.send(get_translation("Now link {0} -> {1} do not exist!")
-                               .format(discord_mention, minecraft_nick))
-            else:
-                await ctx.send(get_translation("Bot don't have `mention to nick` link already!"))
-        if need_to_save:
-            Config.save_config()
-
-    @commands.group(pass_context=True, invoke_without_command=True)
-    @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @commands.guild_only()
-    @decorators.has_role_or_default()
-    async def ops(self, ctx, for_who: str, show: str):
-        """
-        Get info about ops
-        :param for_who: string, "me" or "everyone"
-        :param show: "seen" or "all"
-        """
-        if for_who not in ["me", "everyone"] or show not in ["seen", "all"]:
-            await ctx.send(get_translation("Syntax:") +
-                           f" `{Config.get_settings().bot_settings.prefix}ops <'me', 'everyone'> <'seen', 'all'>`")
-            raise commands.UserInputError()
-
-        message = ""
-        if for_who == "me":
-            if ctx.author.id not in [u.user_discord_id for u in Config.get_known_users_list()]:
-                await ctx.send(get_translation("{0}, you have no bound nicks").format(ctx.author.mention))
-                return
-
-            user_nicks = [u.user_minecraft_nick for u in Config.get_known_users_list()
-                          if u.user_discord_id == ctx.author.id]
-            user_players_data = {}
-
-            for m_nick in user_nicks:
-                for p in Config.get_seen_players_list():
-                    if p.player_minecraft_nick == m_nick:
-                        user_players_data.update({p.player_minecraft_nick: p.number_of_times_to_op})
-                        user_nicks.remove(m_nick)
-            if show == "all":
-                user_players_data.update({n: -1 for n in user_nicks})
-
-            message = get_translation("{0}, bot has these data on your nicks and number of remaining uses:") \
-                          .format(ctx.author.mention) + "\n```"
-            for k, v in user_players_data.items():
-                message += f"{k}: {str(v) if v >= 0 else get_translation('not seen on server')}\n"
-        elif for_who == "everyone":
-            decorators.is_admin(ctx)
-
-            users_to_nicks = {}
-            for user in Config.get_known_users_list():
-                if users_to_nicks.get(user.user_discord_id, None) is None:
-                    users_to_nicks.update({user.user_discord_id: []})
-                users_to_nicks[user.user_discord_id].append(user.user_minecraft_nick)
-
-            for user_id in users_to_nicks.keys():
-                for p in Config.get_seen_players_list():
-                    if p.player_minecraft_nick in users_to_nicks[user_id]:
-                        users_to_nicks[user_id].remove(p.player_minecraft_nick)
-                        users_to_nicks[user_id].append({p.player_minecraft_nick: p.number_of_times_to_op})
-
-            message = get_translation("{0}, bot has these data on your nicks and number of remaining uses:") \
-                          .format(ctx.author.mention) + "\n```"
-            for k, v in users_to_nicks.items():
-                if not len(v) or (show == "seen" and all([isinstance(i, str) for i in v])):
-                    continue
-                member = await ctx.guild.fetch_member(k)
-                message += f"{member.display_name}#{member.discriminator}:\n"
-                for item in v:
-                    if show == "all" and isinstance(item, str):
-                        message += f"\t{item}: " + get_translation("not seen on server") + "\n"
-                    elif isinstance(item, dict):
-                        message += f"\t{list(item.items())[0][0]}: {str(list(item.items())[0][1])}\n"
-
-        if message[-3:] == "```":
-            message += "-----"
-        message += "```"
-        await ctx.send(message)
-
-    @ops.command(pass_context=True, aliases=["hist"], name="history")
+    @op.command(pass_context=True, name="history", aliases=["hist"])
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
     async def o_history(self, ctx, messages_from_end: int = 0):
         if messages_from_end < 0:
-            await ctx.send(get_translation("Wrong 1-st argument used!") + " " +
-                           get_translation("Integer must be above 0!"))
+            await ctx.send(add_quotes(get_translation("Wrong 1-st argument used!") + "\n" +
+                                      get_translation("Integer must be above 0!")))
             return
         log = Config.get_op_log() if messages_from_end < 1 else Config.get_op_log()[-messages_from_end:]
         if "".join(log) == "":
@@ -361,6 +241,51 @@ class MinecraftCommands(commands.Cog):
                 await ctx.send(add_quotes(msg))
         else:
             await ctx.send(add_quotes("".join(log)))
+
+    @op.command(pass_context=True, name="info")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_role_or_default()
+    async def op_info(self, ctx, for_who: str, show: str):
+        """
+        Get info about ops
+        :param for_who: "me" or "everyone"
+        :param show: "seen" or "all"
+        """
+        if for_who not in ["me", "everyone"] or show not in ["seen", "all"]:
+            await ctx.send(get_translation("Syntax:") +
+                           f" `{Config.get_settings().bot_settings.prefix}op info <'me', 'everyone'> <'seen', 'all'>`")
+            raise commands.UserInputError()
+
+        message = await bot_associate_info(ctx, for_me=for_who == "me", show=show)
+        await ctx.send(message)
+
+    @commands.group(pass_context=True, aliases=["assoc"], invoke_without_command=True)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_admin_role()
+    async def associate(self, ctx, for_who: str):
+        """Associates discord user with nick in Minecraft"""
+        if for_who not in ["me", "everyone"]:
+            await ctx.send(get_translation("Syntax:") +
+                           f" `{Config.get_settings().bot_settings.prefix}associate <'me', 'everyone'>`")
+            raise commands.UserInputError()
+        message = await bot_associate_info(ctx, for_me=for_who == "me")
+        await ctx.send(message)
+
+    @associate.command(pass_context=True, name="add")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_admin_role()
+    async def a_add(self, ctx, discord_mention: Member, minecraft_nick: str):
+        await bot_associate(ctx, self._bot, discord_mention, "add", minecraft_nick)
+
+    @associate.command(pass_context=True, name="del", aliases=["remove"])
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_admin_role()
+    async def a_del(self, ctx, discord_mention: Member, minecraft_nick: str):
+        await bot_associate(ctx, self._bot, discord_mention, "del", minecraft_nick)
 
     @commands.group(pass_context=True, invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -429,7 +354,7 @@ class MinecraftCommands(commands.Cog):
                 bound_user = await self._bot.guilds[0].fetch_member(user.user_discord_id)
                 break
         if (bound_user is not None and bound_user.id != ctx.author.id) or \
-                (isinstance(ctx.channel, discord.DMChannel) and bound_user is None):
+                (isinstance(ctx.channel, DMChannel) and bound_user is None):
             await ctx.send(add_quotes(get_translation("You don't have this nick in associations!")))
             return
 
@@ -476,7 +401,7 @@ class MinecraftCommands(commands.Cog):
     @decorators.has_role_or_default()
     async def a_ban(self, ctx, ip: ip_address, *, reason: str = None):
         has_admin_rights = False
-        if not isinstance(ctx.channel, discord.DMChannel):
+        if not isinstance(ctx.channel, DMChannel):
             with suppress(decorators.MissingAdminPermissions):
                 if decorators.is_admin(ctx):
                     has_admin_rights = True
@@ -487,7 +412,7 @@ class MinecraftCommands(commands.Cog):
 
         if not has_admin_rights:
             if ctx.author.id not in [u.user_discord_id for u in Config.get_known_users_list()]:
-                await ctx.send(get_translation("{0}, you don't have bound nicks, use `{1}assoc` first...")
+                await ctx.send(get_translation("{0}, you don't have bound nicks, use `{1}associate add` first...")
                                .format(ctx.author.mention, Config.get_settings().bot_settings.prefix))
                 return
             bound_nicks = [u.user_minecraft_nick for u in Config.get_known_users_list()
@@ -564,7 +489,7 @@ class MinecraftCommands(commands.Cog):
         bound_nicks = None
         if not has_admin_rights:
             if ctx.author.id not in [u.user_discord_id for u in Config.get_known_users_list()]:
-                await ctx.send(get_translation("{0}, you don't have bound nicks, use `{1}assoc` first...")
+                await ctx.send(get_translation("{0}, you don't have bound nicks, use `{1}associate add` first...")
                                .format(ctx.author.mention, Config.get_settings().bot_settings.prefix))
                 return
             bound_nicks = [u.user_minecraft_nick for u in Config.get_known_users_list()
@@ -1117,8 +1042,8 @@ class MinecraftCommands(commands.Cog):
     @decorators.has_role_or_default()
     async def menu(self, ctx):
         await delete_after_by_msg(ctx.message, without_delay=True)
-        emb = discord.Embed(title=get_translation("List of commands via reactions"),
-                            color=discord.Color.teal())
+        emb = Embed(title=get_translation("List of commands via reactions"),
+                    color=d_Color.teal())
         for key, value in self._emoji_symbols.items():
             emb.add_field(name=key, value=value)
         add_reactions_to = await ctx.send(embed=emb)
