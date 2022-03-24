@@ -172,11 +172,8 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
             percentage = round((timedelta_secs / Config.get_selected_server_from_list().server_loading_time) * 100)
             output_bot = get_translation("Loading: ") + ((str(percentage) + "%") if percentage < 101 else "100%...")
         else:
-            output_bot = get_translation("{0}, elapsed time: ") \
-                             .format(Config.get_settings().bot_settings.idle_status) + \
-                         (str(timedelta_secs // 60) + ":" +
-                          f"{(timedelta_secs % 60):02d}" if timedelta_secs // 60 != 0 else str(timedelta_secs) +
-                                                                                           get_translation(" sec"))
+            output_bot = get_translation("{0}, elapsed time: ").format(Config.get_settings().bot_settings.idle_status) \
+                         + get_time_string(timedelta_secs, True)
         await bot.change_presence(activity=Activity(type=ActivityType.listening, name=output_bot))
         await asleep(Config.get_timeouts_settings().await_seconds_when_connecting_via_rcon)
         with suppress(ConnectionError, socket.error):
@@ -528,11 +525,7 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
                     timedelta_secs = (datetime.now() - dt).seconds
                     if timedelta_secs % 4 == 0:
                         percent = round(100 * current / total)
-                        if timedelta_secs // 60 != 0:
-                            date_t = str(timedelta_secs // 60) + ":" + f"{(timedelta_secs % 60):02d}"
-                        else:
-                            date_t = str(timedelta_secs % 60) + get_translation(" sec")
-                        yield add_quotes(f"diff\n{percent}% {date_t} '{afn}'\n"
+                        yield add_quotes(f"diff\n{percent}% {get_time_string(timedelta_secs, True)} '{afn}'\n"
                                          f"- |{'█' * (percent // 5)}{' ' * (20 - percent // 5)}|")
                 tries = 0
                 while tries < 3:
@@ -546,11 +539,7 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
                 current += getsize(fn)
 
     if forced:
-        timedelta_secs = (datetime.now() - dt).seconds
-        if timedelta_secs // 60 != 0:
-            date_t = str(timedelta_secs // 60) + ":" + f"{(timedelta_secs % 60):02d}"
-        else:
-            date_t = str(timedelta_secs % 60) + get_translation(" sec")
+        date_t = get_time_string((datetime.now() - dt).seconds, True)
         backup_size = get_file_size(f"{zip_path}/{zip_name}.zip")
         backup_size_str = get_human_readable_size(backup_size, round=True)
         world_folder_size = get_folder_size(Config.get_selected_server_from_list().working_directory,
@@ -737,6 +726,20 @@ def get_half_members_count_with_role(bot: commands.Bot, role: int):
     if count < 2:
         return count
     return count // 2
+
+
+def get_time_string(seconds: int, use_colon=False):
+    sec_str = get_translation(" sec")
+    if use_colon:
+        if seconds // 60 != 0:
+            return f"{seconds // 60}:{(seconds % 60):02d}"
+        else:
+            return f"{seconds}{sec_str}"
+    else:
+        min_str = get_translation(" min")
+        return ("" if seconds // 60 == 0 else f"{str(seconds // 60)}{min_str}") + \
+               (" " if seconds > 59 and seconds % 60 != 0 else "") + \
+               ("" if seconds % 60 == 0 else f"{str(seconds % 60)}{sec_str}")
 
 
 async def server_checkups(bot: commands.Bot):

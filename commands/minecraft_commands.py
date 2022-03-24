@@ -21,7 +21,7 @@ from components.additional_funcs import (
     BackupsThread, get_folder_size, send_message_of_deleted_backup, handle_backups_limit_and_size, bot_backup,
     delete_after_by_msg, get_half_members_count_with_role, warn_about_auto_backups, get_archive_uncompressed_size,
     get_bot_display_name, get_list_of_banned_ips, get_server_version, DISCORD_SYMBOLS_IN_MESSAGE_LIMIT,
-    get_number_of_digits, bot_associate, bot_associate_info
+    get_number_of_digits, bot_associate, bot_associate_info, get_time_string
 )
 from components.localization import get_translation
 from config.init_config import BotVars, Config
@@ -139,10 +139,8 @@ class MinecraftCommands(commands.Cog):
             bot_display_name = get_bot_display_name(self._bot)
             try:
                 with connect_rcon() as cl_r:
-                    bot_message = f"{minecraft_nick}," + get_translation(" you've opped for") + (
-                        "" if await_time_op // 60 == 0 else " " + str(await_time_op // 60) + get_translation(" min")) \
-                                  + ("." if await_time_op % 60 == 0 else " " + str(await_time_op % 60) +
-                                                                         get_translation(" sec") + ".")
+                    bot_message = f"{minecraft_nick}," + get_translation(" you've opped for") + \
+                                  f" {get_time_string(await_time_op)}."
                     cl_r.tellraw("@a", ["", {"text": "<"}, {"text": bot_display_name, "color": "dark_gray"},
                                         {"text": "> " + bot_message}])
                     cl_r.mkop(minecraft_nick)
