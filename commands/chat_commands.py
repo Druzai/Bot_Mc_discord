@@ -337,7 +337,8 @@ class ChatCommands(commands.Cog):
                 params, _ = parse_params_for_help(c.clean_params, "")
                 subcommands = parse_subcommands_for_help(c)[0]
                 emb.add_field(name=f"__`{c.name}" + ("/" if len(c.aliases) > 0 else "") + "/".join(c.aliases) + "`__" +
-                                   (" " + " | ".join(subcommands) if len(subcommands) else "") + params,
+                                   (" " + " | ".join(subcommands) if len(subcommands) else "") +
+                                   (" |" if len(subcommands) and len(params) else "") + params,
                               value=add_quotes("\n" + get_translation(f"help_brief_{c.name}")), inline=False)
             emb.set_footer(text=get_translation("Values in [square brackets] are optional.\n"
                                                 "Values in <angle brackets> have to be provided by you.\n"

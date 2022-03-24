@@ -1237,14 +1237,16 @@ def parse_subcommands_for_help(command, all_params=False) -> Tuple[List[str], Li
     subcommands = []
     for subcommand in command_commands:
         sub_sub_commands_line = parse_subcommands_for_help(subcommand)[0]
+        sub_commands_aliases_line = ("/" if len(subcommand.aliases) > 0 else "") + "/".join(subcommand.aliases)
         if sub_sub_commands_line:
             sub_sub_commands_line = " " + " | ".join(sub_sub_commands_line) if len(sub_sub_commands_line) else ""
-            sub_command, *sub_command_params = \
-                parse_params_for_help(subcommand.clean_params, subcommand.name)[0].split()
-            subcommands.append(sub_command + sub_sub_commands_line + (" | " if len(sub_sub_commands_line) > 0 else "") +
-                               " ".join(sub_command_params))
+            sub_command, *sub_command_params = parse_params_for_help(subcommand.clean_params,
+                                                                     subcommand.name)[0].split()
+            subcommands.append(sub_command + sub_commands_aliases_line + sub_sub_commands_line +
+                               (" | " if len(sub_command_params) > 0 else "") + " ".join(sub_command_params))
         else:
-            subcommands.append(parse_params_for_help(subcommand.clean_params, subcommand.name)[0])
+            subcommands.append(parse_params_for_help(subcommand.clean_params,
+                                                     subcommand.name + sub_commands_aliases_line)[0])
     return [c.name for c in command_commands], subcommands
 
 
