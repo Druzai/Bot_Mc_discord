@@ -121,8 +121,7 @@ class ChatCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
-    async def r_command(self, ctx, role: commands.Greedy[Role]):
-        role = role[0]
+    async def r_command(self, ctx, role: Role):
         Config.get_settings().bot_settings.managing_commands_role_id = role.id
         Config.save_config()
         await ctx.channel.send(
@@ -142,8 +141,7 @@ class ChatCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
-    async def r_admin(self, ctx, role: commands.Greedy[Role]):
-        role = role[0]
+    async def r_admin(self, ctx, role: Role):
         Config.get_settings().bot_settings.admin_role_id = role.id
         Config.save_config()
         await ctx.channel.send(get_translation("Role {0} set as admin role for bot").format(role.mention))
@@ -369,7 +367,7 @@ class ChatCommands(commands.Cog):
         else:
             await bot_dm_clear(ctx, self._bot, subcommand="all")
 
-    @clear.command(pass_context=True, name="reply")
+    @clear.command(pass_context=True, name="reply", aliases=["to"])
     @decorators.bot_has_permissions_with_dm(manage_messages=True, send_messages=True, mention_everyone=True,
                                             add_reactions=True, embed_links=True, read_message_history=True,
                                             view_channel=True)

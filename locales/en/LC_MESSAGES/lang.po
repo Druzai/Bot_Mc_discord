@@ -133,75 +133,75 @@ msgid "help_associate_del_minecraft_nick"
 msgstr "Nick in Minecraft that you want to unlink to"
 
 #: ..\_frozen_translations.py:18
-msgid "help_brief_auth"
+msgid "help_brief_authorize"
 msgstr "Handles secure authorization in Minecraft 🔑"
 
 #: ..\_frozen_translations.py:19
-msgid "help_auth"
+msgid "help_authorize"
 msgstr ""
 "Returns information about secure authorization configuration and authorized "
 "players"
 
 #: ..\_frozen_translations.py:20
-msgid "help_auth_ban"
+msgid "help_authorize_ban"
 msgstr "Bans specified IP-address"
 
 #: ..\_frozen_translations.py:21
-msgid "help_auth_ban_ip"
+msgid "help_authorize_ban_ip"
 msgstr "IP-address to search"
 
 #: ..\_frozen_translations.py:22
-msgid "help_auth_ban_reason"
+msgid "help_authorize_ban_reason"
 msgstr "Reason for ban"
 
 #: ..\_frozen_translations.py:23
-msgid "help_auth_banlist"
+msgid "help_authorize_banlist"
 msgstr "Returns list of bans by IP-address on selected Minecraft server"
 
 #: ..\_frozen_translations.py:24
-msgid "help_auth_login"
+msgid "help_authorize_login"
 msgstr ""
 "Confirms and gives access to the user by nick using code\n"
 "Works only if user logged into the Minecraft server at least once"
 
 #: ..\_frozen_translations.py:25
-msgid "help_auth_login_code"
+msgid "help_authorize_login_code"
 msgstr "{code_length}-digit code, not case sensitive"
 
 #: ..\_frozen_translations.py:26
-msgid "help_auth_login_nick"
+msgid "help_authorize_login_nick"
 msgstr "Nick of Minecraft player"
 
 #: ..\_frozen_translations.py:27
-msgid "help_auth_off"
+msgid "help_authorize_off"
 msgstr "Disables secure authorization"
 
 #: ..\_frozen_translations.py:28
-msgid "help_auth_on"
+msgid "help_authorize_on"
 msgstr "Enables secure authorization"
 
 #: ..\_frozen_translations.py:29
-msgid "help_auth_revoke"
+msgid "help_authorize_revoke"
 msgstr ""
 "Prematurely revokes permission to access by IP-address for nicks in "
 "Minecraft available to you"
 
 #: ..\_frozen_translations.py:30
-msgid "help_auth_revoke_ip"
+msgid "help_authorize_revoke_ip"
 msgstr "IP-address to search"
 
 #: ..\_frozen_translations.py:31
-msgid "help_auth_revoke_nick"
+msgid "help_authorize_revoke_nick"
 msgstr ""
 "Minecraft nick to search\n"
 "If provided only IP-address from this nick will be revoked!"
 
 #: ..\_frozen_translations.py:32
-msgid "help_auth_revoke_all"
+msgid "help_authorize_revoke_all"
 msgstr "Revokes all logged nicks"
 
 #: ..\_frozen_translations.py:33
-msgid "help_auth_unban"
+msgid "help_authorize_unban"
 msgstr "Unbans selected IP-address from selected Minecraft server ban list"
 
 #: ..\_frozen_translations.py:34

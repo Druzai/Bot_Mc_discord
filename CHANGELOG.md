@@ -35,7 +35,9 @@ All important changes to this project will be documented in this file.
     * From `forceload` to `schedule forceload`
   * Created commands: `associate add` and `associate del`
   * Added alias `associate` to `assoc`
+  * Added alias `authorize` to `auth`
   * Added alias `ls` to all `list` subcommands
+  * Added alias `to` to `reply` subcommand of `clear`
 
 ### [1.2.3](https://github.com/Druzai/Bot_Mc_discord/compare/1.2.2...1.2.3) (2021-12-19)
 

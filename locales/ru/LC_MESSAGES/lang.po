@@ -134,81 +134,81 @@ msgid "help_associate_del_minecraft_nick"
 msgstr "Ник в майнкрафте, который вы хотите отвязать"
 
 #: ..\_frozen_translations.py:18
-msgid "help_brief_auth"
+msgid "help_brief_authorize"
 msgstr "Обеспечивает безопасную авторизацию в майнкрафте 🔑"
 
 #: ..\_frozen_translations.py:19
-msgid "help_auth"
+msgid "help_authorize"
 msgstr ""
 "Возвращает информацию о конфигурации безопасной авторизации и авторизованных "
 "игроках"
 
 #: ..\_frozen_translations.py:20
-msgid "help_auth_ban"
+msgid "help_authorize_ban"
 msgstr "Банит указанный IP-адрес"
 
 #: ..\_frozen_translations.py:21
-msgid "help_auth_ban_ip"
+msgid "help_authorize_ban_ip"
 msgstr "IP-адрес для поиска"
 
 #: ..\_frozen_translations.py:22
-msgid "help_auth_ban_reason"
+msgid "help_authorize_ban_reason"
 msgstr "Причина для бана"
 
 #: ..\_frozen_translations.py:23
-msgid "help_auth_banlist"
+msgid "help_authorize_banlist"
 msgstr "Возвращает список банов по IP-адресу на выбранном майнкрафт сервере"
 
 #: ..\_frozen_translations.py:24
-msgid "help_auth_login"
+msgid "help_authorize_login"
 msgstr ""
 "Подтверждает и даёт доступ пользователю по нику с помощью кода\n"
 "Работает только если пользователь хотя бы один раз заходил на майнкрафт "
 "сервер"
 
 #: ..\_frozen_translations.py:25
-msgid "help_auth_login_code"
+msgid "help_authorize_login_code"
 msgstr "{code_length}-значный код без учёта регистра"
 
 #: ..\_frozen_translations.py:26
-msgid "help_auth_login_nick"
+msgid "help_authorize_login_nick"
 msgstr "Ник игрока в майнкрафте"
 
 #: ..\_frozen_translations.py:27
-msgid "help_auth_off"
+msgid "help_authorize_off"
 msgstr "Отключает безопасную авторизацию"
 
 #: ..\_frozen_translations.py:28
-msgid "help_auth_on"
+msgid "help_authorize_on"
 msgstr "Включает безопасную авторизацию"
 
 #: ..\_frozen_translations.py:29
-msgid "help_auth_revoke"
+msgid "help_authorize_revoke"
 msgstr ""
 "Досрочно отзывает разрешение на доступ по IP-адресу для доступных Вам ников "
 "в майнкрафте"
 
 #: ..\_frozen_translations.py:30
-msgid "help_auth_revoke_ip"
+msgid "help_authorize_revoke_ip"
 msgstr "IP-адрес для поиска"
 
 #: ..\_frozen_translations.py:31
-msgid "help_auth_revoke_nick"
+msgid "help_authorize_revoke_nick"
 msgstr ""
 "Ник в майнкрафте для поиска\n"
 "Если предоставлен, только IP-адрес у этого ника, будет отозван!"
 
 #: ..\_frozen_translations.py:32
-msgid "help_auth_revoke_all"
+msgid "help_authorize_revoke_all"
 msgstr "Отзывает все зашедшие ники"
 
 #: ..\_frozen_translations.py:33
-msgid "help_auth_unban"
+msgid "help_authorize_unban"
 msgstr ""
 "Разбанивает выбранный IP-адрес из списка банов выбранного майнкрафт сервера"
 
 #: ..\_frozen_translations.py:34
-msgid "help_auth_unban_ip"
+msgid "help_authorize_unban_ip"
 msgstr "IP-адрес для поиска"
 
 #: ..\_frozen_translations.py:35

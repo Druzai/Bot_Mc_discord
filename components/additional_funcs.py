@@ -1394,7 +1394,7 @@ def get_offline_uuid(username):
     data[8] &= 0x3f  # clear variant
     data[8] |= 0x80  # set to IETF variant
     uuid = data.hex()
-    return '-'.join((uuid[:8], uuid[8:12], uuid[12:16], uuid[16:20], uuid[20:]))
+    return "-".join((uuid[:8], uuid[8:12], uuid[12:16], uuid[16:20], uuid[20:]))
 
 
 def get_whitelist_entry(username):

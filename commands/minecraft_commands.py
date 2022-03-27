@@ -316,10 +316,10 @@ class MinecraftCommands(commands.Cog):
     async def a_del(self, ctx, discord_mention: Member, minecraft_nick: str):
         await bot_associate(ctx, self._bot, discord_mention, "del", minecraft_nick)
 
-    @commands.group(pass_context=True, invoke_without_command=True)
+    @commands.group(pass_context=True, aliases=["auth"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
-    async def auth(self, ctx):
+    async def authorize(self, ctx):
         msg = get_translation("Secure authorization on") if Config.get_secure_auth().enable_secure_auth \
             else get_translation("Secure authorization off")
         msg += "\n" + get_translation("Login attempts allowed - {0}") \
@@ -340,7 +340,7 @@ class MinecraftCommands(commands.Cog):
                     msg += f"\t{ip[0]}: {ip[1]}\n"
         await ctx.send(add_quotes(msg))
 
-    @auth.command(pass_context=True, name="on")
+    @authorize.command(pass_context=True, name="on")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
@@ -349,7 +349,7 @@ class MinecraftCommands(commands.Cog):
         Config.save_config()
         await ctx.send(add_quotes(get_translation("Secure authorization on")))
 
-    @auth.command(pass_context=True, name="off")
+    @authorize.command(pass_context=True, name="off")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
@@ -358,7 +358,7 @@ class MinecraftCommands(commands.Cog):
         Config.save_config()
         await ctx.send(add_quotes(get_translation("Secure authorization off")))
 
-    @auth.command(pass_context=True, name="login")
+    @authorize.command(pass_context=True, name="login")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @decorators.has_role_or_default()
     async def a_login(self, ctx, nick: str, code: str):
@@ -414,7 +414,7 @@ class MinecraftCommands(commands.Cog):
         else:
             await ctx.send(add_quotes(get_translation("Your code for this nick is wrong. Try again.")))
 
-    @auth.command(pass_context=True, name="banlist")
+    @authorize.command(pass_context=True, name="banlist")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @decorators.has_role_or_default()
     async def a_banlist(self, ctx):
@@ -425,7 +425,7 @@ class MinecraftCommands(commands.Cog):
         else:
             await ctx.send(add_quotes(get_translation("There are no banned IP-addresses!")))
 
-    @auth.command(pass_context=True, name="ban")
+    @authorize.command(pass_context=True, name="ban")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @decorators.has_role_or_default()
     async def a_ban(self, ctx, ip: ip_address, *, reason: str = None):
@@ -477,7 +477,7 @@ class MinecraftCommands(commands.Cog):
             else:
                 await ctx.send(add_quotes(get_translation("server offline").capitalize()))
 
-    @auth.command(pass_context=True, aliases=["pardon"], name="unban")
+    @authorize.command(pass_context=True, aliases=["pardon"], name="unban")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
@@ -496,7 +496,7 @@ class MinecraftCommands(commands.Cog):
             else:
                 await ctx.send(add_quotes(get_translation("server offline").capitalize()))
 
-    @auth.group(pass_context=True, name="revoke", invoke_without_command=True)
+    @authorize.group(pass_context=True, name="revoke", invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
