@@ -42,6 +42,7 @@ class BotVars:
     port_query: int = None
     port_rcon: int = None
     rcon_pass: str = None
+    auto_shutdown_start_date: datetime = None
     watcher_of_log_file: 'Watcher' = None
     watcher_last_line: str = None
     webhook_chat: Webhook = None
@@ -136,8 +137,14 @@ class Rss_feed:
 class Timeouts:
     await_seconds_when_connecting_via_rcon: float = -1.0
     await_seconds_in_check_ups: int = -1
+    await_seconds_before_shutdown: int = -1
     await_seconds_when_opped: int = -1
     await_seconds_before_message_deletion: int = -1
+
+    @property
+    def calc_before_shutdown(self):
+        return round(self.await_seconds_before_shutdown / self.await_seconds_in_check_ups) \
+               * self.await_seconds_in_check_ups
 
 
 @dataclass
@@ -194,6 +201,7 @@ class Bot_settings:
     menu_id: Optional[int] = None
     commands_channel_id: Optional[int] = None
     forceload: bool = False
+    auto_shutdown: bool = False
     default_number_of_times_to_op: int = -1
     server_watcher: Server_watcher = Server_watcher()
     rss_feed: Rss_feed = Rss_feed()
@@ -233,7 +241,7 @@ class State_info:
     user: Optional[str] = None
     date_stamp: Optional[int] = None
 
-    def set_state_info(self, user: str, date: datetime):
+    def set_state_info(self, user: Optional[str], date: datetime):
         self.user, self.date_stamp = user, int(date.timestamp())
 
     @property
@@ -924,7 +932,8 @@ class Config:
         if cls._settings_instance.bot_settings.default_number_of_times_to_op < 1 or \
                 cls._settings_instance.bot_settings.default_number_of_times_to_op > 1000:
             cls._settings_instance.bot_settings.default_number_of_times_to_op = \
-                cls._ask_for_data(get_translation("Set default number of times to op for every player (int):") + "\n> ",
+                cls._ask_for_data(get_translation("Set default number of times to give an operator "
+                                                  "for every player (int):") + "\n> ",
                                   try_int=True, int_high_than=0, int_low_than=1001)
 
     @classmethod
@@ -942,18 +951,42 @@ class Config:
                     get_translation("Set timeout between check-ups 'Server on/off' (in seconds, int)") + "\n> ",
                     try_int=True, int_high_than=0, int_low_than=61)
         print(get_translation("Timeout between check-ups 'Server on/off' set to {0} sec.")
-              .format(str(cls.get_timeouts_settings().await_seconds_in_check_ups)))
+              .format(cls.get_timeouts_settings().await_seconds_in_check_ups))
+
+        # Timeout for shutdown when no players found during a long period of time
+        if cls.get_timeouts_settings().await_seconds_before_shutdown < 0 or \
+                cls.get_timeouts_settings().await_seconds_before_shutdown > 86400:
+            cls._need_to_rewrite = True
+            print(get_translation("Timeout for shutdown the Minecraft server when no players found "
+                                  "during a long period of time set below 0. Change this option."))
+            cls.get_timeouts_settings().await_seconds_before_shutdown = \
+                cls._ask_for_data(get_translation("Set timeout for shutdown the Minecraft server when "
+                                                  "no players found during a long period of time (0 "
+                                                  "- for instant shutdown) (in seconds, int)") + "\n> ",
+                                  try_int=True, int_high_than=0, int_low_than=86401)
+        print(get_translation("Timeout for shutdown the Minecraft server when no players found during "
+                              "a long period of time set to {0} sec.")
+              .format(cls.get_timeouts_settings().await_seconds_before_shutdown))
+        if cls.get_timeouts_settings().await_seconds_before_shutdown == 0:
+            print(get_translation("Server will be stopped immediately."))
+        if cls.get_settings().bot_settings.auto_shutdown:
+            print(get_translation("Shutdown the Minecraft server when no players found during "
+                                  "a long period of time is enabled."))
+        else:
+            print(get_translation("Shutdown the Minecraft server when no players found during "
+                                  "a long period of time is disabled."))
 
         # Timeout for op
-        if cls.get_timeouts_settings().await_seconds_when_opped < 1 or \
+        if cls.get_timeouts_settings().await_seconds_when_opped < 0 or \
                 cls.get_timeouts_settings().await_seconds_when_opped > 1440:
             cls._need_to_rewrite = True
-            print(get_translation("Timeout for op set below 0. Change this option."))
+            print(get_translation("Timeout for being operator in Minecraft set below 0. Change this option."))
             cls.get_timeouts_settings().await_seconds_when_opped = \
-                cls._ask_for_data(get_translation("Set timeout for op (0 - for unlimited timeout) (in seconds, int)") +
-                                  "\n> ", try_int=True, int_high_than=0, int_low_than=1441)
-        print(get_translation("Timeout for op set to {0} sec.")
-              .format(str(cls.get_timeouts_settings().await_seconds_when_opped)))
+                cls._ask_for_data(get_translation("Set timeout for being operator in Minecraft "
+                                                  "(0 - for unlimited timeout) (in seconds, int)") + "\n> ",
+                                  try_int=True, int_high_than=-1, int_low_than=1441)
+        print(get_translation("Timeout for being operator in Minecraft set to {0} sec.")
+              .format(cls.get_timeouts_settings().await_seconds_when_opped))
         if cls.get_timeouts_settings().await_seconds_when_opped == 0:
             print(get_translation("Limitation doesn't exist, padawan."))
 
@@ -967,9 +1000,7 @@ class Config:
                     "Set timeout while bot pinging server for info (in seconds, float)") + "\n> ",
                                   try_float=True, float_high_than=0.1, float_low_than=7.1)
         print(get_translation("Timeout while bot pinging server for info set to {0} sec.")
-              .format(str(cls.get_timeouts_settings().await_seconds_when_connecting_via_rcon)))
-        if cls.get_timeouts_settings().await_seconds_when_connecting_via_rcon == 0:
-            print(get_translation("I'm fast as f*ck, boi!"))
+              .format(cls.get_timeouts_settings().await_seconds_when_connecting_via_rcon))
 
         # Timeout before message deletion
         if cls.get_timeouts_settings().await_seconds_before_message_deletion < 2 or \
@@ -981,7 +1012,7 @@ class Config:
                 cls._ask_for_data(get_translation("Set timeout before message deletion (in seconds, int)") + "\n> ",
                                   try_int=True, int_high_than=1, int_low_than=121)
         print(get_translation("Timeout before message deletion is set to {0} sec.")
-              .format(str(cls.get_timeouts_settings().await_seconds_before_message_deletion)))
+              .format(cls.get_timeouts_settings().await_seconds_before_message_deletion))
 
     @classmethod
     def _setup_servers(cls):

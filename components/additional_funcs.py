@@ -198,6 +198,7 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
             await send_msg(ctx, get_translation("Kept you waiting, huh?"), is_reaction)
     if backups_thread is not None:
         backups_thread.skip()
+    BotVars.auto_shutdown_start_date = None
     BotVars.is_loading = False
     BotVars.is_server_on = True
     if BotVars.is_restarting:
@@ -210,16 +211,18 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
     task.add_done_callback(_ignore_some_tasks_errors)
 
 
-async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_restart=False, is_reaction=False):
+async def stop_server(ctx, bot: commands.Bot, poll: Poll,
+                      how_many_sec=10, is_restart=False, shut_up=False, is_reaction=False):
     no_connection = False
     players_info = None
 
     if "stop" in [p.command for p in poll.get_polls().values()]:
         if not is_reaction:
             await delete_after_by_msg(ctx.message)
-        await ctx.send(get_translation("{0}, bot already has poll on `stop`/`restart` command!")
-                       .format(ctx.author.mention),
-                       delete_after=Config.get_timeouts_settings().await_seconds_before_message_deletion)
+        if not shut_up:
+            await ctx.send(get_translation("{0}, bot already has poll on `stop`/`restart` command!")
+                           .format(ctx.author.mention),
+                           delete_after=Config.get_timeouts_settings().await_seconds_before_message_deletion)
         return
 
     try:
@@ -227,9 +230,9 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_re
     except (ConnectionError, socket.error):
         if len(get_list_of_processes()) == 0:
             print(get_translation("Bot Exception: Couldn't connect to server, because it's stopped"))
-            await send_msg(ctx,
-                           add_quotes(get_translation("Couldn't connect to server to shut it down! Server stopped...")),
-                           is_reaction)
+            if not shut_up:
+                await send_msg(ctx, add_quotes(get_translation("Couldn't connect to server to shut it down! "
+                                                               "Server stopped...")), is_reaction)
             BotVars.is_stopping = False
             BotVars.is_server_on = False
             return
@@ -267,9 +270,10 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_re
 
         BotVars.is_stopping = True
         print(get_translation("Stopping server by request of {0}").format(author))
-        await send_msg(ctx, add_quotes(get_translation("Stopping server") + "......." +
-                                       ("\n" + get_translation("Please wait {0} sec.").format(str(how_many_sec))
-                                        if how_many_sec > 0 else "")), is_reaction)
+        if not shut_up:
+            await send_msg(ctx, add_quotes(get_translation("Stopping server") + "......." +
+                                           ("\n" + get_translation("Please wait {0} sec.").format(str(how_many_sec))
+                                            if how_many_sec > 0 else "")), is_reaction)
 
         with suppress(ConnectionError, socket.error):
             server_version = get_server_version()
@@ -316,14 +320,17 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll, how_many_sec=10, is_re
                 break
     else:
         print(get_translation("Bot Exception: Couldn't connect to server, so killing it now..."))
-        await send_msg(ctx,
-                       add_quotes(get_translation("Couldn't connect to server to shut it down! Killing it now...")),
-                       is_reaction)
+        if not shut_up:
+            await send_msg(ctx,
+                           add_quotes(get_translation("Couldn't connect to server to shut it down! Killing it now...")),
+                           is_reaction)
     kill_server()
+    BotVars.auto_shutdown_start_date = None
     BotVars.is_stopping = False
     BotVars.is_server_on = False
     print(get_translation("Server's off now"))
-    await send_msg(ctx, author_mention + "\n" + add_quotes(get_translation("Server's off now")), is_reaction)
+    if not shut_up:
+        await send_msg(ctx, author_mention + "\n" + add_quotes(get_translation("Server's off now")), is_reaction)
     Config.get_server_config().states.stopped_info.set_state_info(str(author), datetime.now())
     Config.save_server_config()
     task = bot.loop.create_task(
@@ -742,7 +749,7 @@ def get_time_string(seconds: int, use_colon=False):
                ("" if seconds % 60 == 0 else f"{str(seconds % 60)}{sec_str}")
 
 
-async def server_checkups(bot: commands.Bot):
+async def server_checkups(bot: commands.Bot, backups_thread: BackupsThread, poll):
     try:
         info = get_server_players()
         if info.get("current") != 0:
@@ -771,11 +778,37 @@ async def server_checkups(bot: commands.Bot):
                                   name=Config.get_settings().bot_settings.gaming_status
                                        + ", " + str(info.get("current")) + get_translation(" player(s) online"))))
             task.add_done_callback(_ignore_some_tasks_errors)
+            if Config.get_settings().bot_settings.auto_shutdown:
+                if info.get("current") == 0 and BotVars.auto_shutdown_start_date is None:
+                    BotVars.auto_shutdown_start_date = \
+                        datetime.now() + timedelta(seconds=Config.get_timeouts_settings().calc_before_shutdown)
+                elif info.get("current") != 0 and BotVars.auto_shutdown_start_date is not None:
+                    BotVars.auto_shutdown_start_date = None
+                elif info.get("current") == 0 and BotVars.auto_shutdown_start_date <= datetime.now():
+                    channel = bot.guilds[0].get_channel(Config.get_settings().bot_settings.commands_channel_id)
+                    if channel is None:
+                        channel = [ch for ch in bot.guilds[0].channels if isinstance(ch, TextChannel)][0]
+                    print(get_translation("Bot detected: Server is idle for {0} "
+                                          "without players! Stopping server now!")
+                          .format(get_time_string(Config.get_timeouts_settings().calc_before_shutdown)))
+                    await send_msg(ctx=channel,
+                                   msg=add_quotes(get_translation("Bot detected: Server is idle for "
+                                                                  "{0} without players!\n"
+                                                                  "Time: {1}\n"
+                                                                  "Shutting down server now!")
+                                                  .format(get_time_string(Config.get_timeouts_settings()
+                                                                          .calc_before_shutdown),
+                                                          datetime.now()
+                                                          .strftime(get_translation("%H:%M:%S %d/%m/%Y")))),
+                                   is_reaction=True)
+                    await stop_server(ctx=channel, bot=bot, poll=poll, shut_up=True)
     except (ConnectionError, socket.error):
         if len(get_list_of_processes()) == 0:
             if BotVars.is_server_on:
                 BotVars.is_server_on = False
                 print(get_translation("Server unexpectedly stopped!"))
+                Config.get_server_config().states.stopped_info.set_state_info(None, datetime.now())
+                Config.save_server_config()
             if BotVars.watcher_of_log_file is not None and BotVars.watcher_of_log_file.is_running():
                 BotVars.watcher_of_log_file.stop()
         if not BotVars.is_loading and not BotVars.is_stopping and not BotVars.is_restarting:
@@ -789,12 +822,14 @@ async def server_checkups(bot: commands.Bot):
             channel = bot.guilds[0].get_channel(Config.get_settings().bot_settings.commands_channel_id)
             if channel is None:
                 channel = [ch for ch in bot.guilds[0].channels if isinstance(ch, TextChannel)][0]
+            print(get_translation("Bot detected: Server's offline! Starting up server again!"))
             await send_msg(ctx=channel,
-                           msg=add_quotes(get_translation("Bot detected: Server\'s offline!\n"
+                           msg=add_quotes(get_translation("Bot detected: Server's offline!\n"
                                                           "Time: {0}\n"
                                                           "Starting up server again!")
-                                          .format(datetime.now().strftime(get_translation("%H:%M:%S %d/%m/%Y")))))
-            await start_server(ctx=channel, bot=bot, shut_up=True)
+                                          .format(datetime.now().strftime(get_translation("%H:%M:%S %d/%m/%Y")))),
+                           is_reaction=True)
+            await start_server(ctx=channel, bot=bot, backups_thread=backups_thread, shut_up=True)
     if Config.get_secure_auth().enable_secure_auth:
         check_if_ips_expired()
     if Config.get_timeouts_settings().await_seconds_in_check_ups > 0:
@@ -806,13 +841,16 @@ async def bot_status(ctx, is_reaction=False):
     bot_message = ""
     states_info = Config.get_server_config().states
     if states_info.started_info.date is not None and states_info.started_info.user is not None:
-        states += get_translation("Server has been started at {0}, by {1}") \
+        states += get_translation("Server has been started at {0}, by member {1}") \
                       .format(states_info.started_info.date.strftime(get_translation("%H:%M:%S %d/%m/%Y")),
                               states_info.started_info.user) + "\n"
     if states_info.stopped_info.date is not None and states_info.stopped_info.user is not None:
-        states += get_translation("Server has been stopped at {0}, by {1}") \
+        states += get_translation("Server has been stopped at {0}, by member {1}") \
                       .format(states_info.stopped_info.date.strftime(get_translation("%H:%M:%S %d/%m/%Y")),
                               states_info.stopped_info.user) + "\n"
+    elif states_info.stopped_info.date is not None and states_info.stopped_info.user is None:
+        states += get_translation("Server has been crashed at {0}") \
+                      .format(states_info.stopped_info.date.strftime(get_translation("%H:%M:%S %d/%m/%Y"))) + "\n"
     states = states.strip("\n")
     bot_message += get_translation("Server address: ") + Config.get_settings().bot_settings.ip_address + "\n"
     if BotVars.is_backing_up:
@@ -906,7 +944,7 @@ async def bot_stop(ctx, command, bot: commands.Bot, poll: Poll, is_reaction=Fals
     if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and \
             not BotVars.is_backing_up and not BotVars.is_restoring:
         if BotVars.is_doing_op:
-            await send_msg(ctx, add_quotes(get_translation("Some player(s) still oped, waiting for them")),
+            await send_msg(ctx, add_quotes(get_translation("Some player(s) still have an operator, waiting for them")),
                            is_reaction)
             return
         if Config.get_settings().bot_settings.forceload:
@@ -921,7 +959,7 @@ async def bot_restart(ctx, command, bot: commands.Bot, poll: Poll, backups_threa
     if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and \
             not BotVars.is_backing_up and not BotVars.is_restoring:
         if BotVars.is_doing_op:
-            await send_msg(ctx, add_quotes(get_translation("Some player(s) still oped, waiting for them")),
+            await send_msg(ctx, add_quotes(get_translation("Some player(s) still have an operator, waiting for them")),
                            is_reaction)
             return
         BotVars.is_restarting = True
@@ -1157,6 +1195,35 @@ async def bot_associate_info(ctx, for_me: bool, show: str = None):
         message += "-----"
     message += "```"
     return message
+
+
+def bot_shutdown_info(with_timeout=False, only_timeout=False):
+    msg = get_translation("Task: ") + "\"" + get_translation("Shutdown of Minecraft server when idle") + "\""
+    if not only_timeout:
+        msg += "\n" + get_translation("State: ")
+        if Config.get_settings().bot_settings.auto_shutdown:
+            msg += get_translation("Active")
+        else:
+            msg += get_translation("Disabled")
+    if with_timeout:
+        msg += "\n" + get_translation("Timeout: {0} sec") \
+            .format(Config.get_timeouts_settings().await_seconds_before_shutdown) + " (" + \
+               (f"~ " if Config.get_timeouts_settings().await_seconds_before_shutdown %
+                         Config.get_timeouts_settings().await_seconds_in_check_ups != 0 else "") + \
+               f"{get_time_string(Config.get_timeouts_settings().calc_before_shutdown)})" + \
+               ("\n" + get_translation("Server will be stopped immediately.").strip(".")
+                if Config.get_timeouts_settings().calc_before_shutdown == 0 else "")
+    return msg
+
+
+def bot_forceload_info():
+    msg = get_translation("Task: ") + "\"" + get_translation("Autoload if server crashes") + \
+          "\"\n" + get_translation("State: ")
+    if Config.get_settings().bot_settings.forceload:
+        msg += get_translation("Active")
+    else:
+        msg += get_translation("Disabled")
+    return msg
 
 
 def parse_params_for_help(command_params: dict, string_to_add: str, create_params_dict=False) -> Tuple[str, dict]:
@@ -1812,7 +1879,7 @@ def get_server_version(patch=False) -> Union[Tuple[int, int], int]:
     with connect_query() as cl_q:
         version = cl_q.full_stats.version
     if "snapshot" in version.lower() or search(r"\d+w\d+a", version) or "release" in version.lower():
-        raise ValueError("Minecraft server is not in release state!")
+        raise ValueError(get_translation("Minecraft server is not in release state!"))
     matches = findall(r"\d+", version)
     if patch:
         if len(matches) < 3:

@@ -19,9 +19,9 @@ from config.init_config import Config, BotVars
 
 
 class ChatCommands(commands.Cog):
-    def __init__(self, bot: commands.Bot, poll: Poll):
+    def __init__(self, bot: commands.Bot):
         self._bot: commands.Bot = bot
-        self._IndPoll: Poll = poll
+        self._IndPoll: Poll = bot.get_cog("Poll")
 
     @commands.Cog.listener()
     async def on_ready(self):

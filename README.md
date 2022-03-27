@@ -23,6 +23,7 @@
           server)
         * Has options to ban and unban IP-address regardless of whether secure authorization is enabled or not
     * Autoload if the Minecraft server crashes
+    * Auto stop if the Minecraft server online during certain period of time without players
     * Auto backup at specified intervals and forced backup by member
         * Auto deleting backup(s) if backup's limit or space exceeded
     * Make yourself an operator for limited amount of time if your Discord account has association with Minecraft nick

@@ -21,7 +21,7 @@ from components.additional_funcs import (
     BackupsThread, get_folder_size, send_message_of_deleted_backup, handle_backups_limit_and_size, bot_backup,
     delete_after_by_msg, get_half_members_count_with_role, warn_about_auto_backups, get_archive_uncompressed_size,
     get_bot_display_name, get_list_of_banned_ips, get_server_version, DISCORD_SYMBOLS_IN_MESSAGE_LIMIT,
-    get_number_of_digits, bot_associate, bot_associate_info, get_time_string
+    get_number_of_digits, bot_associate, bot_associate_info, get_time_string, bot_shutdown_info, bot_forceload_info
 )
 from components.localization import get_translation
 from config.init_config import BotVars, Config
@@ -37,9 +37,9 @@ class MinecraftCommands(commands.Cog):
     _emoji_symbols = {"status": "🗨", "list": "📋", "backup": "💾", "start": "♿",
                       "stop 10": "⏹", "restart 10": "🔄", "update": "📶"}  # Symbols for menu
 
-    def __init__(self, bot: commands.Bot, poll: Poll):
+    def __init__(self, bot: commands.Bot):
         self._bot: commands.Bot = bot
-        self._IndPoll: Poll = poll
+        self._IndPoll: Poll = bot.get_cog("Poll")
         if not self.checkups_task.is_running():
             self.checkups_task.start()
         self._backups_thread = BackupsThread(self._bot)
@@ -115,7 +115,7 @@ class MinecraftCommands(commands.Cog):
             if minecraft_nick in [p.player_minecraft_nick for p in Config.get_server_config().seen_players] and \
                     [p.number_of_times_to_op for p in Config.get_server_config().seen_players
                      if p.player_minecraft_nick == minecraft_nick][0] == 0:
-                await ctx.send(get_translation("{0}, you had run out of attempts to get opped for `{1}` nick!")
+                await ctx.send(get_translation("{0}, you had run out of attempts to get an operator for `{1}` nick!")
                                .format(ctx.author.mention, minecraft_nick))
                 BotVars.is_doing_op = doing_opping
                 return
@@ -127,7 +127,8 @@ class MinecraftCommands(commands.Cog):
                 return
 
             if minecraft_nick in BotVars.op_deop_list:
-                await ctx.send(get_translation("{0}, you've already been opped!").format(ctx.author.mention))
+                await ctx.send(get_translation("{0}, you've already been given an operator!")
+                               .format(ctx.author.mention))
                 BotVars.is_doing_op = doing_opping
                 return
 
@@ -139,7 +140,7 @@ class MinecraftCommands(commands.Cog):
             bot_display_name = get_bot_display_name(self._bot)
             try:
                 with connect_rcon() as cl_r:
-                    bot_message = f"{minecraft_nick}," + get_translation(" you've opped for") + \
+                    bot_message = f"{minecraft_nick}," + get_translation("you've been given an operator for") + \
                                   f" {get_time_string(await_time_op)}."
                     cl_r.tellraw("@a", ["", {"text": "<"}, {"text": bot_display_name, "color": "dark_gray"},
                                         {"text": "> " + bot_message}])
@@ -156,10 +157,11 @@ class MinecraftCommands(commands.Cog):
                 if randint(0, 2) == 1:
                     await ctx.send(
                         get_translation(
-                            "So {0}, I opped you, but I'm not going to pretend like I did it to win favors upstairs. "
-                            "I'll come in {1} min, deop everyone and we're even. "
-                            "I don't give a shit why you want this op and mind my own business. "
-                            "If you want to be opped, well, you must have your reasons..."
+                            "So {0}, I gave you an operator, but I'm not going to pretend like "
+                            "I did it to win favors upstairs. "
+                            "I'll come in {1} min, take away operator from everyone and we're even. "
+                            "I don't give a shit why you want this operator and mind my own business. "
+                            "If you want it, well, you must have your reasons..."
                         ).format(ctx.author.mention, str(await_time_op // 60)))
                 await asleep(await_time_op)
                 if minecraft_nick != BotVars.op_deop_list[-1]:
@@ -181,7 +183,8 @@ class MinecraftCommands(commands.Cog):
                         else:
                             gamemode = "survival"
                         with connect_rcon() as cl_r:
-                            bot_message = f"{minecraft_nick}," + get_translation(" you all will be deoped now.")
+                            bot_message = f"{minecraft_nick}, " + get_translation("an operator will be taken away "
+                                                                                  "from you all will now.")
                             cl_r.tellraw("@a", ["", {"text": "<"}, {"text": bot_display_name, "color": "dark_gray"},
                                                 {"text": "> " + bot_message}])
                             for player in to_delete_ops:
@@ -192,8 +195,9 @@ class MinecraftCommands(commands.Cog):
                         break
                 Config.append_to_op_log(
                     datetime.now().strftime("%d/%m/%Y %H:%M:%S") + " || " + get_translation("Deopped all ") +
-                    (str(get_translation("|| Note: ") + str(len(BotVars.op_deop_list)) +
-                         get_translation(" people deoped in belated list")) if len(BotVars.op_deop_list) > 1 else ""))
+                    (str(get_translation("|| Note: ") +
+                         get_translation("from {0} people in belated list operator was taken away")
+                         .format(len(BotVars.op_deop_list))) if len(BotVars.op_deop_list) > 1 else ""))
                 await ctx.send(get_translation("Well, {0}, your time is over... and not only yours...\n"
                                                "As they say \"Cheeki breeki i v damké!\"").format(ctx.author.mention))
                 BotVars.op_deop_list.clear()
@@ -213,11 +217,11 @@ class MinecraftCommands(commands.Cog):
     async def o_history(self, ctx, messages_from_end: int = 0):
         if messages_from_end < 0:
             await ctx.send(add_quotes(get_translation("Wrong 1-st argument used!") + "\n" +
-                                      get_translation("Integer must be above 0!")))
+                                      get_translation("Integer must be above {0}!").format(0)))
             return
         log = Config.get_op_log() if messages_from_end < 1 else Config.get_op_log()[-messages_from_end:]
         if "".join(log) == "":
-            await ctx.send(add_quotes(get_translation("There is no ops' history yet...")))
+            await ctx.send(add_quotes(get_translation("There is no history of giving an operator to players yet...")))
             return
         log = [lg for lg in log if not lg.split("||")[1].lstrip().startswith("Deop")]
         for line in range(len(log)):
@@ -244,7 +248,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def op_info(self, ctx, for_who: str, show: str):
+    async def o_info(self, ctx, for_who: str, show: str):
         """
         Get info about ops
         :param for_who: "me" or "everyone"
@@ -257,6 +261,33 @@ class MinecraftCommands(commands.Cog):
 
         message = await bot_associate_info(ctx, for_me=for_who == "me", show=show)
         await ctx.send(message)
+
+    @op.command(pass_context=True, name="timeout")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_admin_role()
+    async def o_timeout(self, ctx, new_value: int = None):
+        if new_value is None:
+            await ctx.send(add_quotes(get_translation("Timeout for being operator in Minecraft set to {0} sec.")
+                                      .format(Config.get_timeouts_settings().await_seconds_when_opped).strip(".") +
+                                      (f" ({get_time_string(Config.get_timeouts_settings().await_seconds_when_opped)})"
+                                       if Config.get_timeouts_settings().await_seconds_when_opped > 59 else "")+
+                                      ("\n" + get_translation("Limitation doesn't exist, padawan.")
+                                       if Config.get_timeouts_settings().await_seconds_when_opped == 0 else "")))
+        elif new_value < 0:
+            await ctx.send(add_quotes(get_translation("Wrong 1-st argument used!") + "\n" +
+                                      get_translation("Integer must be above or equal {0}!").format(0)))
+        elif new_value > 1440:
+            await ctx.send(add_quotes(get_translation("Wrong 1-st argument used!") + "\n" +
+                                      get_translation("Integer must be below or equal {0}!").format(1440)))
+        else:
+            Config.get_timeouts_settings().await_seconds_when_opped = new_value
+            await ctx.send(
+                add_quotes(get_translation("Timeout for being operator in Minecraft set to {0} sec.")
+                           .format(new_value).strip(".") + "!" +
+                           (f" ({get_time_string(new_value)})" if new_value > 59 else "") +
+                           ("\n" + get_translation("Limitation doesn't exist, padawan.") if new_value == 0 else "")))
+            Config.save_config()
 
     @commands.group(pass_context=True, aliases=["assoc"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -565,32 +596,79 @@ class MinecraftCommands(commands.Cog):
                            add_quotes(get_translation("These nicks were kicked from Minecraft server:")
                                       + "\n- " + "\n- ".join(available_players_to_kick)))
 
-    @commands.group(pass_context=True, aliases=["fl"], invoke_without_command=True)
+    @commands.group(pass_context=True, aliases=["sch"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
-    async def forceload(self, ctx):
-        if Config.get_settings().bot_settings.forceload:
-            await ctx.send(add_quotes(get_translation("Forceload on")))
-        else:
-            await ctx.send(add_quotes(get_translation("Forceload off")))
+    async def schedule(self, ctx):
+        msg = bot_shutdown_info(with_timeout=Config.get_settings().bot_settings.auto_shutdown) + \
+              "\n\n" + bot_forceload_info()
+        await ctx.send(add_quotes(msg))
 
-    @forceload.command(pass_context=True, name="on")
+    @schedule.group(pass_context=True, name="shutdown", aliases=["sd"], invoke_without_command=True)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    async def s_shutdown(self, ctx):
+        await ctx.send(add_quotes(bot_shutdown_info()))
+
+    @s_shutdown.command(pass_context=True, name="on")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def f_on(self, ctx):
+    async def s_s_on(self, ctx):
+        Config.get_settings().bot_settings.auto_shutdown = True
+        Config.save_config()
+        await ctx.send(add_quotes(bot_shutdown_info(with_timeout=True)))
+
+    @s_shutdown.command(pass_context=True, name="off")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_role_or_default()
+    async def s_s_off(self, ctx):
+        Config.get_settings().bot_settings.auto_shutdown = False
+        Config.save_config()
+        await ctx.send(add_quotes(bot_shutdown_info()))
+
+    @s_shutdown.command(pass_context=True, name="timeout")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_role_or_default()
+    async def s_s_timeout(self, ctx, new_value: int = None):
+        if new_value is None:
+            await ctx.send(add_quotes(bot_shutdown_info(with_timeout=True, only_timeout=True)))
+        elif new_value < 0:
+            await ctx.send(add_quotes(get_translation("Wrong 1-st argument used!") + "\n" +
+                                      get_translation("Integer must be above or equal {0}!").format(0)))
+        elif new_value > 86400:
+            await ctx.send(add_quotes(get_translation("Wrong 1-st argument used!") + "\n" +
+                                      get_translation("Integer must be below or equal {0}!").format(86400)))
+        else:
+            Config.get_timeouts_settings().await_seconds_before_shutdown = new_value
+            Config.save_config()
+            await ctx.send(add_quotes(bot_shutdown_info(with_timeout=True, only_timeout=True)))
+
+    @schedule.group(pass_context=True, name="forceload", aliases=["fl"], invoke_without_command=True)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    async def s_forceload(self, ctx):
+        await ctx.send(add_quotes(bot_forceload_info()))
+
+    @s_forceload.command(pass_context=True, name="on")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    @decorators.has_role_or_default()
+    async def s_f_on(self, ctx):
         Config.get_settings().bot_settings.forceload = True
         Config.save_config()
-        await ctx.send(add_quotes(get_translation("Forceload on")))
+        await ctx.send(add_quotes(bot_forceload_info()))
 
-    @forceload.command(pass_context=True, name="off")
+    @s_forceload.command(pass_context=True, name="off")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def f_off(self, ctx):
+    async def s_f_off(self, ctx):
         Config.get_settings().bot_settings.forceload = False
         Config.save_config()
-        await ctx.send(add_quotes(get_translation("Forceload off")))
+        await ctx.send(add_quotes(bot_forceload_info()))
 
     @commands.group(pass_context=True, aliases=["wl"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -1052,7 +1130,7 @@ class MinecraftCommands(commands.Cog):
 
     @tasks.loop()
     async def checkups_task(self):
-        await server_checkups(self._bot)
+        await server_checkups(self._bot, self._backups_thread, self._IndPoll)
 
     @checkups_task.before_loop
     async def before_checkups(self):
