@@ -1,6 +1,6 @@
 from discord import DMChannel, Permissions
 from discord.abc import GuildChannel
-from discord.ext.commands import NoPrivateMessage, MissingRole, CommandError, BotMissingPermissions
+from discord.ext.commands import NoPrivateMessage, MissingRole, CommandError, BotMissingPermissions, MissingPermissions
 from discord.ext.commands.core import check
 from discord.utils import get as utils_get
 
@@ -40,6 +40,28 @@ def is_admin(ctx):
 
 def has_admin_role():
     return check(is_admin)
+
+
+def has_permissions_with_dm(**perms):
+    invalid = set(perms) - set(Permissions.VALID_FLAGS)
+    if invalid:
+        raise TypeError('Invalid permission(s): %s' % (', '.join(invalid)))
+
+    def predicate(ctx):
+        ch = ctx.channel
+        permissions: Permissions = ch.permissions_for(ctx.author)
+
+        if isinstance(ctx.channel, DMChannel):
+            perms["manage_messages"] = False
+
+        missing = [perm for perm, value in perms.items() if getattr(permissions, perm) != value]
+
+        if not missing:
+            return True
+
+        raise MissingPermissions(missing)
+
+    return check(predicate)
 
 
 def bot_has_permissions_with_dm(**perms):

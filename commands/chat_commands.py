@@ -351,6 +351,7 @@ class ChatCommands(commands.Cog):
     @decorators.bot_has_permissions_with_dm(manage_messages=True, send_messages=True, mention_everyone=True,
                                             add_reactions=True, embed_links=True, read_message_history=True,
                                             view_channel=True)
+    @decorators.has_permissions_with_dm(manage_messages=True)
     async def clear(self, ctx, count: int = 1, mentions: commands.Greedy[Union[Member, Role]] = None):
         if not isinstance(ctx.channel, DMChannel):
             await bot_clear(ctx, self._IndPoll, count=count, discord_mentions=mentions)
@@ -361,6 +362,7 @@ class ChatCommands(commands.Cog):
     @decorators.bot_has_permissions_with_dm(manage_messages=True, send_messages=True, mention_everyone=True,
                                             add_reactions=True, embed_links=True, read_message_history=True,
                                             view_channel=True)
+    @decorators.has_permissions_with_dm(manage_messages=True)
     async def c_all(self, ctx, mentions: commands.Greedy[Union[Member, Role]] = None):
         if not isinstance(ctx.channel, DMChannel):
             await bot_clear(ctx, self._IndPoll, subcommand="all", discord_mentions=mentions)
@@ -371,6 +373,7 @@ class ChatCommands(commands.Cog):
     @decorators.bot_has_permissions_with_dm(manage_messages=True, send_messages=True, mention_everyone=True,
                                             add_reactions=True, embed_links=True, read_message_history=True,
                                             view_channel=True)
+    @decorators.has_permissions_with_dm(manage_messages=True)
     async def c_reply(self, ctx, mentions: commands.Greedy[Union[Member, Role]] = None):
         if ctx.message.reference is not None:
             if not isinstance(ctx.channel, DMChannel):
