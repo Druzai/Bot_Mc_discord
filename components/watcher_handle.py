@@ -84,6 +84,7 @@ def create_watcher():
         BotVars.watcher_of_log_file.stop()
 
     from components.additional_funcs import get_server_version
+
     server_version = get_server_version()
     if 7 <= server_version:
         path_to_server_log = "logs/latest.log"
@@ -95,7 +96,8 @@ def create_watcher():
     BotVars.watcher_of_log_file = Watcher(watch_file=Path(Config.get_selected_server_from_list().working_directory,
                                                           path_to_server_log),
                                           call_func_on_change=_check_log_file,
-                                          server_version=server_version)
+                                          server_version=server_version,
+                                          poll=BotVars.bot_for_webhooks.get_cog("Poll"))
 
 
 def create_chat_webhook():
@@ -104,7 +106,7 @@ def create_chat_webhook():
                                                 adapter=RequestsWebhookAdapter())
 
 
-def _check_log_file(file: Path, server_version: int, last_line: str = None):
+def _check_log_file(file: Path, server_version: int, last_line: str = None, poll=None):
     if Config.get_cross_platform_chat_settings().channel_id is None and \
             not Config.get_secure_auth().enable_secure_auth:
         return
@@ -417,7 +419,28 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None):
                         msg += get_translation("To ban this IP-address enter command `{0}`") \
                             .format(f"{Config.get_settings().bot_settings.prefix}auth ban {ip_address} [reason]")
                         if member is not None:
-                            run_coroutine_threadsafe(member.send(msg), BotVars.bot_for_webhooks.loop)
+                            for p in poll.get_polls().values():
+                                if p.command == f"auth login {nick} {ip_address}":
+                                    p.cancel()
+
+                            async def send_message_and_poll(member, msg, poll, nick, ip_address):
+                                await member.send(msg)
+                                if await poll.run(ctx=member,
+                                                  embeded_message=get_translation("Login without code?\n(Less safe)"),
+                                                  command=f"auth login {nick} {ip_address}",
+                                                  need_for_voting=1,
+                                                  timeout=Config.get_secure_auth().mins_before_code_expires * 60,
+                                                  remove_logs_after=5,
+                                                  add_mention=False,
+                                                  add_str_count=False):
+                                    Config.update_ip_address(nick, ip_address, whitelist=True)
+                                    Config.save_auth_users()
+                                    await member.send(get_translation("{0}, bot gave access to the nick "
+                                                                      "`{1}` with IP-address `{2}`!")
+                                                      .format(member.mention, nick, ip_address))
+
+                            run_coroutine_threadsafe(send_message_and_poll(member, msg, poll, nick, ip_address),
+                                                     BotVars.bot_for_webhooks.loop)
                         else:
                             channel = _get_commands_channel()
                             run_coroutine_threadsafe(channel.send(msg), BotVars.bot_for_webhooks.loop)

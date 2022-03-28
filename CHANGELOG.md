@@ -11,6 +11,7 @@ All important changes to this project will be documented in this file.
 * Added editing messages from Minecraft in Discord channel and edit webhook messages from Discord ([#27](https://github.com/Druzai/Bot_Mc_discord/issues/27))
 * Added check for edited messages whether they are stored in cache or not
 * Added timeout to stop server when no players found during long period of time ([#29](https://github.com/Druzai/Bot_Mc_discord/issues/29))
+* Added fast-login feature if user is in associations ([#26](https://github.com/Druzai/Bot_Mc_discord/issues/26))
 
 #### Fixed:
 

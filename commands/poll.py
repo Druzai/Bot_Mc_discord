@@ -3,7 +3,7 @@ from contextlib import suppress
 from datetime import datetime
 from enum import Enum, auto
 
-from discord import Color, Embed, Status, Role, NotFound, Forbidden, HTTPException
+from discord import Color, Embed, Status, Role, NotFound, Forbidden, HTTPException, DMChannel, Member
 from discord.ext import commands
 
 from components.localization import get_translation
@@ -21,19 +21,29 @@ class Poll(commands.Cog):
     def add_awaiting_command(self, command: str):
         self._await_date[command] = datetime.now()
 
-    async def run(self, ctx, message: str, command: str, need_for_voting=2, needed_role: int = None,
-                  timeout=60 * 60, remove_logs_after=None, admin_needed=False):
-        members_count = len([m for m in self._bot.guilds[0].members if not m.bot and m.status != Status.offline])
-        if members_count < need_for_voting:
-            need_for_voting = members_count
+    async def run(self, ctx, command: str, message: str = None, need_for_voting=2, needed_role: int = None,
+                  timeout=60 * 60, remove_logs_after=None, admin_needed=False, add_mention=True, add_str_count=True,
+                  embeded_message: str = None):
+        if message is None and embeded_message is None:
+            raise ValueError("'message' and 'embeded_message' is not stated!")
+        if not isinstance(ctx, Member) or not isinstance(ctx, DMChannel):
+            members_count = len([m for m in self._bot.guilds[0].members if not m.bot and m.status != Status.offline])
+            if members_count < need_for_voting:
+                need_for_voting = members_count
+        else:
+            if need_for_voting > 1:
+                need_for_voting = 1
         mention = "@everyone"
         if needed_role is not None:
             needed_role = self._bot.guilds[0].get_role(needed_role)
             if needed_role is not None:
                 mention = needed_role.mention
-        start_msg = await ctx.send(f"{mention}, {message} " +
-                                   get_translation("To win the poll needed {0} vote(s)!").format(str(need_for_voting)))
-        poll_msg = await self.make_embed(ctx)
+        if add_str_count or add_mention or message is not None:
+            start_msg = await ctx.send((f"{mention}, " if add_mention else "") +
+                                       (f"{message} " if message is not None else "") +
+                                       (get_translation("To win the poll needed {0} vote(s)!")
+                                        .format(str(need_for_voting)) if add_str_count else ""))
+        poll_msg = await self.make_embed(ctx, embeded_message)
         current_poll = Poll.PollContent(ctx, command, need_for_voting, needed_role, remove_logs_after, admin_needed)
         self._polls[poll_msg.id] = current_poll
         seconds = 0
@@ -47,8 +57,9 @@ class Poll(commands.Cog):
                     _ = await ctx.fetch_message(poll_msg.id)
                 except (NotFound, Forbidden, HTTPException):
                     current_poll.cancel()
-        with suppress(NotFound, Forbidden, HTTPException):
-            await start_msg.delete()
+        if add_str_count or add_mention or message is not None:
+            with suppress(NotFound, Forbidden, HTTPException):
+                await start_msg.delete()
         with suppress(NotFound, Forbidden, HTTPException):
             await poll_msg.delete()
         del self._polls[poll_msg.id]
@@ -61,8 +72,8 @@ class Poll(commands.Cog):
                        delete_after=remove_logs_after)
         return current_poll.state == Poll.States.GRANTED
 
-    async def make_embed(self, ctx):
-        emb = Embed(title=get_translation("Survey. Voting!"),
+    async def make_embed(self, ctx, embeded_message: str = None):
+        emb = Embed(title=get_translation("Survey. Voting!") if embeded_message is None else embeded_message,
                     color=Color.orange())
         emb.add_field(name=get_translation("yes"), value=self._emoji_symbols.get("yes"))
         emb.add_field(name=get_translation("no"), value=self._emoji_symbols.get("no"))
@@ -73,28 +84,45 @@ class Poll(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
-        if payload.message_id not in self._polls or payload.member.id == self._bot.user.id:
+        if payload.message_id not in self._polls or \
+                (payload.member is not None and payload.member.id == self._bot.user.id) or \
+                (payload.member is None and payload.user_id == self._bot.user.id):
             return
         channel = self._bot.get_channel(payload.channel_id)
         current_poll = self._polls[payload.message_id]
         emoji = self._emoji_symbols["yes"] if payload.emoji.name == \
                                               self._emoji_symbols["yes"] else self._emoji_symbols["no"]
+        if payload.member is None:
+            if isinstance(channel, DMChannel):
+                user = await self._bot.fetch_user(payload.user_id)
+            else:
+                user = await self._bot.guilds[0].fetch_member(payload.user_id)
+        else:
+            user = payload.member
         if payload.emoji.name not in self._emoji_symbols.values() \
-                or not await current_poll.count_add_voice(channel, payload.member, emoji,
+                or not await current_poll.count_add_voice(channel, user, emoji,
                                                           payload.emoji.name == self._emoji_symbols["yes"]):
             message = await channel.fetch_message(payload.message_id)
-            await message.remove_reaction(payload.emoji, payload.member)
+            await message.remove_reaction(payload.emoji, user)
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
-        if payload.message_id not in self._polls or payload.user_id == self._bot.user.id:
+        if payload.message_id not in self._polls or \
+                (payload.member is not None and payload.member.id == self._bot.user.id) or \
+                (payload.member is None and payload.user_id == self._bot.user.id):
             return
         current_poll = self._polls[payload.message_id]
         if payload.emoji.name not in [v for k, v in current_poll.poll_voted_uniq.items() if k == payload.user_id]:
             return
         channel = self._bot.get_channel(payload.channel_id)
-        member = await self._bot.guilds[0].fetch_member(payload.user_id)
-        await current_poll.count_del_voice(channel, member, payload.emoji.name == self._emoji_symbols["yes"])
+        if payload.member is None:
+            if isinstance(channel, DMChannel):
+                user = await self._bot.fetch_user(payload.user_id)
+            else:
+                user = await self._bot.guilds[0].fetch_member(payload.user_id)
+        else:
+            user = payload.member
+        await current_poll.count_del_voice(channel, user, payload.emoji.name == self._emoji_symbols["yes"])
 
     async def timer(self, ctx, seconds: int, command: str):
         if (datetime.now() - self._await_date[command]).seconds > seconds:  # Starting a poll
