@@ -1556,43 +1556,32 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
                                            "so bot can't send messages from Discord to Minecraft!"),
                            is_reaction=True)
         elif get_server_players().get("current") > 0:
+            reply_from_minecraft_user = None
+            content_name = "contents" if server_version >= 16 else "value"
             result_msg = _handle_custom_emojis(message, edit_command=edit_command)
             if not edit_command:
-                result_msg = await _handle_reply_in_message(message, result_msg)
+                result_msg, reply_from_minecraft_user = await _handle_reply_in_message(message, result_msg)
             result_msg = _handle_urls_and_attachments_in_message(result_msg, message, edit_command=edit_command)
 
             # Building object for tellraw
             res_obj = [""]
             if result_msg.get("reply", None) is not None:
-                if isinstance(result_msg["reply"][-1], list):
-                    res_obj.extend([{"text": result_msg.get("reply")[0], "color": "gray"},
-                                    {"text": result_msg.get("reply")[1], "color": "dark_gray"},
-                                    {"text": result_msg.get("reply")[2], "color": "gray"}])
-                    _build_if_urls_in_message(res_obj, result_msg.get("reply")[-1], "gray")
+                if not reply_from_minecraft_user:
+                    res_obj += _build_nickname_tellraw_for_discord_member(server_version, result_msg.get("reply")[1],
+                                                                          content_name, brackets_color="gray",
+                                                                          left_bracket=result_msg.get("reply")[0],
+                                                                          right_bracket=result_msg.get("reply")[2])
                 else:
-                    _build_if_urls_in_message(res_obj, result_msg.get("reply"), "gray")
-            content_name = "contents" if server_version >= 16 else "value"
+                    res_obj += _build_nickname_tellraw_for_minecraft_player(server_version, result_msg.get("reply")[1],
+                                                                            content_name, default_text_color="gray",
+                                                                            left_bracket=result_msg.get("reply")[0],
+                                                                            right_bracket=result_msg.get("reply")[2])
+                _build_if_urls_in_message(res_obj, result_msg.get("reply")[-1], "gray")
             if not edit_command:
-                hover_string = ["", {"text": f"{message.author.display_name}\n"
-                                             f"{message.author.name}#{message.author.discriminator}"}]
-                if server_version > 11:
-                    hover_string += [{"text": "\nShift + "}, {"keybind": "key.attack"}]
-                res_obj += [{"text": "<"},
-                            {"text": message.author.display_name, "color": "dark_gray",
-                             "insertion": f"@{message.author.display_name}",
-                             "hoverEvent": {"action": "show_text", content_name: hover_string}},
-                            {"text": "> "}]
+                res_obj += _build_nickname_tellraw_for_discord_member(server_version, message.author, content_name)
             else:
-                hover_string = ["", {"text": f"{before_message.author.name}\n" +
-                                             get_translation("Type: Player") +
-                                             f"\n{get_offline_uuid(before_message.author.name)}"}]
-                if server_version > 11:
-                    hover_string += [{"text": "\nShift + "}, {"keybind": "key.attack"}]
-                res_obj += [{"text": "<"},
-                            {"text": before_message.author.name,
-                             "insertion": f"/tell {before_message.author.name} ",
-                             "hoverEvent": {"action": "show_text", content_name: hover_string}},
-                            {"text": "> "}]
+                res_obj += _build_nickname_tellraw_for_minecraft_player(server_version, before_message.author.name,
+                                                                        content_name)
             if on_edit:
                 if before_message is not None:
                     result_before = _handle_custom_emojis(before_message)
@@ -1602,7 +1591,7 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
                                                    content_name: shorten_string(result_before.get("content"), 250)}})
                 else:
                     res_obj.append({"text": "*", "color": "gold"})
-            _build_if_urls_in_message(res_obj, result_msg.get("content"), None)
+            _build_if_urls_in_message(res_obj, result_msg.get("content"))
             res_obj = _handle_long_tellraw_object(res_obj)
 
             with connect_rcon() as cl_r:
@@ -1737,17 +1726,20 @@ def _handle_custom_emojis(message, edit_command=False):
 
 
 async def _handle_reply_in_message(message, result_msg):
+    reply_from_minecraft_user = None
     if message.reference is not None:
         reply_msg = message.reference.resolved
         cnt = reply_msg.clean_content.replace("​", "").strip()
         if reply_msg.author.discriminator == "0000":
             # reply to Minecraft player
-            result_msg["reply"] = f"\n -> <{reply_msg.author.display_name}> {cnt}"
+            nick = reply_msg.author.display_name
+            reply_from_minecraft_user = True
         else:
             # Reply to discord user
-            nick = (await message.guild.fetch_member(reply_msg.author.id)).display_name
-            result_msg["reply"] = ["\n -> <", nick, "> ", cnt]
-    return result_msg
+            nick = await message.guild.fetch_member(reply_msg.author.id)
+            reply_from_minecraft_user = False
+        result_msg["reply"] = ["\n -> <", nick, "> ", cnt]
+    return result_msg, reply_from_minecraft_user
 
 
 def _handle_urls_and_attachments_in_message(result_msg, message, only_replace_links=False, edit_command=False):
@@ -1828,7 +1820,7 @@ def _handle_attachments_in_message(message):
     return attachments
 
 
-def _build_if_urls_in_message(res_obj, obj, default_text_color):
+def _build_if_urls_in_message(res_obj, obj, default_text_color: str = None):
     if isinstance(obj, list):
         for elem in obj:
             if isinstance(elem, tuple):
@@ -1872,6 +1864,51 @@ def _search_mentions_in_message(message) -> set:
             if nick in server_players:
                 nicks.append(nick)
     return set(nicks)
+
+
+def _build_nickname_tellraw_for_minecraft_player(server_version: int, nick: str, content_name: str,
+                                                 default_text_color: str = None, left_bracket: str = "<",
+                                                 right_bracket: str = "> "):
+    if server_version > 7 and len(nick.split()) == 1:
+        tellraw_obj = [{"text": left_bracket}, {"selector": f"@p[name={nick}]"}, {"text": right_bracket}]
+    elif server_version > 7 and len(nick.split()) > 1:
+        hover_string = ["", {"text": f"{nick}\n" + get_translation("Type: Player") + f"\n{get_offline_uuid(nick)}"}]
+        if server_version > 11:
+            hover_string += [{"text": "\nShift + "}, {"keybind": "key.attack"}]
+        tellraw_obj = [{"text": left_bracket},
+                       {"text": nick,
+                        "insertion": f"/tell {nick} ",
+                        "hoverEvent": {"action": "show_text", content_name: hover_string}},
+                       {"text": right_bracket}]
+    else:
+        tellraw_obj = [{"text": left_bracket},
+                       {"text": nick,
+                        "hoverEvent": {"action": "show_text",
+                                       content_name: ["", {"text": f"{nick}\n" + f"\n{get_offline_uuid(nick)}"}]}},
+                       {"text": right_bracket}]
+    if default_text_color is not None:
+        for i in range(len(tellraw_obj)):
+            tellraw_obj[i]["color"] = default_text_color
+    return tellraw_obj
+
+
+def _build_nickname_tellraw_for_discord_member(server_version: int, author: Member, content_name: str,
+                                               brackets_color: str = None, left_bracket: str = "<",
+                                               right_bracket: str = "> "):
+    hover_string = ["", {"text": f"{author.display_name}\n"
+                                 f"{author.name}#{author.discriminator}"}]
+    if server_version > 11:
+        hover_string += [{"text": "\nShift + "}, {"keybind": "key.attack"}]
+    tellraw_obj = [{"text": left_bracket},
+                   {"text": author.display_name, "color": "dark_gray",
+                    "insertion": f"@{author.display_name}",
+                    "hoverEvent": {"action": "show_text", content_name: hover_string}},
+                   {"text": right_bracket}]
+    if brackets_color is not None:
+        for i in range(len(tellraw_obj)):
+            if len(tellraw_obj[i].keys()) == 1:
+                tellraw_obj[i]["color"] = brackets_color
+    return tellraw_obj
 
 
 def get_server_version(patch=False) -> Union[Tuple[int, int], int]:
