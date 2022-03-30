@@ -23,6 +23,7 @@ All important changes to this project will be documented in this file.
 * Added additional spaces when there are more than 9 items in list to display in command output
 * Reduced `backup force` command cooldown to 15 seconds
 * Fixed and rewrote many translations
+* Added support of servers' version below 1.7.6 for `whitelist` command and deletion of some nicks
 
 #### Breaking changes:
 

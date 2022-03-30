@@ -22,7 +22,7 @@ from components.additional_funcs import (
     delete_after_by_msg, get_half_members_count_with_role, warn_about_auto_backups, get_archive_uncompressed_size,
     get_bot_display_name, get_list_of_banned_ips, get_server_version, DISCORD_SYMBOLS_IN_MESSAGE_LIMIT,
     get_number_of_digits, bot_associate, bot_associate_info, get_time_string, bot_shutdown_info, bot_forceload_info,
-    get_member_name
+    get_member_name, handle_rcon_error, check_and_delete_from_whitelist_json
 )
 from components.localization import get_translation
 from config.init_config import BotVars, Config
@@ -676,110 +676,96 @@ class MinecraftCommands(commands.Cog):
     @commands.guild_only()
     @decorators.has_role_or_default()
     async def whitelist(self, ctx):
-        await ctx.send(add_quotes(get_translation("Wrong syntax, subcommands:") + " on, off, add, del, list, reload"))
-        raise commands.UserInputError()
+        if not get_from_server_properties("white-list"):
+            await ctx.send(add_quotes(get_translation("The server allows players regardless of their nick")))
+        else:
+            await ctx.send(add_quotes(get_translation("The server only allows players from the list of allowed nicks")))
 
     @whitelist.command(pass_context=True, name="add")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
     async def w_add(self, ctx, minecraft_nick: str):
-        try:
+        async with handle_rcon_error(ctx):
+            version = get_server_version(patch=True)
             with connect_rcon() as cl_r:
-                if get_from_server_properties("online-mode"):
+                if get_from_server_properties("online-mode") or version[0] < 7 or (version[0] == 7 and version[1] < 6):
                     cl_r.run("whitelist add", minecraft_nick)
                 else:
                     save_to_whitelist_json(get_whitelist_entry(minecraft_nick))
                     cl_r.run("whitelist reload")
-                await ctx.send(add_quotes(get_translation("Added {0} to the whitelist").format(minecraft_nick)))
-        except (ConnectionError, socket.error):
-            if BotVars.is_server_on:
-                await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
-            else:
-                await ctx.send(add_quotes(get_translation("server offline").capitalize()))
+                await ctx.send(add_quotes(get_translation("Added {0} to the list of allowed nicks")
+                                          .format(minecraft_nick)))
 
     @whitelist.command(pass_context=True, name="del")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
     async def w_del(self, ctx, minecraft_nick: str):
-        try:
+        async with handle_rcon_error(ctx):
+            version = get_server_version(patch=True)
             with connect_rcon() as cl_r:
-                cl_r.run("whitelist remove", minecraft_nick)
-                await ctx.send(add_quotes(get_translation("Removed {0} from the whitelist").format(minecraft_nick)))
-        except (ConnectionError, socket.error):
-            if BotVars.is_server_on:
-                await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
-            else:
-                await ctx.send(add_quotes(get_translation("server offline").capitalize()))
+                msg = cl_r.run("whitelist remove", minecraft_nick)
+                entry_deleted = False
+                if version[0] > 7 or (version[0] == 7 and version[1] > 5):
+                    entry_deleted = check_and_delete_from_whitelist_json(minecraft_nick)
+                    if entry_deleted:
+                        cl_r.run("whitelist reload")
+                if search(r"Removed [\w ]+ from the whitelist", msg) or entry_deleted:
+                    await ctx.send(add_quotes(get_translation("Removed {0} from the list of allowed nicks")
+                                              .format(minecraft_nick)))
+                else:
+                    await ctx.send(add_quotes(get_translation("Nick not found in the list of allowed nicks")))
 
     @whitelist.command(pass_context=True, name="list", aliases=["ls"])
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
     async def w_list(self, ctx):
-        try:
+        async with handle_rcon_error(ctx):
             with connect_rcon() as cl_r:
                 white_list = cl_r.run("whitelist list")
                 if ":" in white_list:
-                    players = [p.strip() for p in white_list.split(":", maxsplit=1)[1].split(", ")]
+                    players = [p.strip() for p in white_list.split(":", maxsplit=1)[1].split(",")]
                     if " and " in players[-1]:
                         players[-1], last_player = players[-1].split(" and ")
                         players.append(last_player)
-                    await ctx.send(add_quotes(get_translation("There are {0} players in whitelist\n{1}")
-                                              .format(len(players), ", ".join(players))))
+                    await ctx.send(add_quotes(get_translation("Allowed {0} nicks:\n{1}")
+                                              .format(len(players), "- " + "\n- ".join(players))))
                 else:
-                    await ctx.send(add_quotes(get_translation("There are no whitelisted players")))
-        except (ConnectionError, socket.error):
-            if BotVars.is_server_on:
-                await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
-            else:
-                await ctx.send(add_quotes(get_translation("server offline").capitalize()))
+                    await ctx.send(add_quotes(get_translation("No nicks allowed to login")))
 
     @whitelist.command(pass_context=True, name="on")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
     async def w_on(self, ctx):
-        try:
+        async with handle_rcon_error(ctx):
             with connect_rcon() as cl_r:
                 cl_r.run("whitelist on")
-                await ctx.send(add_quotes(get_translation("Turned on the whitelist")))
-        except (ConnectionError, socket.error):
-            if BotVars.is_server_on:
-                await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
-            else:
-                await ctx.send(add_quotes(get_translation("server offline").capitalize()))
+                await ctx.send(add_quotes(get_translation("The server is forbidden to let players not "
+                                                          "from the list of allowed nicknames")))
 
     @whitelist.command(pass_context=True, name="off")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
     async def w_off(self, ctx):
-        try:
+        async with handle_rcon_error(ctx):
             with connect_rcon() as cl_r:
                 cl_r.run("whitelist off")
-                await ctx.send(add_quotes(get_translation("Turned off the whitelist")))
-        except (ConnectionError, socket.error):
-            if BotVars.is_server_on:
-                await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
-            else:
-                await ctx.send(add_quotes(get_translation("server offline").capitalize()))
+                await ctx.send(add_quotes(get_translation("The server is allowed to let any players regardless "
+                                                          "of the list of allowed nicknames")))
 
     @whitelist.command(pass_context=True, name="reload")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
     async def w_reload(self, ctx):
-        try:
+        async with handle_rcon_error(ctx):
             with connect_rcon() as cl_r:
                 cl_r.run("whitelist reload")
-                await ctx.send(add_quotes(get_translation("Reloaded the whitelist")))
-        except (ConnectionError, socket.error):
-            if BotVars.is_server_on:
-                await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
-            else:
-                await ctx.send(add_quotes(get_translation("server offline").capitalize()))
+                await ctx.send(add_quotes(get_translation("Reloaded the list of allowed nicks")))
 
     @commands.group(pass_context=True, aliases=["serv"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)

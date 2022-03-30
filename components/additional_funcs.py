@@ -4,7 +4,7 @@ import sys
 import typing
 from ast import literal_eval
 from asyncio import sleep as asleep, Task, CancelledError
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager, suppress, asynccontextmanager
 from datetime import datetime, timedelta
 from hashlib import md5
 from itertools import chain
@@ -1425,6 +1425,17 @@ def connect_query():
         yield cl_q
 
 
+@asynccontextmanager
+async def handle_rcon_error(ctx):
+    try:
+        yield
+    except (ConnectionError, socket.error):
+        if BotVars.is_server_on:
+            await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
+        else:
+            await ctx.send(add_quotes(get_translation("server offline").capitalize()))
+
+
 def get_offline_uuid(username):
     data = bytearray(md5(("OfflinePlayer:" + username).encode()).digest())
     data[6] &= 0x0f  # clear version
@@ -1436,19 +1447,36 @@ def get_offline_uuid(username):
 
 
 def get_whitelist_entry(username):
-    return dict(name=username, uuid=get_offline_uuid(username))
+    return dict(uuid=get_offline_uuid(username), name=username)
 
 
 def save_to_whitelist_json(entry: dict):
     whitelist = [entry]
     filepath = Path(Config.get_selected_server_from_list().working_directory + "/whitelist.json")
-    if filepath.is_file():
+    if filepath.exists():
         with suppress(JSONDecodeError):
             with open(filepath, "r", encoding="utf8") as file:
                 whitelist = load(file)
             whitelist.append(entry)
     with open(filepath, "w", encoding="utf8") as file:
-        dump(whitelist, file)
+        dump(whitelist, file, indent=2)
+
+
+def check_and_delete_from_whitelist_json(username: str):
+    filepath = Path(Config.get_selected_server_from_list().working_directory + "/whitelist.json")
+    is_entry_deleted = False
+    if filepath.exists():
+        with suppress(JSONDecodeError):
+            with open(filepath, "r", encoding="utf8") as file:
+                whitelist = load(file)
+        for entry in range(len(whitelist)):
+            if whitelist[entry]["name"] == username:
+                whitelist.remove(whitelist[entry])
+                is_entry_deleted = True
+        if is_entry_deleted:
+            with open(filepath, "w", encoding="utf8") as file:
+                dump(whitelist, file, indent=2)
+    return is_entry_deleted
 
 
 def get_list_of_banned_ips():
@@ -1467,7 +1495,7 @@ def get_from_server_properties(setting: str):
     Parameters
     ----------
     setting : str
-        can be "online-mode" or "level-name"
+        can be "online-mode", "level-name" or "white-list"
     """
     filepath = Path(Config.get_selected_server_from_list().working_directory + "/server.properties")
     if not filepath.exists():
@@ -1475,7 +1503,7 @@ def get_from_server_properties(setting: str):
     with open(filepath, "r") as f:
         for i in f.readlines():
             if i.find(setting) >= 0:
-                if setting == "online-mode":
+                if setting in ["online-mode", "white-list"]:
                     return literal_eval(i.split("=")[1].capitalize())
                 elif setting == "level-name":
                     return i.split("=")[1].strip(" \n")
