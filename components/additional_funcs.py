@@ -1839,30 +1839,39 @@ def _build_if_urls_in_message(res_obj, obj, default_text_color: str = None):
 
 
 def _search_mentions_in_message(message) -> set:
-    if len(message.mentions) == 0 and len(message.role_mentions) == 0 and not message.mention_everyone:
+    if len(message.mentions) == 0 and len(message.role_mentions) == 0 and \
+            not message.mention_everyone and message.reference is None and "@" not in message.content:
         return set()
 
     nicks = []
     if message.mention_everyone:
         nicks.append("@a")
     else:
-        # Check role and user mentions
+        # Check role, user mentions and reply author mention
         members_from_roles = list(chain(*[i.members for i in message.role_mentions]))
+        if message.reference is not None:
+            if message.reference.resolved.author.discriminator != "0000":
+                members_from_roles.append(message.reference.resolved.author)
+            else:
+                nicks.append(message.reference.resolved.author.name)
         members_from_roles.extend(message.mentions)
         members_from_roles = set(members_from_roles)
         for member in members_from_roles:
             if member.id in [i.user_discord_id for i in Config.get_known_users_list()]:
                 nicks.extend([i.user_minecraft_nick for i in Config.get_known_users_list()
                               if i.user_discord_id == member.id])
-
-        players_nicks_from_discord = [i.display_name if i.display_name else i.name for i in message.mentions]
         server_players = get_server_players().get("players")
-        if len(members_from_roles) > 0:
-            nicks = [i for i in nicks if i in server_players]
         # Check @'minecraft_nick' mentions
-        for nick in players_nicks_from_discord:
-            if nick in server_players:
-                nicks.append(nick)
+        if "@" in message.content:
+            seen_players = [i.player_minecraft_nick for i in Config.get_server_config().seen_players]
+            seen_players.extend(server_players)
+            seen_players = set(seen_players)
+            for mc_nick in seen_players:
+                print(search(rf"@{mc_nick}", message.content))
+                if search(rf"@{mc_nick}", message.content):
+                    nicks.append(mc_nick)
+        # Check if players online
+        nicks = [i for i in nicks if i in server_players]
     return set(nicks)
 
 
