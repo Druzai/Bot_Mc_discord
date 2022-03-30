@@ -248,7 +248,6 @@ class ChatCommands(commands.Cog):
                 Config.get_settings().bot_settings.language = set_language.lower()
                 Config.save_config()
                 await ctx.send(add_quotes(get_translation("Language switched successfully!")))
-
         else:
             langs = []
             for lang in get_locales():

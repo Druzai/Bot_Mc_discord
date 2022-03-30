@@ -23,7 +23,9 @@ from traceback import print_exception
 from typing import Tuple, List, Union
 from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 
-from discord import Activity, ActivityType, TextChannel, Message, Status, Member, Role, MessageType
+from discord import (
+    Activity, ActivityType, TextChannel, Message, Status, Member, Role, MessageType, NotFound, HTTPException, Forbidden
+)
 from discord.ext import commands
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r, WrongPassword
@@ -191,9 +193,9 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
     else:
         Config.get_selected_server_from_list().server_loading_time = (datetime.now() - check_time).seconds
     Config.save_config()
+    print(get_translation("Server on!"))
     if ctx and not shut_up:
         await send_msg(ctx, author_mention + "\n" + add_quotes(get_translation("Server's on now")), is_reaction)
-        print(get_translation("Server on!"))
         if randint(0, 8) == 0:
             await send_msg(ctx, get_translation("Kept you waiting, huh?"), is_reaction)
     if backups_thread is not None:
@@ -203,7 +205,7 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
     BotVars.is_server_on = True
     if BotVars.is_restarting:
         BotVars.is_restarting = False
-    Config.get_server_config().states.started_info.set_state_info(str(author), datetime.now())
+    Config.get_server_config().states.started_info.set_state_info(author.id, datetime.now(), bot=author == bot.user)
     Config.save_server_config()
     task = bot.loop.create_task(
         bot.change_presence(activity=Activity(type=ActivityType.playing,
@@ -331,7 +333,7 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll,
     print(get_translation("Server's off now"))
     if not shut_up:
         await send_msg(ctx, author_mention + "\n" + add_quotes(get_translation("Server's off now")), is_reaction)
-    Config.get_server_config().states.stopped_info.set_state_info(str(author), datetime.now())
+    Config.get_server_config().states.stopped_info.set_state_info(author.id, datetime.now(), bot=author == bot.user)
     Config.save_server_config()
     task = bot.loop.create_task(
         bot.change_presence(activity=Activity(type=ActivityType.listening,
@@ -368,6 +370,23 @@ def get_bot_display_name(bot: commands.Bot):
         if member.id == bot.user.id:
             return member.display_name
     return bot.user.display_name
+
+
+async def get_member_name(bot: commands.Bot, id: int):
+    member = bot.guilds[0].get_member(id)
+    if member is not None:
+        member = f"{member.display_name}#{member.discriminator}"
+    else:
+        try:
+            member = await bot.guilds[0].fetch_member(id)
+            member = f"{member.display_name}#{member.discriminator}"
+        except (HTTPException, Forbidden):
+            try:
+                user = await bot.fetch_user(id)
+                member = f"{user.name}#{user.discriminator}"
+            except (HTTPException, NotFound):
+                member = "invalid-user"
+    return member
 
 
 class BackupsThread(Thread):
@@ -613,14 +632,21 @@ def delete_oldest_auto_backup_if_exists(reason: str, bot: commands.Bot):
     Config.get_server_config().backups.remove(backup)
 
 
-def send_message_of_deleted_backup(bot: commands.Bot, reason: str, backup=None):
+def send_message_of_deleted_backup(bot: commands.Bot, reason: str, backup=None, member_name: str = None):
     if backup is not None:
         if backup.initiator is None:
             msg = get_translation("Deleted auto backup '{0}.zip' because of {1}").format(backup.file_name, reason)
         else:
+            if member_name is not None:
+                member = member_name
+            else:
+                member = bot.guilds[0].get_member(backup.initiator)
+                if member is not None:
+                    member = f"{member.display_name}#{member.discriminator}"
+                else:
+                    member = "invalid-user"
             msg = get_translation("Deleted backup '{0}.zip' made by {1} because of {2}").format(backup.file_name,
-                                                                                                backup.initiator,
-                                                                                                reason)
+                                                                                                member, reason)
     else:
         msg = get_translation("Deleted all backups because of {0}").format(reason)
     with suppress(ConnectionError, socket.error):
@@ -737,7 +763,9 @@ def get_half_members_count_with_role(bot: commands.Bot, role: int):
 
 def get_time_string(seconds: int, use_colon=False):
     sec_str = get_translation(" sec")
-    if use_colon:
+    if seconds == 0:
+        return f"{seconds}{sec_str}"
+    elif use_colon:
         if seconds // 60 != 0:
             return f"{seconds // 60}:{(seconds % 60):02d}"
         else:
@@ -836,20 +864,28 @@ async def server_checkups(bot: commands.Bot, backups_thread: BackupsThread, poll
         await asleep(Config.get_timeouts_settings().await_seconds_in_check_ups)
 
 
-async def bot_status(ctx, is_reaction=False):
+async def bot_status(ctx, bot: commands.Bot, is_reaction=False):
     states = ""
     bot_message = ""
     states_info = Config.get_server_config().states
     if states_info.started_info.date is not None and states_info.started_info.user is not None:
-        states += get_translation("Server has been started at {0}, by member {1}") \
-                      .format(states_info.started_info.date.strftime(get_translation("%H:%M:%S %d/%m/%Y")),
-                              states_info.started_info.user) + "\n"
+        if not states_info.started_info.bot:
+            states += get_translation("Server has been started at {0} by member {1}") \
+                          .format(states_info.started_info.date.strftime(get_translation("%H:%M:%S %d/%m/%Y")),
+                                  await get_member_name(bot, states_info.started_info.user)) + "\n"
+        else:
+            states += get_translation("Server has started at {0}") \
+                          .format(states_info.started_info.date.strftime(get_translation("%H:%M:%S %d/%m/%Y"))) + "\n"
     if states_info.stopped_info.date is not None and states_info.stopped_info.user is not None:
-        states += get_translation("Server has been stopped at {0}, by member {1}") \
-                      .format(states_info.stopped_info.date.strftime(get_translation("%H:%M:%S %d/%m/%Y")),
-                              states_info.stopped_info.user) + "\n"
+        if not states_info.stopped_info.bot:
+            states += get_translation("Server has been stopped at {0} by member {1}") \
+                          .format(states_info.stopped_info.date.strftime(get_translation("%H:%M:%S %d/%m/%Y")),
+                                  await get_member_name(bot, states_info.stopped_info.user)) + "\n"
+        else:
+            states += get_translation("Server has stopped at {0}") \
+                          .format(states_info.stopped_info.date.strftime(get_translation("%H:%M:%S %d/%m/%Y"))) + "\n"
     elif states_info.stopped_info.date is not None and states_info.stopped_info.user is None:
-        states += get_translation("Server has been crashed at {0}") \
+        states += get_translation("Server has crashed at {0}") \
                       .format(states_info.stopped_info.date.strftime(get_translation("%H:%M:%S %d/%m/%Y"))) + "\n"
     states = states.strip("\n")
     bot_message += get_translation("Server address: ") + Config.get_settings().bot_settings.ip_address + "\n"
@@ -1055,7 +1091,7 @@ async def bot_dm_clear(ctx, bot: commands.Bot, subcommand: str = None, count: in
             await msg.delete()
 
 
-async def bot_backup(ctx, is_reaction=False):
+async def bot_backup(ctx, bot: commands.Bot, is_reaction=False):
     bot_message = (get_translation("Automatic backups enabled") if Config.get_backups_settings()
                    .automatic_backup else get_translation("Automatic backups disabled")) + "\n"
     bot_message += get_translation("Automatic backups period set to {0} min").format(Config.get_backups_settings()
@@ -1100,17 +1136,16 @@ async def bot_backup(ctx, is_reaction=False):
         else:
             bot_message += "\n" + get_translation("Reason: ") + \
                            (backup.reason if backup.reason else get_translation("Not stated"))
-            bot_message += "\n" + get_translation("Initiator: ") + backup.initiator
+            bot_message += "\n" + get_translation("Initiator: ") + await get_member_name(bot, backup.initiator)
         if backup.restored_from:
             bot_message += "\n\t" + get_translation("The world of the server was restored from this backup")
     await send_msg(ctx, add_quotes(bot_message), is_reaction)
 
 
 async def bot_associate(ctx, bot: commands.Bot, discord_mention: Member, assoc_command: str, minecraft_nick: str):
-    comm_operators = ["add", "del"]
     need_to_save = False
 
-    if assoc_command == comm_operators[0]:
+    if assoc_command == "add":
         if minecraft_nick in [u.user_minecraft_nick for u in Config.get_known_users_list()]:
             associated_member = [u.user_discord_id for u in Config.get_known_users_list()
                                  if u.user_minecraft_nick == minecraft_nick][0]
@@ -1122,7 +1157,7 @@ async def bot_associate(ctx, bot: commands.Bot, discord_mention: Member, assoc_c
             Config.add_to_known_users_list(minecraft_nick, discord_mention.id)
             await ctx.send(get_translation("Now {0} associates with nick `{1}` in Minecraft.")
                            .format(discord_mention.mention, minecraft_nick))
-    else:
+    elif assoc_command == "del":
         if minecraft_nick in [u.user_minecraft_nick for u in Config.get_known_users_list()] and \
                 discord_mention.id in [u.user_discord_id for u in Config.get_known_users_list()]:
             need_to_save = True
@@ -1207,12 +1242,15 @@ def bot_shutdown_info(with_timeout=False, only_timeout=False):
             msg += get_translation("Disabled")
     if with_timeout:
         msg += "\n" + get_translation("Timeout: {0} sec") \
-            .format(Config.get_timeouts_settings().await_seconds_before_shutdown) + " (" + \
-               (f"~ " if Config.get_timeouts_settings().await_seconds_before_shutdown %
-                         Config.get_timeouts_settings().await_seconds_in_check_ups != 0 else "") + \
-               f"{get_time_string(Config.get_timeouts_settings().calc_before_shutdown)})" + \
-               ("\n" + get_translation("Server will be stopped immediately.").strip(".")
-                if Config.get_timeouts_settings().calc_before_shutdown == 0 else "")
+            .format(Config.get_timeouts_settings().await_seconds_before_shutdown)
+        if Config.get_timeouts_settings().calc_before_shutdown > 59 or \
+                Config.get_timeouts_settings().await_seconds_before_shutdown % \
+                Config.get_timeouts_settings().await_seconds_in_check_ups != 0:
+            msg += " (" + (f"~ " if Config.get_timeouts_settings().await_seconds_before_shutdown %
+                                    Config.get_timeouts_settings().await_seconds_in_check_ups != 0 else "") + \
+                   f"{get_time_string(Config.get_timeouts_settings().calc_before_shutdown)})"
+        if Config.get_timeouts_settings().calc_before_shutdown == 0:
+            msg += "\n" + get_translation("Server will be stopped immediately.").strip(".")
     return msg
 
 

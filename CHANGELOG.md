@@ -27,6 +27,9 @@ All important changes to this project will be documented in this file.
 #### Breaking changes:
 
 * Changed `specific_command_role_id` to `managing_commands_role_id` in bot's configuration file
+* Changed in file `server_config.yml`:
+  * Field `initiator` in category `backups` from `Optional[str]` to `Optional[int]`
+  * Field `user` in category `states` from `Optional[str]` to `Optional[int]`
 * Changed commands:
   * Renamed `servers` to `server` and alias `servs` to `serv`
   * Moved logic:

@@ -21,7 +21,8 @@ from components.additional_funcs import (
     BackupsThread, get_folder_size, send_message_of_deleted_backup, handle_backups_limit_and_size, bot_backup,
     delete_after_by_msg, get_half_members_count_with_role, warn_about_auto_backups, get_archive_uncompressed_size,
     get_bot_display_name, get_list_of_banned_ips, get_server_version, DISCORD_SYMBOLS_IN_MESSAGE_LIMIT,
-    get_number_of_digits, bot_associate, bot_associate_info, get_time_string, bot_shutdown_info, bot_forceload_info
+    get_number_of_digits, bot_associate, bot_associate_info, get_time_string, bot_shutdown_info, bot_forceload_info,
+    get_member_name
 )
 from components.localization import get_translation
 from config.init_config import BotVars, Config
@@ -50,7 +51,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
     async def status(self, ctx):
         """Shows server status"""
-        await bot_status(ctx)
+        await bot_status(ctx, self._bot)
 
     @commands.command(pass_context=True, aliases=["ls"])
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
@@ -271,7 +272,7 @@ class MinecraftCommands(commands.Cog):
             await ctx.send(add_quotes(get_translation("Timeout for being operator in Minecraft set to {0} sec.")
                                       .format(Config.get_timeouts_settings().await_seconds_when_opped).strip(".") +
                                       (f" ({get_time_string(Config.get_timeouts_settings().await_seconds_when_opped)})"
-                                       if Config.get_timeouts_settings().await_seconds_when_opped > 59 else "")+
+                                       if Config.get_timeouts_settings().await_seconds_when_opped > 59 else "") +
                                       ("\n" + get_translation("Limitation doesn't exist, padawan.")
                                        if Config.get_timeouts_settings().await_seconds_when_opped == 0 else "")))
         elif new_value < 0:
@@ -840,7 +841,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     async def backup(self, ctx):
-        await bot_backup(ctx)
+        await bot_backup(ctx, self._bot)
 
     @backup.command(pass_context=True, name="on")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -927,8 +928,7 @@ class MinecraftCommands(commands.Cog):
                                              Config.get_backups_settings().compression_method, forced=True,
                                              user=ctx.author):
                 await msg.edit(content=string)
-            Config.add_backup_info(file_name=file_name, reason=reason,
-                                   initiator=f"{ctx.author.display_name}#{ctx.author.discriminator}")
+            Config.add_backup_info(file_name=file_name, reason=reason, initiator=ctx.author.id)
             Config.save_server_config()
             self._backups_thread.skip()
         else:
@@ -997,17 +997,16 @@ class MinecraftCommands(commands.Cog):
                     return
 
                 if await self._IndPoll.timer(ctx, 5, "backup_del"):
+                    member = await get_member_name(self._bot,
+                                                   Config.get_server_config().backups[backup_number - 1].initiator)
                     if not await self._IndPoll. \
                             run(ctx=ctx,
                                 message=get_translation(
                                     "this man {0} trying to delete {1} backup by {2} of '{3}' "
                                     "server. Will you let that happen?")
                                         .format(ctx.author.mention,
-                                                Config.get_server_config().backups[
-                                                    backup_number - 1].file_name + ".zip",
-                                                Config.get_server_config().backups[
-                                                    backup_number - 1].initiator,
-                                                Config.get_selected_server_from_list().server_name),
+                                                Config.get_server_config().backups[backup_number - 1].file_name +
+                                                ".zip", member, Config.get_selected_server_from_list().server_name),
                                 command="backup_del",
                                 needed_role=Config.get_settings().bot_settings.managing_commands_role_id,
                                 need_for_voting=get_half_members_count_with_role(self._bot,
@@ -1021,8 +1020,8 @@ class MinecraftCommands(commands.Cog):
             backup = Config.get_server_config().backups[backup_number - 1]
             remove(Path(Config.get_selected_server_from_list().working_directory,
                         Config.get_backups_settings().name_of_the_backups_folder, f"{backup.file_name}.zip"))
-            send_message_of_deleted_backup(self._bot,
-                                           f"{ctx.author.display_name}#{ctx.author.discriminator}", backup)
+            send_message_of_deleted_backup(self._bot, f"{ctx.author.display_name}#{ctx.author.discriminator}", backup,
+                                           member_name=await get_member_name(self._bot, backup.initiator))
             Config.get_server_config().backups.remove(backup)
             Config.save_server_config()
             await ctx.send(add_quotes(get_translation("Deleted backup {0}.zip of '{1}' server")
@@ -1100,7 +1099,8 @@ class MinecraftCommands(commands.Cog):
                 else:
                     message += f"\n\t{additional_space}" + get_translation("Reason: ") + \
                                (backup.reason if backup.reason else get_translation("Not stated"))
-                    message += f"\n\t{additional_space}" + get_translation("Initiator: ") + backup.initiator
+                    message += f"\n\t{additional_space}" + get_translation("Initiator: ") + \
+                               await get_member_name(self._bot, backup.initiator)
                 message += "\n"
                 if backup.restored_from:
                     message += "\t" + \
@@ -1146,11 +1146,11 @@ class MinecraftCommands(commands.Cog):
             if payload.emoji.name in self._emoji_symbols.values():
                 BotVars.react_auth = payload.member
                 if payload.emoji.name == self._emoji_symbols.get("status"):
-                    await bot_status(channel, is_reaction=True)
+                    await bot_status(channel, self._bot, is_reaction=True)
                 elif payload.emoji.name == self._emoji_symbols.get("list"):
                     await bot_list(channel, self._bot, is_reaction=True)
                 elif payload.emoji.name == self._emoji_symbols.get("backup"):
-                    await bot_backup(channel, is_reaction=True)
+                    await bot_backup(channel, self._bot, is_reaction=True)
                 elif payload.emoji.name == self._emoji_symbols.get("update"):
                     if self.checkups_task.is_running():
                         self.checkups_task.restart()

@@ -238,11 +238,12 @@ class Settings:
 
 @dataclass
 class State_info:
-    user: Optional[str] = None
+    user: Optional[int] = None
+    bot: bool = False
     date_stamp: Optional[int] = None
 
-    def set_state_info(self, user: Optional[str], date: datetime):
-        self.user, self.date_stamp = user, int(date.timestamp())
+    def set_state_info(self, user: Optional[int], date: datetime, bot: bool = False):
+        self.user, self.bot, self.date_stamp = user, bot, int(date.timestamp())
 
     @property
     def date(self):
@@ -269,7 +270,7 @@ class Backup_info:
     file_name: str = ""
     reason: Optional[str] = None
     restored_from: bool = False
-    initiator: Optional[str] = None
+    initiator: Optional[int] = None
 
     @property
     def file_creation_date(self):
@@ -551,7 +552,7 @@ class Config:
                 cls._server_config_instance.seen_players[p].number_of_times_to_op -= 1
 
     @classmethod
-    def add_backup_info(cls, file_name: str, reason: str = None, initiator: str = None):
+    def add_backup_info(cls, file_name: str, reason: str = None, initiator: int = None):
         cls._server_config_instance.backups.append(Backup_info(file_name=file_name, reason=reason, initiator=initiator))
 
     @classmethod
