@@ -730,7 +730,7 @@ class MinecraftCommands(commands.Cog):
                     if " and " in players[-1]:
                         players[-1], last_player = players[-1].split(" and ")
                         players.append(last_player)
-                    await ctx.send(add_quotes(get_translation("Allowed {0} nicks:\n{1}")
+                    await ctx.send(add_quotes(get_translation("Allowed nicks - {0}:\n{1}")
                                               .format(len(players), "- " + "\n- ".join(players))))
                 else:
                     await ctx.send(add_quotes(get_translation("No nicks allowed to login")))

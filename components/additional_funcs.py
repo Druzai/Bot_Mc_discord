@@ -1946,9 +1946,15 @@ def _search_mentions_in_message(message) -> set:
             seen_players.extend(server_players)
             seen_players = set(seen_players)
             for mc_nick in seen_players:
-                print(search(rf"@{mc_nick}", message.content))
                 if search(rf"@{mc_nick}", message.content):
                     nicks.append(mc_nick)
+        nicks = set(nicks)
+        # Remove nicks' mentions from author of the initial message
+        if message.author.id in [i.user_discord_id for i in Config.get_known_users_list()]:
+            for nick in [i.user_minecraft_nick for i in Config.get_known_users_list()
+                         if i.user_discord_id == message.author.id]:
+                if nick in nicks:
+                    nicks.remove(nick)
         # Check if players online
         nicks = [i for i in nicks if i in server_players]
     return set(nicks)
