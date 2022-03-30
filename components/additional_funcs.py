@@ -29,7 +29,7 @@ from discord import (
 from discord.ext import commands
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r, WrongPassword
-from psutil import process_iter, NoSuchProcess, disk_usage
+from psutil import process_iter, NoSuchProcess, disk_usage, Process
 from requests import post as req_post
 
 from commands.poll import Poll
@@ -341,7 +341,18 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll,
     task.add_done_callback(_ignore_some_tasks_errors)
 
 
-def get_list_of_processes() -> list:
+def get_list_of_processes() -> List[Process]:
+    renew_list = False
+    if len(BotVars.java_processes) > 0:
+        for p in BotVars.java_processes:
+            if not p.is_running():
+                renew_list = True
+                break
+    else:
+        renew_list = True
+    if not renew_list:
+        return BotVars.java_processes
+
     basename_of_executable = basename(argv[0])
     process_name = "java"
     list_proc = []
@@ -354,6 +365,7 @@ def get_list_of_processes() -> list:
                                                 "python.exe" in parents_name_list) \
                     and Config.get_selected_server_from_list().working_directory == proc.cwd():
                 list_proc.append(proc)
+    BotVars.java_processes = list_proc
     return list_proc
 
 
@@ -831,7 +843,8 @@ async def server_checkups(bot: commands.Bot, backups_thread: BackupsThread, poll
                                    is_reaction=True)
                     await stop_server(ctx=channel, bot=bot, poll=poll, shut_up=True)
     except (ConnectionError, socket.error):
-        if len(get_list_of_processes()) == 0:
+        java_processes = get_list_of_processes()
+        if len(java_processes) == 0:
             if BotVars.is_server_on:
                 BotVars.is_server_on = False
                 print(get_translation("Server unexpectedly stopped!"))
@@ -843,7 +856,7 @@ async def server_checkups(bot: commands.Bot, backups_thread: BackupsThread, poll
             task = bot.loop.create_task(
                 bot.change_presence(activity=Activity(type=ActivityType.listening,
                                                       name=Config.get_settings().bot_settings.idle_status +
-                                                           (" 🤔" if len(get_list_of_processes()) != 0 else ""))))
+                                                           (" 🤔" if len(java_processes) != 0 else ""))))
             task.add_done_callback(_ignore_some_tasks_errors)
         if Config.get_settings().bot_settings.forceload and not BotVars.is_stopping \
                 and not BotVars.is_loading and not BotVars.is_restarting:
@@ -1991,7 +2004,7 @@ def get_server_version(patch=False) -> Union[Tuple[int, int], int]:
     with connect_query() as cl_q:
         version = cl_q.full_stats.version
     if "snapshot" in version.lower() or search(r"\d+w\d+a", version) or "release" in version.lower():
-        raise ValueError(get_translation("Minecraft server is not in release state!"))
+        print(get_translation("Minecraft server is not in release state! Proceed with caution!"))
     matches = findall(r"\d+", version)
     if patch:
         if len(matches) < 3:

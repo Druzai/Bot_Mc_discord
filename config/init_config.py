@@ -19,6 +19,7 @@ from discord import Webhook, Member
 from discord.ext.commands import Bot
 from jsons import load as sload, DeserializationError
 from omegaconf import OmegaConf as Conf
+from psutil import Process
 
 from components.localization import get_translation, get_locales, set_locale
 from config.crypt_wrapper import *
@@ -43,6 +44,7 @@ class BotVars:
     port_rcon: int = None
     rcon_pass: str = None
     auto_shutdown_start_date: datetime = None
+    java_processes: List[Process] = []
     watcher_of_log_file: 'Watcher' = None
     watcher_last_line: str = None
     webhook_chat: Webhook = None
