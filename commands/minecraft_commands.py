@@ -20,9 +20,9 @@ from components.additional_funcs import (
     make_underscored_line, get_human_readable_size, create_zip_archive, restore_from_zip_archive, get_file_size,
     BackupsThread, get_folder_size, send_message_of_deleted_backup, handle_backups_limit_and_size, bot_backup,
     delete_after_by_msg, get_half_members_count_with_role, warn_about_auto_backups, get_archive_uncompressed_size,
-    get_bot_display_name, get_list_of_banned_ips, get_server_version, DISCORD_SYMBOLS_IN_MESSAGE_LIMIT,
-    get_number_of_digits, bot_associate, bot_associate_info, get_time_string, bot_shutdown_info, bot_forceload_info,
-    get_member_name, handle_rcon_error, check_and_delete_from_whitelist_json
+    get_bot_display_name, get_server_version, DISCORD_SYMBOLS_IN_MESSAGE_LIMIT, get_number_of_digits, bot_associate,
+    bot_associate_info, get_time_string, bot_shutdown_info, bot_forceload_info, get_member_name, handle_rcon_error,
+    check_and_delete_from_whitelist_json
 )
 from components.localization import get_translation
 from config.init_config import BotVars, Config
@@ -167,15 +167,11 @@ class MinecraftCommands(commands.Cog):
                 await asleep(await_time_op)
                 if minecraft_nick != BotVars.op_deop_list[-1]:
                     return
-                to_delete_ops = []
-                for i in Config.get_ops_json():
-                    for k, v in i.items():
-                        if k == "name":
-                            to_delete_ops.append(v)
+                version = get_server_version(patch=True)
+                to_delete_ops = Config.get_list_of_ops(version)
                 while True:
                     await asleep(Config.get_timeouts_settings().await_seconds_when_connecting_via_rcon)
                     with suppress(ConnectionError, socket.error):
-                        version = get_server_version(patch=True)
                         if version[0] < 13:
                             if version[0] > 3 or (version[0] == 3 and version[1] > 0):
                                 gamemode = 0
@@ -419,7 +415,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @decorators.has_role_or_default()
     async def a_banlist(self, ctx):
-        banned_ips = get_list_of_banned_ips()
+        banned_ips = Config.get_list_of_banned_ips(get_server_version(patch=True))
         if len(banned_ips) > 0:
             await ctx.send(add_quotes(get_translation("List of banned IP-addresses:") +
                                       "\n- " + "\n- ".join(banned_ips)))
@@ -483,7 +479,7 @@ class MinecraftCommands(commands.Cog):
     @commands.guild_only()
     @decorators.has_admin_role()
     async def a_unban(self, ctx, ip: ip_address):
-        if len(get_list_of_banned_ips()) == 0:
+        if len(Config.get_list_of_banned_ips(get_server_version(patch=True))) == 0:
             await ctx.send(add_quotes(get_translation("There are no banned IP-addresses!")))
             return
 

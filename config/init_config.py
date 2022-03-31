@@ -5,7 +5,7 @@ from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import datetime
 from glob import glob
-from json import load
+from json import load, JSONDecodeError
 from locale import getdefaultlocale
 from os import mkdir, listdir, remove, getcwd
 from os.path import isfile, isdir
@@ -686,8 +686,39 @@ class Config:
             print("------")
 
     @classmethod
-    def get_ops_json(cls):
-        return load(open(Path(cls.get_selected_server_from_list().working_directory + '/ops.json'), 'r'))
+    def get_list_of_ops(cls, version):
+        ops_list = []
+        if version[0] < 7 or (version[0] == 7 and version[1] < 6):
+            filepath = Path(cls.get_selected_server_from_list().working_directory + "/ops.txt")
+            if filepath.is_file():
+                with open(filepath, "r", encoding="utf8") as f:
+                    ops_list = [ln.strip() for ln in f.readlines()]
+        else:
+            filepath = Path(cls.get_selected_server_from_list().working_directory + "/ops.json")
+            if filepath.is_file():
+                with open(filepath, "r", encoding="utf8") as f:
+                    json_ops = load(f)
+                ops_list = [v for k, v in json_ops.items() if k == "name"]
+        return ops_list
+
+    @classmethod
+    def get_list_of_banned_ips(cls, version):
+        ban_list = []
+        if version[0] < 7 or (version[0] == 7 and version[1] < 6):
+            filepath = Path(Config.get_selected_server_from_list().working_directory + "/banned-ips.txt")
+            if filepath.is_file():
+                with open(filepath, "r", encoding="utf8") as f:
+                    for line in f.readlines():
+                        if not line.startswith("#") and len(line) > 0 and "|" in line:
+                            ban_list.append(line.split("|")[0])
+        else:
+            filepath = Path(Config.get_selected_server_from_list().working_directory + "/banned-ips.json")
+            if filepath.is_file():
+                with suppress(JSONDecodeError):
+                    with open(filepath, "r", encoding="utf8") as f:
+                        ban_list = load(f)
+                    ban_list = [e["ip"] for e in ban_list]
+        return ban_list
 
     @classmethod
     def append_to_op_log(cls, message_line: str):

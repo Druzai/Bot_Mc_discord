@@ -25,6 +25,7 @@ All important changes to this project will be documented in this file.
 * Reduced `backup force` command cooldown to 15 seconds
 * Fixed and rewrote many translations
 * Added support of servers' version below 1.7.6 for `whitelist` command and deletion of some nicks
+* Better handling of files for `banned ips`, `ops` and `whitelist` on versions lower than `1.7.6`
 
 #### Breaking changes:
 

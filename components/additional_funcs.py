@@ -1492,17 +1492,6 @@ def check_and_delete_from_whitelist_json(username: str):
     return is_entry_deleted
 
 
-def get_list_of_banned_ips():
-    filepath = Path(Config.get_selected_server_from_list().working_directory + "/banned-ips.json")
-    banlist = []
-    if filepath.is_file():
-        with suppress(JSONDecodeError):
-            with open(filepath, "r", encoding="utf8") as file:
-                banlist = load(file)
-            banlist = [e.get("ip") for e in banlist]
-    return banlist
-
-
 def get_from_server_properties(setting: str):
     """
     Parameters
