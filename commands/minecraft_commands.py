@@ -15,17 +15,17 @@ from psutil import disk_usage
 from commands.poll import Poll
 from components import decorators
 from components.additional_funcs import (
-    server_checkups, send_error, send_status, save_to_whitelist_json, get_whitelist_entry, get_from_server_properties,
-    get_server_players, add_quotes, bot_status, bot_list, bot_start, bot_stop, bot_restart, connect_rcon,
-    make_underscored_line, get_human_readable_size, create_zip_archive, restore_from_zip_archive, get_file_size,
-    BackupsThread, get_folder_size, send_message_of_deleted_backup, handle_backups_limit_and_size, bot_backup,
-    delete_after_by_msg, get_half_members_count_with_role, warn_about_auto_backups, get_archive_uncompressed_size,
-    get_bot_display_name, get_server_version, DISCORD_SYMBOLS_IN_MESSAGE_LIMIT, get_number_of_digits, bot_associate,
-    bot_associate_info, get_time_string, bot_shutdown_info, bot_forceload_info, get_member_name, handle_rcon_error,
+    server_checkups, send_error, send_status, save_to_whitelist_json, get_whitelist_entry, get_server_players,
+    add_quotes, bot_status, bot_list, bot_start, bot_stop, bot_restart, connect_rcon, make_underscored_line,
+    get_human_readable_size, create_zip_archive, restore_from_zip_archive, get_file_size, BackupsThread,
+    get_folder_size, send_message_of_deleted_backup, handle_backups_limit_and_size, bot_backup, delete_after_by_msg,
+    get_half_members_count_with_role, warn_about_auto_backups, get_archive_uncompressed_size, get_bot_display_name,
+    get_server_version, DISCORD_SYMBOLS_IN_MESSAGE_LIMIT, get_number_of_digits, bot_associate, bot_associate_info,
+    get_time_string, bot_shutdown_info, bot_forceload_info, get_member_name, handle_rcon_error,
     check_and_delete_from_whitelist_json
 )
 from components.localization import get_translation
-from config.init_config import BotVars, Config
+from config.init_config import BotVars, Config, ServerProperties
 
 
 def ip_address(arg: str):
@@ -672,10 +672,10 @@ class MinecraftCommands(commands.Cog):
     @commands.guild_only()
     @decorators.has_role_or_default()
     async def whitelist(self, ctx):
-        if not get_from_server_properties("white-list"):
-            await ctx.send(add_quotes(get_translation("The server allows players regardless of their nick")))
-        else:
+        if ServerProperties().white_list:
             await ctx.send(add_quotes(get_translation("The server only allows players from the list of allowed nicks")))
+        else:
+            await ctx.send(add_quotes(get_translation("The server allows players regardless of their nick")))
 
     @whitelist.command(pass_context=True, name="add")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -685,7 +685,7 @@ class MinecraftCommands(commands.Cog):
         async with handle_rcon_error(ctx):
             version = get_server_version(patch=True)
             with connect_rcon() as cl_r:
-                if get_from_server_properties("online-mode") or version[0] < 7 or (version[0] == 7 and version[1] < 6):
+                if ServerProperties().online_mode or version[0] < 7 or (version[0] == 7 and version[1] < 6):
                     cl_r.run("whitelist add", minecraft_nick)
                 else:
                     save_to_whitelist_json(get_whitelist_entry(minecraft_nick))
@@ -906,7 +906,7 @@ class MinecraftCommands(commands.Cog):
                                              Path(Config.get_selected_server_from_list().working_directory,
                                                   Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
                                              Path(Config.get_selected_server_from_list().working_directory,
-                                                  get_from_server_properties("level-name")).as_posix(),
+                                                  ServerProperties().level_name).as_posix(),
                                              Config.get_backups_settings().compression_method, forced=True,
                                              user=ctx.author):
                 await msg.edit(content=string)
@@ -924,9 +924,10 @@ class MinecraftCommands(commands.Cog):
         if not BotVars.is_server_on and not BotVars.is_loading and not BotVars.is_stopping and \
                 not BotVars.is_restarting and not BotVars.is_backing_up:
             if 0 < backup_number <= len(Config.get_server_config().backups):
+                level_name = ServerProperties().level_name
                 free_space = disk_usage(Config.get_selected_server_from_list().working_directory).free
                 bc_folder_bytes = get_folder_size(Config.get_selected_server_from_list().working_directory,
-                                                  get_from_server_properties("level-name"))
+                                                  level_name)
                 uncompressed_size = get_archive_uncompressed_size(
                     Config.get_selected_server_from_list().working_directory,
                     Config.get_backups_settings().name_of_the_backups_folder,
@@ -944,7 +945,7 @@ class MinecraftCommands(commands.Cog):
                                          Path(Config.get_selected_server_from_list().working_directory,
                                               Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
                                          Path(Config.get_selected_server_from_list().working_directory,
-                                              get_from_server_properties("level-name")).as_posix())
+                                              level_name).as_posix())
                 for backup in Config.get_server_config().backups:
                     if backup.restored_from:
                         backup.restored_from = False

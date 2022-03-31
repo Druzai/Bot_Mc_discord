@@ -1,6 +1,5 @@
 import datetime as dt
 import sys
-from ast import literal_eval
 from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -40,12 +39,9 @@ class BotVars:
     is_restoring: bool = False
     is_auto_backup_disable: bool = False
     op_deop_list: List = []  # List of nicks of players to op and then to deop
-    port_query: int = None
-    port_rcon: int = None
-    rcon_pass: str = None
     auto_shutdown_start_date: datetime = None
     java_processes: List[Process] = []
-    watcher_of_log_file: 'Watcher' = None
+    watcher_of_log_file: 'Watcher' = None  # typehint: ignore
     watcher_last_line: str = None
     webhook_chat: Webhook = None
     webhook_rss: Webhook = None
@@ -284,6 +280,154 @@ class Server_config:
     states: States = States()
     backups: List[Backup_info] = field(default_factory=list)
     seen_players: List[Player] = field(default_factory=list)
+    query_port = 0
+    rcon_port = 0
+    rcon_password = ""
+
+
+class ServerProperties:
+    filepath: Path
+    properties: dict = {}
+
+    def __init__(self, filepath: Path = None):
+        if filepath is None:
+            filepath = Path(Config.get_selected_server_from_list().working_directory, "server.properties")
+        if filepath.exists():
+            self.filepath = filepath
+            with open(filepath, "r", encoding="utf8") as f:
+                for line in f.readlines():
+                    if line.startswith("#") or len(line) == 0:
+                        continue
+                    ctx = iter(reversed(line.split("=")))
+                    self.properties[next(ctx)] = next(ctx, "").strip()
+        else:
+            raise FileNotFoundError(get_translation("File '{0}' doesn't exist!").format(filepath.as_posix()))
+
+    def save(self):
+        with open(self.filepath, "w", encoding="utf8") as f:
+            f.writelines([f"{k}={v}\n" for k, v in self.properties.items()])
+
+    def __getitem__(self, key: str):
+        return self.properties.get(key, None)
+
+    def __setitem__(self, key: str, value):
+        self.properties[key] = value
+
+    def __delitem__(self, key):
+        del self.properties[key]
+
+    def __contains__(self, item):
+        return item in self.properties
+
+    def __iter__(self):
+        return iter(self.properties)
+
+    def __len__(self):
+        return len(self.properties)
+
+    def __repr__(self):
+        return repr(self.properties)
+
+    @staticmethod
+    def _parse_from_parameter(value, is_bool=False, is_int=False):
+        if value is None or value == "":
+            return value
+        else:
+            if is_bool:
+                return value == "true"
+            elif is_int:
+                try:
+                    return int(value)
+                except ValueError:
+                    return None
+            else:
+                return value
+
+    @staticmethod
+    def _parse_to_parameter(value):
+        if value is None:
+            return ""
+        else:
+            if isinstance(value, bool):
+                return str(value).lower()
+            elif isinstance(value, int):
+                return str(value)
+            elif isinstance(value, str):
+                return value
+            else:
+                raise ValueError(f"Wrong passed value {value!r}!")
+
+    @property
+    def enable_query(self):
+        return self._parse_from_parameter(self["enable-query"], is_bool=True)
+
+    @enable_query.setter
+    def enable_query(self, value):
+        self["enable-query"] = self._parse_to_parameter(value)
+
+    @property
+    def query_port(self):
+        return self._parse_from_parameter(self["query.port"], is_int=True)
+
+    @query_port.setter
+    def query_port(self, value):
+        self["query.port"] = self._parse_to_parameter(value)
+
+    @property
+    def enable_rcon(self):
+        return self._parse_from_parameter(self["enable-rcon"], is_bool=True)
+
+    @enable_rcon.setter
+    def enable_rcon(self, value):
+        self["enable-rcon"] = self._parse_to_parameter(value)
+
+    @property
+    def rcon_port(self):
+        return self._parse_from_parameter(self["rcon.port"], is_int=True)
+
+    @rcon_port.setter
+    def rcon_port(self, value):
+        self["rcon.port"] = self._parse_to_parameter(value)
+
+    @property
+    def rcon_password(self):
+        return self._parse_from_parameter(self["rcon.password"])
+
+    @rcon_password.setter
+    def rcon_password(self, value):
+        self["rcon.password"] = self._parse_to_parameter(value)
+
+    @property
+    def force_gamemode(self):
+        return self._parse_from_parameter(self["force-gamemode"], is_bool=True)
+
+    @force_gamemode.setter
+    def force_gamemode(self, value):
+        self["force-gamemode"] = self._parse_to_parameter(value)
+
+    @property
+    def online_mode(self):
+        return self._parse_from_parameter(self["online-mode"], is_bool=True)
+
+    @online_mode.setter
+    def online_mode(self, value):
+        self["online-mode"] = self._parse_to_parameter(value)
+
+    @property
+    def level_name(self):
+        return self._parse_from_parameter(self["level-name"])
+
+    @level_name.setter
+    def level_name(self, value):
+        self["level-name"] = self._parse_to_parameter(value)
+
+    @property
+    def white_list(self):
+        return self._parse_from_parameter(self["white-list"], is_bool=True)
+
+    @white_list.setter
+    def white_list(self, value):
+        self["white-list"] = self._parse_to_parameter(value)
 
 
 class Config:
@@ -618,72 +762,54 @@ class Config:
 
         filepath = Path(cls.get_selected_server_from_list().working_directory, "server.properties")
         if not filepath.exists():
-            raise RuntimeError(get_translation("File '{0}' doesn't exist! "
-                                               "Run Minecraft server manually to create one and accept eula!")
+            raise FileNotFoundError(get_translation("File '{0}' doesn't exist! "
+                                                    "Run Minecraft server manually to create one and accept eula!")
+                                    .format(filepath.as_posix()))
+        server_properties = ServerProperties(filepath)
+        if len(server_properties) == 0:
+            raise RuntimeError(get_translation("File '{0}' doesn't have any parameters! Accept eula and "
+                                               "run Minecraft server manually to fill it with parameters!")
                                .format(filepath.as_posix()))
-        BotVars.port_query = None
-        BotVars.port_rcon = None
-        BotVars.rcon_pass = None
-        force_gamemode = None
-        with open(filepath, "r", encoding="utf8") as f:
-            lines = f.readlines()
-            if len(lines) < 3:
-                raise RuntimeError(get_translation("File '{0}' doesn't have any parameters! Accept eula and "
-                                                   "run Minecraft server manually to fill it with parameters!")
-                                   .format(filepath.as_posix()))
-            for i in lines:
-                if i.find("enable-query") >= 0:
-                    enable_query = literal_eval(i.split("=")[1].capitalize())
-                if i.find("enable-rcon") >= 0:
-                    enable_rcon = literal_eval(i.split("=")[1].capitalize())
-                if i.find("query.port") >= 0:
-                    BotVars.port_query = int(i.split("=")[1])
-                if i.find("rcon.port") >= 0:
-                    BotVars.port_rcon = int(i.split("=")[1])
-                if i.find("rcon.password") >= 0:
-                    BotVars.rcon_pass = i.split("=")[1].strip()
-                if i.find("force-gamemode") >= 0:
-                    force_gamemode = literal_eval(i.split("=")[1].capitalize())
-        if not enable_query or not enable_rcon or not BotVars.rcon_pass or not force_gamemode:
-            changed_parameters = []
-            rewritten_rcon_pass = False
-            if not enable_query:
-                changed_parameters.append("enable-query=true")
-            if not enable_rcon:
-                changed_parameters.append("enable-rcon=true")
-            if not BotVars.rcon_pass:
-                BotVars.rcon_pass = "".join(sec_choice(ascii_letters + digits) for _ in range(20))
-                changed_parameters.append(f"rcon.password={BotVars.rcon_pass}")
-                changed_parameters.append(get_translation("Reminder: For better security "
-                                                          "you have to change this password for a more secure one."))
-            if force_gamemode == False:
-                changed_parameters.append("force-gamemode=true")
-            with open(filepath, "r", encoding="utf8") as f:
-                properties_file = f.readlines()
-            for i in range(len(properties_file)):
-                if "enable-query" in properties_file[i] or "enable-rcon" in properties_file[i] or \
-                        "force-gamemode" in properties_file[i]:
-                    properties_file[i] = f"{properties_file[i].split('=')[0]}=true\n"
-                if "rcon.password" in properties_file[i]:
-                    rewritten_rcon_pass = True
-                    properties_file[i] = f"rcon.password={BotVars.rcon_pass}\n"
-            if BotVars.port_query is None:
-                BotVars.port_query = 25565
-                properties_file.append(f"query.port={BotVars.port_query}\n")
-                changed_parameters.append(f"query.port={BotVars.port_query}")
-            if BotVars.port_rcon is None:
-                BotVars.port_rcon = 25575
-                properties_file.append(f"rcon.port={BotVars.port_rcon}\n")
-                changed_parameters.append(f"rcon.port={BotVars.port_rcon}")
-            if not rewritten_rcon_pass:
-                properties_file.append(f"rcon.password={BotVars.rcon_pass}\n")
-            with open(filepath, "w", encoding="utf8") as f:
-                f.writelines(properties_file)
+        # Check server parameters
+        changed_parameters = []
+        changed = False
+        if not server_properties.enable_query:
+            changed = True
+            server_properties.enable_query = True
+            changed_parameters.append("enable-query=true")
+        if server_properties.query_port is None or server_properties.query_port == "":
+            changed = True
+            server_properties.query_port = 25565
+            changed_parameters.append(f"query.port={server_properties.query_port}")
+        if not server_properties.enable_rcon:
+            changed = True
+            server_properties.enable_rcon = True
+            changed_parameters.append("enable-rcon=true")
+        if server_properties.rcon_port is None or server_properties.rcon_port == "":
+            changed = True
+            server_properties.rcon_port = 25575
+            changed_parameters.append(f"rcon.port={server_properties.rcon_port}")
+        if server_properties.rcon_password is None or server_properties.rcon_password == "":
+            changed = True
+            server_properties.rcon_password = "".join(sec_choice(ascii_letters + digits) for _ in range(20))
+            changed_parameters.append(f"rcon.password={server_properties.rcon_password}")
+            changed_parameters.append(get_translation("Reminder: For better security "
+                                                      "you have to change this password for a more secure one."))
+        if not server_properties.force_gamemode:
+            changed = True
+            server_properties.force_gamemode = True
+            changed_parameters.append("force-gamemode=true")
+        if changed:
+            server_properties.save()
             print("------")
             print(get_translation("Note: In '{0}' bot set these parameters:").format(filepath.as_posix()))
             for line in changed_parameters:
                 print(line)
             print("------")
+
+        cls.get_server_config().query_port = server_properties.query_port
+        cls.get_server_config().rcon_port = server_properties.rcon_port
+        cls.get_server_config().rcon_password = server_properties.rcon_password
 
     @classmethod
     def get_list_of_ops(cls, version):

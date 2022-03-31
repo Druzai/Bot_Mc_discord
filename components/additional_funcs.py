@@ -2,7 +2,6 @@ import inspect
 import socket
 import sys
 import typing
-from ast import literal_eval
 from asyncio import sleep as asleep, Task, CancelledError
 from contextlib import contextmanager, suppress, asynccontextmanager
 from datetime import datetime, timedelta
@@ -37,7 +36,7 @@ from components.decorators import MissingAdminPermissions
 from components.localization import get_translation
 from components.rss_feed_handle import create_feed_webhook
 from components.watcher_handle import create_watcher, create_chat_webhook
-from config.init_config import Config, BotVars
+from config.init_config import Config, BotVars, ServerProperties
 
 if platform == "win32":
     from os import startfile
@@ -446,7 +445,7 @@ class BackupsThread(Thread):
                                             Path(Config.get_selected_server_from_list().working_directory,
                                                  Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
                                             Path(Config.get_selected_server_from_list().working_directory,
-                                                 get_from_server_properties("level-name")).as_posix(),
+                                                 ServerProperties().level_name).as_posix(),
                                             Config.get_backups_settings().compression_method), None)
                     Config.add_backup_info(file_name=file_name)
                     Config.save_server_config()
@@ -581,7 +580,7 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
         backup_size = get_file_size(f"{zip_path}/{zip_name}.zip")
         backup_size_str = get_human_readable_size(backup_size, round=True)
         world_folder_size = get_folder_size(Config.get_selected_server_from_list().working_directory,
-                                            get_from_server_properties("level-name"))
+                                            ServerProperties().level_name)
         world_folder_size_str = get_human_readable_size(world_folder_size, stop_unit=backup_size_str.split(" ")[-1],
                                                         round=True)
         yield add_quotes(get_translation("Done in {0}\nCompression method: {1}").format(date_t, compression) +
@@ -1421,20 +1420,22 @@ def make_underscored_line(line):
 @contextmanager
 def connect_rcon(timeout=1):
     try:
-        with Client_r(Config.get_settings().bot_settings.local_address,
-                      BotVars.port_rcon, passwd=BotVars.rcon_pass, timeout=timeout) as cl_r:
+        with Client_r(Config.get_settings().bot_settings.local_address, Config.get_server_config().rcon_port,
+                      passwd=Config.get_server_config().rcon_password, timeout=timeout) as cl_r:
             yield cl_r
     except WrongPassword:
         print(get_translation("Bot Error: {0}")
-              .format(get_translation("Rcon password doesn't match with its value in '{0}'!")
-                      .format(Path(Config.get_selected_server_from_list().working_directory +
-                                   "/server.properties").as_posix())))
+              .format(get_translation("Rcon password '{0}' doesn't match with its value in '{1}'!")
+                      .format(Config.get_server_config().rcon_password,
+                              Path(Config.get_selected_server_from_list().working_directory + "/server.properties")
+                              .as_posix())))
         raise ConnectionError()
 
 
 @contextmanager
 def connect_query():
-    with Client_q(Config.get_settings().bot_settings.local_address, BotVars.port_query, timeout=1) as cl_q:
+    with Client_q(Config.get_settings().bot_settings.local_address,
+                  Config.get_server_config().query_port, timeout=1) as cl_q:
         yield cl_q
 
 
@@ -1490,25 +1491,6 @@ def check_and_delete_from_whitelist_json(username: str):
             with open(filepath, "w", encoding="utf8") as file:
                 dump(whitelist, file, indent=2)
     return is_entry_deleted
-
-
-def get_from_server_properties(setting: str):
-    """
-    Parameters
-    ----------
-    setting : str
-        can be "online-mode", "level-name" or "white-list"
-    """
-    filepath = Path(Config.get_selected_server_from_list().working_directory + "/server.properties")
-    if not filepath.exists():
-        raise RuntimeError(get_translation("File '{0}' doesn't exist!").format(filepath.as_posix()))
-    with open(filepath, "r") as f:
-        for i in f.readlines():
-            if i.find(setting) >= 0:
-                if setting in ["online-mode", "white-list"]:
-                    return literal_eval(i.split("=")[1].capitalize())
-                elif setting == "level-name":
-                    return i.split("=")[1].strip(" \n")
 
 
 # Handling errors

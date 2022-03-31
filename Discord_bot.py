@@ -85,7 +85,7 @@ def main():
         bot.run(Config.get_settings().bot_settings.token)
     except LoginFailure:
         print(get_translation("Bot/Discord Error: Your token is wrong"))
-    except RuntimeError as e:
+    except (RuntimeError, FileNotFoundError) as e:
         print(get_translation("Bot Error: {0}").format("".join(e.args)))
     except (ScannerError, ParserError) as e:
         print(get_translation("Bot Error: {0}").format(e.problem.capitalize()) +
@@ -102,7 +102,7 @@ def main():
                 if thread.getName() == "BackupsThread":
                     thread.join()
             print(get_translation("Press any key to continue..."))
-            listen_keyboard(on_press=lambda: stop_listening())
+            listen_keyboard(on_press=lambda _: stop_listening())
             print(get_translation("Bot is stopping..."))
         exit(0)
 
