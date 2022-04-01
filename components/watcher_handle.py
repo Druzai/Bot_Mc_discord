@@ -115,7 +115,8 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None, poll
     if len(last_lines) == 0:
         return last_line
 
-    INFO_line = r"\[Server thread/INFO]" if server_version >= 7 else r"\[INFO]"
+    date_line = r"^\[\d+:\d+:\d+]" if server_version > 6 else r"^\d+-\d+-\d+ \d+:\d+:\d+"
+    INFO_line = r"\[Server thread/INFO]:" if server_version > 6 else r"\[INFO]"
 
     if last_line is None:
         if Config.get_secure_auth().enable_secure_auth:
@@ -126,8 +127,7 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None, poll
 
     for line in last_lines:
         if Config.get_cross_platform_chat_settings().channel_id is not None:
-            if search(INFO_line, line) and "*" not in split(r"<([^>]*)>", line, maxsplit=1)[0] and \
-                    search(r"<([^>]*)> (.*)", line):
+            if search(rf"{date_line} {INFO_line} <([^>]*)> (.*)", line):
                 player_nick, player_message = search(r"<([^>]*)>", line)[0][1:-1], \
                                               split(r"<([^>]*)>", line, maxsplit=1)[-1].strip()
                 if search(r"@[^\s]+", player_message):
@@ -332,17 +332,17 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None, poll
 
         if Config.get_secure_auth().enable_secure_auth:
             from components.additional_funcs import connect_rcon, add_quotes
-            if search(r"[\w ]+ lost connection:", line):
-                if search(INFO_line, line) and "*" not in split(r"[\w ]+ lost connection:", line)[0] and \
-                        "You logged in from another location" not in split(r"[\w ]+ lost connection:",
-                                                                           line, maxsplit=1)[1]:
-                    nick = split(r"lost connection:", search(r"[\w ]+ lost connection:", line)[0])[0].strip()
-                    Config.set_user_logged(nick, False)
-                    Config.save_auth_users()
+            if not search(rf"{date_line} {INFO_line}", line) or search(rf"{date_line} {INFO_line} \*", line):
+                continue
+            if search(r"[^\[\]<>]+ lost connection:", line) and \
+                    "You logged in from another location" not in split(r"[^\[\]<>]+ lost connection:",
+                                                                       line, maxsplit=1)[1]:
+                nick = split(r"lost connection:", search(r"[^\[\]<>]+ lost connection:", line)[0])[0].strip()
+                Config.set_user_logged(nick, False)
+                Config.save_auth_users()
 
-            if search(INFO_line, line) and "*" not in split(r"[\w ]+\[/\d+\.\d+\.\d+\.\d+:\d+]", line)[0] and \
-                    search(r": [\w ]+\[/\d+\.\d+\.\d+\.\d+:\d+] logged in with entity id \d+ at", line):
-                nick = search(r": [\w ]+\[", line)[0][2:-1]
+            if search(rf"{INFO_line} [^\[\]<>]+\[/\d+\.\d+\.\d+\.\d+:\d+] logged in with entity id \d+ at", line):
+                nick = search(rf"{INFO_line} [^\[\]<>]+\[", line)[0].split(INFO_line[1:], maxsplit=1)[-1][1:-1]
                 ip_address = search(r"\[/\d+\.\d+\.\d+\.\d+:\d+]", line)[0].split(":")[0][2:]
                 if nick not in [u.nick for u in Config.get_auth_users()]:
                     Config.add_auth_user(nick)
@@ -449,9 +449,7 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None, poll
                 Config.save_auth_users()
 
     for line in reversed(last_lines):
-        if server_version >= 7 and search(r"^\[\d+:\d+:\d+]", line):
-            return line
-        elif search(r"\d+-\d+-\d+ \d+:\d+:\d+", line):
+        if search(date_line, line):
             return line
 
 
