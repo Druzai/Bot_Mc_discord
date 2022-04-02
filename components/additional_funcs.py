@@ -1608,11 +1608,11 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
         elif get_server_players().get("current") > 0:
             reply_from_minecraft_user = None
             content_name = "contents" if server_version >= 16 else "value"
-            result_msg = _handle_custom_emojis(message, edit_command=edit_command)
+            result_msg = _clean_message(message, edit_command)
             if not edit_command:
                 result_msg, reply_from_minecraft_user = await _handle_reply_in_message(message, result_msg)
-            result_msg = _handle_urls_and_attachments_in_message(result_msg, message, edit_command=edit_command)
-
+            result_msg = await _handle_components_in_message(result_msg, message, bot,
+                                                             edit_command=edit_command)
             # Building object for tellraw
             res_obj = [""]
             if result_msg.get("reply", None) is not None:
@@ -1634,8 +1634,9 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
                                                                         content_name)
             if on_edit:
                 if before_message is not None:
-                    result_before = _handle_custom_emojis(before_message)
-                    result_before = _handle_urls_and_attachments_in_message(result_before, before_message, True)
+                    result_before = _clean_message(before_message)
+                    result_before = await _handle_components_in_message(result_before, before_message, bot,
+                                                                        only_replace_links=True)
                     res_obj.append({"text": "*", "color": "gold",
                                     "hoverEvent": {"action": "show_text",
                                                    content_name: shorten_string(result_before.get("content"), 250)}})
@@ -1756,22 +1757,13 @@ def _split_tellraw_object(tellraw_obj):
     return res
 
 
-def _handle_custom_emojis(message, edit_command=False):
+def _clean_message(message, edit_command=False):
     result_msg = {}
-    # TODO: In discord.py 2.0 'replace("​", "")' can be omitted
+    # TODO: In discord.py 2.0 'replace("​", "")' can be omitted # "\u200b"
     content = message.clean_content.replace("​", "").strip()
     if edit_command:
         content = content.strip(f"{Config.get_settings().bot_settings.prefix}edit ")
-    if search(r"<:\w+:\d+>", content):
-        temp_split = split(r"<:\w+:\d+>", content)
-        temp_arr = list(findall(r"<:\w+:\d+>", content))
-        i = 1
-        for emoji in temp_arr:
-            temp_split.insert(i, findall(r"\w+", emoji)[0])
-            i += 2
-        result_msg["content"] = "".join(temp_split)
-    else:
-        result_msg["content"] = content
+    result_msg["content"] = content
     return result_msg
 
 
@@ -1779,6 +1771,7 @@ async def _handle_reply_in_message(message, result_msg):
     reply_from_minecraft_user = None
     if message.reference is not None:
         reply_msg = message.reference.resolved
+        # TODO: In discord.py 2.0 'replace("​", "")' can be omitted # "\u200b"
         cnt = reply_msg.clean_content.replace("​", "").strip()
         if reply_msg.author.discriminator == "0000":
             # reply to Minecraft player
@@ -1792,9 +1785,44 @@ async def _handle_reply_in_message(message, result_msg):
     return result_msg, reply_from_minecraft_user
 
 
-def _handle_urls_and_attachments_in_message(result_msg, message, only_replace_links=False, edit_command=False):
+async def _handle_components_in_message(result_msg, message, bot: commands.Bot,
+                                        only_replace_links=False, edit_command=False):
     # TODO: For now 'webhook.edit_message' doesn't support attachments, wait for discord.py 2.0
     attachments = _handle_attachments_in_message(message) if not edit_command else {}
+    url_regex = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|%[0-9a-fA-F][0-9a-fA-F])+'
+
+    async def repl_emoji(obj: str):
+        emoji_name = search(r"\w+", obj).group(0)
+        if only_replace_links:
+            return emoji_name
+        else:
+            emoji_id = search(r"\d+", obj).group(0)
+            try:
+                emoji = await bot.guilds[0].fetch_emoji(emoji_id)
+                return emoji_name, str(emoji.url)
+            except (NotFound, HTTPException):
+                return emoji_name
+
+    def repl_url(link: str):
+        if only_replace_links:
+            return "[gif]" if "tenor" in link and "view" in link else shorten_string(link, 30)
+        else:
+            return ("[gif]" if "tenor" in link and "view" in link else shorten_string(link, 30),
+                    link if len(link) < 257 else get_clck_ru_url(link))
+
+    transformations = {
+        r"<:\w+:\d+>": repl_emoji,
+        url_regex: repl_url
+    }
+    mass_regex = "|".join(transformations.keys())
+
+    async def repl(obj):
+        match = obj.group(0)
+        if search(url_regex, match):
+            return transformations.get(url_regex)(match)
+        else:
+            return await transformations.get(r"<:\w+:\d+>")(match)
+
     for key, ms in result_msg.items():
         if isinstance(ms, list):
             msg = ms.copy()
@@ -1803,17 +1831,11 @@ def _handle_urls_and_attachments_in_message(result_msg, message, only_replace_li
             msg = ms
 
         temp_split = []
-        url_regex = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|%[0-9a-fA-F][0-9a-fA-F])+'
-        if search(url_regex, msg):
-            temp_split = split(url_regex, msg)
-            temp_arr = list(findall(url_regex, msg))
+        if search(mass_regex, msg):
+            temp_split = split(mass_regex, msg)
             i = 1
-            for link in temp_arr:
-                if only_replace_links:
-                    temp_split.insert(i, "[gif]" if "tenor" in link and "view" in link else shorten_string(link, 30))
-                else:
-                    temp_split.insert(i, ("[gif]" if "tenor" in link and "view" in link else shorten_string(link, 30),
-                                          link if len(link) < 257 else get_clck_ru_url(link)))
+            for m in compile(mass_regex).finditer(msg):
+                temp_split.insert(i, (await repl(m)))
                 i += 2
         else:
             temp_split.append(msg)
