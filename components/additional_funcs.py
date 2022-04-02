@@ -1628,7 +1628,7 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
                                                                             content_name, default_text_color="gray",
                                                                             left_bracket=result_msg["reply"][0],
                                                                             right_bracket=result_msg["reply"][2])
-                _build_if_urls_in_message(res_obj, content_name, result_msg["reply"][-1], "gray")
+                _build_components_in_message(res_obj, content_name, result_msg["reply"][-1], "gray")
             if not edit_command:
                 res_obj += _build_nickname_tellraw_for_discord_member(server_version, message.author, content_name)
             else:
@@ -1644,7 +1644,7 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
                                                    content_name: shorten_string(result_before["content"], 250)}})
                 else:
                     res_obj.append({"text": "*", "color": "gold"})
-            _build_if_urls_in_message(res_obj, content_name, result_msg["content"])
+            _build_components_in_message(res_obj, content_name, result_msg["content"])
             res_obj = _handle_long_tellraw_object(res_obj)
 
             with connect_rcon() as cl_r:
@@ -1899,7 +1899,7 @@ def _handle_attachments_in_message(message):
     return attachments
 
 
-def _build_if_urls_in_message(res_obj, content_name, obj, default_text_color: str = None):
+def _build_components_in_message(res_obj, content_name, obj, default_text_color: str = None):
     if isinstance(obj, list):
         for elem in obj:
             if isinstance(elem, dict):

@@ -236,6 +236,10 @@ class ChatCommands(commands.Cog):
             if after_channel is None:
                 after_channel = await self._bot.fetch_channel(payload.channel_id)
             after_message = await after_channel.fetch_message(payload.message_id)
+
+            if payload.cached_message is not None and after_message.content == payload.cached_message.content and \
+                    after_message.attachments == payload.cached_message.attachments:
+                return
             await handle_message_for_chat(after_message, self._bot,
                                           on_edit=True, before_message=payload.cached_message)
 
