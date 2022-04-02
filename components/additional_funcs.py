@@ -1619,16 +1619,16 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
             res_obj = [""]
             if result_msg.get("reply", None) is not None:
                 if not reply_from_minecraft_user:
-                    res_obj += _build_nickname_tellraw_for_discord_member(server_version, result_msg.get("reply")[1],
+                    res_obj += _build_nickname_tellraw_for_discord_member(server_version, result_msg["reply"][1],
                                                                           content_name, brackets_color="gray",
-                                                                          left_bracket=result_msg.get("reply")[0],
-                                                                          right_bracket=result_msg.get("reply")[2])
+                                                                          left_bracket=result_msg["reply"][0],
+                                                                          right_bracket=result_msg["reply"][2])
                 else:
-                    res_obj += _build_nickname_tellraw_for_minecraft_player(server_version, result_msg.get("reply")[1],
+                    res_obj += _build_nickname_tellraw_for_minecraft_player(server_version, result_msg["reply"][1],
                                                                             content_name, default_text_color="gray",
-                                                                            left_bracket=result_msg.get("reply")[0],
-                                                                            right_bracket=result_msg.get("reply")[2])
-                _build_if_urls_in_message(res_obj, result_msg.get("reply")[-1], "gray")
+                                                                            left_bracket=result_msg["reply"][0],
+                                                                            right_bracket=result_msg["reply"][2])
+                _build_if_urls_in_message(res_obj, content_name, result_msg["reply"][-1], "gray")
             if not edit_command:
                 res_obj += _build_nickname_tellraw_for_discord_member(server_version, message.author, content_name)
             else:
@@ -1641,10 +1641,10 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
                                                                         only_replace_links=True)
                     res_obj.append({"text": "*", "color": "gold",
                                     "hoverEvent": {"action": "show_text",
-                                                   content_name: shorten_string(result_before.get("content"), 250)}})
+                                                   content_name: shorten_string(result_before["content"], 250)}})
                 else:
                     res_obj.append({"text": "*", "color": "gold"})
-            _build_if_urls_in_message(res_obj, result_msg.get("content"))
+            _build_if_urls_in_message(res_obj, content_name, result_msg["content"])
             res_obj = _handle_long_tellraw_object(res_obj)
 
             with connect_rcon() as cl_r:
@@ -1806,7 +1806,7 @@ async def _handle_components_in_message(result_msg, message, bot: commands.Bot,
                 with suppress(NotFound, HTTPException):
                     emoji = await bot.guilds[0].fetch_emoji(emoji_id)
             if isinstance(emoji, Emoji):
-                return emoji_name, str(emoji.url)
+                return {"text": emoji_name, "hyperlink": str(emoji.url)}
             else:
                 return emoji_name
 
@@ -1814,8 +1814,8 @@ async def _handle_components_in_message(result_msg, message, bot: commands.Bot,
         if only_replace_links:
             return "[gif]" if "tenor" in link and "view" in link else shorten_string(link, 30)
         else:
-            return ("[gif]" if "tenor" in link and "view" in link else shorten_string(link, 30),
-                    link if len(link) < 257 else get_clck_ru_url(link))
+            return {"text": "[gif]" if "tenor" in link and "view" in link else shorten_string(link, 30),
+                    "hyperlink": link if len(link) < 257 else get_clck_ru_url(link)}
 
     transformations = {
         r"<:\w+:\d+>": repl_emoji,
@@ -1849,12 +1849,12 @@ async def _handle_components_in_message(result_msg, message, bot: commands.Bot,
 
         if attachments.get(key, None) is not None and len(attachments[key]) > 0:
             for i in attachments[key]:
-                t_string = [t[0] if isinstance(t, tuple) else t for t in temp_split]
+                t_string = [t["text"] if isinstance(t, dict) else t for t in temp_split]
                 if (key == "content" and len("".join(t_string)) != 0) or \
                         (key == "reply" and "".join(t_string) != "> "):
                     temp_split.append(" ")
                 if only_replace_links:
-                    temp_split.append(i[0])
+                    temp_split.append(i["text"])
                 else:
                     temp_split.append(i)
 
@@ -1882,29 +1882,39 @@ def _handle_attachments_in_message(message):
                 attachments["reply"] = []
                 iattach = attachments["reply"]
             for attachment in messages[i].attachments:
-                if attachment.content_type is None:
-                    a_type = "[file]"
+                need_hover = True
+                if "." in attachment.filename:
+                    a_type = f"[{attachment.filename.split('.')[-1]}]"
+                elif attachment.content_type is not None and \
+                        any(i in attachment.content_type for i in ["image", "video", "audio"]):
+                    a_type = f"[{attachment.content_type.split('/')[-1]}]"
                 else:
-                    if "image" in attachment.content_type:
-                        if "image/gif" in attachment.content_type:
-                            a_type = "[gif]"
-                        else:
-                            a_type = "[img]"
-                    elif "video" in attachment.content_type or "audio" in attachment.content_type:
-                        a_type = f"[{attachment.content_type.split('/')[-1]}]"
-                    else:
-                        a_type = "[file]"
-                iattach.append((a_type,
-                                attachment.url if len(attachment.url) < 257 else get_clck_ru_url(attachment.url)))
+                    need_hover = False
+                    a_type = f"[{shorten_string(attachment.filename, max_length=20)}]"
+                iattach.append({"text": a_type,
+                                "hyperlink": attachment.url if len(attachment.url) < 257
+                                else get_clck_ru_url(attachment.url)})
+                if need_hover:
+                    iattach[-1].update({"hover": attachment.filename})
     return attachments
 
 
-def _build_if_urls_in_message(res_obj, obj, default_text_color: str = None):
+def _build_if_urls_in_message(res_obj, content_name, obj, default_text_color: str = None):
     if isinstance(obj, list):
         for elem in obj:
-            if isinstance(elem, tuple):
-                res_obj.append({"text": elem[0], "underlined": True, "color": "blue",
-                                "clickEvent": {"action": "open_url", "value": elem[1]}})
+            if isinstance(elem, dict):
+                if "text" not in elem.keys():
+                    raise KeyError(f"'text' key not in dict {elem}!")
+                if default_text_color is not None:
+                    res_obj.append({"text": elem["text"], "color": default_text_color})
+                else:
+                    res_obj.append({"text": elem["text"]})
+                if "hover" in elem.keys():
+                    res_obj[-1].update({"hoverEvent": {"action": "show_text",
+                                                       content_name: shorten_string(elem["hover"], 250)}})
+                if "hyperlink" in elem.keys():
+                    res_obj[-1].update({"underlined": True, "color": "blue",
+                                        "clickEvent": {"action": "open_url", "value": elem["hyperlink"]}})
             elif isinstance(elem, str):
                 if default_text_color is not None:
                     res_obj.append({"text": elem, "color": default_text_color})
