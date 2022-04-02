@@ -23,8 +23,10 @@ from typing import Tuple, List, Union
 from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 
 from discord import (
-    Activity, ActivityType, TextChannel, Message, Status, Member, Role, MessageType, NotFound, HTTPException, Forbidden
+    Activity, ActivityType, Message, Status, Member, Role, MessageType, NotFound, HTTPException, Forbidden, Emoji,
+    ChannelType
 )
+from discord.utils import get as utils_get
 from discord.ext import commands
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r, WrongPassword
@@ -826,7 +828,7 @@ async def server_checkups(bot: commands.Bot, backups_thread: BackupsThread, poll
                 elif info.get("current") == 0 and BotVars.auto_shutdown_start_date <= datetime.now():
                     channel = bot.guilds[0].get_channel(Config.get_settings().bot_settings.commands_channel_id)
                     if channel is None:
-                        channel = [ch for ch in bot.guilds[0].channels if isinstance(ch, TextChannel)][0]
+                        channel = utils_get(bot.guilds[0].channels, type=ChannelType.text)
                     print(get_translation("Bot detected: Server is idle for {0} "
                                           "without players! Stopping server now!")
                           .format(get_time_string(Config.get_timeouts_settings().calc_before_shutdown)))
@@ -861,7 +863,7 @@ async def server_checkups(bot: commands.Bot, backups_thread: BackupsThread, poll
                 and not BotVars.is_loading and not BotVars.is_restarting:
             channel = bot.guilds[0].get_channel(Config.get_settings().bot_settings.commands_channel_id)
             if channel is None:
-                channel = [ch for ch in bot.guilds[0].channels if isinstance(ch, TextChannel)][0]
+                channel = utils_get(bot.guilds[0].channels, type=ChannelType.text)
             print(get_translation("Bot detected: Server's offline! Starting up server again!"))
             await send_msg(ctx=channel,
                            msg=add_quotes(get_translation("Bot detected: Server's offline!\n"
@@ -1762,7 +1764,7 @@ def _clean_message(message, edit_command=False):
     # TODO: In discord.py 2.0 'replace("​", "")' can be omitted # "\u200b"
     content = message.clean_content.replace("​", "").strip()
     if edit_command:
-        content = content.strip(f"{Config.get_settings().bot_settings.prefix}edit ")
+        content = compile(rf"^{Config.get_settings().bot_settings.prefix}edit\s").sub("", content, count=1)
     result_msg["content"] = content
     return result_msg
 
@@ -1789,18 +1791,23 @@ async def _handle_components_in_message(result_msg, message, bot: commands.Bot,
                                         only_replace_links=False, edit_command=False):
     # TODO: For now 'webhook.edit_message' doesn't support attachments, wait for discord.py 2.0
     attachments = _handle_attachments_in_message(message) if not edit_command else {}
-    url_regex = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|%[0-9a-fA-F][0-9a-fA-F])+'
+    url_regex = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|%[0-9a-fA-F][0-9a-fA-F])+"
 
     async def repl_emoji(obj: str):
-        emoji_name = search(r"\w+", obj).group(0)
+        emoji_name = search(r":\w+:", obj).group(0)
         if only_replace_links:
             return emoji_name
         else:
-            emoji_id = search(r"\d+", obj).group(0)
-            try:
-                emoji = await bot.guilds[0].fetch_emoji(emoji_id)
+            emoji_id = int(search(r"\d+", obj).group(0))
+            emoji = bot.get_emoji(emoji_id)
+            if emoji is None:
+                emoji = utils_get(bot.guilds[0].emojis, id=emoji_id)
+            if emoji is None:
+                with suppress(NotFound, HTTPException):
+                    emoji = await bot.guilds[0].fetch_emoji(emoji_id)
+            if isinstance(emoji, Emoji):
                 return emoji_name, str(emoji.url)
-            except (NotFound, HTTPException):
+            else:
                 return emoji_name
 
     def repl_url(link: str):
@@ -1956,9 +1963,9 @@ def _search_mentions_in_message(message) -> set:
 def _build_nickname_tellraw_for_minecraft_player(server_version: int, nick: str, content_name: str,
                                                  default_text_color: str = None, left_bracket: str = "<",
                                                  right_bracket: str = "> "):
-    if server_version > 7 and len(nick.split()) == 1:
+    if server_version > 7 and len(nick.split()) == 1 and nick in get_server_players().get("players"):
         tellraw_obj = [{"text": left_bracket}, {"selector": f"@p[name={nick}]"}, {"text": right_bracket}]
-    elif server_version > 7 and len(nick.split()) > 1:
+    elif server_version > 7:
         hover_string = ["", {"text": f"{nick}\n" + get_translation("Type: Player") + f"\n{get_offline_uuid(nick)}"}]
         if server_version > 11:
             hover_string += [{"text": "\nShift + "}, {"keybind": "key.attack"}]
@@ -1971,7 +1978,7 @@ def _build_nickname_tellraw_for_minecraft_player(server_version: int, nick: str,
         tellraw_obj = [{"text": left_bracket},
                        {"text": nick,
                         "hoverEvent": {"action": "show_text",
-                                       content_name: ["", {"text": f"{nick}\n" + f"\n{get_offline_uuid(nick)}"}]}},
+                                       content_name: ["", {"text": f"{nick}\n{get_offline_uuid(nick)}"}]}},
                        {"text": right_bracket}]
     if default_text_color is not None:
         for i in range(len(tellraw_obj)):

@@ -49,15 +49,18 @@ class ChatCommands(commands.Cog):
     @commands.guild_only()
     async def channel(self, ctx):
         try:
-            msg = get_translation("Channel {0} set to Minecraft cross-platform chat") \
-                .format((await self._bot.fetch_channel(Config.get_cross_platform_chat_settings().channel_id)).mention)
+            channel = self._bot.get_channel(Config.get_cross_platform_chat_settings().channel_id)
+            if channel is None:
+                channel = await self._bot.fetch_channel(Config.get_cross_platform_chat_settings().channel_id)
+            msg = get_translation("Channel {0} set to Minecraft cross-platform chat").format(channel.mention)
         except (InvalidData, HTTPException, NotFound, Forbidden):
             msg = get_translation("Channel for Minecraft cross-platform chat is not found or unreachable!")
         msg += "\n"
         try:
-            msg += get_translation("Channel {0} set as commands' channel for bot") \
-                .format((await self._bot.fetch_channel(Config.get_settings()
-                                                       .bot_settings.commands_channel_id)).mention)
+            channel = self._bot.get_channel(Config.get_settings().bot_settings.commands_channel_id)
+            if channel is None:
+                channel = await self._bot.fetch_channel(Config.get_settings().bot_settings.commands_channel_id)
+            msg += get_translation("Channel {0} set as commands' channel for bot").format(channel.mention)
         except (InvalidData, HTTPException, NotFound, Forbidden):
             msg += get_translation("Channel for bot commands is not found or unreachable!")
         await ctx.channel.send(msg)
@@ -229,7 +232,9 @@ class ChatCommands(commands.Cog):
     async def on_raw_message_edit(self, payload):
         if Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
                 payload.channel_id == Config.get_cross_platform_chat_settings().channel_id:
-            after_channel = await self._bot.fetch_channel(payload.channel_id)
+            after_channel = self._bot.get_channel(payload.channel_id)
+            if after_channel is None:
+                after_channel = await self._bot.fetch_channel(payload.channel_id)
             after_message = await after_channel.fetch_message(payload.message_id)
             await handle_message_for_chat(after_message, self._bot,
                                           on_edit=True, before_message=payload.cached_message)

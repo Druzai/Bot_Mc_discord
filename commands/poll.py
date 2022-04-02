@@ -3,7 +3,7 @@ from contextlib import suppress
 from datetime import datetime
 from enum import Enum, auto
 
-from discord import Color, Embed, Status, Role, NotFound, Forbidden, HTTPException, DMChannel, Member
+from discord import Color, Embed, Status, Role, NotFound, Forbidden, HTTPException, DMChannel, Member, InvalidData
 from discord.ext import commands
 
 from components.localization import get_translation
@@ -89,6 +89,9 @@ class Poll(commands.Cog):
                 (payload.member is None and payload.user_id == self._bot.user.id):
             return
         channel = self._bot.get_channel(payload.channel_id)
+        if channel is None:
+            with suppress(InvalidData, HTTPException, NotFound, Forbidden):
+                channel = await self._bot.fetch_channel(payload.channel_id)
         current_poll = self._polls[payload.message_id]
         emoji = self._emoji_symbols["yes"] if payload.emoji.name == \
                                               self._emoji_symbols["yes"] else self._emoji_symbols["no"]
@@ -115,6 +118,9 @@ class Poll(commands.Cog):
         if payload.emoji.name not in [v for k, v in current_poll.poll_voted_uniq.items() if k == payload.user_id]:
             return
         channel = self._bot.get_channel(payload.channel_id)
+        if channel is None:
+            with suppress(InvalidData, HTTPException, NotFound, Forbidden):
+                channel = await self._bot.fetch_channel(payload.channel_id)
         if payload.member is None:
             if isinstance(channel, DMChannel):
                 user = await self._bot.fetch_user(payload.user_id)

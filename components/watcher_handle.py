@@ -12,7 +12,8 @@ from time import sleep
 from traceback import format_exc
 
 from colorama import Fore, Style
-from discord import Webhook, RequestsWebhookAdapter, TextChannel, Role
+from discord import Webhook, RequestsWebhookAdapter, TextChannel, Role, ChannelType
+from discord.utils import get as utils_get
 from discord import NoMoreItems
 from discord.iterators import _AsyncIterator, OLDEST_OBJECT
 from discord.object import Object
@@ -197,9 +198,9 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None, poll
                                             if cut_right_string is not None:
                                                 mentions[i_mention].append(cut_right_string)
                                         if isinstance(mentions[i_mention][1], list):
-                                            mentions[i_mention][1] += [m for m in
-                                                                       BotVars.bot_for_webhooks.guilds[0].members
-                                                                       if m.id == user.user_discord_id]
+                                            mentions[i_mention][1] += [utils_get(BotVars.bot_for_webhooks
+                                                                                 .guilds[0].members,
+                                                                                 id=user.user_discord_id)]
                                             found = True
                                 if found:
                                     break
@@ -232,15 +233,15 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None, poll
                                 split_arr[insert_numb] = f"{mention[2]}{split_arr[insert_numb]}"
 
                             if Config.get_settings().bot_settings.managing_commands_role_id is None:
-                                possible_role = []
+                                possible_role = None
                             else:
-                                possible_role = \
-                                    [r for r in BotVars.bot_for_webhooks.guilds[0].roles
-                                     if r.id == Config.get_settings().bot_settings.managing_commands_role_id]
-                            if len(possible_role) != 0:
-                                split_arr.insert(insert_numb, possible_role[0].mention)
+                                possible_role = utils_get(BotVars.bot_for_webhooks.guilds[0].roles,
+                                                          id=Config.get_settings()
+                                                          .bot_settings.managing_commands_role_id)
+                            if possible_role is not None:
+                                split_arr.insert(insert_numb, possible_role.mention)
                                 if "@a" not in mention_nicks:
-                                    mention_nicks = _get_members_nicks_of_the_role(possible_role[0], mention_nicks)
+                                    mention_nicks = _get_members_nicks_of_the_role(possible_role, mention_nicks)
                             else:
                                 split_arr.insert(insert_numb, "@everyone")
                                 if "@a" not in mention_nicks:
@@ -280,8 +281,14 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None, poll
 
                     if len(mention_nicks) > 0:
                         mention_nicks = set(mention_nicks)
-                        with suppress(KeyError):
-                            mention_nicks.remove(player_nick)
+                        nick_owner_id = None
+                        for u in Config.get_known_users_list():
+                            if u.user_minecraft_nick == player_nick:
+                                nick_owner_id = u.user_discord_id
+                        for nick in [u.user_minecraft_nick for u in Config.get_known_users_list()
+                                     if u.user_discord_id == nick_owner_id]:
+                            with suppress(KeyError):
+                                mention_nicks.remove(nick)
                         from components.additional_funcs import announce, connect_rcon, times
 
                         with suppress(ConnectionError, socket.error):
@@ -290,6 +297,22 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None, poll
                                     for nick in mention_nicks:
                                         announce(nick, f"@{player_nick} -> @{nick if nick != '@a' else 'everyone'}",
                                                  cl_r)
+
+                if search(r":[^:]+:", player_message):
+                    split_arr = split(r":[^:]+:", player_message)
+                    emojis = [i[1:-1] for i in findall(r":[^:]+:", player_message)]
+                    i = 1
+                    for emoji_name in emojis:
+                        emoji = utils_get(BotVars.bot_for_webhooks.emojis, name=emoji_name)
+                        if emoji is None:
+                            emoji = utils_get(BotVars.bot_for_webhooks.guilds[0].emojis, name=emoji_name)
+                        if emoji is None:
+                            emoji = emoji_name
+                        else:
+                            emoji = f"<:{emoji.name}:{emoji.id}>"
+                        split_arr.insert(i, emoji)
+                        i += 2
+                    player_message = "".join(split_arr)
 
                 edited_message = False
                 if search(r"^\*[^*].*", player_message):
@@ -322,10 +345,9 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None, poll
                     player_url_pic = None
                     for user in Config.get_settings().known_users:
                         if user.user_minecraft_nick.lower() == player_nick.lower():
-                            possible_users = [m for m in BotVars.bot_for_webhooks.guilds[0].members
-                                              if m.id == user.user_discord_id]
-                            if len(possible_users) > 0:
-                                player_url_pic = possible_users[0].avatar_url
+                            possible_user = BotVars.bot_for_webhooks.guilds[0].get_member(user.user_discord_id)
+                            if possible_user is not None:
+                                player_url_pic = possible_user.avatar_url
                                 break
 
                     BotVars.webhook_chat.send(player_message, username=player_nick, avatar_url=player_url_pic)
@@ -393,8 +415,7 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None, poll
                         member = None
                         for user in Config.get_known_users_list():
                             if user.user_minecraft_nick == nick:
-                                member = [m for m in BotVars.bot_for_webhooks.guilds[0].members
-                                          if m.id == user.user_discord_id][0]
+                                member = BotVars.bot_for_webhooks.guilds[0].get_member(user.user_discord_id)
 
                         user_nicks = Config.get_user_nicks(ip_address=ip_address, nick=nick, authorized=True)
                         status = get_translation("Status:") + f" {user_nicks[nick][0][1]}\n"
@@ -457,8 +478,7 @@ def _get_commands_channel():
     channel = BotVars.bot_for_webhooks.guilds[0] \
         .get_channel(Config.get_settings().bot_settings.commands_channel_id)
     if channel is None:
-        channel = [ch for ch in BotVars.bot_for_webhooks.guilds[0].channels
-                   if isinstance(ch, TextChannel)][0]
+        channel = utils_get(BotVars.bot_for_webhooks.guilds[0].channels, type=ChannelType.text)
     return channel
 
 

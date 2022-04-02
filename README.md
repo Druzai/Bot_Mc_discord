@@ -42,7 +42,8 @@
     * Supported url links (shortens if link longer than 256 symbols)
     * Supported attached files to message in Discord
     * Half supported emojis
-        * Custom emojis are converted to text with their own text name
+        * Custom emojis are converted to text with their own text name and hyperlink to img of emoji if applicable
+        * Minecraft players can send emojis typing `:emoji_name:`
         * Most of the standard unicode emojis are not processed by the vanilla Minecraft server
 * Setting up optional rss feed. Bot will send new items of feed to Discord text channel via webhook
 
