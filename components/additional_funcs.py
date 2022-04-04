@@ -1706,16 +1706,9 @@ def _handle_long_tellraw_object(tellraw_obj):
                 res += [["", elem]]
                 calc_size = len(dumps(elem)) + 6
             else:
-                use_slice = False
-                if "\n" not in elem["text"] and " " not in elem["text"]:
-                    use_slice = True
-                if use_slice:
-                    for sliced_str in wrap(dumps(elem["text"])[1:-1], 1100, drop_whitespace=True):
-                        split_elem = elem.copy()
-                        split_elem["text"] = loads(f"'{sliced_str}'")
-                        res += [["", split_elem]]
-                    continue
                 for split_str in elem["text"].split("\n"):
+                    if split_str == "":
+                        continue
                     split_elem = elem.copy()
                     split_elem["text"] = split_str
                     if len(dumps(split_elem)) + 6 > MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH:
@@ -1723,17 +1716,56 @@ def _handle_long_tellraw_object(tellraw_obj):
                         split_elem["text"] = ""
                         calc_split_str_size = len(dumps(split_elem))
                         for split_ws_str in split_str.split(" "):
-                            split_ws_str_len = len(dumps(split_ws_str)) - 2
-                            if calc_split_str_size + split_ws_str_len > 1100:
-                                split_array += [split_ws_str]
-                                calc_split_str_size = split_ws_str_len + len(dumps(split_elem))
+                            split_ws_str_len = len(dumps(split_ws_str)) - 1
+                            if calc_split_str_size + \
+                                    split_ws_str_len + 6 > MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH:
+                                if split_ws_str_len > MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH:
+                                    last_slice_len = 0
+                                    max_wrap_str_length = MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH - 6 - \
+                                                          len(dumps(split_elem))
+                                    wraps = wrap(dumps(split_ws_str)[1:-1], max_wrap_str_length, drop_whitespace=True)
+                                    wraps_slice = 0
+                                    for i in range(len(wraps)):
+                                        if wraps_slice > 0:
+                                            wraps[i] = f"{wraps[i - 1][-wraps_slice:]}{wraps[i]}"
+                                            if len(wraps[i]) > max_wrap_str_length:
+                                                wraps_slice = len(wraps[i]) - max_wrap_str_length
+                                            else:
+                                                wraps_slice = 0
+                                        while True:
+                                            try:
+                                                if wraps_slice > 0:
+                                                    parsed_sliced_str = wraps[i][:-wraps_slice] \
+                                                        .encode("ascii").decode("unicode-escape")
+                                                else:
+                                                    parsed_sliced_str = wraps[i] \
+                                                        .encode("ascii").decode("unicode-escape")
+                                            except (UnicodeDecodeError, SyntaxError):
+                                                wraps_slice += 1
+                                                continue
+                                            split_array += [parsed_sliced_str]
+                                            if len(wraps) == i + 1:
+                                                last_slice_len = len(dumps(parsed_sliced_str)) - 2
+                                            break
+                                    split_array[-1] += " "
+                                    calc_split_str_size = last_slice_len + len(dumps(split_elem)) + 1
+                                else:
+                                    split_array += [split_ws_str]
+                                    calc_split_str_size = split_ws_str_len + len(dumps(split_elem))
                                 continue
-                            split_array[-1] += f" {split_ws_str}"
+                            if len(split_array[-1].strip()) == 0:
+                                split_array[-1] = split_ws_str
+                            else:
+                                split_array[-1] += f" {split_ws_str}"
                             calc_split_str_size += split_ws_str_len
                         for split_str_ws in split_array:
                             split_elem = elem.copy()
                             split_elem["text"] = split_str_ws
-                            res += [["", split_elem]]
+                            if len(dumps(res[-1])) + len(
+                                    dumps(split_elem)) + 6 > MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH:
+                                res += [["", split_elem]]
+                            else:
+                                res[-1] += [split_elem]
                     else:
                         added_split = res[-1].copy()
                         added_dict = added_split[-1].copy()

@@ -26,7 +26,7 @@ All important changes to this project will be documented in this file.
 * Fixed and rewrote many translations
 * Added support of servers' version below 1.7.6 for `whitelist` command and deletion of some nicks
 * Better handling of files for `banned ips`, `ops` and `whitelist` on versions lower than `1.7.6`
-* Fixed handling long tellraw objects and improved building of tellraw objects
+* Fixed handling long tellraw objects and improved their building
 
 #### Breaking changes:
 
