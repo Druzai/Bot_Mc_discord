@@ -7,7 +7,7 @@ from contextlib import contextmanager, suppress, asynccontextmanager
 from datetime import datetime, timedelta
 from hashlib import md5
 from itertools import chain
-from json import load, dump, dumps, JSONDecodeError
+from json import load, loads, dump, dumps, JSONDecodeError
 from os import chdir, system, walk, mkdir, remove
 from os.path import basename, join as p_join, getsize, isfile
 from pathlib import Path
@@ -19,7 +19,7 @@ from textwrap import wrap
 from threading import Thread, Event
 from time import sleep
 from traceback import print_exception
-from typing import Tuple, List, Union
+from typing import Tuple, List, Union, Optional
 from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 
 from discord import (
@@ -1618,6 +1618,15 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
             # Building object for tellraw
             res_obj = [""]
             if result_msg.get("reply", None) is not None:
+                is_list = isinstance(result_msg["reply"][-1], list)
+                split_bracket = isinstance(result_msg["reply"][-1][0] if is_list else result_msg["reply"][-1], dict)
+                if not split_bracket:
+                    if is_list:
+                        result_msg["reply"][2] += result_msg["reply"][-1][0]
+                        result_msg["reply"][-1] = result_msg["reply"][-1][1:]
+                    else:
+                        result_msg["reply"][2] += result_msg["reply"][-1]
+                        result_msg["reply"][-1] = []
                 if not reply_from_minecraft_user:
                     res_obj += _build_nickname_tellraw_for_discord_member(server_version, result_msg["reply"][1],
                                                                           content_name, brackets_color="gray",
@@ -1629,11 +1638,20 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
                                                                             left_bracket=result_msg["reply"][0],
                                                                             right_bracket=result_msg["reply"][2])
                 _build_components_in_message(res_obj, content_name, result_msg["reply"][-1], "gray")
+            is_list = isinstance(result_msg["content"], list)
+            split_bracket = isinstance(result_msg["content"][0] if is_list else result_msg["content"], dict) or on_edit
+            if not split_bracket:
+                if is_list:
+                    result_msg["content"][0] = f"> {result_msg['content'][0]}"
+                else:
+                    result_msg["content"] = f"> {result_msg['content']}"
             if not edit_command:
-                res_obj += _build_nickname_tellraw_for_discord_member(server_version, message.author, content_name)
+                res_obj += _build_nickname_tellraw_for_discord_member(server_version, message.author, content_name,
+                                                                      right_bracket="> " if split_bracket else None)
             else:
                 res_obj += _build_nickname_tellraw_for_minecraft_player(server_version, before_message.author.name,
-                                                                        content_name)
+                                                                        content_name,
+                                                                        right_bracket="> " if split_bracket else None)
             if on_edit:
                 if before_message is not None:
                     result_before = _clean_message(before_message)
@@ -1674,17 +1692,17 @@ def _handle_long_tellraw_object(tellraw_obj):
     if len(dumps(tellraw_obj)) <= MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH:
         return [tellraw_obj]
 
-    calc_size = 6
+    calc_size = 4
     res = []
     for elem in tellraw_obj:
         if elem == "":
             res += [[""]]
         elif isinstance(elem, dict):
-            calc_size += len(dumps(elem))
+            calc_size += len(dumps(elem)) + 2
             if calc_size <= MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH:
                 res[-1] += [elem]
                 continue
-            if len(dumps(elem)) + 6 <= MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH:
+            if len(dumps(elem)) + 4 <= MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH:
                 res += [["", elem]]
                 calc_size = len(dumps(elem)) + 6
             else:
@@ -1692,9 +1710,9 @@ def _handle_long_tellraw_object(tellraw_obj):
                 if "\n" not in elem["text"] and " " not in elem["text"]:
                     use_slice = True
                 if use_slice:
-                    for sliced_str in wrap(elem["text"], 1100, drop_whitespace=True):
+                    for sliced_str in wrap(dumps(elem["text"])[1:-1], 1100, drop_whitespace=True):
                         split_elem = elem.copy()
-                        split_elem["text"] = sliced_str
+                        split_elem["text"] = loads(f"'{sliced_str}'")
                         res += [["", split_elem]]
                     continue
                 for split_str in elem["text"].split("\n"):
@@ -1702,11 +1720,16 @@ def _handle_long_tellraw_object(tellraw_obj):
                     split_elem["text"] = split_str
                     if len(dumps(split_elem)) + 6 > MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH:
                         split_array = [""]
+                        split_elem["text"] = ""
+                        calc_split_str_size = len(dumps(split_elem))
                         for split_ws_str in split_str.split(" "):
-                            if len(split_array[-1] + split_ws_str) > 1100:
+                            split_ws_str_len = len(dumps(split_ws_str)) - 2
+                            if calc_split_str_size + split_ws_str_len > 1100:
                                 split_array += [split_ws_str]
+                                calc_split_str_size = split_ws_str_len + len(dumps(split_elem))
                                 continue
-                            split_array[-1] = f"{split_array[-1]} {split_ws_str}"
+                            split_array[-1] += f" {split_ws_str}"
+                            calc_split_str_size += split_ws_str_len
                         for split_str_ws in split_array:
                             split_elem = elem.copy()
                             split_elem["text"] = split_str_ws
@@ -1719,7 +1742,10 @@ def _handle_long_tellraw_object(tellraw_obj):
                         if len(dumps(added_split)) > MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH:
                             res += [["", split_elem]]
                         else:
-                            if res[-1][-1].get("text", "") in ["> ", "*"]:
+                            if res[-1][-1].get("text", "") == "*" or \
+                                    (len(res[-1]) > 1 and any(i in res[-1][-1].keys()
+                                                              for i in ["insertion", "selector", "hoverEvent"]) and
+                                     res[-1][-2]["text"] in ["<", "\n -> <"]):
                                 res[-1] += [split_elem]
                             else:
                                 res[-1] = added_split
@@ -1761,8 +1787,7 @@ def _split_tellraw_object(tellraw_obj):
 
 def _clean_message(message, edit_command=False):
     result_msg = {}
-    # TODO: In discord.py 2.0 'replace("​", "")' can be omitted # "\u200b"
-    content = message.clean_content.replace("​", "").strip()
+    content = message.clean_content.replace("\u200b", "").strip()
     if edit_command:
         content = compile(rf"^{Config.get_settings().bot_settings.prefix}edit\s").sub("", content, count=1)
     result_msg["content"] = content
@@ -1773,8 +1798,7 @@ async def _handle_reply_in_message(message, result_msg):
     reply_from_minecraft_user = None
     if message.reference is not None:
         reply_msg = message.reference.resolved
-        # TODO: In discord.py 2.0 'replace("​", "")' can be omitted # "\u200b"
-        cnt = reply_msg.clean_content.replace("​", "").strip()
+        cnt = reply_msg.clean_content.replace("\u200b", "").strip()
         if reply_msg.author.discriminator == "0000":
             # reply to Minecraft player
             nick = reply_msg.author.display_name
@@ -1850,16 +1874,23 @@ async def _handle_components_in_message(result_msg, message, bot: commands.Bot,
         if attachments.get(key, None) is not None and len(attachments[key]) > 0:
             for i in attachments[key]:
                 t_string = [t["text"] if isinstance(t, dict) else t for t in temp_split]
-                if (key == "content" and len("".join(t_string)) != 0) or \
-                        (key == "reply" and "".join(t_string) != "> "):
-                    temp_split.append(" ")
+                if len("".join(t_string)) != 0:
+                    if isinstance(temp_split[-1], str):
+                        temp_split[-1] += " "
+                    else:
+                        temp_split.append(" ")
                 if only_replace_links:
                     temp_split.append(i["text"])
                 else:
                     temp_split.append(i)
 
         if key == "reply":
-            temp_split.append("\n")
+            if isinstance(temp_split[-1], dict):
+                temp_split.append("\n")
+            else:
+                temp_split[-1] += "\n"
+
+        temp_split = [s for s in temp_split if (isinstance(s, str) and len(s) > 0) or not isinstance(s, str)]
 
         if isinstance(ms, list):
             result_msg[key] = [ms[0], ms[1], ms[2], "".join(temp_split) if only_replace_links else temp_split]
@@ -1972,24 +2003,23 @@ def _search_mentions_in_message(message) -> set:
 
 def _build_nickname_tellraw_for_minecraft_player(server_version: int, nick: str, content_name: str,
                                                  default_text_color: str = None, left_bracket: str = "<",
-                                                 right_bracket: str = "> "):
+                                                 right_bracket: Optional[str] = "> "):
+    tellraw_obj = [{"text": left_bracket}]
     if server_version > 7 and len(nick.split()) == 1 and nick in get_server_players().get("players"):
-        tellraw_obj = [{"text": left_bracket}, {"selector": f"@p[name={nick}]"}, {"text": right_bracket}]
+        tellraw_obj += [{"selector": f"@p[name={nick}]"}]
     elif server_version > 7:
         hover_string = ["", {"text": f"{nick}\n" + get_translation("Type: Player") + f"\n{get_offline_uuid(nick)}"}]
         if server_version > 11:
             hover_string += [{"text": "\nShift + "}, {"keybind": "key.attack"}]
-        tellraw_obj = [{"text": left_bracket},
-                       {"text": nick,
-                        "insertion": f"/tell {nick} ",
-                        "hoverEvent": {"action": "show_text", content_name: hover_string}},
-                       {"text": right_bracket}]
+        tellraw_obj += [{"text": nick,
+                         "insertion": f"/tell {nick} ",
+                         "hoverEvent": {"action": "show_text", content_name: hover_string}}]
     else:
-        tellraw_obj = [{"text": left_bracket},
-                       {"text": nick,
-                        "hoverEvent": {"action": "show_text",
-                                       content_name: ["", {"text": f"{nick}\n{get_offline_uuid(nick)}"}]}},
-                       {"text": right_bracket}]
+        tellraw_obj += [{"text": nick,
+                         "hoverEvent": {"action": "show_text",
+                                        content_name: ["", {"text": f"{nick}\n{get_offline_uuid(nick)}"}]}}]
+    if right_bracket is not None:
+        tellraw_obj += [{"text": right_bracket}]
     if default_text_color is not None:
         for i in range(len(tellraw_obj)):
             tellraw_obj[i]["color"] = default_text_color
@@ -1998,7 +2028,7 @@ def _build_nickname_tellraw_for_minecraft_player(server_version: int, nick: str,
 
 def _build_nickname_tellraw_for_discord_member(server_version: int, author: Member, content_name: str,
                                                brackets_color: str = None, left_bracket: str = "<",
-                                               right_bracket: str = "> "):
+                                               right_bracket: Optional[str] = "> "):
     hover_string = ["", {"text": f"{author.display_name}\n"
                                  f"{author.name}#{author.discriminator}"}]
     if server_version > 11:
@@ -2006,8 +2036,9 @@ def _build_nickname_tellraw_for_discord_member(server_version: int, author: Memb
     tellraw_obj = [{"text": left_bracket},
                    {"text": author.display_name, "color": "dark_gray",
                     "insertion": f"@{author.display_name}",
-                    "hoverEvent": {"action": "show_text", content_name: hover_string}},
-                   {"text": right_bracket}]
+                    "hoverEvent": {"action": "show_text", content_name: hover_string}}]
+    if right_bracket is not None:
+        tellraw_obj += [{"text": right_bracket}]
     if brackets_color is not None:
         for i in range(len(tellraw_obj)):
             if len(tellraw_obj[i].keys()) == 1:
