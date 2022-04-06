@@ -2084,6 +2084,12 @@ def get_server_version(patch=False) -> Union[Tuple[int, int], int]:
         version = cl_q.full_stats.version
     if "snapshot" in version.lower() or search(r"\d+w\d+a", version) or "release" in version.lower():
         print(get_translation("Minecraft server is not in release state! Proceed with caution!"))
+        if "snapshot" in version.lower():
+            version = version.split("snapshot")[0]
+        elif "release" in version.lower():
+            version = version.split("release")[0]
+        elif search(r"\d+w\d+a", version):
+            raise ValueError(f"Can't parse server's version '{version}'!")
     matches = findall(r"\d+", version)
     if patch:
         if len(matches) < 3:
