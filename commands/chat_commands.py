@@ -1,9 +1,7 @@
 from typing import Union
 
 import discord
-from discord import (
-    Activity, ActivityType, Role, Member, TextChannel, InvalidData, HTTPException, NotFound, Forbidden, DMChannel
-)
+from discord import Role, Member, TextChannel, InvalidData, HTTPException, NotFound, Forbidden, DMChannel
 from discord.ext import commands, tasks
 
 from commands.poll import Poll
@@ -30,10 +28,15 @@ class ChatCommands(commands.Cog):
         print(f"{self._bot.user.name}#{self._bot.user.discriminator}")
         print(get_translation('Version of discord.py') + " - " + discord.__version__)
         print("------")
-        await self._bot.change_presence(activity=Activity(type=ActivityType.watching, name="nsfw"))
         create_webhooks()
         if Config.get_rss_feed_settings().enable_rss_feed and not self.rss_feed_task.is_running():
             self.rss_feed_task.start()
+        elif self.rss_feed_task.is_running():
+            self.rss_feed_task.restart()
+        if not self._bot.get_cog("MinecraftCommands").checkups_task.is_running():
+            self._bot.get_cog("MinecraftCommands").checkups_task.start()
+        else:
+            self._bot.get_cog("MinecraftCommands").checkups_task.restart()
         print(get_translation("Bot is ready!"))
         print(get_translation("To stop the bot press Ctrl + C"))
 

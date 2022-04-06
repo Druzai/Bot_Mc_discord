@@ -41,8 +41,6 @@ class MinecraftCommands(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self._bot: commands.Bot = bot
         self._IndPoll: Poll = bot.get_cog("Poll")
-        if not self.checkups_task.is_running():
-            self.checkups_task.start()
         self._backups_thread = BackupsThread(self._bot)
         if len(argv) == 1:
             self._backups_thread.start()
