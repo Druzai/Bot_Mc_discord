@@ -7,7 +7,7 @@ from contextlib import contextmanager, suppress, asynccontextmanager
 from datetime import datetime, timedelta
 from hashlib import md5
 from itertools import chain
-from json import load, loads, dump, dumps, JSONDecodeError
+from json import load, dump, dumps, JSONDecodeError
 from os import chdir, system, walk, mkdir, remove
 from os.path import basename, join as p_join, getsize, isfile
 from pathlib import Path
@@ -26,8 +26,8 @@ from discord import (
     Activity, ActivityType, Message, Status, Member, Role, MessageType, NotFound, HTTPException, Forbidden, Emoji,
     ChannelType
 )
-from discord.utils import get as utils_get
 from discord.ext import commands
+from discord.utils import get as utils_get
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r, WrongPassword
 from psutil import process_iter, NoSuchProcess, disk_usage, Process
@@ -1602,13 +1602,73 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
                        add_quotes(get_translation("server is loading!").capitalize()), True)
     else:
         server_version = get_server_version()
+        reply_from_minecraft_user = None
         if server_version < 7:
-            await send_msg(message.channel, f"{author_mention}, " +
-                           get_translation("version of your Minecraft server is lower than `1.7.2` "
-                                           "so bot can't send messages from Discord to Minecraft!"),
-                           is_reaction=True)
+            if server_version < 3:
+                message_length = 108
+            elif 3 <= server_version < 6:
+                message_length = 112
+            else:
+                message_length = 1442
+            space = u"\U000e0020"
+            result_msg = _clean_message(message, edit_command)
+            if not edit_command:
+                result_msg, reply_from_minecraft_user = await _handle_reply_in_message(message, result_msg)
+            result_msg = await _handle_components_in_message(result_msg, message, bot, only_replace_links=True,
+                                                             edit_command=edit_command, version_lower_1_7_2=True)
+            msg = ""
+            if result_msg.get("reply", None) is not None:
+                msg += space
+                if not reply_from_minecraft_user:
+                    result_msg["reply"][1] = result_msg["reply"][1].display_name
+                if isinstance(result_msg["reply"][-1], list):
+                    msg += "".join(result_msg["reply"][:-1] + ["".join(result_msg["reply"][-1])])
+                else:
+                    msg += "".join(result_msg["reply"])
+            if not edit_command:
+                msg += f"<{message.author.display_name}> "
+            else:
+                msg += f"<{before_message.author.name}> "
+            if on_edit:
+                msg += "*"
+            msg += result_msg["content"]
+            if (server_version < 6 and len(msg) <= message_length) or \
+                    (server_version == 6 and len(msg.encode()) <= message_length):
+                if server_version < 3 and "\n" in msg:
+                    messages = [m.strip() for m in msg.split("\n")]
+                else:
+                    messages = [msg if reply_from_minecraft_user is None else msg[1:]]
+            else:
+                messages = []
+                if server_version < 6:
+                    if server_version < 3 and "\n" in msg:
+                        for m in msg.split("\n"):
+                            if len(m) <= message_length:
+                                messages.append(m.strip())
+                            else:
+                                for m_split in wrap(m, message_length, replace_whitespace=False):
+                                    messages.append(m_split)
+                    else:
+                        for m_split in wrap((msg if reply_from_minecraft_user is None else msg[1:]),
+                                            message_length, replace_whitespace=False):
+                            messages.append(m_split)
+                else:
+                    split_line = ""
+                    byte_line_length = 0
+                    for symb in (msg if reply_from_minecraft_user is None else msg[1:]):
+                        byte_line_length += len(symb.encode())
+                        if byte_line_length > message_length:
+                            messages.append(split_line)
+                            split_line = symb
+                            byte_line_length = len(symb.encode())
+                        else:
+                            split_line += symb
+                    if len(split_line) > 0:
+                        messages.append(split_line)
+            with connect_rcon() as cl_r:
+                for m in messages:
+                    cl_r.say(m if m != "" else space)
         elif get_server_players().get("current") > 0:
-            reply_from_minecraft_user = None
             content_name = "contents" if server_version >= 16 else "value"
             result_msg = _clean_message(message, edit_command)
             if not edit_command:
@@ -1618,15 +1678,6 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
             # Building object for tellraw
             res_obj = [""]
             if result_msg.get("reply", None) is not None:
-                is_list = isinstance(result_msg["reply"][-1], list)
-                split_bracket = isinstance(result_msg["reply"][-1][0] if is_list else result_msg["reply"][-1], dict)
-                if not split_bracket:
-                    if is_list:
-                        result_msg["reply"][2] += result_msg["reply"][-1][0]
-                        result_msg["reply"][-1] = result_msg["reply"][-1][1:]
-                    else:
-                        result_msg["reply"][2] += result_msg["reply"][-1]
-                        result_msg["reply"][-1] = []
                 if not reply_from_minecraft_user:
                     res_obj += _build_nickname_tellraw_for_discord_member(server_version, result_msg["reply"][1],
                                                                           content_name, brackets_color="gray",
@@ -1638,20 +1689,11 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
                                                                             left_bracket=result_msg["reply"][0],
                                                                             right_bracket=result_msg["reply"][2])
                 _build_components_in_message(res_obj, content_name, result_msg["reply"][-1], "gray")
-            is_list = isinstance(result_msg["content"], list)
-            split_bracket = isinstance(result_msg["content"][0] if is_list else result_msg["content"], dict) or on_edit
-            if not split_bracket:
-                if is_list:
-                    result_msg["content"][0] = f"> {result_msg['content'][0]}"
-                else:
-                    result_msg["content"] = f"> {result_msg['content']}"
             if not edit_command:
-                res_obj += _build_nickname_tellraw_for_discord_member(server_version, message.author, content_name,
-                                                                      right_bracket="> " if split_bracket else None)
+                res_obj += _build_nickname_tellraw_for_discord_member(server_version, message.author, content_name)
             else:
                 res_obj += _build_nickname_tellraw_for_minecraft_player(server_version, before_message.author.name,
-                                                                        content_name,
-                                                                        right_bracket="> " if split_bracket else None)
+                                                                        content_name)
             if on_edit:
                 if before_message is not None:
                     result_before = _clean_message(before_message)
@@ -1674,15 +1716,17 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
                     for tellraw in res:
                         cl_r.tellraw("@a", tellraw)
 
-            nicks = _search_mentions_in_message(message)
-            if len(nicks) > 0:
-                with suppress(ConnectionError, socket.error):
-                    with connect_rcon() as cl_r:
-                        with times(0, 60, 20, cl_r):
-                            for nick in nicks:
-                                announce(nick,
-                                         f"@{message.author.display_name} -> @{nick if nick != '@a' else 'everyone'}",
-                                         cl_r)
+            if server_version > 7:
+                nicks = _search_mentions_in_message(message, edit_command)
+                if len(nicks) > 0:
+                    with suppress(ConnectionError, socket.error):
+                        with connect_rcon() as cl_r:
+                            with times(0, 60, 20, cl_r):
+                                for nick in nicks:
+                                    announce(nick,
+                                             f"@{message.author.display_name} "
+                                             f"-> @{nick if nick != '@a' else 'everyone'}",
+                                             cl_r)
         else:
             await send_msg(message.channel, f"{author_mention}, " +
                            get_translation("No players on server!").lower(), True)
@@ -1694,75 +1738,61 @@ def _handle_long_tellraw_object(tellraw_obj):
 
     calc_size = 4
     res = []
-    for elem in tellraw_obj:
-        if elem == "":
+    tellraw_obj_length = len(tellraw_obj)
+    for e in range(tellraw_obj_length):
+        if tellraw_obj[e] == "":
             res += [[""]]
-        elif isinstance(elem, dict):
-            calc_size += len(dumps(elem)) + 2
-            if calc_size <= MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH:
-                res[-1] += [elem]
+        elif isinstance(tellraw_obj[e], dict):
+            calc_size += len(dumps(tellraw_obj[e])) + 2
+            if calc_size <= MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH and \
+                    not (tellraw_obj_length - e > 1 and any(i in tellraw_obj[e + 1].keys()
+                                                            for i in ["insertion", "selector", "hoverEvent"]) and
+                         tellraw_obj[e]["text"] == "<" and len(res[-1]) > 1):
+                res[-1] += [tellraw_obj[e]]
                 continue
-            if len(dumps(elem)) + 4 <= MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH:
-                res += [["", elem]]
-                calc_size = len(dumps(elem)) + 6
+            if len(dumps(tellraw_obj[e])) + 4 <= MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH:
+                res += [["", tellraw_obj[e]]]
+                calc_size = len(dumps(tellraw_obj[e])) + 6
             else:
-                for split_str in elem["text"].split("\n"):
+                for split_str in tellraw_obj[e]["text"].split("\n"):
                     if split_str == "":
                         continue
-                    split_elem = elem.copy()
+                    split_elem = tellraw_obj[e].copy()
                     split_elem["text"] = split_str
                     if len(dumps(split_elem)) + 6 > MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH:
-                        split_array = [""]
+                        split_array = []
                         split_elem["text"] = ""
-                        calc_split_str_size = len(dumps(split_elem))
-                        for split_ws_str in split_str.split(" "):
-                            split_ws_str_len = len(dumps(split_ws_str)) - 1
-                            if calc_split_str_size + \
-                                    split_ws_str_len + 6 > MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH:
-                                if split_ws_str_len > MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH:
-                                    last_slice_len = 0
-                                    max_wrap_str_length = MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH - 6 - \
-                                                          len(dumps(split_elem))
-                                    wraps = wrap(dumps(split_ws_str)[1:-1], max_wrap_str_length, drop_whitespace=True)
-                                    wraps_slice = 0
-                                    for i in range(len(wraps)):
-                                        if wraps_slice > 0:
-                                            wraps[i] = f"{wraps[i - 1][-wraps_slice:]}{wraps[i]}"
-                                            if len(wraps[i]) > max_wrap_str_length:
-                                                wraps_slice = len(wraps[i]) - max_wrap_str_length
-                                            else:
-                                                wraps_slice = 0
-                                        while True:
-                                            try:
-                                                if wraps_slice > 0:
-                                                    parsed_sliced_str = wraps[i][:-wraps_slice] \
-                                                        .encode("ascii").decode("unicode-escape")
-                                                else:
-                                                    parsed_sliced_str = wraps[i] \
-                                                        .encode("ascii").decode("unicode-escape")
-                                            except (UnicodeDecodeError, SyntaxError):
-                                                wraps_slice += 1
-                                                continue
-                                            split_array += [parsed_sliced_str]
-                                            if len(wraps) == i + 1:
-                                                last_slice_len = len(dumps(parsed_sliced_str)) - 2
-                                            break
-                                    split_array[-1] += " "
-                                    calc_split_str_size = last_slice_len + len(dumps(split_elem)) + 1
+                        max_wrap_str_length = MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH - 6 - \
+                                              len(dumps(split_elem))
+                        wraps = wrap(dumps(split_str)[1:-1], max_wrap_str_length, replace_whitespace=False)
+                        wraps_slice = 0
+                        for i in range(len(wraps)):
+                            if wraps_slice > 0:
+                                wraps[i] = f"{wraps[i - 1][-wraps_slice:]}{wraps[i]}"
+                                if len(wraps[i]) > max_wrap_str_length:
+                                    wraps_slice = len(wraps[i]) - max_wrap_str_length
                                 else:
-                                    split_array += [split_ws_str]
-                                    calc_split_str_size = split_ws_str_len + len(dumps(split_elem))
-                                continue
-                            if len(split_array[-1].strip()) == 0:
-                                split_array[-1] = split_ws_str
-                            else:
-                                split_array[-1] += f" {split_ws_str}"
-                            calc_split_str_size += split_ws_str_len
+                                    wraps_slice = 0
+                            while True:
+                                try:
+                                    if wraps_slice > 0:
+                                        parsed_sliced_str = wraps[i][:-wraps_slice] \
+                                            .encode("ascii").decode("unicode-escape")
+                                    else:
+                                        parsed_sliced_str = wraps[i] \
+                                            .encode("ascii").decode("unicode-escape")
+                                except (UnicodeDecodeError, SyntaxError):
+                                    wraps_slice += 1
+                                    continue
+                                split_array += [parsed_sliced_str]
+                                break
+                        if wraps_slice > 0:
+                            split_array += [wraps[-1][-wraps_slice:].encode("ascii").decode("unicode-escape")]
                         for split_str_ws in split_array:
-                            split_elem = elem.copy()
+                            split_elem = tellraw_obj[e].copy()
                             split_elem["text"] = split_str_ws
-                            if len(dumps(res[-1])) + len(
-                                    dumps(split_elem)) + 6 > MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH:
+                            if len(dumps(res[-1])) + \
+                                    len(dumps(split_elem)) + 6 > MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH:
                                 res += [["", split_elem]]
                             else:
                                 res[-1] += [split_elem]
@@ -1774,21 +1804,21 @@ def _handle_long_tellraw_object(tellraw_obj):
                         if len(dumps(added_split)) > MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH:
                             res += [["", split_elem]]
                         else:
-                            if res[-1][-1].get("text", "") == "*" or \
-                                    (len(res[-1]) > 1 and any(i in res[-1][-1].keys()
-                                                              for i in ["insertion", "selector", "hoverEvent"]) and
-                                     res[-1][-2]["text"] in ["<", "\n -> <"]):
+                            if res[-1][-1].get("text", "") in ["> ", "*"]:
                                 res[-1] += [split_elem]
                             else:
                                 res[-1] = added_split
     for elem_res in range(len(res)):
-        for i in [1, -1]:
-            if elem_res == 0 and i == 1:
-                continue
-            if len(res[elem_res][i]["text"].strip(" \n")) == 0:
-                del res[elem_res][i]
-            else:
-                res[elem_res][i]["text"] = res[elem_res][i]["text"].strip(" \n")
+        if elem_res == 0:
+            pass
+        elif len(res[elem_res][1]["text"].lstrip(" \n")) == 0:
+            del res[elem_res][1]
+        else:
+            res[elem_res][1]["text"] = res[elem_res][1]["text"].lstrip(" \n")
+        if len(res[elem_res][-1]["text"].rstrip(" \n")) == 0:
+            del res[elem_res][-1]
+        else:
+            res[elem_res][-1]["text"] = res[elem_res][-1]["text"].rstrip(" \n")
     return res
 
 
@@ -1817,7 +1847,7 @@ def _split_tellraw_object(tellraw_obj):
     return res
 
 
-def _clean_message(message, edit_command=False):
+def _clean_message(message: Message, edit_command=False):
     result_msg = {}
     content = message.clean_content.replace("\u200b", "").strip()
     if edit_command:
@@ -1826,7 +1856,7 @@ def _clean_message(message, edit_command=False):
     return result_msg
 
 
-async def _handle_reply_in_message(message, result_msg):
+async def _handle_reply_in_message(message: Message, result_msg: dict) -> Tuple[dict, bool]:
     reply_from_minecraft_user = None
     if message.reference is not None:
         reply_msg = message.reference.resolved
@@ -1843,8 +1873,8 @@ async def _handle_reply_in_message(message, result_msg):
     return result_msg, reply_from_minecraft_user
 
 
-async def _handle_components_in_message(result_msg, message, bot: commands.Bot,
-                                        only_replace_links=False, edit_command=False):
+async def _handle_components_in_message(result_msg: dict, message: Message, bot: commands.Bot,
+                                        only_replace_links=False, edit_command=False, version_lower_1_7_2=False):
     # TODO: For now 'webhook.edit_message' doesn't support attachments, wait for discord.py 2.0
     attachments = _handle_attachments_in_message(message) if not edit_command else {}
     url_regex = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|%[0-9a-fA-F][0-9a-fA-F])+"
@@ -1868,7 +1898,15 @@ async def _handle_components_in_message(result_msg, message, bot: commands.Bot,
 
     def repl_url(link: str):
         if only_replace_links:
-            return "[gif]" if "tenor" in link and "view" in link else shorten_string(link, 30)
+            if version_lower_1_7_2:
+                if "tenor" in link and "view" in link:
+                    return "[gif]"
+                elif len(link) > 30:
+                    return get_clck_ru_url(link)
+                else:
+                    return link
+            else:
+                return "[gif]" if "tenor" in link and "view" in link else shorten_string(link, 30)
         else:
             return {"text": "[gif]" if "tenor" in link and "view" in link else shorten_string(link, 30),
                     "hyperlink": link if len(link) < 257 else get_clck_ru_url(link)}
@@ -1931,7 +1969,7 @@ async def _handle_components_in_message(result_msg, message, bot: commands.Bot,
     return result_msg
 
 
-def _handle_attachments_in_message(message):
+def _handle_attachments_in_message(message: Message):
     attachments = {}
     messages = [message]
     if message.reference is not None:
@@ -1962,7 +2000,7 @@ def _handle_attachments_in_message(message):
     return attachments
 
 
-def _build_components_in_message(res_obj, content_name, obj, default_text_color: str = None):
+def _build_components_in_message(res_obj, content_name: str, obj, default_text_color: str = None):
     if isinstance(obj, list):
         for elem in obj:
             if isinstance(elem, dict):
@@ -1990,7 +2028,7 @@ def _build_components_in_message(res_obj, content_name, obj, default_text_color:
             res_obj.append({"text": obj})
 
 
-def _search_mentions_in_message(message) -> set:
+def _search_mentions_in_message(message: Message, edit_command=False) -> set:
     if len(message.mentions) == 0 and len(message.role_mentions) == 0 and \
             not message.mention_everyone and message.reference is None and "@" not in message.content:
         return set()
@@ -2001,7 +2039,7 @@ def _search_mentions_in_message(message) -> set:
     else:
         # Check role, user mentions and reply author mention
         members_from_roles = list(chain(*[i.members for i in message.role_mentions]))
-        if message.reference is not None:
+        if message.reference is not None and not edit_command:
             if message.reference.resolved.author.discriminator != "0000":
                 members_from_roles.append(message.reference.resolved.author)
             else:

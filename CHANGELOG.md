@@ -6,13 +6,14 @@ All important changes to this project will be documented in this file.
 
 #### Improvements:
 
-* **Important!** Added saving all data on the server to disk before backing up
+* **Important!** Added saving all data on the server to disk before making a backup
 * Added handling `.cmd` script and shortcut to `.bat` or `.cmd` script as start file on Windows
 * Added editing messages from Minecraft in Discord channel and edit webhook messages from Discord ([#27](https://github.com/Druzai/Bot_Mc_discord/issues/27))
 * Added check for edited messages whether they are stored in cache or not
 * Added timeout to stop server when no players found during long period of time ([#29](https://github.com/Druzai/Bot_Mc_discord/issues/29))
 * Added fast-login feature if user is in associations ([#26](https://github.com/Druzai/Bot_Mc_discord/issues/26))
 * Optimized getting list of java processes
+* Added support of cross-platform chat for Minecraft versions `1.0.0` - `1.6.4`
 
 #### Fixed:
 
@@ -28,12 +29,8 @@ All important changes to this project will be documented in this file.
 * Better handling of files for `banned ips`, `ops` and `whitelist` on versions lower than `1.7.6`
 * Fixed handling long tellraw objects and improved their building
 
-#### Breaking changes:
+#### Changes
 
-* Changed `specific_command_role_id` to `managing_commands_role_id` in bot's configuration file
-* Changed in file `server_config.yml`:
-  * Field `initiator` in category `backups` from `Optional[str]` to `Optional[int]`
-  * Field `user` in category `states` from `Optional[str]` to `Optional[int]`
 * Changed commands:
   * Renamed `servers` to `server` and alias `servs` to `serv`
   * Moved logic:
@@ -46,6 +43,13 @@ All important changes to this project will be documented in this file.
   * Added alias `authorize` to `auth`
   * Added alias `ls` to all `list` subcommands
   * Added alias `to` to `reply` subcommand of `clear`
+
+#### Breaking changes:
+
+* Changed `specific_command_role_id` to `managing_commands_role_id` in bot's configuration file
+* Changed in file `server_config.yml`:
+  * Field `initiator` in category `backups` from `Optional[str]` to `Optional[int]`
+  * Field `user` in category `states` from `Optional[str]` to `Optional[int]`
 
 ### [1.2.3](https://github.com/Druzai/Bot_Mc_discord/compare/1.2.2...1.2.3) (2021-12-19)
 

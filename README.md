@@ -45,6 +45,7 @@
         * Custom emojis are converted to text with their own text name and hyperlink to img of emoji if applicable
         * Minecraft players can send emojis typing `:emoji_name:`
         * Most of the standard unicode emojis are not processed by the vanilla Minecraft server
+    * Some features may not work in versions lower than `1.7.2`!
 * Setting up optional rss feed. Bot will send new items of feed to Discord text channel via webhook
 
 ## Commands
@@ -57,9 +58,6 @@ To enable cross-platform chat you need to enter in bot setup channel id (or use 
 And to enable rss feed you also need webhook url!
 
 [How to create webhook and get its url.](https://github.com/Akizo96/de.isekaidev.discord.wbbBridge/wiki/How-to-get-Webhook-ID-&-Token)
-
-For Minecraft server lower than version `1.7.2` cross-platform chat currently work only from Minecraft to Discord,
-because these Minecraft servers don't have a `tellraw` command!
 
 **For backups: remember that if there are files in backups directory that not in server config, they will be deleted!
 And vice versa!**

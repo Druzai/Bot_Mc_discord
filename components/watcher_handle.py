@@ -279,7 +279,7 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None, poll
                         insert_numb += 2
                     player_message = "".join(split_arr)
 
-                    if len(mention_nicks) > 0:
+                    if len(mention_nicks) > 0 and server_version > 7:
                         mention_nicks = set(mention_nicks)
                         nick_owner_id = None
                         for u in Config.get_known_users_list():
@@ -364,7 +364,7 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None, poll
                 Config.save_auth_users()
 
             if search(rf"{INFO_line} [^\[\]<>]+\[/\d+\.\d+\.\d+\.\d+:\d+] logged in with entity id \d+ at", line):
-                nick = search(rf"{INFO_line} [^\[\]<>]+\[", line)[0].split(INFO_line[1:], maxsplit=1)[-1][1:-1]
+                nick = search(rf"{INFO_line} [^\[\]<>]+\[", line)[0].split(INFO_line[1:], maxsplit=1)[-1][1:-1].strip()
                 ip_address = search(r"\[/\d+\.\d+\.\d+\.\d+:\d+]", line)[0].split(":")[0][2:]
                 if nick not in [u.nick for u in Config.get_auth_users()]:
                     Config.add_auth_user(nick)
