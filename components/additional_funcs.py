@@ -31,7 +31,7 @@ from discord.utils import get as utils_get
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r, WrongPassword
 from psutil import process_iter, NoSuchProcess, disk_usage, Process
-from requests import post as req_post
+from requests import post as req_post, get as req_get
 
 from commands.poll import Poll
 from components.decorators import MissingAdminPermissions
@@ -297,15 +297,15 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll,
                     else:
                         bot_message = get_translation("Server\'s restarting in {0} seconds").format(str(how_many_sec))
 
-                    if server_version < 7:
-                        cl_r.run(f"say {bot_message}")
+                    if server_version.minor < 7:
+                        cl_r.say(bot_message)
                     else:
                         tellraw_init = ["", {"text": "<"}, {"text": get_bot_display_name(bot), "color": "dark_gray"},
                                         {"text": "> "}]
                         cl_r.tellraw("@a", tellraw_init + [{"text": bot_message}])
                     for i in range(how_many_sec, 0, -w):
-                        if server_version < 7:
-                            cl_r.run(f"say {get_translation('{0} sec to go').format(str(i))}")
+                        if server_version.minor < 7:
+                            cl_r.say(get_translation("{0} sec to go").format(str(i)))
                         else:
                             cl_r.tellraw("@a",
                                          tellraw_init + [{"text": get_translation("{0} sec to go").format(str(i))}])
@@ -500,14 +500,12 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
     use_rcon = False
     if BotVars.is_server_on:
         with suppress(ConnectionError, socket.error):
-            with connect_query() as cl_q:
-                if cl_q.full_stats:
-                    use_rcon = True
+            server_version = get_server_version()
+            use_rcon = True
 
     if use_rcon:
-        server_version = get_server_version(patch=True)
 
-        if server_version[0] > 6:
+        if server_version.minor > 6:
             tellraw_init = ["", {"text": "<"}, {"text": get_bot_display_name(bot), "color": "dark_gray"},
                             {"text": "> "}]
             tellraw_msg = tellraw_init.copy()
@@ -519,33 +517,32 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
                                     "color": "dark_aqua"})
         with suppress(ConnectionError, socket.error):
             with connect_rcon() as cl_r:
-                if server_version[0] < 7:
+                if server_version.minor < 7:
                     if forced:
-                        msg = get_translation("Starting backup triggered by {0} in 3 seconds...") \
-                            .format(f"{user.display_name}#{user.discriminator}")
-                        cl_r.run(f"say {msg}")
+                        cl_r.say(get_translation("Starting backup triggered by {0} in 3 seconds...") \
+                                 .format(f"{user.display_name}#{user.discriminator}"))
                     else:
-                        cl_r.run(f"say {get_translation('Starting automatic backup in 3 seconds...')}")
+                        cl_r.say(get_translation("Starting automatic backup in 3 seconds..."))
                 else:
                     cl_r.tellraw("@a", tellraw_msg)
         sleep(3.0)
         with suppress(ConnectionError, socket.error):
             with connect_rcon(timeout=60) as cl_r:
-                if server_version[0] < 7:
-                    cl_r.run(f"say {get_translation('Saving chunks...')}")
+                if server_version.minor < 7:
+                    cl_r.say(get_translation("Saving chunks..."))
                 else:
                     cl_r.tellraw("@a", tellraw_init +
                                  [{"text": get_translation("Saving chunks..."), "color": "light_purple"}])
-                if server_version[0] > 2 or (server_version[0] == 2 and server_version[1] >= 4):
+                if server_version.minor > 2 or (server_version.minor == 2 and server_version.patch >= 4):
                     cl_r.run("save-off")
                 _ = cl_r.run("save-all flush")
         with suppress(ConnectionError, socket.error):
             with connect_rcon() as cl_r:
-                if server_version[0] < 2 or (server_version[0] == 2 and server_version[1] < 4):
+                if server_version.minor < 2 or (server_version.minor == 2 and server_version.patch < 4):
                     cl_r.run("save-off")
-                if server_version[0] < 7:
-                    cl_r.run(f"say {get_translation('Chunks saved!')}")
-                    cl_r.run(f"say {get_translation('Creating zip-archive for backup!')}")
+                if server_version.minor < 7:
+                    cl_r.say(get_translation("Chunks saved!"))
+                    cl_r.say(get_translation("Creating zip-archive for backup!"))
                 else:
                     cl_r.tellraw("@a", tellraw_init + [{"text": get_translation("Chunks saved!"),
                                                         "color": "dark_green"}])
@@ -594,8 +591,8 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
         with suppress(ConnectionError, socket.error):
             with connect_rcon() as cl_r:
                 cl_r.run("save-on")
-                if server_version[0] < 7:
-                    cl_r.run(f"say {get_translation('Backup completed!')}")
+                if server_version.patch < 7:
+                    cl_r.say(get_translation("Backup completed!"))
                 else:
                     cl_r.tellraw("@a", tellraw_init + [{"text": get_translation("Backup completed!"),
                                                         "color": "dark_green"}])
@@ -665,8 +662,8 @@ def send_message_of_deleted_backup(bot: commands.Bot, reason: str, backup=None, 
     with suppress(ConnectionError, socket.error):
         server_version = get_server_version()
         with connect_rcon() as cl_r:
-            if server_version < 7:
-                cl_r.run(f"say {msg}")
+            if server_version.minor < 7:
+                cl_r.say(msg)
             else:
                 cl_r.tellraw("@a", ["", {"text": "<"}, {"text": get_bot_display_name(bot), "color": "dark_gray"},
                                     {"text": "> "}, {"text": msg, "color": "red"}])
@@ -910,17 +907,13 @@ async def bot_status(ctx, bot: commands.Bot, is_reaction=False):
     server_info = get_translation("Selected server: {0}") \
                       .format(Config.get_selected_server_from_list().server_name) + "\n"
     if Config.get_selected_server_from_list().server_loading_time is not None:
-        loading_time = Config.get_selected_server_from_list().server_loading_time
-        if loading_time // 60 != 0:
-            loading_str = f"{loading_time // 60}{get_translation(' min')} " \
-                          f"{(loading_time % 60):02d}{get_translation(' sec')}"
-        else:
-            loading_str = f"{loading_time}{get_translation(' sec')}"
-        server_info += get_translation("Average server loading time: {0}").format(loading_str) + "\n"
+        server_info += get_translation("Average server loading time: {0}") \
+                           .format(get_time_string(Config.get_selected_server_from_list().server_loading_time)) + "\n"
     if BotVars.is_server_on:
         try:
+            server_version = get_server_version()
             bot_message = get_translation("server online").capitalize() + "\n" + bot_message
-            if get_server_version() > 7:
+            if server_version.minor > 7:
                 # Rcon check daytime cycle
                 with connect_rcon() as cl_r:
                     time_ticks = int(cl_r.run("time query daytime").split(" ")[-1])
@@ -935,6 +928,9 @@ async def bot_status(ctx, bot: commands.Bot, is_reaction=False):
                     message += get_translation("Sunrise, ")
                 message += str((6 + time_ticks // 1000) % 24) + ":" + f"{((time_ticks % 1000) * 60 // 1000):02d}\n"
                 bot_message += message
+            server_info_splits = server_info.split("\n", maxsplit=1)
+            server_version_str = get_translation("Server version: {0}").format(server_version.version_string)
+            server_info = f"{server_info_splits[0]}\n{server_version_str}\n{server_info_splits[-1]}"
             bot_message += server_info + states
             await send_msg(ctx, add_quotes(bot_message), is_reaction)
         except (ConnectionError, socket.error):
@@ -1603,10 +1599,10 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
     else:
         server_version = get_server_version()
         reply_from_minecraft_user = None
-        if server_version < 7:
-            if server_version < 3:
+        if server_version.minor < 7:
+            if server_version.minor < 3:
                 message_length = 108
-            elif 3 <= server_version < 6:
+            elif 3 <= server_version.minor < 6:
                 message_length = 112
             else:
                 message_length = 1442
@@ -1632,16 +1628,16 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
             if on_edit:
                 msg += "*"
             msg += result_msg["content"]
-            if (server_version < 6 and len(msg) <= message_length) or \
-                    (server_version == 6 and len(msg.encode()) <= message_length):
-                if server_version < 3 and "\n" in msg:
+            if (server_version.minor < 6 and len(msg) <= message_length) or \
+                    (server_version.minor == 6 and len(msg.encode()) <= message_length):
+                if server_version.minor < 3 and "\n" in msg:
                     messages = [m.strip() for m in msg.split("\n")]
                 else:
                     messages = [msg if reply_from_minecraft_user is None else msg[1:]]
             else:
                 messages = []
-                if server_version < 6:
-                    if server_version < 3 and "\n" in msg:
+                if server_version.minor < 6:
+                    if server_version.minor < 3 and "\n" in msg:
                         for m in msg.split("\n"):
                             if len(m) <= message_length:
                                 messages.append(m.strip())
@@ -1669,7 +1665,7 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
                 for m in messages:
                     cl_r.say(m if m != "" else space)
         elif get_server_players().get("current") > 0:
-            content_name = "contents" if server_version >= 16 else "value"
+            content_name = "contents" if server_version.minor >= 16 else "value"
             result_msg = _clean_message(message, edit_command)
             if not edit_command:
                 result_msg, reply_from_minecraft_user = await _handle_reply_in_message(message, result_msg)
@@ -1679,20 +1675,20 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
             res_obj = [""]
             if result_msg.get("reply", None) is not None:
                 if not reply_from_minecraft_user:
-                    res_obj += _build_nickname_tellraw_for_discord_member(server_version, result_msg["reply"][1],
+                    res_obj += _build_nickname_tellraw_for_discord_member(server_version.minor, result_msg["reply"][1],
                                                                           content_name, brackets_color="gray",
                                                                           left_bracket=result_msg["reply"][0],
                                                                           right_bracket=result_msg["reply"][2])
                 else:
-                    res_obj += _build_nickname_tellraw_for_minecraft_player(server_version, result_msg["reply"][1],
+                    res_obj += _build_nickname_tellraw_for_minecraft_player(server_version.minor, result_msg["reply"][1],
                                                                             content_name, default_text_color="gray",
                                                                             left_bracket=result_msg["reply"][0],
                                                                             right_bracket=result_msg["reply"][2])
                 _build_components_in_message(res_obj, content_name, result_msg["reply"][-1], "gray")
             if not edit_command:
-                res_obj += _build_nickname_tellraw_for_discord_member(server_version, message.author, content_name)
+                res_obj += _build_nickname_tellraw_for_discord_member(server_version.minor, message.author, content_name)
             else:
-                res_obj += _build_nickname_tellraw_for_minecraft_player(server_version, before_message.author.name,
+                res_obj += _build_nickname_tellraw_for_minecraft_player(server_version.minor, before_message.author.name,
                                                                         content_name)
             if on_edit:
                 if before_message is not None:
@@ -1708,7 +1704,7 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
             res_obj = _handle_long_tellraw_object(res_obj)
 
             with connect_rcon() as cl_r:
-                if server_version > 7:
+                if server_version.minor > 7:
                     for obj in res_obj:
                         cl_r.tellraw("@a", obj)
                 else:
@@ -1716,7 +1712,7 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
                     for tellraw in res:
                         cl_r.tellraw("@a", tellraw)
 
-            if server_version > 7:
+            if server_version.minor > 7:
                 nicks = _search_mentions_in_message(message, edit_command)
                 if len(nicks) > 0:
                     with suppress(ConnectionError, socket.error):
@@ -2116,25 +2112,53 @@ def _build_nickname_tellraw_for_discord_member(server_version: int, author: Memb
     return tellraw_obj
 
 
-def get_server_version(patch=False) -> Union[Tuple[int, int], int]:
-    """Gets minor version and patch version of server"""
+class ServerVersion:
+    def __init__(self, version_string: str):
+        parsed_version = version_string
+        snapshot_version = False
+        if "snapshot" in parsed_version.lower() or search(r"\d+w\d+a", parsed_version) or \
+                "release" in parsed_version.lower():
+            print(get_translation("Minecraft server is not in release state! Proceed with caution!"))
+            if "snapshot" in parsed_version.lower():
+                parsed_version = parsed_version.split("snapshot")[0]
+                snapshot_version = True
+            elif "release" in parsed_version.lower():
+                parsed_version = parsed_version.split("release")[0]
+            elif search(r"\d+w\d+a", parsed_version):
+                parsed_version = parse_snapshot(parsed_version)
+                snapshot_version = True
+        matches = findall(r"\d+", parsed_version)
+        if len(matches) < 2:
+            raise ValueError(f"Can't parse server version '{version_string}'!")
+        self.major = int(matches[0])
+        self.minor = int(matches[1])
+        self.patch = int(matches[2]) if len(matches) > 2 else 0
+        self.version_string = version_string
+        if snapshot_version and self.patch > 0:
+            self.patch -= 1
+        elif snapshot_version and self.patch == 0:
+            self.minor -= 1
+            self.patch = 10
+
+
+def get_server_version() -> ServerVersion:
     with connect_query() as cl_q:
         version = cl_q.full_stats.version
-    if "snapshot" in version.lower() or search(r"\d+w\d+a", version) or "release" in version.lower():
-        print(get_translation("Minecraft server is not in release state! Proceed with caution!"))
-        if "snapshot" in version.lower():
-            version = version.split("snapshot")[0]
-        elif "release" in version.lower():
-            version = version.split("release")[0]
-        elif search(r"\d+w\d+a", version):
-            raise ValueError(f"Can't parse server's version '{version}'!")
-    matches = findall(r"\d+", version)
-    if patch:
-        if len(matches) < 3:
-            return int(matches[1]), 0
-        else:
-            return int(matches[1]), int(matches[2])
-    return int(matches[1])
+    return ServerVersion(version)
+
+
+def parse_snapshot(version: str) -> Optional[str]:
+    answer = req_get(url="https://minecraft.fandom.com/api.php",
+                     params={
+                         "action": "parse",
+                         "page": f"Java Edition {version}",
+                         "prop": "categories",
+                         "format": "json"
+                     }).json()
+    if answer.get("parse", None) is not None and answer["parse"].get("categories", None) is not None:
+        for category in answer["parse"]["categories"]:
+            if "snapshots" in category["*"].lower():
+                return category["*"]
 
 
 def get_server_players() -> dict:
@@ -2163,7 +2187,7 @@ def times(fade_in, duration, fade_out, rcon_client):
 
 
 def announce(player, message, rcon_client, subtitle=False):
-    if get_server_version() >= 11 and not subtitle:
+    if get_server_version().minor >= 11 and not subtitle:
         rcon_client.run(f'title {player} actionbar ' + '{' + f'"text":"{message}"' + ',"bold":true,"color":"gold"}')
     else:
         rcon_client.run(f'title {player} subtitle ' + '{' + f'"text":"{message}"' + ',"color":"gold"}')

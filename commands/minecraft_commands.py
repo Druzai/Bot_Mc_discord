@@ -92,7 +92,7 @@ class MinecraftCommands(commands.Cog):
         BotVars.is_doing_op = True
         if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and not BotVars.is_restarting:
             if get_server_players().get("current") == 0:
-                await ctx.send(f"{ctx.author.mention} " +
+                await ctx.send(f"{ctx.author.mention}, " +
                                get_translation("There are no players on the server").lower() + "!")
                 BotVars.is_doing_op = doing_opping
                 return
@@ -137,12 +137,16 @@ class MinecraftCommands(commands.Cog):
                                                       if reasons else ""))
             await_time_op = Config.get_timeouts_settings().await_seconds_when_opped
             bot_display_name = get_bot_display_name(self._bot)
+            server_version = get_server_version()
             try:
                 with connect_rcon() as cl_r:
-                    bot_message = f"{minecraft_nick}," + get_translation("you've been given an operator for") + \
+                    bot_message = f"{minecraft_nick}, " + get_translation("you've been given an operator for") + \
                                   f" {get_time_string(await_time_op)}."
-                    cl_r.tellraw("@a", ["", {"text": "<"}, {"text": bot_display_name, "color": "dark_gray"},
-                                        {"text": "> " + bot_message}])
+                    if server_version.minor < 7:
+                        cl_r.say(bot_message)
+                    else:
+                        cl_r.tellraw("@a", ["", {"text": "<"}, {"text": bot_display_name, "color": "dark_gray"},
+                                            {"text": "> " + bot_message}])
                     cl_r.mkop(minecraft_nick)
                 Config.decrease_number_to_op_for_player(minecraft_nick)
                 Config.save_server_config()
@@ -158,34 +162,40 @@ class MinecraftCommands(commands.Cog):
                         get_translation(
                             "So {0}, I gave you an operator, but I'm not going to pretend like "
                             "I did it to win favors upstairs. "
-                            "I'll come in {1} min, take away operator from everyone and we're even. "
+                            "I'll come in {1}, take away operator from everyone and we're even. "
                             "I don't give a shit why you want this operator and mind my own business. "
                             "If you want it, well, you must have your reasons..."
-                        ).format(ctx.author.mention, str(await_time_op // 60)))
+                        ).format(ctx.author.mention, get_time_string(await_time_op)))
                 await asleep(await_time_op)
                 if minecraft_nick != BotVars.op_deop_list[-1]:
                     return
-                version = get_server_version(patch=True)
-                to_delete_ops = Config.get_list_of_ops(version)
+                to_delete_ops = Config.get_list_of_ops(server_version)
                 while True:
                     await asleep(Config.get_timeouts_settings().await_seconds_when_connecting_via_rcon)
                     with suppress(ConnectionError, socket.error):
-                        if version[0] < 13:
-                            if version[0] > 3 or (version[0] == 3 and version[1] > 0):
-                                gamemode = 0
-                            else:
-                                gamemode = 3
+                        if server_version.minor < 13:
+                            gamemode = 0
                         else:
                             gamemode = "survival"
                         with connect_rcon() as cl_r:
                             bot_message = f"{minecraft_nick}, " + get_translation("an operator will be taken away "
                                                                                   "from you all will now.")
-                            cl_r.tellraw("@a", ["", {"text": "<"}, {"text": bot_display_name, "color": "dark_gray"},
-                                                {"text": "> " + bot_message}])
+                            if server_version.minor < 7:
+                                cl_r.say(bot_message)
+                            else:
+                                cl_r.tellraw("@a", ["", {"text": "<"}, {"text": bot_display_name, "color": "dark_gray"},
+                                                    {"text": "> " + bot_message}])
                             for player in to_delete_ops:
                                 cl_r.deop(player)
-                            cl_r.run(f"gamemode {gamemode} @a")
-                            if version[0] > 3 or (version[0] == 3 and version[1] > 0):
+                            if server_version.minor < 4:
+                                for player in get_server_players()["players"]:
+                                    if server_version.minor > 2:
+                                        cl_r.run(f"gamemode {gamemode} {player}")
+                                    else:
+                                        cl_r.run(f"gamemode {player} {gamemode}")
+                            else:
+                                cl_r.run(f"gamemode {gamemode} @a")
+                            if server_version.minor > 2:
                                 cl_r.run(f"defaultgamemode {gamemode}")
                         break
                 Config.append_to_op_log(
@@ -413,7 +423,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @decorators.has_role_or_default()
     async def a_banlist(self, ctx):
-        banned_ips = Config.get_list_of_banned_ips(get_server_version(patch=True))
+        banned_ips = Config.get_list_of_banned_ips(get_server_version())
         if len(banned_ips) > 0:
             await ctx.send(add_quotes(get_translation("List of banned IP-addresses:") +
                                       "\n- " + "\n- ".join(banned_ips)))
@@ -477,7 +487,7 @@ class MinecraftCommands(commands.Cog):
     @commands.guild_only()
     @decorators.has_admin_role()
     async def a_unban(self, ctx, ip: ip_address):
-        if len(Config.get_list_of_banned_ips(get_server_version(patch=True))) == 0:
+        if len(Config.get_list_of_banned_ips(get_server_version())) == 0:
             await ctx.send(add_quotes(get_translation("There are no banned IP-addresses!")))
             return
 
@@ -681,9 +691,9 @@ class MinecraftCommands(commands.Cog):
     @decorators.has_role_or_default()
     async def w_add(self, ctx, minecraft_nick: str):
         async with handle_rcon_error(ctx):
-            version = get_server_version(patch=True)
+            version = get_server_version()
             with connect_rcon() as cl_r:
-                if ServerProperties().online_mode or version[0] < 7 or (version[0] == 7 and version[1] < 6):
+                if ServerProperties().online_mode or version.minor < 7 or (version.minor == 7 and version.patch < 6):
                     cl_r.run("whitelist add", minecraft_nick)
                 else:
                     save_to_whitelist_json(get_whitelist_entry(minecraft_nick))
@@ -697,11 +707,11 @@ class MinecraftCommands(commands.Cog):
     @decorators.has_role_or_default()
     async def w_del(self, ctx, minecraft_nick: str):
         async with handle_rcon_error(ctx):
-            version = get_server_version(patch=True)
+            version = get_server_version()
             with connect_rcon() as cl_r:
                 msg = cl_r.run("whitelist remove", minecraft_nick)
                 entry_deleted = False
-                if version[0] > 7 or (version[0] == 7 and version[1] > 5):
+                if version.minor > 7 or (version.minor == 7 and version.patch > 5):
                     entry_deleted = check_and_delete_from_whitelist_json(minecraft_nick)
                     if entry_deleted:
                         cl_r.run("whitelist reload")

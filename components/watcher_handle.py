@@ -1,5 +1,5 @@
-import socket
 import datetime as dt
+import socket
 from asyncio import run_coroutine_threadsafe, Queue, QueueEmpty, new_event_loop
 from contextlib import suppress
 from datetime import datetime
@@ -10,17 +10,21 @@ from sys import exc_info
 from threading import Thread
 from time import sleep
 from traceback import format_exc
+from typing import TYPE_CHECKING
 
 from colorama import Fore, Style
-from discord import Webhook, RequestsWebhookAdapter, TextChannel, Role, ChannelType
-from discord.utils import get as utils_get
 from discord import NoMoreItems
+from discord import Webhook, RequestsWebhookAdapter, TextChannel, Role, ChannelType
 from discord.iterators import _AsyncIterator, OLDEST_OBJECT
 from discord.object import Object
+from discord.utils import get as utils_get
 from discord.utils import time_snowflake
 
 from components.localization import get_translation
 from config.init_config import Config, BotVars
+
+if TYPE_CHECKING:
+    from components.additional_funcs import ServerVersion
 
 
 class Watcher:
@@ -87,9 +91,9 @@ def create_watcher():
     from components.additional_funcs import get_server_version
 
     server_version = get_server_version()
-    if 7 <= server_version:
+    if 7 <= server_version.minor:
         path_to_server_log = "logs/latest.log"
-    elif 0 <= server_version < 7:
+    elif 0 <= server_version.minor < 7:
         path_to_server_log = "server.log"
     else:
         return
@@ -107,7 +111,7 @@ def create_chat_webhook():
                                                 adapter=RequestsWebhookAdapter())
 
 
-def _check_log_file(file: Path, server_version: int, last_line: str = None, poll=None):
+def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str = None, poll=None):
     if Config.get_cross_platform_chat_settings().channel_id is None and \
             not Config.get_secure_auth().enable_secure_auth:
         return
@@ -116,8 +120,8 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None, poll
     if len(last_lines) == 0:
         return last_line
 
-    date_line = r"^\[\d+:\d+:\d+]" if server_version > 6 else r"^\d+-\d+-\d+ \d+:\d+:\d+"
-    INFO_line = r"\[Server thread/INFO]:" if server_version > 6 else r"\[INFO]"
+    date_line = r"^\[\d+:\d+:\d+]" if server_version.minor > 6 else r"^\d+-\d+-\d+ \d+:\d+:\d+"
+    INFO_line = r"\[Server thread/INFO]:" if server_version.minor > 6 else r"\[INFO]"
 
     if last_line is None:
         if Config.get_secure_auth().enable_secure_auth:
@@ -279,7 +283,7 @@ def _check_log_file(file: Path, server_version: int, last_line: str = None, poll
                         insert_numb += 2
                     player_message = "".join(split_arr)
 
-                    if len(mention_nicks) > 0 and server_version > 7:
+                    if len(mention_nicks) > 0 and server_version.minor > 7:
                         mention_nicks = set(mention_nicks)
                         nick_owner_id = None
                         for u in Config.get_known_users_list():

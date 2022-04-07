@@ -25,6 +25,7 @@ from config.crypt_wrapper import *
 
 if TYPE_CHECKING:
     from components.watcher_handle import Watcher
+    from components.additional_funcs import ServerVersion
 
 
 class BotVars:
@@ -812,9 +813,9 @@ class Config:
         cls.get_server_config().rcon_password = server_properties.rcon_password
 
     @classmethod
-    def get_list_of_ops(cls, version):
+    def get_list_of_ops(cls, version: 'ServerVersion'):
         ops_list = []
-        if version[0] < 7 or (version[0] == 7 and version[1] < 6):
+        if version.minor < 7 or (version.minor == 7 and version.patch < 6):
             filepath = Path(cls.get_selected_server_from_list().working_directory + "/ops.txt")
             if filepath.is_file():
                 with open(filepath, "r", encoding="utf8") as f:
@@ -828,9 +829,9 @@ class Config:
         return ops_list
 
     @classmethod
-    def get_list_of_banned_ips(cls, version):
+    def get_list_of_banned_ips(cls, version: 'ServerVersion'):
         ban_list = []
-        if version[0] < 7 or (version[0] == 7 and version[1] < 6):
+        if version.minor < 7 or (version.minor == 7 and version.patch < 6):
             filepath = Path(Config.get_selected_server_from_list().working_directory + "/banned-ips.txt")
             if filepath.is_file():
                 with open(filepath, "r", encoding="utf8") as f:

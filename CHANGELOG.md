@@ -14,6 +14,7 @@ All important changes to this project will be documented in this file.
 * Added fast-login feature if user is in associations ([#26](https://github.com/Druzai/Bot_Mc_discord/issues/26))
 * Optimized getting list of java processes
 * Added support of cross-platform chat for Minecraft versions `1.0.0` - `1.6.4`
+* Added printing server version in `status` command
 
 #### Fixed:
 
@@ -25,7 +26,8 @@ All important changes to this project will be documented in this file.
 * Added additional spaces when there are more than 9 items in list to display in command output
 * Reduced `backup force` command cooldown to 15 seconds
 * Fixed and rewrote many translations
-* Added support of servers' version below 1.7.6 for `whitelist` command and deletion of some nicks
+* Added support of servers' version below 1.7.6 for `whitelist` and `op` command
+* Added support of deletion of some nicks for `whitelist` command
 * Better handling of files for `banned ips`, `ops` and `whitelist` on versions lower than `1.7.6`
 * Fixed handling long tellraw objects and improved their building
 
