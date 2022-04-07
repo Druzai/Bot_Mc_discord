@@ -468,8 +468,12 @@ class MinecraftCommands(commands.Cog):
                 return
 
         try:
+            server_version = get_server_version()
             with connect_rcon() as cl_r:
-                cl_r.run(f"ban-ip {ip} {reason}")
+                if reason is not None and server_version.minor > 2:
+                    cl_r.run(f"ban-ip {ip} {reason}")
+                else:
+                    cl_r.run(f"ban-ip {ip}")
             reason_str = ""
             if reason is not None:
                 reason_str = " " + get_translation("with reason '{0}'").format(reason)

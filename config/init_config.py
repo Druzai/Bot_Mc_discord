@@ -927,6 +927,7 @@ class Config:
         cls._setup_ip_address()
         cls._setup_local_address()
         cls._setup_log_bot_messages()
+        cls._print_tasks_info()
         cls._setup_clear_delete_limit_without_poll()
         cls._setup_menu_id()
         cls._setup_commands_channel_id()
@@ -1098,6 +1099,23 @@ class Config:
                                   try_int=True, int_high_than=0, int_low_than=1001)
 
     @classmethod
+    def _print_tasks_info(cls):
+        msg = f"{get_translation('Task: ')}'{get_translation('Autoload if server crashes')}'."\
+              f"\n{get_translation('State: ')}"
+        if cls.get_settings().bot_settings.forceload:
+            msg += get_translation("Active")
+        else:
+            msg += get_translation("Disabled")
+        print(f"{msg}.")
+        msg = f"{get_translation('Task: ')}'{get_translation('Shutdown of Minecraft server when idle')}'." \
+              f"\n{get_translation('State: ')}"
+        if cls.get_settings().bot_settings.auto_shutdown:
+            msg += get_translation("Active")
+        else:
+            msg += get_translation("Disabled")
+        print(f"{msg}.")
+
+    @classmethod
     def _setup_timeouts(cls):
         # Timeout between check-ups func
         if cls.get_timeouts_settings().await_seconds_in_check_ups < 1 or \
@@ -1130,12 +1148,6 @@ class Config:
               .format(cls.get_timeouts_settings().await_seconds_before_shutdown))
         if cls.get_timeouts_settings().await_seconds_before_shutdown == 0:
             print(get_translation("Server will be stopped immediately."))
-        if cls.get_settings().bot_settings.auto_shutdown:
-            print(get_translation("Shutdown the Minecraft server when no players found during "
-                                  "a long period of time is enabled."))
-        else:
-            print(get_translation("Shutdown the Minecraft server when no players found during "
-                                  "a long period of time is disabled."))
 
         # Timeout for op
         if cls.get_timeouts_settings().await_seconds_when_opped < 0 or \

@@ -6,14 +6,14 @@ All important changes to this project will be documented in this file.
 
 #### Improvements:
 
-* **Important!** Added saving all data on the server to disk before making a backup
+* **Added saving all data on the server to disk before making a backup**
+* **Added support of cross-platform chat for Minecraft versions `1.0.0` - `1.6.4`**
 * Added handling `.cmd` script and shortcut to `.bat` or `.cmd` script as start file on Windows
 * Added editing messages from Minecraft in Discord channel and edit webhook messages from Discord ([#27](https://github.com/Druzai/Bot_Mc_discord/issues/27))
 * Added check for edited messages whether they are stored in cache or not
 * Added timeout to stop server when no players found during long period of time ([#29](https://github.com/Druzai/Bot_Mc_discord/issues/29))
 * Added fast-login feature if user is in associations ([#26](https://github.com/Druzai/Bot_Mc_discord/issues/26))
 * Optimized getting list of java processes
-* Added support of cross-platform chat for Minecraft versions `1.0.0` - `1.6.4`
 * Added printing server version in `status` command
 
 #### Fixed:

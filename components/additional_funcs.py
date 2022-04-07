@@ -164,20 +164,24 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
             print(get_translation("Error while loading server! Retreating..."))
             await send_msg(ctx, add_quotes(get_translation("Error while loading server! Retreating...")),
                            is_reaction)
-            bot.loop.create_task(bot.change_presence(activity=Activity(type=ActivityType.listening,
-                                                                       name=Config.get_settings().bot_settings.idle_status)))
+            task = bot.loop.create_task(
+                bot.change_presence(activity=Activity(type=ActivityType.listening,
+                                                      name=Config.get_settings().bot_settings.idle_status)))
+            task.add_done_callback(_ignore_some_tasks_errors)
             BotVars.is_loading = False
             if BotVars.is_restarting:
                 BotVars.is_restarting = False
             return
         timedelta_secs = (datetime.now() - check_time).seconds
-        if Config.get_selected_server_from_list().server_loading_time:
-            percentage = round((timedelta_secs / Config.get_selected_server_from_list().server_loading_time) * 100)
-            output_bot = get_translation("Loading: ") + ((str(percentage) + "%") if percentage < 101 else "100%...")
-        else:
-            output_bot = get_translation("{0}, elapsed time: ").format(Config.get_settings().bot_settings.idle_status) \
-                         + get_time_string(timedelta_secs, True)
-        await bot.change_presence(activity=Activity(type=ActivityType.listening, name=output_bot))
+        if (timedelta_secs - 5) % 4 == 0:
+            if Config.get_selected_server_from_list().server_loading_time:
+                percentage = round((timedelta_secs / Config.get_selected_server_from_list().server_loading_time) * 100)
+                output_bot = get_translation("Loading: ") + ((str(percentage) + "%") if percentage < 101 else "100%...")
+            else:
+                output_bot = get_translation("{0}, elapsed time: ") \
+                                 .format(Config.get_settings().bot_settings.idle_status) \
+                             + get_time_string(timedelta_secs, True)
+            await bot.change_presence(activity=Activity(type=ActivityType.listening, name=output_bot))
         await asleep(Config.get_timeouts_settings().await_seconds_when_connecting_via_rcon)
         with suppress(ConnectionError, socket.error):
             with connect_query() as cl_q:
@@ -1680,16 +1684,18 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
                                                                           left_bracket=result_msg["reply"][0],
                                                                           right_bracket=result_msg["reply"][2])
                 else:
-                    res_obj += _build_nickname_tellraw_for_minecraft_player(server_version.minor, result_msg["reply"][1],
-                                                                            content_name, default_text_color="gray",
+                    res_obj += _build_nickname_tellraw_for_minecraft_player(server_version.minor,
+                                                                            result_msg["reply"][1], content_name,
+                                                                            default_text_color="gray",
                                                                             left_bracket=result_msg["reply"][0],
                                                                             right_bracket=result_msg["reply"][2])
                 _build_components_in_message(res_obj, content_name, result_msg["reply"][-1], "gray")
             if not edit_command:
-                res_obj += _build_nickname_tellraw_for_discord_member(server_version.minor, message.author, content_name)
+                res_obj += _build_nickname_tellraw_for_discord_member(server_version.minor, message.author,
+                                                                      content_name)
             else:
-                res_obj += _build_nickname_tellraw_for_minecraft_player(server_version.minor, before_message.author.name,
-                                                                        content_name)
+                res_obj += _build_nickname_tellraw_for_minecraft_player(server_version.minor,
+                                                                        before_message.author.name, content_name)
             if on_edit:
                 if before_message is not None:
                     result_before = _clean_message(before_message)
@@ -2101,8 +2107,9 @@ def _build_nickname_tellraw_for_discord_member(server_version: int, author: Memb
         hover_string += [{"text": "\nShift + "}, {"keybind": "key.attack"}]
     tellraw_obj = [{"text": left_bracket},
                    {"text": author.display_name, "color": "dark_gray",
-                    "insertion": f"@{author.display_name}",
                     "hoverEvent": {"action": "show_text", content_name: hover_string}}]
+    if server_version > 7:
+        tellraw_obj[-1].update({"insertion": f"@{author.display_name}"})
     if right_bracket is not None:
         tellraw_obj += [{"text": right_bracket}]
     if brackets_color is not None:
