@@ -12,6 +12,7 @@ from pathlib import Path
 from secrets import choice as sec_choice
 from shutil import rmtree
 from string import ascii_letters, digits
+from struct import unpack
 from typing import List, Optional, TYPE_CHECKING, Set
 
 from discord import Webhook, Member
@@ -880,7 +881,7 @@ class Config:
                       int_low_than: Optional[int] = None, try_float=False,
                       float_high_than: Optional[float] = None, float_low_than: Optional[float] = None):
         while True:
-            answer = str(input(message))
+            answer = str(input(message)).strip()
             if answer != "":
                 if match_str is not None and answer.lower() != match_str:
                     return False
@@ -1293,21 +1294,68 @@ class Config:
                                   "You need to enter file name {0}with{1} file extension!").format(BOLD, END))
         while True:
             start_file_name = cls._ask_for_data(get_translation("Enter server start file name") + "\n> ")
+            is_link_file = False
             for ext in file_extensions:
                 start_file_name_with_ext = start_file_name + (ext if ext is not None else '')
-                if Path(working_directory, start_file_name_with_ext).is_file():
+                start_file_path = Path(working_directory, start_file_name_with_ext)
+                if start_file_path.is_file():
+                    if len(start_file_name_with_ext.split(".")) == 1 or \
+                            start_file_name_with_ext.split(".")[-1].lower() == "lnk":
+                        is_link_file = True
+                        start_file_target = cls._read_link_target(start_file_path)
+                        if not Path(start_file_target).is_file():
+                            print(get_translation("Target of this start file shortcut '{0}' doesn't exists.")
+                                  .format(start_file_name_with_ext))
+                            continue
+                        elif len(start_file_target.split(".")) == 1 or \
+                                start_file_target.split(".")[-1] not in ["bat", "cmd"]:
+                            print(get_translation("Target of this start file shortcut '{0}' "
+                                                  "isn't '*.bat' file or '*.cmd' file.")
+                                  .format(start_file_name_with_ext))
+                            continue
                     existing_files.append(start_file_name_with_ext)
             if len(existing_files) == 0:
+                if is_link_file:
+                    continue
                 print(get_translation("This start file doesn't exist."))
             elif len(existing_files) > 1:
                 print(get_translation("Bot found several files that match search conditions:") +
                       "\n- " + "\n- ".join(existing_files))
                 while True:
-                    chosen_file_name = input(get_translation("Type the chosen one") + "\n> ")
+                    chosen_file_name = input(get_translation("Type the chosen one") + "\n> ").strip()
                     if chosen_file_name in existing_files:
                         return chosen_file_name
             else:
                 return existing_files.pop()
+
+    @staticmethod
+    def _read_link_target(path: Path):
+        # Taken from
+        # http://stackoverflow.com/a/28952464/1119602
+        # https://gist.github.com/Winand/997ed38269e899eb561991a0c663fa49
+        with open(path, "rb") as stream:
+            content = stream.read()
+        # skip first 20 bytes (HeaderSize and LinkCLSID)
+        # read the LinkFlags structure (4 bytes)
+        lflags = unpack("I", content[0x14:0x18])[0]
+        position = 0x18
+        # if the HasLinkTargetIDList bit is set then skip the stored IDList
+        # structure and header
+        if (lflags & 0x01) == 1:
+            position = unpack("H", content[0x4C:0x4E])[0] + 0x4E
+        last_pos = position
+        position += 0x04
+        # get how long the file information is (LinkInfoSize)
+        length = unpack("I", content[last_pos:position])[0]
+        # skip 12 bytes (LinkInfoHeaderSize, LinkInfoFlags and VolumeIDOffset)
+        position += 0x0C
+        # go to the LocalBasePath position
+        lbpos = unpack("I", content[position:position + 0x04])[0]
+        position = last_pos + lbpos
+        # read the string at the given position of the determined length
+        size = (length + last_pos) - position - 0x02
+        content = content[position:position + size].split(b"\x00", 1)
+        return content[-1].decode("utf-16" if len(content) > 1 else getdefaultlocale()[1])
 
     @classmethod
     def _setup_server_watcher(cls):
