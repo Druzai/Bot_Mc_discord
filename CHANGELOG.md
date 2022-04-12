@@ -14,7 +14,7 @@ All important changes to this project will be documented in this file.
 * Added timeout to stop server when no players found during long period of time ([#29](https://github.com/Druzai/Bot_Mc_discord/issues/29))
 * Added fast-login feature if user is in associations ([#26](https://github.com/Druzai/Bot_Mc_discord/issues/26))
 * Optimized getting list of java processes
-* Added printing server version in `status` command
+* Added printing server version and server status when it's loading/stopping in `status` command
 * Added ability to send Discord emojis from Minecraft chat
 * Added check if cryptography key is wrong or bot can't decrypt a token
 

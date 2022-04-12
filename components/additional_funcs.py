@@ -302,7 +302,7 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll,
                     return
             elif not logged_only_author_accounts:
                 await delete_after_by_msg(ctx.message)
-        elif players_info["current"] == 0:
+        elif players_info["current"] == 0 and is_reaction:
             how_many_sec = 0
 
         BotVars.is_stopping = True
@@ -936,7 +936,7 @@ async def bot_status(ctx, bot: commands.Bot, is_reaction=False):
     if Config.get_selected_server_from_list().server_loading_time is not None:
         server_info += get_translation("Average server loading time: {0}") \
                            .format(get_time_string(Config.get_selected_server_from_list().server_loading_time)) + "\n"
-    if BotVars.is_server_on:
+    if BotVars.is_server_on and not BotVars.is_stopping:
         try:
             server_version = get_server_version()
             bot_message = get_translation("server online").capitalize() + "\n" + bot_message
@@ -965,7 +965,12 @@ async def bot_status(ctx, bot: commands.Bot, is_reaction=False):
             await send_msg(ctx, add_quotes(bot_message), is_reaction)
             print(get_translation("Server's down via rcon"))
     else:
-        bot_message = get_translation("server offline").capitalize() + "\n" + bot_message
+        if BotVars.is_loading:
+            bot_message = get_translation("server is loading!").capitalize()[:-1] + "\n" + bot_message
+        elif BotVars.is_stopping:
+            bot_message = get_translation("server is stopping!").capitalize()[:-1] + "\n" + bot_message
+        else:
+            bot_message = get_translation("server offline").capitalize() + "\n" + bot_message
         bot_message += server_info + states
         await send_msg(ctx, add_quotes(bot_message), is_reaction)
 
