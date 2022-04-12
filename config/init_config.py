@@ -15,6 +15,7 @@ from string import ascii_letters, digits
 from struct import unpack
 from typing import List, Optional, TYPE_CHECKING, Set
 
+from cryptography.fernet import InvalidToken
 from discord import Webhook, Member
 from discord.ext.commands import Bot
 from jsons import load as sload, DeserializationError
@@ -22,7 +23,7 @@ from omegaconf import OmegaConf as Conf
 from psutil import Process
 
 from components.localization import get_translation, get_locales, set_locale
-from config.crypt_wrapper import *
+from config.crypt_wrapper import encrypt_string, decrypt_string
 
 if TYPE_CHECKING:
     from components.watcher_handle import Watcher
@@ -210,7 +211,8 @@ class Bot_settings:
 
     def __post_init__(self):
         if self.token_encrypted:
-            self._token = decrypt_string(self.token_encrypted)
+            with suppress(InvalidToken):
+                self._token = decrypt_string(self.token_encrypted)
 
 
 @dataclass
@@ -976,8 +978,11 @@ class Config:
     def _setup_token(cls):
         if cls._settings_instance.bot_settings.token is None:
             cls._need_to_rewrite = True
+            if cls._settings_instance.bot_settings.token_encrypted is not None:
+                print(get_translation("Bot couldn't decrypt Discord token with key from file '{0}'!")
+                      .format(Path(Config._current_bot_path, "key").as_posix()))
             cls._settings_instance.bot_settings.token = \
-                cls._ask_for_data(get_translation("Token not founded. Enter token") + "\n> ")
+                cls._ask_for_data(get_translation("Discord token not founded. Enter it") + "\n> ")
 
     @classmethod
     def _setup_prefix(cls):
@@ -1101,7 +1106,7 @@ class Config:
 
     @classmethod
     def _print_tasks_info(cls):
-        msg = f"{get_translation('Task: ')}'{get_translation('Autoload if server crashes')}'."\
+        msg = f"{get_translation('Task: ')}'{get_translation('Autoload if server crashes')}'." \
               f"\n{get_translation('State: ')}"
         if cls.get_settings().bot_settings.forceload:
             msg += get_translation("Active")
@@ -1302,7 +1307,7 @@ class Config:
                     if len(start_file_name_with_ext.split(".")) == 1 or \
                             start_file_name_with_ext.split(".")[-1].lower() == "lnk":
                         is_link_file = True
-                        start_file_target = cls._read_link_target(start_file_path)
+                        start_file_target = cls.read_link_target(start_file_path)
                         if not Path(start_file_target).is_file():
                             print(get_translation("Target of this start file shortcut '{0}' doesn't exists.")
                                   .format(start_file_name_with_ext))
@@ -1329,7 +1334,7 @@ class Config:
                 return existing_files.pop()
 
     @staticmethod
-    def _read_link_target(path: Path):
+    def read_link_target(path: Path):
         # Taken from
         # http://stackoverflow.com/a/28952464/1119602
         # https://gist.github.com/Winand/997ed38269e899eb561991a0c663fa49

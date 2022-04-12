@@ -136,6 +136,14 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
             is_file_exists = False
             for ext in [".bat", ".cmd", ".lnk"]:
                 if ext in Config.get_selected_server_from_list().start_file_name:
+                    if ext == ".lnk":
+                        start_file_target = Config.read_link_target(
+                            Path(f"./{Config.get_selected_server_from_list().start_file_name}"))
+                        if not Path(start_file_target).is_file():
+                            raise FileNotFoundError(".lnk")
+                        elif len(start_file_target.split(".")) == 1 or \
+                                start_file_target.split(".")[-1] not in ["bat", "cmd"]:
+                            raise ReferenceError(".lnk")
                     is_file_exists = True
                     break
             if not is_file_exists:
@@ -143,15 +151,36 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
             startfile(Config.get_selected_server_from_list().start_file_name)
     except (NameError, ValueError, FileNotFoundError, ReferenceError) as ex:
         chdir(Config.get_bot_config_path())
-        if ex.__class__ is not ReferenceError:
+        if ex.__class__ is FileNotFoundError:
+            if len(ex.args) == 0:
+                print(get_translation("Script '{0}' doesn't exist.")
+                      .format(Config.get_selected_server_from_list().start_file_name))
+                await send_msg(ctx, add_quotes(get_translation("Couldn't open script because it "
+                                                               "doesn't exists! Retreating...")),
+                               is_reaction)
+            else:
+                print(get_translation("Target script of this shortcut '{0}' doesn't exists.")
+                      .format(Config.get_selected_server_from_list().start_file_name))
+                await send_msg(ctx, add_quotes(get_translation("Couldn't open shortcut because target script "
+                                                               "doesn't exists! Retreating...")),
+                               is_reaction)
+        elif ex.__class__ is not ReferenceError:
             print(get_translation("Couldn't open script! Check naming and extension of the script!"))
             await send_msg(ctx, add_quotes(get_translation("Couldn't open script because of naming! Retreating...")),
                            is_reaction)
         else:
-            print(get_translation("Couldn't open script because there is no command 'screen'! "
-                                  "Install it via packet manager!"))
-            await send_msg(ctx, add_quotes(get_translation("Couldn't open script because command 'screen' "
-                                                           "wasn't installed! Retreating...")), is_reaction)
+            if len(ex.args) == 0:
+                print(get_translation("Couldn't open script because there is no command 'screen'! "
+                                      "Install it via packet manager!"))
+                await send_msg(ctx, add_quotes(get_translation("Couldn't open script because command 'screen' "
+                                                               "wasn't installed! Retreating...")), is_reaction)
+            else:
+                print(get_translation("Target of this shortcut '{0}' "
+                                      "isn't '*.bat' file or '*.cmd' file.")
+                      .format(Config.get_selected_server_from_list().start_file_name))
+                await send_msg(ctx, add_quotes(get_translation("Couldn't open shortcut because target file "
+                                                               "isn't a script! Retreating...")),
+                               is_reaction)
         BotVars.is_loading = False
         if BotVars.is_restarting:
             BotVars.is_restarting = False

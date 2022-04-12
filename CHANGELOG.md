@@ -8,13 +8,15 @@ All important changes to this project will be documented in this file.
 
 * **Added saving all data on the server to disk before making a backup**
 * **Added support of cross-platform chat for Minecraft versions `1.0.0` - `1.6.4`**
-* Added handling `.cmd` script and shortcut to `.bat` or `.cmd` script as start file on Windows
+* Added handling `*.cmd` script and shortcut to `*.bat` or `*.cmd` script as start file on Windows
 * Added editing messages from Minecraft in Discord channel and edit webhook messages from Discord ([#27](https://github.com/Druzai/Bot_Mc_discord/issues/27))
 * Added check for edited messages whether they are stored in cache or not
 * Added timeout to stop server when no players found during long period of time ([#29](https://github.com/Druzai/Bot_Mc_discord/issues/29))
 * Added fast-login feature if user is in associations ([#26](https://github.com/Druzai/Bot_Mc_discord/issues/26))
 * Optimized getting list of java processes
 * Added printing server version in `status` command
+* Added ability to send Discord emojis from Minecraft chat
+* Added check if cryptography key is wrong or bot can't decrypt a token
 
 #### Fixed:
 
@@ -26,12 +28,12 @@ All important changes to this project will be documented in this file.
 * Added additional spaces when there are more than 9 items in list to display in command output
 * Reduced `backup force` command cooldown to 15 seconds
 * Fixed and rewrote many translations
-* Added support of servers' version below 1.7.6 for `whitelist` and `op` command
+* Added support of servers' version lower than `1.7.6` for `whitelist` and `op` command
 * Added support of deletion of some nicks for `whitelist` command
-* Better handling of files for `banned ips`, `ops` and `whitelist` on versions lower than `1.7.6`
+* Better handling on versions lower than `1.7.6` for files: `banned-ips.txt`/`banned-ips.json`, `ops.txt`/`ops.json` and `white-list.txt`/`whitelist.json`
 * Fixed handling long tellraw objects and improved their building
 
-#### Changes
+#### Changes in bot commands
 
 * Changed commands:
   * Renamed `servers` to `server` and alias `servs` to `serv`
