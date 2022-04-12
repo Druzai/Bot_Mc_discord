@@ -9,7 +9,7 @@ from hashlib import md5
 from itertools import chain
 from json import load, dump, dumps, JSONDecodeError
 from os import chdir, system, walk, mkdir, remove
-from os.path import basename, join as p_join, getsize, isfile
+from os.path import join as p_join, getsize, isfile
 from pathlib import Path
 from random import randint
 from re import search, split, findall, sub, compile
@@ -388,17 +388,10 @@ def get_list_of_processes() -> List[Process]:
     if not renew_list:
         return BotVars.java_processes
 
-    basename_of_executable = basename(argv[0])
-    process_name = "java"
     list_proc = []
-
     for proc in process_iter():
-        with suppress(NoSuchProcess):
-            parents_name_list = [i.name() for i in proc.parents()]
-            if process_name in proc.name() and ("screen" in parents_name_list or
-                                                basename_of_executable in parents_name_list or
-                                                "python.exe" in parents_name_list) \
-                    and Config.get_selected_server_from_list().working_directory == proc.cwd():
+        with proc.oneshot():
+            if "java" in proc.name() and Config.get_selected_server_from_list().working_directory == proc.cwd():
                 list_proc.append(proc)
     BotVars.java_processes = list_proc
     return list_proc
