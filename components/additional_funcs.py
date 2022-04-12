@@ -19,7 +19,7 @@ from textwrap import wrap
 from threading import Thread, Event
 from time import sleep
 from traceback import print_exception
-from typing import Tuple, List, Union, Optional
+from typing import Tuple, List, Optional
 from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 
 from discord import (
@@ -158,9 +158,10 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
         return
     chdir(Config.get_bot_config_path())
     check_time = datetime.now()
-    await asleep(5)
+    last_change_presence = datetime.now() - timedelta(seconds=4)
     while True:
-        if len(get_list_of_processes()) == 0:
+        timedelta_secs = (datetime.now() - check_time).seconds
+        if len(get_list_of_processes()) == 0 and timedelta_secs > 5:
             print(get_translation("Error while loading server! Retreating..."))
             await send_msg(ctx, add_quotes(get_translation("Error while loading server! Retreating...")),
                            is_reaction)
@@ -172,8 +173,7 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
             if BotVars.is_restarting:
                 BotVars.is_restarting = False
             return
-        timedelta_secs = (datetime.now() - check_time).seconds
-        if (timedelta_secs - 5) % 4 == 0:
+        if (datetime.now() - last_change_presence).seconds >= 4:
             if Config.get_selected_server_from_list().server_loading_time:
                 percentage = round((timedelta_secs / Config.get_selected_server_from_list().server_loading_time) * 100)
                 output_bot = get_translation("Loading: ") + ((str(percentage) + "%") if percentage < 101 else "100%...")
@@ -182,6 +182,7 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
                                  .format(Config.get_settings().bot_settings.idle_status) \
                              + get_time_string(timedelta_secs, True)
             await bot.change_presence(activity=Activity(type=ActivityType.listening, name=output_bot))
+            last_change_presence = datetime.now()
         await asleep(Config.get_timeouts_settings().await_seconds_when_connecting_via_rcon)
         with suppress(ConnectionError, socket.error):
             with connect_query() as cl_q:
@@ -2075,7 +2076,7 @@ def _search_mentions_in_message(message: Message, edit_command=False) -> set:
 
 def _build_nickname_tellraw_for_minecraft_player(server_version: int, nick: str, content_name: str,
                                                  default_text_color: str = None, left_bracket: str = "<",
-                                                 right_bracket: Optional[str] = "> "):
+                                                 right_bracket: str = "> "):
     tellraw_obj = [{"text": left_bracket}]
     if server_version > 7 and len(nick.split()) == 1 and nick in get_server_players().get("players"):
         tellraw_obj += [{"selector": f"@p[name={nick}]"}]
@@ -2090,8 +2091,7 @@ def _build_nickname_tellraw_for_minecraft_player(server_version: int, nick: str,
         tellraw_obj += [{"text": nick,
                          "hoverEvent": {"action": "show_text",
                                         content_name: ["", {"text": f"{nick}\n{get_offline_uuid(nick)}"}]}}]
-    if right_bracket is not None:
-        tellraw_obj += [{"text": right_bracket}]
+    tellraw_obj += [{"text": right_bracket}]
     if default_text_color is not None:
         for i in range(len(tellraw_obj)):
             tellraw_obj[i]["color"] = default_text_color
@@ -2100,18 +2100,17 @@ def _build_nickname_tellraw_for_minecraft_player(server_version: int, nick: str,
 
 def _build_nickname_tellraw_for_discord_member(server_version: int, author: Member, content_name: str,
                                                brackets_color: str = None, left_bracket: str = "<",
-                                               right_bracket: Optional[str] = "> "):
+                                               right_bracket: str = "> "):
     hover_string = ["", {"text": f"{author.display_name}\n"
                                  f"{author.name}#{author.discriminator}"}]
     if server_version > 11:
         hover_string += [{"text": "\nShift + "}, {"keybind": "key.attack"}]
     tellraw_obj = [{"text": left_bracket},
                    {"text": author.display_name, "color": "dark_gray",
-                    "hoverEvent": {"action": "show_text", content_name: hover_string}}]
+                    "hoverEvent": {"action": "show_text", content_name: hover_string}},
+                   {"text": right_bracket}]
     if server_version > 7:
-        tellraw_obj[-1].update({"insertion": f"@{author.display_name}"})
-    if right_bracket is not None:
-        tellraw_obj += [{"text": right_bracket}]
+        tellraw_obj[-2].update({"insertion": f"@{author.display_name}"})
     if brackets_color is not None:
         for i in range(len(tellraw_obj)):
             if len(tellraw_obj[i].keys()) == 1:
@@ -2123,16 +2122,17 @@ class ServerVersion:
     def __init__(self, version_string: str):
         parsed_version = version_string
         snapshot_version = False
-        if "snapshot" in parsed_version.lower() or search(r"\d+w\d+a", parsed_version) or \
-                "release" in parsed_version.lower():
+        if any(i in parsed_version.lower() for i in ["snapshot", "release"]) or search(r"\d+w\d+a", parsed_version):
             print(get_translation("Minecraft server is not in release state! Proceed with caution!"))
             if "snapshot" in parsed_version.lower():
-                parsed_version = parsed_version.split("snapshot")[0]
+                parsed_version = parsed_version.lower().split("snapshot")[0]
                 snapshot_version = True
             elif "release" in parsed_version.lower():
-                parsed_version = parsed_version.split("release")[0]
+                parsed_version = parsed_version.lower().split("release")[0]
             elif search(r"\d+w\d+a", parsed_version):
                 parsed_version = parse_snapshot(parsed_version)
+                if parsed_version is None:
+                    parsed_version = ""
                 snapshot_version = True
         matches = findall(r"\d+", parsed_version)
         if len(matches) < 2:
@@ -2143,7 +2143,7 @@ class ServerVersion:
         self.version_string = version_string
         if snapshot_version and self.patch > 0:
             self.patch -= 1
-        elif snapshot_version and self.patch == 0:
+        elif snapshot_version and self.minor > 0 and self.patch == 0:
             self.minor -= 1
             self.patch = 10
 
