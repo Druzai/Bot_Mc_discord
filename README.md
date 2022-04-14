@@ -29,24 +29,40 @@
         * Auto deleting backup(s) if backup's limit or space exceeded
     * Make yourself an operator for limited amount of time if your Discord account has association with Minecraft nick
 * Changing Minecraft servers on the go while server is down
-* Setting an optional role. If set then the bot commands for managing the Minecraft server will require this role from
-  the member
-* Setting an optional admin role. If set then commands that interacts with Minecraft server commands will execute if
-  member has admin role. Otherwise, member must have `Administrator` permission.
+* Setting an optional role in Discord. If set then the bot commands for managing the Minecraft server will require this
+  role from the member
+* Setting an optional admin role in Discord. If set then commands that interacts with Minecraft server commands will
+  execute if member has admin role. Otherwise, member must have `Administrator` permission.
 * Creating optional cross-platform chat between Discord text channel and Minecraft server via bot and webhook
     * Supported mentions in Discord and Minecraft (also for better recognition you can create list of associations
       between Discord member and Minecraft nick)
-    * Supported edited messages from Discord and editing messages from Minecraft (message should start with single
-      asterix)
+    * Supported edited messages from Discord and editing messages from Minecraft (message should start with single `*`)
     * Supported Discord reply in message
     * Supported url links (shortens if link longer than 256 symbols)
     * Supported attached files to message in Discord
     * Half supported emojis
         * Custom emojis are converted to text with their own text name and hyperlink to img of emoji if applicable
-        * Minecraft players can send emojis typing `:emoji_name:`
+        * Minecraft players can send custom emojis typing `:emoji_name:`
         * Most of the standard unicode emojis are not processed by the vanilla Minecraft server
     * Some features may not work in versions lower than `1.7.2`!
 * Setting up optional rss feed. Bot will send new items of feed to Discord text channel via webhook
+
+**How bot converts mentions from Minecraft chat to Discord for cross-platform chat:**
+
+| Minecraft               | Discord                  |
+|-------------------------|--------------------------|
+| `@a`                    | `@Minecrafters`          |
+| `@all`                  | `@Minecrafters`          |
+| `@e`                    | `@everyone`              |
+| `@p`                    | `@here`                  |
+| `@here`                 | `@here`                  |
+| `@everyone`             | `@everyone`              |
+| `@AnyRoleOrUserMention` | `@SameRoleOrUserMention` |
+
+`@Minecrafters` - an optional role in Discord for managing the Minecraft server. If not stated then bot will
+mention `@everyone`.
+
+Note: Mentions from Minecraft mustn't contain `@` in them!
 
 ## Commands
 
@@ -74,13 +90,16 @@ Supported 2 languages:
 * [Python 3.8-3.10](https://www.python.org/downloads/)
 * For Linux required [screen](https://linuxize.com/post/how-to-use-linux-screen/) command
 * Minecraft server not lower than version `1.0.0`
-    * Run server 1 or 2 times to accept eula and generate server.properties
-    * Enable query and rcon in `server.properties` (unnecessary, bot can enable it if file `server.properties` exists)
+    * Run server 1 or 2 times to accept `eula` and generate `server.properties`
 
-### Required bot permissions
+Bot can automatically enable `query` and `rcon` in `server.properties` if file exists, but you can enable and enter them
+manually if you want.
 
-* Enable the `Server Members Intent` and the `Presence Intent` in section `Privileged Gateway Intents` on the Bot tab of
-  your bot's page on the [Discord developer's portal](https://discord.com/developers/applications).
+### Required bot intents
+
+* Enable the `Server Members Intent`, the `Presence Intent` and the `Message Content Intent` in
+  section `Privileged Gateway Intents` on the Bot tab of your bot's page on
+  the [Discord developer's portal](https://discord.com/developers/applications).
 
 ## Build
 
@@ -122,10 +141,10 @@ for this script) in your root Minecraft server directory! Example of file:
 rem min_ram, max_ram - consists how many min and max GB you're allocating for server on start up
 rem your_jar_file - jar file that starts up your server. It can be for vanilla: standard server.jar or for modded server: spigot.jar, forge.jar
 rem java_parameters - parameters for Minecraft server
-SET min_ram=1
-SET max_ram=3
-SET your_jar_file=server.jar
-SET java_parameters=
+set min_ram=1
+set max_ram=3
+set your_jar_file=server.jar
+set java_parameters=
 chcp 65001
 cls
 title Minecraft Server Console (%max_ram%Gb RAM)
@@ -141,6 +160,8 @@ shortcut by doing these steps:
 - Right click on the shortcut and choose `Properties`
 - In the `Run`: drop down, choose `Minimized`
 - Click `OK`
+
+After creating shortcut you can specify it as start file for bot instead of script in config setup.
 
 ### Linux
 
