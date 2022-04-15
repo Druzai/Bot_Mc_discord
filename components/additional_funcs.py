@@ -18,10 +18,11 @@ from sys import platform, argv
 from textwrap import wrap
 from threading import Thread, Event
 from time import sleep
-from traceback import print_exception
+from traceback import format_exception
 from typing import Tuple, List, Optional
 from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 
+from colorama import Style, Fore
 from discord import (
     Activity, ActivityType, Message, Status, Member, Role, MessageType, NotFound, HTTPException, Forbidden, Emoji,
     ChannelType
@@ -1523,29 +1524,110 @@ def check_and_delete_from_whitelist_json(username: str):
     return is_entry_deleted
 
 
+class HelpCommandArgument(commands.CheckFailure):
+    pass
+
+
+class IPAddress(commands.Converter):
+    async def convert(self, ctx: commands.Context, argument: str):
+        if search(r"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)(\.(?!$)|$)){4}$", argument):
+            return argument
+        raise commands.BadArgument(f"Converting to \"IPAddress\" failed for parameter \"ip\".")
+
+
 # Handling errors
-async def send_error(ctx, bot: commands.Bot, error, is_reaction=False):
+async def send_error(ctx: commands.Context, bot: commands.Bot, error, is_reaction=False):
     author, author_mention = get_author_and_mention(ctx, bot, is_reaction)
+    parsed_input = None
+    if hasattr(error, "param"):
+        error_param_type = sub(r"\w*?\.", "", str(error.param.annotation)).strip("<>").lstrip("class").strip("' ")
+        error_param_name = error.param.name
+    else:
+        error_param_type = ""
+        error_param_name = ""
+    if hasattr(error, "argument") and isinstance(error.argument, str):
+        parsed_input = await commands.clean_content(fix_channel_mentions=True).convert(ctx, error.argument)
+    if parsed_input is None:
+        parsed_input = await commands.clean_content(fix_channel_mentions=True) \
+            .convert(ctx, ctx.message.content[ctx.view.previous:ctx.view.index])
+
     if isinstance(error, commands.MissingRequiredArgument):
-        print(get_translation("{0} didn't input the argument").format(author))
-        await send_msg(ctx, f"{author_mention}\n" + add_quotes(get_translation("enter all arguments").capitalize()),
+        print(get_translation("{0} didn't input the argument '{1}' of type '{2}' in command '{3}'")
+              .format(author, error_param_name, error_param_type,
+                      f"{Config.get_settings().bot_settings.prefix}{ctx.command}"))
+        await send_msg(ctx, f"{author_mention}\n" +
+                       add_quotes(get_translation("Required argument '{0}' of type '{1}' is missing!")
+                                  .format(error_param_name, error_param_type)),
                        is_reaction)
+    elif isinstance(error, commands.TooManyArguments):
+        print(get_translation("{0} passed too many arguments to command '{1}'")
+              .format(author, f"{Config.get_settings().bot_settings.prefix}{ctx.command}"))
+        await send_msg(ctx, f"{author_mention}\n" +
+                       add_quotes(get_translation("You passed too many arguments to this command!")),
+                       is_reaction)
+    elif isinstance(error, commands.MemberNotFound):
+        print(get_translation("{0} passed member mention '{1}' that can't be found").format(author, parsed_input))
+        await send_msg(ctx, f"{author_mention}\n" +
+                       add_quotes(get_translation("Member '{0}' not found!").format(parsed_input)), is_reaction)
+    elif isinstance(error, commands.UserNotFound):
+        print(get_translation("{0} passed user mention '{1}' that can't be found").format(author, parsed_input))
+        await send_msg(ctx, f"{author_mention}\n" +
+                       add_quotes(get_translation("User '{0}' not found!").format(parsed_input)), is_reaction)
+    elif isinstance(error, commands.RoleNotFound):
+        print(get_translation("{0} passed role mention '{1}' that can't be found"))
+        await send_msg(ctx, f"{author_mention}\n" +
+                       add_quotes(get_translation("Role '{0}' not found!").format(parsed_input)), is_reaction)
+    elif isinstance(error, commands.ChannelNotReadable):
+        print(get_translation("Bot can't read messages in channel '{0}'").format(error.argument))
+        await send_msg(ctx, f"{author_mention}\n" +
+                       add_quotes(get_translation("Bot can't read messages in channel '{0}'")
+                                  .format(error.argument) + "!"),
+                       is_reaction)
+    elif isinstance(error, commands.ChannelNotFound):
+        print(get_translation("{0} passed channel mention '{1}' that can't be found").format(author, parsed_input))
+        await send_msg(ctx, f"{author_mention}\n" +
+                       add_quotes(get_translation("Channel '{0}' not found!").format(parsed_input)), is_reaction)
+    elif isinstance(error, commands.BadBoolArgument):
+        print(get_translation("{0} passed bad bool argument '{1}'").format(author, parsed_input))
+        await send_msg(ctx, f"{author_mention}\n" +
+                       add_quotes(get_translation("Bot couldn't convert bool argument '{0}'!").format(parsed_input)),
+                       is_reaction)
+    elif isinstance(error, commands.BadArgument) or isinstance(error, commands.ArgumentParsingError):
+        conv_args = findall(r"Converting to \".+\" failed for parameter \".+\"\.", "".join(error.args))
+        if len(conv_args) > 0:
+            conv_args = [i[1:-1] for i in findall(r"\"[^\"]+\"", conv_args[0])]
+        if len(conv_args) > 0:
+            print(get_translation("{0} passed parameter '{2}' in string \"{3}\" that bot couldn't "
+                                  "convert to type '{1}' in command '{4}'")
+                  .format(author, *conv_args, parsed_input,
+                          f"{Config.get_settings().bot_settings.prefix}{ctx.command}"))
+            await send_msg(ctx, f"{author_mention}\n" +
+                           add_quotes(get_translation("Bot didn't recognized parameter '{1}'\n"
+                                                      "Received: '{2}'\n"
+                                                      "Expected: value of type '{0}'"))
+                           .format(*conv_args, parsed_input),
+                           is_reaction)
+        else:
+            print(get_translation("{0} passed string \"{1}\" that can't be parsed in command '{2}'")
+                  .format(author, parsed_input, f"{Config.get_settings().bot_settings.prefix}{ctx.command}"))
+            await send_msg(ctx, f"{author_mention}\n" +
+                           add_quotes(get_translation("Bot couldn't parse user "
+                                                      "string '{0}' in this command!").format(parsed_input)),
+                           is_reaction)
     elif isinstance(error, commands.MissingPermissions):
         print(get_translation("{0} don't have some permissions to run command").format(author))
-        missing_perms = [get_translation(perm.replace('_', ' ')
-                                         .replace('guild', 'server').title()) for perm in error.missing_perms]
+        missing_perms = [get_translation(perm.replace("_", " ").replace("guild", "server").title())
+                         for perm in error.missing_perms]
         await send_msg(ctx, f"{author_mention}\n" +
-                       add_quotes(get_translation("to run this command you don't have these permissions:")
-                                  .capitalize() + "\n- " + "\n- ".join(missing_perms)),
-                       is_reaction)
+                       add_quotes(get_translation("You don't have these permissions to run this command:")
+                                  .capitalize() + "\n- " + "\n- ".join(missing_perms)), is_reaction)
     elif isinstance(error, commands.BotMissingPermissions):
         print(get_translation("Bot doesn't have some permissions"))
-        missing_perms = [get_translation(perm.replace('_', ' ')
-                                         .replace('guild', 'server').title()) for perm in error.missing_perms]
+        missing_perms = [get_translation(perm.replace("_", " ").replace("guild", "server").title())
+                         for perm in error.missing_perms]
         await send_msg(ctx, f"{author_mention}\n" +
-                       add_quotes(get_translation("to run this command bot don't have these permissions:")
-                                  .capitalize() + "\n- " + "\n- ".join(missing_perms)),
-                       is_reaction)
+                       add_quotes(get_translation("Bot don't have these permissions to run this command:")
+                                  .capitalize() + "\n- " + "\n- ".join(missing_perms)), is_reaction)
     elif isinstance(error, commands.MissingRole):
         if isinstance(error.missing_role, int):
             role = bot.guilds[0].get_role(error.missing_role)
@@ -1557,38 +1639,39 @@ async def send_error(ctx, bot: commands.Bot, error, is_reaction=False):
             role = error.missing_role
         print(get_translation("{0} don't have role '{1}' to run command").format(author, role))
         await send_msg(ctx, f"{author_mention}\n" +
-                       add_quotes(get_translation("you don't have role '{0}' to run this command").capitalize()
-                                  .format(role)),
+                       add_quotes(get_translation("You don't have role '{0}' to run this command!").format(role)),
                        is_reaction)
     elif isinstance(error, commands.CommandNotFound):
         print(get_translation("{0} entered non-existent command").format(author))
         await send_msg(ctx, f"{author_mention}\n" +
-                       add_quotes(get_translation("you entered non-existent command").capitalize()),
-                       is_reaction)
+                       add_quotes(get_translation("You entered non-existent command!")), is_reaction)
     elif isinstance(error, commands.UserInputError):
-        print(get_translation("{0} entered wrong argument(s) of command").format(author))
+        print(get_translation("{0} entered wrong argument(s) of command '{1}'")
+              .format(author, f"{Config.get_settings().bot_settings.prefix}{ctx.command}"))
         await send_msg(ctx, f"{author_mention}\n" +
-                       add_quotes(get_translation("you entered wrong argument(s) of this command").capitalize()),
+                       add_quotes(get_translation("You entered wrong argument(s) of this command!")),
                        is_reaction)
     elif isinstance(error, commands.DisabledCommand):
         print(get_translation("{0} entered disabled command").format(author))
         await send_msg(ctx, f"{author_mention}\n" +
-                       add_quotes(get_translation("you entered disabled command").capitalize()),
-                       is_reaction)
+                       add_quotes(get_translation("You entered disabled command!")), is_reaction)
     elif isinstance(error, commands.NoPrivateMessage):
         print(get_translation("{0} entered a command that only works in the guild").format(author))
         await send_msg(ctx, f"{author_mention}\n" +
-                       add_quotes(get_translation("this command only works on server").capitalize()),
-                       is_reaction)
+                       add_quotes(get_translation("This command only works on server!")), is_reaction)
     elif isinstance(error, commands.CommandOnCooldown):
+        cooldown_retry = round(error.retry_after, 1) if error.retry_after < 1 else int(error.retry_after)
+        if isinstance(cooldown_retry, float) and cooldown_retry.is_integer():
+            cooldown_retry = int(cooldown_retry)
         print(get_translation("{0} triggered a command more than {1} time(s) per {2} sec")
               .format(author, error.cooldown.rate, int(error.cooldown.per)))
         await send_msg(ctx, f"{author_mention}\n" +
-                       add_quotes(get_translation("You triggered this command more than {0} time(s) per {1} sec\n"
-                                                  "Try again in {2} sec").format(error.cooldown.rate,
-                                                                                 int(error.cooldown.per),
-                                                                                 int(error.retry_after))))
-    elif isinstance(error, commands.CheckFailure):
+                       add_quotes(get_translation("You triggered this command more than {0} time(s) per {1} sec.\n"
+                                                  "Try again in {2} sec...").format(error.cooldown.rate,
+                                                                                    int(error.cooldown.per),
+                                                                                    cooldown_retry)),
+                       is_reaction)
+    elif isinstance(error, HelpCommandArgument):
         pass
     elif isinstance(error, MissingAdminPermissions):
         if Config.get_settings().bot_settings.admin_role_id is not None:
@@ -1596,17 +1679,20 @@ async def send_error(ctx, bot: commands.Bot, error, is_reaction=False):
                              commands.MissingRole(Config.get_settings().bot_settings.admin_role_id), is_reaction)
         await send_error(ctx, bot, commands.MissingPermissions(['administrator']), is_reaction)
     else:
+        exc = "".join(format_exception(type(error.original), error.original, error.original.__traceback__)).rstrip("\n")
         print(get_translation("Ignoring exception in command '{0}{1}':")
-              .format(Config.get_settings().bot_settings.prefix, ctx.command))
-        print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+              .format(Config.get_settings().bot_settings.prefix, ctx.command) +
+              f"\n{Fore.RED}{exc}{Style.RESET_ALL}")
         await send_msg(ctx, f"{author_mention}\n" +
-                       add_quotes(", ".join([str(a) for a in error.original.args])), is_reaction)
+                       add_quotes(error.original.__class__.__name__ +
+                                  (": " + ", ".join([str(a) for a in error.original.args])
+                                   if len(error.original.args) > 0 else "")), is_reaction)
 
 
 async def handle_message_for_chat(message: Message, bot: commands.Bot,
                                   on_edit=False, before_message: Message = None, edit_command: bool = False):
-    if message.author == bot.user or (message.content.startswith(Config.get_settings().bot_settings.prefix) and
-                                      not edit_command) or str(message.author.discriminator) == "0000" or \
+    if message.author.id == bot.user.id or (message.content.startswith(Config.get_settings().bot_settings.prefix) and
+                                            not edit_command) or str(message.author.discriminator) == "0000" or \
             (len(message.content) == 0 and len(message.attachments) == 0):
         return
 

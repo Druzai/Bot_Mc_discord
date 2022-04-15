@@ -43,7 +43,7 @@ def create_pot_lines(bot: commands.Bot):
                 RuntimeTextHandler.add_translation(f"help_{command.name}_{arg}")
             _create_pot_lines_for_subcommands(command, f"help_{command.name}")
         for perm in sorted(Permissions.VALID_FLAGS.keys()):
-            RuntimeTextHandler.add_translation(perm.replace('_', ' ').replace('guild', 'server').title())
+            RuntimeTextHandler.add_translation(perm.replace("_", " ").replace("guild", "server").title())
         RuntimeTextHandler.freeze_translation()
         exit(0)
 
@@ -89,13 +89,13 @@ def main():
         print(get_translation("Bot Error: {0}").format("".join(e.args)))
     except (ScannerError, ParserError) as e:
         print(get_translation("Bot Error: {0}").format(e.problem.capitalize()) +
-              f"\n{Style.DIM}{Fore.RED}{e.problem_mark}{Style.RESET_ALL}")
+              f"\n{Fore.RED}{e.problem_mark}{Style.RESET_ALL}")
     except (SystemExit, KeyboardInterrupt):
         pass
     except BaseException:
         exc = format_exc().rstrip("\n")
-        print(get_translation("Bot/Discord Error: Something went wrong") + " ( ͡° ͜ʖ ͡°)" +
-              f"\n{Style.DIM}{Fore.RED}{exc}{Style.RESET_ALL}")
+        print(get_translation("Bot/Discord Error: Something went wrong ( ͡° ͜ʖ ͡°)") +
+              f"\n{Fore.RED}{exc}{Style.RESET_ALL}")
     finally:
         if len(argv) == 1 or (len(argv) > 1 and argv[1] == "-cs"):
             for thread in threads():

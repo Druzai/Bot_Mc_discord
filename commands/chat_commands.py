@@ -9,7 +9,7 @@ from components import decorators
 from components.additional_funcs import (
     handle_message_for_chat, send_error, bot_clear, add_quotes, parse_params_for_help, send_help_of_command,
     parse_subcommands_for_help, find_subcommand, make_underscored_line, create_webhooks, bot_dm_clear,
-    delete_after_by_msg, send_msg
+    delete_after_by_msg, send_msg, HelpCommandArgument
 )
 from components.localization import get_translation, get_locales, set_locale, get_current_locale
 from components.rss_feed_handle import check_on_rss_feed
@@ -40,13 +40,6 @@ class ChatCommands(commands.Cog):
         print(get_translation("Bot is ready!"))
         print(get_translation("To stop the bot press Ctrl + C"))
 
-    """
-    @commands.command(pass_context=True)
-    async def debug(self, ctx):
-        await send_msg(ctx, "Constants:\nIsServerOn: " + str(IsServerOn) + "\nIsLoading: " + str(IsLoading)
-                       + "\nIsStopping: " + str(IsStopping) + "\nIsRestarting: " + str(IsRestarting))
-    """
-
     @commands.group(pass_context=True, aliases=["chn"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
@@ -68,33 +61,29 @@ class ChatCommands(commands.Cog):
             msg += get_translation("Channel for bot commands is not found or unreachable!")
         await ctx.channel.send(msg)
 
-    @channel.command(pass_context=True, name="chat")
+    @channel.command(pass_context=True, name="chat", ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def c_chat(self, ctx, channel: commands.Greedy[TextChannel] = None):
+    async def c_chat(self, ctx, channel: TextChannel = None):
         if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
             await ctx.channel.send(get_translation("Cross-platform chat is disabled in bot config!"))
             return
 
         if channel is None:
             channel = ctx.channel
-        else:
-            channel = channel[0]
         Config.get_cross_platform_chat_settings().channel_id = channel.id
         Config.save_config()
         await ctx.channel.send(get_translation("Channel {0} set to Minecraft cross-platform chat")
                                .format(channel.mention))
 
-    @channel.command(pass_context=True, name="commands")
+    @channel.command(pass_context=True, name="commands", ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def c_commands(self, ctx, channel: commands.Greedy[TextChannel] = None):
+    async def c_commands(self, ctx, channel: TextChannel = None):
         if channel is None:
             channel = ctx.channel
-        else:
-            channel = channel[0]
         Config.get_settings().bot_settings.commands_channel_id = channel.id
         Config.save_config()
         await ctx.channel.send(get_translation("Channel {0} set as commands' channel for bot").format(channel.mention))
@@ -123,7 +112,7 @@ class ChatCommands(commands.Cog):
             msg += get_translation("Admin role not stated")
         await ctx.channel.send(msg)
 
-    @role.group(pass_context=True, name="command", invoke_without_command=True)
+    @role.group(pass_context=True, name="command", invoke_without_command=True, ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
@@ -143,7 +132,7 @@ class ChatCommands(commands.Cog):
         await ctx.channel.send(add_quotes(get_translation("Role for commands that manage "
                                                           "Minecraft server has been cleared")))
 
-    @role.group(pass_context=True, name="admin", invoke_without_command=True)
+    @role.group(pass_context=True, name="admin", invoke_without_command=True, ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
@@ -246,7 +235,7 @@ class ChatCommands(commands.Cog):
             await handle_message_for_chat(after_message, self._bot,
                                           on_edit=True, before_message=payload.cached_message)
 
-    @commands.command(pass_context=True, aliases=["lang"])
+    @commands.command(pass_context=True, aliases=["lang"], ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     async def language(self, ctx, set_language: str = ""):
@@ -272,14 +261,13 @@ class ChatCommands(commands.Cog):
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
-    @decorators.has_role_or_default()
     async def prefix(self, ctx, *, new_prefix: str = ""):
         if not new_prefix:
             await ctx.send(add_quotes(get_translation("Current prefix - '{0}'.")
                                       .format(Config.get_settings().bot_settings.prefix)))
         else:
-            if Config.get_settings().bot_settings.managing_commands_role_id != "" and \
-                    Config.get_settings().bot_settings.managing_commands_role_id not in (e.name for e in
+            if Config.get_settings().bot_settings.managing_commands_role_id is not None and \
+                    Config.get_settings().bot_settings.managing_commands_role_id not in (e.id for e in
                                                                                          ctx.author.roles):
                 await send_error(ctx, self._bot,
                                  commands.MissingRole(Config.get_settings().bot_settings.managing_commands_role_id))
@@ -312,7 +300,7 @@ class ChatCommands(commands.Cog):
                 await send_help_of_command(ctx, ctx.command)
             else:
                 await ctx.send(add_quotes(get_translation("Bot doesn't have such subcommand!")))
-            return False
+            raise HelpCommandArgument()
         return True
 
     @commands.command(pass_context=True)
@@ -345,7 +333,7 @@ class ChatCommands(commands.Cog):
             for c in sorted(self._bot.commands, key=lambda i: i.name):
                 params, _ = parse_params_for_help(c.clean_params, "")
                 subcommands = parse_subcommands_for_help(c)[0]
-                emb.add_field(name=f"__`{c.name}" + ("/" if len(c.aliases) > 0 else "") + "/".join(c.aliases) + "`__" +
+                emb.add_field(name=f"__`{c.name}" + ("/" + "/".join(c.aliases) if len(c.aliases) > 0 else "") + "`__" +
                                    (" " + " | ".join(subcommands) if len(subcommands) else "") +
                                    (" |" if len(subcommands) and len(params) else "") + params,
                               value=add_quotes("\n" + get_translation(f"help_brief_{c.name}")), inline=False)

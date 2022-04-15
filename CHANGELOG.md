@@ -7,7 +7,7 @@ All important changes to this project will be documented in this file.
 #### Improvements:
 
 * **Added saving all data on the server to disk before making a backup**
-* **Added support of cross-platform chat for Minecraft versions `1.0.0` - `1.6.4`**
+* **Added support of cross-platform chat and server-related commands for Minecraft versions `1.0.0` - `1.6.4`**
 * Added handling `*.cmd` script and shortcut to `*.bat` or `*.cmd` script as start file on Windows
 * Added editing messages from Minecraft in Discord channel and edit webhook messages from Discord ([#27](https://github.com/Druzai/Bot_Mc_discord/issues/27))
 * Added check for edited messages whether they are stored in cache or not
@@ -17,6 +17,7 @@ All important changes to this project will be documented in this file.
 * Added printing server version and server status when it's loading/stopping in `status` command
 * Added ability to send Discord emojis from Minecraft chat
 * Added check if cryptography key is wrong or bot can't decrypt a token
+* Added handling of more granular errors for bot and improved handling of old ones
 
 #### Fixed:
 
