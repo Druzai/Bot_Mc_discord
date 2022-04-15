@@ -1071,28 +1071,30 @@ async def bot_clear(ctx, poll: Poll, subcommand: str = None, count: int = None, 
         if count > 0:
             lim = count if count < delete_limit else delete_limit + 1
             if delete_limit == 0 or len(await ctx.channel.history(limit=lim).flatten()) <= delete_limit:
-                await ctx.channel.purge(limit=1, bulk=False)
-                await ctx.channel.purge(limit=count, check=check_condition, bulk=False)
+                await ctx.message.delete()
+                await clear_with_big_limit(ctx, count=count, check_condition=check_condition)
                 return
         elif count < 0:
             message_created = (await ctx.channel.history(limit=-count, oldest_first=True).flatten())[-1]
             if delete_limit == 0 or len(await ctx.channel.history(limit=delete_limit + 1, after=message_created,
                                                                   oldest_first=True).flatten()) <= delete_limit:
-                await ctx.channel.purge(limit=None, check=check_condition, after=message_created, bulk=False)
+                await ctx.message.delete()
+                await clear_with_none_limit(ctx, check_condition=check_condition, after_message=message_created)
                 return
         else:
             await send_msg(ctx, get_translation("Nothing's done!"), True)
             return
     elif subcommand == "all":
         if delete_limit == 0 or len(await ctx.channel.history(limit=delete_limit + 1).flatten()) <= delete_limit:
-            await ctx.channel.purge(limit=1, bulk=False)
-            await ctx.channel.purge(limit=None, check=check_condition, bulk=False)
+            await ctx.message.delete()
+            await clear_with_none_limit(ctx, check_condition=check_condition)
             return
     elif subcommand == "reply":
         message_created = ctx.message.reference.resolved
         if delete_limit == 0 or len(await ctx.channel.history(limit=delete_limit + 1, after=message_created,
                                                               oldest_first=True).flatten()) <= delete_limit:
-            await ctx.channel.purge(limit=None, check=check_condition, after=message_created, bulk=False)
+            await ctx.message.delete()
+            await clear_with_none_limit(ctx, check_condition=check_condition, after_message=message_created)
             return
     if await poll.timer(ctx, 5, "clear"):
         if ctx.channel in [p.ctx.channel for p in poll.get_polls().values() if p.command == "clear"]:
@@ -1108,12 +1110,25 @@ async def bot_clear(ctx, poll: Poll, subcommand: str = None, count: int = None, 
                           command="clear",
                           remove_logs_after=5):
             if subcommand == "all" or subcommand == "reply" or count < 0:
-                await ctx.channel.purge(limit=None, check=check_condition, after=message_created, bulk=False)
+                await ctx.message.delete()
+                await clear_with_none_limit(ctx, check_condition=check_condition, after_message=message_created)
             else:
-                await ctx.channel.purge(limit=1, bulk=False)
-                await ctx.channel.purge(limit=count, check=check_condition, bulk=False)
+                await ctx.message.delete()
+                await clear_with_big_limit(ctx, count=count, check_condition=check_condition)
     else:
         await delete_after_by_msg(ctx.message)
+
+
+async def clear_with_big_limit(ctx, count, check_condition):
+    ranges_to_delete = [100 for _ in range(count // 100)] + [count % 100]
+    for limit in ranges_to_delete:
+        await ctx.channel.purge(limit=limit, check=check_condition)
+
+
+async def clear_with_none_limit(ctx, check_condition, after_message=None):
+    messages_length = 100
+    while messages_length == 100:
+        messages_length = len(await ctx.channel.purge(check=check_condition, after=after_message))
 
 
 async def bot_dm_clear(ctx, bot: commands.Bot, subcommand: str = None, count: int = None):

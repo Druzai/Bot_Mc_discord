@@ -33,6 +33,7 @@ All important changes to this project will be documented in this file.
 * Added support of deletion of some nicks for `whitelist` command
 * Better handling on versions lower than `1.7.6` for files: `banned-ips.txt`/`banned-ips.json`, `ops.txt`/`ops.json` and `white-list.txt`/`whitelist.json`
 * Fixed handling long tellraw objects and improved their building
+* Speeded up deletion of messages in `clear` command
 
 #### Changes in bot commands
 
