@@ -71,12 +71,8 @@ def main():
             Config.read_config(change_servers=(len(argv) > 1 and argv[1] == "-cs"))
             setup_print_handlers()
         bot = commands.Bot(command_prefix=get_prefix, intents=Intents.all())
-        bot.remove_command('help')
-        poll = Poll(bot)
-        for command in ["clear", "stop", "backup_del", "backup_del_all"]:
-            poll.add_awaiting_command(command)
-        bot.add_cog(poll)
-        for i in [ChatCommands, MinecraftCommands]:
+        bot.remove_command("help")
+        for i in [Poll, ChatCommands, MinecraftCommands]:
             bot.add_cog(i(bot))
         create_pot_lines(bot)
         BotVars.bot_for_webhooks = bot

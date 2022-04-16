@@ -21,9 +21,8 @@ class Poll(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self._bot: commands.Bot = bot
-
-    def add_awaiting_command(self, command: str):
-        self._await_date[command] = datetime.now()
+        for command in ["clear", "stop", "backup_del", "backup_del_all"]:
+            self._await_date[command] = datetime.now()
 
     async def run(self, channel: Union[Member, TextChannel, GroupChannel, DMChannel], command: str, message: str = None,
                   need_for_voting=2, needed_role: int = None, timeout=60 * 60, remove_logs_after=None,
