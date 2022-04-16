@@ -391,7 +391,7 @@ class MinecraftCommands(commands.Cog):
                 await ctx.send(add_quotes(get_translation("This code expired! Try to login again to get another one!")))
                 return
             if bound_user is None:
-                if not await self._IndPoll.run(ctx=ctx,
+                if not await self._IndPoll.run(channel=ctx.channel,
                                                message=get_translation("this man {0} trying to login as `{1}`. "
                                                                        "Bot requesting create link {0} -> {1}. "
                                                                        "Will you let that happen?")
@@ -989,7 +989,7 @@ class MinecraftCommands(commands.Cog):
                     member = await get_member_name(self._bot,
                                                    Config.get_server_config().backups[backup_number - 1].initiator)
                     if not await self._IndPoll. \
-                            run(ctx=ctx,
+                            run(channel=ctx.channel,
                                 message=get_translation(
                                     "this man {0} trying to delete {1} backup by {2} of '{3}' "
                                     "server. Will you let that happen?")
@@ -998,7 +998,7 @@ class MinecraftCommands(commands.Cog):
                                                 ".zip", member, Config.get_selected_server_from_list().server_name),
                                 command="backup_del",
                                 needed_role=Config.get_settings().bot_settings.managing_commands_role_id,
-                                need_for_voting=get_half_members_count_with_role(self._bot,
+                                need_for_voting=get_half_members_count_with_role(ctx.channel,
                                                                                  Config.get_settings().bot_settings
                                                                                          .managing_commands_role_id),
                                 remove_logs_after=5):
@@ -1038,7 +1038,7 @@ class MinecraftCommands(commands.Cog):
 
         if await self._IndPoll.timer(ctx, 5, "backup_del_all"):
             if not await self._IndPoll. \
-                    run(ctx=ctx,
+                    run(channel=ctx.channel,
                         message=get_translation(
                             "this man {0} trying to delete all backups of '{1}' server. "
                             "Will you let that happen?")
@@ -1046,7 +1046,7 @@ class MinecraftCommands(commands.Cog):
                                         Config.get_selected_server_from_list().server_name),
                         command="backup_del_all",
                         needed_role=Config.get_settings().bot_settings.managing_commands_role_id,
-                        need_for_voting=get_half_members_count_with_role(self._bot,
+                        need_for_voting=get_half_members_count_with_role(ctx.channel,
                                                                          Config.get_settings().bot_settings
                                                                                  .managing_commands_role_id),
                         remove_logs_after=5):

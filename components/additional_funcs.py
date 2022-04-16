@@ -25,7 +25,7 @@ from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 from colorama import Style, Fore
 from discord import (
     Activity, ActivityType, Message, Status, Member, Role, MessageType, NotFound, HTTPException, Forbidden, Emoji,
-    ChannelType
+    ChannelType, TextChannel
 )
 from discord.ext import commands
 from discord.utils import get as utils_get
@@ -292,7 +292,7 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll,
                         break
 
             if not logged_only_author_accounts and await poll.timer(ctx, 5, "stop"):
-                if not await poll.run(ctx=ctx,
+                if not await poll.run(channel=ctx.channel,
                                       message=get_translation("this man {0} trying to stop the server with {1} "
                                                               "player(s) on it. Will you let that happen?")
                                               .format(get_author_and_mention(ctx, bot, is_reaction)[1],
@@ -785,9 +785,9 @@ async def warn_about_auto_backups(ctx, bot: commands.Bot):
                            .format(Config.get_selected_server_from_list().server_name))
 
 
-def get_half_members_count_with_role(bot: commands.Bot, role: int):
+def get_half_members_count_with_role(channel: TextChannel, role: int):
     count = 0
-    for m in bot.guilds[0].members:
+    for m in channel.members:
         if not m.bot and m.status != Status.offline:
             if role:
                 if role in (e.id for e in m.roles):
@@ -1097,13 +1097,13 @@ async def bot_clear(ctx, poll: Poll, subcommand: str = None, count: int = None, 
             await clear_with_none_limit(ctx, check_condition=check_condition, after_message=message_created)
             return
     if await poll.timer(ctx, 5, "clear"):
-        if ctx.channel in [p.ctx.channel for p in poll.get_polls().values() if p.command == "clear"]:
+        if ctx.channel in [p.channel for p in poll.get_polls().values() if p.command == "clear"]:
             await delete_after_by_msg(ctx.message)
             await ctx.send(get_translation("{0}, bot already has poll on `clear` command for this channel!")
                            .format(ctx.author.mention),
                            delete_after=Config.get_timeouts_settings().await_seconds_before_message_deletion)
             return
-        if await poll.run(ctx=ctx,
+        if await poll.run(channel=ctx.channel,
                           message=get_translation("this man {0} trying to delete some history"
                                                   " of this channel. Will you let that happen?")
                                   .format(ctx.author.mention),

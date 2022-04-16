@@ -2,8 +2,12 @@ from asyncio import sleep as asleep
 from contextlib import suppress
 from datetime import datetime
 from enum import Enum, auto
+from typing import Union
 
-from discord import Color, Embed, Status, Role, NotFound, Forbidden, HTTPException, DMChannel, Member, InvalidData
+from discord import (
+    Color, Embed, Status, Role, NotFound, Forbidden, HTTPException, DMChannel, Member, InvalidData, TextChannel,
+    GroupChannel
+)
 from discord.ext import commands
 
 from components.localization import get_translation
@@ -21,13 +25,16 @@ class Poll(commands.Cog):
     def add_awaiting_command(self, command: str):
         self._await_date[command] = datetime.now()
 
-    async def run(self, ctx, command: str, message: str = None, need_for_voting=2, needed_role: int = None,
-                  timeout=60 * 60, remove_logs_after=None, admin_needed=False, add_mention=True, add_str_count=True,
-                  embeded_message: str = None):
+    async def run(self, channel: Union[Member, TextChannel, GroupChannel, DMChannel], command: str, message: str = None,
+                  need_for_voting=2, needed_role: int = None, timeout=60 * 60, remove_logs_after=None,
+                  admin_needed=False, add_mention=True, add_str_count=True, embeded_message: str = None):
         if message is None and embeded_message is None:
             raise ValueError("'message' and 'embeded_message' is not stated!")
-        if not isinstance(ctx, Member) or not isinstance(ctx, DMChannel):
-            members_count = len([m for m in self._bot.guilds[0].members if not m.bot and m.status != Status.offline])
+        if not isinstance(channel, Member) and not isinstance(channel, DMChannel):
+            if isinstance(channel, GroupChannel):
+                members_count = len([m for m in channel.recipients if not m.bot])
+            else:
+                members_count = len([m for m in channel.members if not m.bot and m.status != Status.offline])
             if members_count < need_for_voting:
                 need_for_voting = members_count
         else:
@@ -39,12 +46,12 @@ class Poll(commands.Cog):
             if needed_role is not None:
                 mention = needed_role.mention
         if add_str_count or add_mention or message is not None:
-            start_msg = await ctx.send((f"{mention}, " if add_mention else "") +
-                                       (f"{message} " if message is not None else "") +
-                                       (get_translation("To win the poll needed {0} vote(s)!")
-                                        .format(str(need_for_voting)) if add_str_count else ""))
-        poll_msg = await self.make_embed(ctx, embeded_message)
-        current_poll = Poll.PollContent(ctx, command, need_for_voting, needed_role, remove_logs_after, admin_needed)
+            start_msg = await channel.send((f"{mention}, " if add_mention else "") +
+                                           (f"{message} " if message is not None else "") +
+                                           (get_translation("To win the poll needed {0} vote(s)!")
+                                            .format(str(need_for_voting)) if add_str_count else ""))
+        poll_msg = await self.make_embed(channel, embeded_message)
+        current_poll = Poll.PollContent(channel, command, need_for_voting, needed_role, remove_logs_after, admin_needed)
         self._polls[poll_msg.id] = current_poll
         seconds = 0
         while current_poll.state == Poll.States.NONE:
@@ -54,7 +61,7 @@ class Poll(commands.Cog):
                 current_poll.cancel()
             if seconds % 10 == 0:
                 try:
-                    _ = await ctx.fetch_message(poll_msg.id)
+                    _ = await channel.fetch_message(poll_msg.id)
                 except (NotFound, Forbidden, HTTPException):
                     current_poll.cancel()
         if add_str_count or add_mention or message is not None:
@@ -64,20 +71,20 @@ class Poll(commands.Cog):
             await poll_msg.delete()
         del self._polls[poll_msg.id]
         if current_poll.state == Poll.States.CANCELED:
-            await ctx.send("`" + get_translation("Poll result: canceled!") + "`", delete_after=remove_logs_after)
+            await channel.send("`" + get_translation("Poll result: canceled!") + "`", delete_after=remove_logs_after)
             return
         poll_res = get_translation("granted") if current_poll.state == \
                                                  Poll.States.GRANTED else get_translation("refused")
-        await ctx.send("`" + get_translation("Poll result: permission {0}!").format(poll_res) + "`",
-                       delete_after=remove_logs_after)
+        await channel.send("`" + get_translation("Poll result: permission {0}!").format(poll_res) + "`",
+                           delete_after=remove_logs_after)
         return current_poll.state == Poll.States.GRANTED
 
-    async def make_embed(self, ctx, embeded_message: str = None):
+    async def make_embed(self, channel, embeded_message: str = None):
         emb = Embed(title=get_translation("Survey. Voting!") if embeded_message is None else embeded_message,
                     color=Color.orange())
         emb.add_field(name=get_translation("yes"), value=self._emoji_symbols.get("yes"))
         emb.add_field(name=get_translation("no"), value=self._emoji_symbols.get("no"))
-        add_reactions_to = await ctx.send(embed=emb)
+        add_reactions_to = await channel.send(embed=emb)
         for emote in self._emoji_symbols.values():
             await add_reactions_to.add_reaction(emote)
         return add_reactions_to
@@ -151,12 +158,12 @@ class Poll(commands.Cog):
         CANCELED = auto()
 
     class PollContent:
-        def __init__(self, ctx, command: str, need_for_voting=2, needed_role: Role = None,
+        def __init__(self, channel, command: str, need_for_voting=2, needed_role: Role = None,
                      remove_logs_after=0, admin_needed=False):
             self.poll_yes = 0
             self.poll_no = 0
             self.poll_voted_uniq = {}
-            self.ctx = ctx
+            self.channel = channel
             self.NFW = need_for_voting
             self.NR = needed_role
             self.RLA = remove_logs_after

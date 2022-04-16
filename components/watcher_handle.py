@@ -450,7 +450,7 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
 
                             async def send_message_and_poll(member, msg, poll, nick, ip_address):
                                 await member.send(msg)
-                                if await poll.run(ctx=member,
+                                if await poll.run(channel=member,
                                                   embeded_message=get_translation("Login without code?\n(Less safe)"),
                                                   command=f"auth login {nick} {ip_address}",
                                                   need_for_voting=1,
