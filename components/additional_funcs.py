@@ -1119,16 +1119,25 @@ async def bot_clear(ctx, poll: Poll, subcommand: str = None, count: int = None, 
         await delete_after_by_msg(ctx.message)
 
 
-async def clear_with_big_limit(ctx, count, check_condition):
+async def clear_with_big_limit(ctx: commands.Context, count: int, check_condition):
+    last_undeleted_message = None
     ranges_to_delete = [100 for _ in range(count // 100)] + [count % 100]
-    for limit in ranges_to_delete:
-        await ctx.channel.purge(limit=limit, check=check_condition)
+    ranges_to_delete_length = len(ranges_to_delete)
+    for i in range(ranges_to_delete_length):
+        if ranges_to_delete_length > i + 1:
+            last_undeleted_message = (await ctx.channel.history(limit=ranges_to_delete[i],
+                                                                before=last_undeleted_message).flatten())[-1]
+        await ctx.channel.purge(limit=ranges_to_delete[i], check=check_condition, before=last_undeleted_message)
 
 
-async def clear_with_none_limit(ctx, check_condition, after_message=None):
-    messages_length = 100
-    while messages_length == 100:
-        messages_length = len(await ctx.channel.purge(check=check_condition, after=after_message))
+async def clear_with_none_limit(ctx: commands.Context, check_condition, after_message: Message = None):
+    last_undeleted_message = None
+    while True:
+        limited_messages = await ctx.channel.history(before=last_undeleted_message).flatten()
+        await ctx.channel.purge(check=check_condition, before=last_undeleted_message, after=after_message)
+        if after_message in limited_messages:
+            return
+        last_undeleted_message = limited_messages[-1]
 
 
 async def bot_dm_clear(ctx, bot: commands.Bot, subcommand: str = None, count: int = None):
