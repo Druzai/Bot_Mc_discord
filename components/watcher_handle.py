@@ -120,8 +120,9 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
     if len(last_lines) == 0:
         return last_line
 
-    date_line = r"^\[\d+:\d+:\d+]" if server_version.minor > 6 else r"^\d+-\d+-\d+ \d+:\d+:\d+"
-    INFO_line = r"\[Server thread/INFO].*:" if server_version.minor > 6 else r"\[INFO]"
+    date_line = r"^\[(\d{2}\w{3}\d{4} )?\d+:\d+:\d+(\.\d+)?]" if server_version.minor > 6 \
+        else r"^\d+-\d+-\d+ \d+:\d+:\d+"
+    INFO_line = r"\[Server thread/INFO][^\*<>]*:" if server_version.minor > 6 else r"\[INFO]"
 
     if last_line is None:
         if Config.get_secure_auth().enable_secure_auth:
