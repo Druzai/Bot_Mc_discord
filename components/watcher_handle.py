@@ -121,7 +121,7 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
         return last_line
 
     date_line = r"^\[\d+:\d+:\d+]" if server_version.minor > 6 else r"^\d+-\d+-\d+ \d+:\d+:\d+"
-    INFO_line = r"\[Server thread/INFO]:" if server_version.minor > 6 else r"\[INFO]"
+    INFO_line = r"\[Server thread/INFO].*:" if server_version.minor > 6 else r"\[INFO]"
 
     if last_line is None:
         if Config.get_secure_auth().enable_secure_auth:
@@ -368,7 +368,7 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                 Config.save_auth_users()
 
             if search(rf"{INFO_line} [^\[\]<>]+\[/\d+\.\d+\.\d+\.\d+:\d+] logged in with entity id \d+ at", line):
-                nick = search(rf"{INFO_line} [^\[\]<>]+\[", line)[0].split(INFO_line[1:], maxsplit=1)[-1][1:-1].strip()
+                nick = split(INFO_line, search(rf"{INFO_line} [^\[\]<>]+\[", line)[0], maxsplit=1)[-1][1:-1].strip()
                 ip_address = search(r"\[/\d+\.\d+\.\d+\.\d+:\d+]", line)[0].split(":")[0][2:]
                 if nick not in [u.nick for u in Config.get_auth_users()]:
                     Config.add_auth_user(nick)
