@@ -10,14 +10,14 @@ from sys import exc_info
 from threading import Thread
 from time import sleep
 from traceback import format_exc
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from colorama import Fore, Style
 from discord import NoMoreItems
 from discord import Webhook, RequestsWebhookAdapter, TextChannel, Role, ChannelType
 from discord.iterators import _AsyncIterator, OLDEST_OBJECT
 from discord.object import Object
-from discord.utils import get as utils_get
+from discord.utils import get as utils_get, escape_markdown
 from discord.utils import time_snowflake
 
 from components.localization import get_translation
@@ -84,13 +84,10 @@ class Watcher:
         return self._running
 
 
-def create_watcher():
-    if BotVars.watcher_of_log_file is not None and BotVars.watcher_of_log_file.is_running():
-        BotVars.watcher_of_log_file.stop()
+def create_watcher(watcher: Optional[Watcher], server_version: 'ServerVersion'):
+    if watcher is not None and watcher.is_running():
+        watcher.stop()
 
-    from components.additional_funcs import get_server_version
-
-    server_version = get_server_version()
     if 7 <= server_version.minor:
         path_to_server_log = "logs/latest.log"
     elif 0 <= server_version.minor < 7:
@@ -98,11 +95,10 @@ def create_watcher():
     else:
         return
 
-    BotVars.watcher_of_log_file = Watcher(watch_file=Path(Config.get_selected_server_from_list().working_directory,
-                                                          path_to_server_log),
-                                          call_func_on_change=_check_log_file,
-                                          server_version=server_version,
-                                          poll=BotVars.bot_for_webhooks.get_cog("Poll"))
+    return Watcher(watch_file=Path(Config.get_selected_server_from_list().working_directory, path_to_server_log),
+                   call_func_on_change=_check_log_file,
+                   server_version=server_version,
+                   poll=BotVars.bot_for_webhooks.get_cog("Poll"))
 
 
 def create_chat_webhook():
@@ -130,12 +126,16 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
         else:
             last_lines = last_lines[-2:]
     last_lines = [sub(r"§[0-9abcdefklmnor]", "", line) for line in last_lines]
+    death_message = ""
 
     for line in last_lines:
+        if not search(rf"{date_line} {INFO_line}", line) or search(rf"{date_line} {INFO_line} \* ", line):
+            continue
+
         if Config.get_cross_platform_chat_settings().channel_id is not None:
             if search(rf"{date_line} {INFO_line} <([^>]*)> (.*)", line):
-                player_nick, player_message = search(r"<([^>]*)>", line)[0][1:-1], \
-                                              split(r"<([^>]*)>", line, maxsplit=1)[-1].strip()
+                player_nick = search(r"<([^>]*)>", line).group(1)
+                player_message = split(r"<([^>]*)>", line, maxsplit=1)[-1].strip()
                 if search(r"@[^\s]+", player_message):
                     split_arr = split(r"@[^\s]+", player_message)
                     mentions = [[i[1:]] for i in findall(r"@[^\s]+", player_message)]
@@ -356,28 +356,34 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                                 break
 
                     BotVars.webhook_chat.send(player_message, username=player_nick, avatar_url=player_url_pic)
-
-        if Config.get_secure_auth().enable_secure_auth:
-            from components.additional_funcs import connect_rcon, add_quotes
-            if not search(rf"{date_line} {INFO_line}", line) or search(rf"{date_line} {INFO_line} \*", line):
                 continue
-            if search(r"[^\[\]<>]+ lost connection:", line) and \
-                    "You logged in from another location" not in split(r"[^\[\]<>]+ lost connection:",
-                                                                       line, maxsplit=1)[1]:
-                nick = split(r"lost connection:", search(r"[^\[\]<>]+ lost connection:", line)[0])[0].strip()
-                Config.set_user_logged(nick, False)
-                Config.save_auth_users()
 
-            if search(rf"{INFO_line} [^\[\]<>]+\[/\d+\.\d+\.\d+\.\d+:\d+] logged in with entity id \d+ at", line):
-                nick = split(INFO_line, search(rf"{INFO_line} [^\[\]<>]+\[", line)[0], maxsplit=1)[-1][1:-1].strip()
-                ip_address = search(r"\[/\d+\.\d+\.\d+\.\d+:\d+]", line)[0].split(":")[0][2:]
+        if Config.get_secure_auth().enable_secure_auth or \
+                Config.get_cross_platform_chat_settings().channel_id is not None:
+            player_logout = check_if_player_logged_out(line, INFO_line)
+
+            if player_logout[0] is not None and player_logout[1] is not None:
+                BotVars.remove_player_login(player_logout[0])
+                continue
+
+            player_login = check_if_player_logged_in(line, INFO_line)
+
+            if player_login[0] is not None and player_login[1] is not None and \
+                    Config.get_secure_auth().enable_secure_auth:
+                from components.additional_funcs import connect_rcon, add_quotes
+
+                nick = player_login[0]
+                ip_address = player_login[1]
+                save_auth_users = False
                 if nick not in [u.nick for u in Config.get_auth_users()]:
                     Config.add_auth_user(nick)
+                    save_auth_users = True
                 nick_numb = [i for i in range(len(Config.get_auth_users()))
                              if Config.get_auth_users()[i].nick == nick][0]
-                is_invasion_to_ban = Config.get_auth_users()[nick_numb].logged and \
+                nick_logged = BotVars.player_logged(Config.get_auth_users()[nick_numb].nick) is not None
+                is_invasion_to_ban = nick_logged and \
                                      ip_address not in Config.get_known_user_ips()
-                is_invasion_to_kick = Config.get_auth_users()[nick_numb].logged and \
+                is_invasion_to_kick = nick_logged and \
                                       ip_address not in Config.get_known_user_ips(nick)
 
                 if not is_invasion_to_ban and not is_invasion_to_kick:
@@ -385,6 +391,7 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                         user_attempts, code = Config.update_ip_address(nick, ip_address)
                     else:
                         user_attempts, code = Config.add_ip_address(nick, ip_address, is_login_attempt=True)
+                    save_auth_users = True
                 else:
                     user_attempts, code = 0, 0
                 if is_invasion_to_ban or is_invasion_to_kick or (code is not None and user_attempts is not None):
@@ -401,6 +408,7 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                                 ban_reason = get_translation("Intrusion prevented: User was banned!")
                             else:
                                 Config.remove_ip_address(ip_address, [nick])
+                                save_auth_users = True
                                 ban_reason = get_translation("Too many login attempts: User was banned!")
                             msg = f"{ban_reason}\n" + get_translation("Nick: {0}\nIP: {1}\nTime: {2}") \
                                 .format(nick, ip_address, datetime.now().strftime(get_translation("%H:%M:%S %d/%m/%Y")))
@@ -471,8 +479,39 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                             channel = _get_commands_channel()
                             run_coroutine_threadsafe(channel.send(msg), BotVars.bot_for_webhooks.loop)
                 else:
-                    Config.set_user_logged(nick, True)
-                Config.save_auth_users()
+                    BotVars.add_player_login(nick)
+                if save_auth_users:
+                    Config.save_auth_users()
+                continue
+            elif player_login[0] is not None and player_login[1] is not None and \
+                    not Config.get_secure_auth().enable_secure_auth and \
+                    Config.get_cross_platform_chat_settings().channel_id is not None:
+                BotVars.add_player_login(player_login[0])
+                continue
+
+        if Config.get_cross_platform_chat_settings().channel_id is not None:
+            from components.additional_funcs import DEATH_MESSAGES, REGEX_DEATH_MESSAGES, MASS_REGEX_DEATH_MESSAGES
+
+            if search(MASS_REGEX_DEATH_MESSAGES, line):
+                for regex in range(len(REGEX_DEATH_MESSAGES)):
+                    message_match = search(fr"{INFO_line} {REGEX_DEATH_MESSAGES[regex]}", line)
+                    if message_match:
+                        groups = list(message_match.groups())
+                        if len(groups) == 3 and DEATH_MESSAGES[regex].find("{1}") > DEATH_MESSAGES[regex].find("{2}"):
+                            groups = [groups[0], groups[2], groups[1]]
+                        if search(r"\'.+\'", get_translation(DEATH_MESSAGES[regex]).format(*groups)):
+                            groups = [g.strip("'") for g in groups]
+                        if len(groups) > 1:
+                            groups[1] = get_translation(groups[1])
+                        groups[0] = get_translation(groups[0])
+                        groups = [f"**{escape_markdown(g)}**" for g in groups]
+                        msg = get_translation(DEATH_MESSAGES[regex]).format(*groups)
+                        if death_message != msg:
+                            BotVars.webhook_chat.send(msg, username=get_translation("Server"),
+                                                      avatar_url=BotVars.bot_for_webhooks.user.avatar_url)
+                            death_message = msg
+                        break
+                continue
 
     for line in reversed(last_lines):
         if search(date_line, line):
@@ -494,6 +533,27 @@ def _get_members_nicks_of_the_role(role: Role, mention_nicks: list):
         if len(possible_user) != 0:
             mention_nicks.extend(possible_user)
     return mention_nicks
+
+
+def check_if_player_logged_out(line: str, INFO_line: str):
+    match = search(rf"{INFO_line} ([^\[\]<>]+) lost connection:", line)
+    if match:
+        nick = match.group(1).strip()
+        reason = split(r"lost connection:", line, maxsplit=1)[-1].strip()
+    else:
+        nick, reason = None, None
+    return nick, reason
+
+
+def check_if_player_logged_in(line: str, INFO_line: str):
+    match = search(rf"{INFO_line} ([^\[\]<>]+)\[/(\d+\.\d+\.\d+\.\d+):\d+] logged in with entity id \d+ at", line)
+    if match:
+        nick = match.group(1).strip()
+        ip_address = match.group(2).strip()
+    else:
+        nick = None
+        ip_address = None
+    return nick, ip_address
 
 
 def _get_last_n_lines(file, number_of_lines, last_line):

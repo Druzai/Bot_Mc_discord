@@ -49,11 +49,49 @@ DISCORD_SYMBOLS_IN_MESSAGE_LIMIT = 2000
 MAX_RCON_COMMAND_STR_LENGTH = 1446
 MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH = MAX_RCON_COMMAND_STR_LENGTH - 9 - 2
 
-if len(argv) > 1 and argv[1] == "-g":
-    from components.localization import RuntimeTextHandler
-
-    for un in UNITS:
-        RuntimeTextHandler.add_translation(un)
+# Messages taken from https://minecraft.fandom.com/wiki/Death_messages
+DEATH_MESSAGES = ['{0} fell off a ladder', '{0} fell off some vines', '{0} fell off some weeping vines',
+                  '{0} fell off some twisting vines', '{0} fell off scaffolding', '{0} fell while climbing',
+                  '{0} fell from a high place', '{0} was doomed to fall', '{0} was doomed to fall by {1}',
+                  '{0} was doomed to fall by {1} using {2}', '{0} fell too far and was finished by {1}',
+                  '{0} fell too far and was finished by {1} using {2}', '{0} was struck by lightning',
+                  '{0} was struck by lightning whilst fighting {1}', '{0} went up in flames',
+                  '{0} walked into fire whilst fighting {1}', '{0} burned to death',
+                  '{0} was burnt to a crisp whilst fighting {1}', '{0} tried to swim in lava',
+                  '{0} tried to swim in lava to escape {1}', '{0} discovered the floor was lava',
+                  '{0} walked into danger zone due to {1}', '{0} suffocated in a wall',
+                  '{0} suffocated in a wall whilst fighting {1}', '{0} was squished too much',
+                  '{0} was squashed by {1}', '{0} drowned', '{0} drowned whilst trying to escape {1}',
+                  '{0} died from dehydration', '{0} died from dehydration whilst trying to escape {1}',
+                  '{0} starved to death', '{0} starved to death whilst fighting {1}', '{0} was pricked to death',
+                  '{0} walked into a cactus whilst trying to escape {1}', '{0} died', '{0} died because of {1}',
+                  '{0} blew up', '{0} was blown up by {1}', '{0} was blown up by {1} using {2}',
+                  '{0} was killed by magic', '{0} was killed by magic whilst trying to escape {1}',
+                  '{0} was killed by even more magic', '{0} withered away', '{0} withered away whilst fighting {1}',
+                  '{0} was shot by a skull from {1}', '{0} was squashed by a falling anvil',
+                  '{0} was squashed by a falling anvil whilst fighting {1}', '{0} was squashed by a falling block',
+                  '{0} was squashed by a falling block whilst fighting {1}', '{0} was impaled on a stalagmite',
+                  '{0} was impaled on a stalagmite whilst fighting {1}', '{0} was skewered by a falling stalactite',
+                  '{0} was skewered by a falling stalactite whilst fighting {1}', '{0} was slain by {1}',
+                  '{0} was slain by {1} using {2}', '{0} was slain by {1}', '{0} was slain by {1} using {2}',
+                  '{0} was shot by {1}', '{0} was shot by {1} using {2}', '{0} was fireballed by {1}',
+                  '{0} was fireballed by {1} using {2}', '{0} was pummeled by {1}', '{0} was pummeled by {1} using {2}',
+                  '{0} was killed by {1} using magic', '{0} was killed by {1} using {2}',
+                  '{0} was killed trying to hurt {1}', '{0} was killed by {2} trying to hurt {1}',
+                  '{0} was impaled by {1}', '{0} was impaled by {1} with {2}', '{0} hit the ground too hard',
+                  '{0} hit the ground too hard whilst trying to escape {1}', '{0} fell out of the world',
+                  "{0} didn't want to live in the same world as {1}", '{0} was roasted in dragon breath',
+                  '{0} was roasted in dragon breath by {1}', '{0} experienced kinetic energy',
+                  '{0} experienced kinetic energy whilst trying to escape {1}', '{0} went off with a bang',
+                  '{0} went off with a bang whilst fighting {1}',
+                  '{0} went off with a bang due to a firework fired from {2} by {1}', '{0} was killed by {1}',
+                  '{0} was poked to death by a sweet berry bush',
+                  '{0} was poked to death by a sweet berry bush whilst trying to escape {1}', '{0} was stung to death',
+                  '{0} was stung to death by {1}', '{0} froze to death', '{0} was frozen to death by {1}',
+                  '{0} fell out of the water', "{0} was shot by a {1}'s skull"]
+DEATH_MESSAGES = sorted(DEATH_MESSAGES, key=lambda s: len(s), reverse=True)
+REGEX_DEATH_MESSAGES = [sub(r"\{\d}", r"(.+)", m) for m in DEATH_MESSAGES]
+MASS_REGEX_DEATH_MESSAGES = "|".join(REGEX_DEATH_MESSAGES)
 
 
 async def send_msg(ctx, msg: str, is_reaction=False):
@@ -221,7 +259,7 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
     if (Config.get_cross_platform_chat_settings().enable_cross_platform_chat and
         Config.get_cross_platform_chat_settings().channel_id and
         Config.get_cross_platform_chat_settings().webhook_url) or Config.get_secure_auth().enable_secure_auth:
-        create_watcher()
+        BotVars.watcher_of_log_file = create_watcher(BotVars.watcher_of_log_file, get_server_version())
         BotVars.watcher_of_log_file.start()
     if Config.get_selected_server_from_list().server_loading_time:
         Config.get_selected_server_from_list().server_loading_time = \
@@ -236,6 +274,7 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
             await send_msg(ctx, get_translation("Kept you waiting, huh?"), is_reaction)
     if backups_thread is not None:
         backups_thread.skip()
+    BotVars.players_login_dict.clear()
     BotVars.auto_shutdown_start_date = None
     BotVars.is_loading = False
     BotVars.is_server_on = True
@@ -349,12 +388,15 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll,
 
         if BotVars.watcher_of_log_file is not None and BotVars.watcher_of_log_file.is_running():
             BotVars.watcher_of_log_file.stop()
+        stop_datetime = datetime.now()
         while True:
             await asleep(Config.get_timeouts_settings().await_seconds_when_connecting_via_rcon)
             try:
                 with connect_query() as cl_q:
                     _ = cl_q.basic_stats
             except (ConnectionError, socket.error):
+                break
+            if (datetime.now() - stop_datetime).seconds > 60:
                 break
     else:
         print(get_translation("Bot Exception: Couldn't connect to server, so killing it now..."))
@@ -363,6 +405,7 @@ async def stop_server(ctx, bot: commands.Bot, poll: Poll,
                            add_quotes(get_translation("Couldn't connect to server to shut it down! Killing it now...")),
                            is_reaction)
     kill_server()
+    BotVars.players_login_dict.clear()
     BotVars.auto_shutdown_start_date = None
     BotVars.is_stopping = False
     BotVars.is_server_on = False
@@ -820,10 +863,13 @@ async def server_checkups(bot: commands.Bot, backups_thread: BackupsThread, poll
         info = get_server_players()
         if info.get("current") != 0:
             to_save = False
+            BotVars.players_login_dict = {k: v for k, v in BotVars.players_login_dict.items()
+                                          if k in info.get("players")}
             for player in info.get("players"):
                 if player not in [i.player_minecraft_nick for i in Config.get_server_config().seen_players]:
                     Config.add_to_seen_players_list(player)
                     to_save = True
+                BotVars.add_player_login(player)
             if to_save:
                 Config.save_server_config()
             if BotVars.is_auto_backup_disable:
@@ -836,7 +882,7 @@ async def server_checkups(bot: commands.Bot, backups_thread: BackupsThread, poll
                   Config.get_cross_platform_chat_settings().webhook_url) or
                  Config.get_secure_auth().enable_secure_auth):
             if BotVars.watcher_of_log_file is None:
-                create_watcher()
+                BotVars.watcher_of_log_file = create_watcher(BotVars.watcher_of_log_file, get_server_version())
             BotVars.watcher_of_log_file.start()
         if not BotVars.is_loading and not BotVars.is_stopping and not BotVars.is_restarting:
             task = bot.loop.create_task(bot.change_presence(
@@ -985,12 +1031,16 @@ async def bot_list(ctx, bot: commands.Bot, is_reaction=False):
             players_dict = {p: None for p in info.get("players")}
             if Config.get_secure_auth().enable_secure_auth:
                 for player in Config.get_auth_users():
-                    if player.nick in players_dict.keys() and player.logged:
+                    if player.nick in players_dict.keys() and BotVars.player_logged(player.nick) is not None:
                         non_expired_ips = [ip.expires_on_date for ip in player.ip_addresses
                                            if ip.expires_on_date is not None and datetime.now() < ip.expires_on_date]
                         if len(non_expired_ips) > 0:
                             players_dict[player.nick] = max(non_expired_ips) - \
                                                         timedelta(days=Config.get_secure_auth().days_before_ip_expires)
+            else:
+                for logged_player, date in BotVars.players_login_dict.items():
+                    if logged_player in players_dict.keys():
+                        players_dict[logged_player] = date
             players_list = []
             w_from = get_translation("from")
             time_f = get_translation("%H:%M %d/%m/%y")
@@ -2423,3 +2473,24 @@ class Error_file_handler:
     def flush(self):
         if self.file is not None:
             self.file.flush()
+
+
+if len(argv) > 1 and argv[1] == "-g":
+    from components.localization import RuntimeTextHandler
+
+    entities = ['Area Effect Cloud', 'Arrow', 'Axolotl', 'Bee', 'Blaze', 'Cave Spider', 'Creeper', 'Drowned',
+                'Dragon Fireball', 'Elder Guardian', 'End Crystal', 'Ender Dragon', 'Enderman', 'Endermite',
+                'Evoker Fangs', 'Evoker', 'Falling Block', 'Fireball', 'Firework Rocket', 'Ghast', 'Giant', 'Goat',
+                'Guardian', 'Hoglin', 'Husk', 'Ravager', 'Illusioner', 'The Killer Bunny', 'Lightning Bolt', 'Llama',
+                'Llama Spit', 'Magma Cube', 'Ocelot', 'Panda', 'Phantom', 'Piglin', 'Piglin Brute', 'Pillager',
+                'Polar Bear', 'Shulker', 'Shulker Bullet', 'Skeleton', 'Slime', 'Small Fireball', 'Snowball',
+                'Snow Golem', 'Spectral Arrow', 'Spider', 'Stray', 'Strider', 'Primed TNT', 'Trident', 'Vex',
+                'Villager', 'Iron Golem', 'Witch', 'Wither', 'Wither Skeleton', 'Wither Skull', 'Wolf', 'Zoglin',
+                'Zombie', 'Zombified Piglin', 'Zombie Villager', '[Intentional Game Design]', 'Zombie Pigman']
+
+    for un in UNITS:
+        RuntimeTextHandler.add_translation(un)
+    for msg in DEATH_MESSAGES:
+        RuntimeTextHandler.add_translation(msg)
+    for entity in entities:
+        RuntimeTextHandler.add_translation(entity)

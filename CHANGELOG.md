@@ -18,6 +18,7 @@ All important changes to this project will be documented in this file.
 * Added ability to send Discord emojis from Minecraft chat
 * Added check if cryptography key is wrong or bot can't decrypt a token
 * Added handling of more granular errors for bot and improved handling of old ones
+* Added sending death messages from Minecraft in Discord
 
 #### Fixed:
 

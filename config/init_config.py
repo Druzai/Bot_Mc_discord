@@ -43,12 +43,27 @@ class BotVars:
     is_auto_backup_disable: bool = False
     op_deop_list: List = []  # List of nicks of players to op and then to deop
     auto_shutdown_start_date: datetime = None
+    players_login_dict: dict = {}  # Dict of logged nicks and datetime of their login
     java_processes: List[Process] = []
-    watcher_of_log_file: 'Watcher' = None  # typehint: ignore
+    watcher_of_log_file: 'Watcher' = None
     watcher_last_line: str = None
     webhook_chat: Webhook = None
     webhook_rss: Webhook = None
     bot_for_webhooks: Bot = None
+
+    @classmethod
+    def add_player_login(cls, nick: str):
+        if cls.player_logged(nick) is None:
+            cls.players_login_dict[nick] = datetime.now()
+
+    @classmethod
+    def remove_player_login(cls, nick: str):
+        with suppress(KeyError):
+            del cls.players_login_dict[nick]
+
+    @classmethod
+    def player_logged(cls, nick: str) -> Optional[datetime]:
+        return cls.players_login_dict.get(nick, None)
 
 
 CODE_LETTERS = "WERTYUPASFGHKZXCVBNM23456789$%&+="
@@ -99,7 +114,6 @@ class Ip_address_of_user:
 class Auth_user:
     nick: str = ""
     ip_addresses: List[Ip_address_of_user] = field(default_factory=list)
-    logged = False
 
 
 @dataclass
@@ -606,12 +620,6 @@ class Config:
                         return ip_info
 
     @classmethod
-    def set_user_logged(cls, nick: str, logged: bool):
-        for i in range(len(cls.get_auth_users())):
-            if cls.get_auth_users()[i].nick == nick:
-                cls.get_auth_users()[i].logged = logged
-
-    @classmethod
     def get_known_user_ips(cls, nick: Optional[str] = None) -> Set[str]:
         ip_set = set()
         for user in cls.get_auth_users():
@@ -724,6 +732,10 @@ class Config:
 
     @classmethod
     def read_server_info(cls):
+        # Ensure that server folder exists
+        if not Path(cls.get_selected_server_from_list().working_directory).exists():
+            raise RuntimeError(get_translation("Directory {0} doesn't exist!")
+                               .format(cls.get_selected_server_from_list().working_directory))
         cls.read_server_config()
         # Ensure we have backups folder
         with suppress(FileExistsError):
@@ -879,33 +891,34 @@ class Config:
         Conf.save(config=Conf.structured(class_instance), f=filepath)
 
     @staticmethod
-    def _ask_for_data(message: str, match_str: Optional[str] = None, try_int=False, int_high_than: Optional[int] = None,
-                      int_low_than: Optional[int] = None, try_float=False,
-                      float_high_than: Optional[float] = None, float_low_than: Optional[float] = None):
+    def _ask_for_data(message: str, match_str: Optional[str] = None, try_int=False,
+                      int_high_or_equal_than: Optional[int] = None, int_low_or_equal_than: Optional[int] = None,
+                      try_float=False, float_high_or_equal_than: Optional[float] = None,
+                      float_low_or_equal_than: Optional[float] = None):
         while True:
             answer = str(input(message)).strip()
             if answer != "":
                 if match_str is not None and answer.lower() != match_str:
                     return False
-                if try_int or int_high_than is not None or int_low_than is not None:
+                if try_int or int_high_or_equal_than is not None or int_low_or_equal_than is not None:
                     try:
-                        if int_high_than is not None and int(answer) <= int_high_than:
-                            print(get_translation("Your number lower than {0}!").format(int_high_than))
+                        if int_high_or_equal_than is not None and int(answer) < int_high_or_equal_than:
+                            print(get_translation("Your number lower than {0}!").format(int_high_or_equal_than))
                             continue
-                        if int_low_than is not None and int(answer) >= int_low_than:
-                            print(get_translation("Your number higher than {0}!").format(int_low_than))
+                        if int_low_or_equal_than is not None and int(answer) > int_low_or_equal_than:
+                            print(get_translation("Your number higher than {0}!").format(int_low_or_equal_than))
                             continue
                         return int(answer)
                     except ValueError:
                         print(get_translation("Your string doesn't contain an integer!"))
                         continue
-                if try_float or float_high_than is not None or float_low_than is not None:
+                if try_float or float_high_or_equal_than is not None or float_low_or_equal_than is not None:
                     try:
-                        if float_high_than is not None and float(answer) <= float_high_than:
-                            print(get_translation("Your number lower than {0}!").format(float_high_than))
+                        if float_high_or_equal_than is not None and float(answer) < float_high_or_equal_than:
+                            print(get_translation("Your number lower than {0}!").format(float_high_or_equal_than))
                             continue
-                        if float_low_than is not None and float(answer) >= float_low_than:
-                            print(get_translation("Your number higher than {0}!").format(float_low_than))
+                        if float_low_or_equal_than is not None and float(answer) > float_low_or_equal_than:
+                            print(get_translation("Your number higher than {0}!").format(float_low_or_equal_than))
                             continue
                         return float(answer)
                     except ValueError:
@@ -1054,7 +1067,7 @@ class Config:
             cls._settings_instance.bot_settings.deletion_messages_limit_without_poll = \
                 cls._ask_for_data(get_translation("Set limit for deletion messages "
                                                   "without poll (0 - for disable poll) (int)") + "\n> ",
-                                  try_int=True, int_high_than=-1, int_low_than=1000001)
+                                  try_int=True, int_high_or_equal_than=0, int_low_or_equal_than=1000000)
 
     @classmethod
     def _setup_menu_id(cls):
@@ -1063,7 +1076,8 @@ class Config:
                     get_translation("Menu message id not found. Would you like to enter it?") + " Y/n\n> ", "y"):
                 cls._need_to_rewrite = True
                 cls._settings_instance.bot_settings.menu_id = \
-                    cls._ask_for_data(get_translation("Enter menu message id") + "\n> ", try_int=True, int_high_than=0)
+                    cls._ask_for_data(get_translation("Enter menu message id") + "\n> ", try_int=True,
+                                      int_high_or_equal_than=1)
             else:
                 print(get_translation("Menu via reactions wouldn't work. To make it work type "
                                       "'{0}menu' to create new menu and its id.").format(
@@ -1078,7 +1092,7 @@ class Config:
                 cls._need_to_rewrite = True
                 cls._settings_instance.bot_settings.commands_channel_id = \
                     cls._ask_for_data(get_translation("Enter commands' channel id") + "\n> ",
-                                      try_int=True, int_high_than=0)
+                                      try_int=True, int_high_or_equal_than=1)
             else:
                 print(get_translation("Bot send some push events to the channel it can post. To make it work right type"
                                       " '{0}channel commands' to create a link.")
@@ -1102,7 +1116,7 @@ class Config:
             cls._settings_instance.bot_settings.default_number_of_times_to_op = \
                 cls._ask_for_data(get_translation("Set default number of times to give an operator "
                                                   "for every player (int):") + "\n> ",
-                                  try_int=True, int_high_than=0, int_low_than=1001)
+                                  try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=1000)
 
     @classmethod
     def _print_tasks_info(cls):
@@ -1124,17 +1138,17 @@ class Config:
     @classmethod
     def _setup_timeouts(cls):
         # Timeout between check-ups func
-        if cls.get_timeouts_settings().await_seconds_in_check_ups < 1 or \
+        if cls.get_timeouts_settings().await_seconds_in_check_ups < 5 or \
                 cls.get_timeouts_settings().await_seconds_in_check_ups > 60:
             cls._need_to_rewrite = True
-            print(get_translation("Timeout between check-ups 'Server on/off' set below 1. Change this option."))
+            print(get_translation("Timeout between check-ups 'Server on/off' set below 6. Change this option."))
             print(get_translation("Note: If your machine has processor with frequency 2-2.5 GHz, "
-                                  "you have to set this option at least to '2' seconds "
+                                  "you have to set this option at least to '8' seconds "
                                   "or higher for the bot to work properly."))
             cls.get_timeouts_settings().await_seconds_in_check_ups = \
                 cls._ask_for_data(
                     get_translation("Set timeout between check-ups 'Server on/off' (in seconds, int)") + "\n> ",
-                    try_int=True, int_high_than=0, int_low_than=61)
+                    try_int=True, int_high_or_equal_than=5, int_low_or_equal_than=60)
         print(get_translation("Timeout between check-ups 'Server on/off' set to {0} sec.")
               .format(cls.get_timeouts_settings().await_seconds_in_check_ups))
 
@@ -1148,7 +1162,7 @@ class Config:
                 cls._ask_for_data(get_translation("Set timeout for shutdown the Minecraft server when "
                                                   "no players found during a long period of time (0 "
                                                   "- for instant shutdown) (in seconds, int)") + "\n> ",
-                                  try_int=True, int_high_than=0, int_low_than=86401)
+                                  try_int=True, int_high_or_equal_than=0, int_low_or_equal_than=86400)
         print(get_translation("Timeout for shutdown the Minecraft server when no players found during "
                               "a long period of time set to {0} sec.")
               .format(cls.get_timeouts_settings().await_seconds_before_shutdown))
@@ -1163,33 +1177,33 @@ class Config:
             cls.get_timeouts_settings().await_seconds_when_opped = \
                 cls._ask_for_data(get_translation("Set timeout for being operator in Minecraft "
                                                   "(0 - for unlimited timeout) (in seconds, int)") + "\n> ",
-                                  try_int=True, int_high_than=-1, int_low_than=1441)
+                                  try_int=True, int_high_or_equal_than=0, int_low_or_equal_than=1440)
         print(get_translation("Timeout for being operator in Minecraft set to {0} sec.")
               .format(cls.get_timeouts_settings().await_seconds_when_opped))
         if cls.get_timeouts_settings().await_seconds_when_opped == 0:
             print(get_translation("Limitation doesn't exist, padawan."))
 
         # Timeout to sleep while bot pinging server for info
-        if cls.get_timeouts_settings().await_seconds_when_connecting_via_rcon <= 0.1 or \
-                cls.get_timeouts_settings().await_seconds_when_connecting_via_rcon >= 7.1:
+        if cls.get_timeouts_settings().await_seconds_when_connecting_via_rcon < 0.5 or \
+                cls.get_timeouts_settings().await_seconds_when_connecting_via_rcon > 7.0:
             cls._need_to_rewrite = True
             print(get_translation("Timeout while bot pinging server for info set below 0. Change this option."))
             cls.get_timeouts_settings().await_seconds_when_connecting_via_rcon = \
                 cls._ask_for_data(get_translation(
                     "Set timeout while bot pinging server for info (in seconds, float)") + "\n> ",
-                                  try_float=True, float_high_than=0.1, float_low_than=7.1)
+                                  try_float=True, float_high_or_equal_than=0.5, float_low_or_equal_than=7.0)
         print(get_translation("Timeout while bot pinging server for info set to {0} sec.")
               .format(cls.get_timeouts_settings().await_seconds_when_connecting_via_rcon))
 
         # Timeout before message deletion
-        if cls.get_timeouts_settings().await_seconds_before_message_deletion < 2 or \
+        if cls.get_timeouts_settings().await_seconds_before_message_deletion < 1 or \
                 cls.get_timeouts_settings().await_seconds_before_message_deletion > 120:
             cls._need_to_rewrite = True
             print(get_translation(
                 "Timeout before message deletion is set below 1. Change this option."))
             cls.get_timeouts_settings().await_seconds_before_message_deletion = \
                 cls._ask_for_data(get_translation("Set timeout before message deletion (in seconds, int)") + "\n> ",
-                                  try_int=True, int_high_than=1, int_low_than=121)
+                                  try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=120)
         print(get_translation("Timeout before message deletion is set to {0} sec.")
               .format(cls.get_timeouts_settings().await_seconds_before_message_deletion))
 
@@ -1210,7 +1224,7 @@ class Config:
             print(get_translation("There is/are {0} server(s) in bot config")
                   .format(len(cls._settings_instance.servers_list)))
         new_servers_number = cls._ask_for_data(get_translation("How much servers you intend to keep?") + "\n> ",
-                                               try_int=True, int_high_than=0, int_low_than=101)
+                                               try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=100)
         if new_servers_number >= len(cls._settings_instance.servers_list):
             for i in range(len(cls._settings_instance.servers_list)):
                 cls._settings_instance.servers_list[i] = \
@@ -1364,22 +1378,22 @@ class Config:
 
     @classmethod
     def _setup_server_watcher(cls):
-        if cls.get_server_watcher().refresh_delay_of_console_log <= 0.1 or \
-                cls.get_server_watcher().refresh_delay_of_console_log >= 10.1:
+        if cls.get_server_watcher().refresh_delay_of_console_log < 0.5 or \
+                cls.get_server_watcher().refresh_delay_of_console_log > 10.0:
             print(get_translation("Watcher's delay to refresh doesn't set."))
             print(get_translation("Note: If your machine has processor with frequency 2-2.5 GHz, "
                                   "you have to set this option from '0.5' to '0.9' second "
                                   "for the bot to work properly."))
             cls.get_server_watcher().refresh_delay_of_console_log = \
                 cls._ask_for_data(get_translation("Set delay to refresh (in seconds, float)") + "\n> ",
-                                  try_float=True, float_high_than=0.1, float_low_than=10.1)
+                                  try_float=True, float_high_or_equal_than=0.5, float_low_or_equal_than=10.0)
 
-        if cls.get_server_watcher().number_of_lines_to_check_in_console_log < 2 or \
+        if cls.get_server_watcher().number_of_lines_to_check_in_console_log < 1 or \
                 cls.get_server_watcher().number_of_lines_to_check_in_console_log > 100:
             print(get_translation("Watcher's number of lines to check in server log doesn't set."))
             cls.get_server_watcher().number_of_lines_to_check_in_console_log = \
                 cls._ask_for_data(get_translation("Set number of lines to check") + "\n> ",
-                                  try_int=True, int_high_than=1, int_low_than=101)
+                                  try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=100)
 
         if cls.get_cross_platform_chat_settings().enable_cross_platform_chat is None:
             cls._need_to_rewrite = True
@@ -1416,7 +1430,7 @@ class Config:
                 cls._ask_for_data(
                     get_translation("Enter how many words in mention from Minecraft chat bot can parse "
                                     "(0 - handle only mentions with one word) (default - 5, int)") + "\n> ",
-                    try_int=True, int_high_than=0, int_low_than=21)
+                    try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=20)
         if cls.get_cross_platform_chat_settings().max_wrong_symbols_in_mention_from_right is None or \
                 cls.get_cross_platform_chat_settings().max_wrong_symbols_in_mention_from_right < 1 or \
                 cls.get_cross_platform_chat_settings().max_wrong_symbols_in_mention_from_right > 20:
@@ -1426,7 +1440,7 @@ class Config:
                     get_translation("Enter how many characters from right side of mention "
                                     "bot can remove to find similar mention in Discord"
                                     " (0 - don't try to find similar ones) (default - 5, int)") + "\n> ",
-                    try_int=True, int_high_than=0, int_low_than=21)
+                    try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=20)
 
         if cls.get_cross_platform_chat_settings().enable_cross_platform_chat:
             print(get_translation("Cross-platform chat enabled."))
@@ -1440,37 +1454,38 @@ class Config:
                 cls.get_secure_auth().enable_secure_auth = True
             else:
                 cls.get_secure_auth().enable_secure_auth = False
-        if cls.get_secure_auth().max_login_attempts < 2 or cls.get_secure_auth().max_login_attempts > 100:
+        if cls.get_secure_auth().max_login_attempts < 1 or cls.get_secure_auth().max_login_attempts > 100:
             cls._need_to_rewrite = True
             cls.get_secure_auth().max_login_attempts = \
                 cls._ask_for_data(get_translation("Enter how many attempts bot will accept connection from "
                                                   "a certain IP-address before it bans this IP") + "\n> ",
-                                  try_int=True, int_high_than=1, int_low_than=101)
-        if cls.get_secure_auth().days_before_ip_expires < 2 or cls.get_secure_auth().days_before_ip_expires > 90:
+                                  try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=100)
+        if cls.get_secure_auth().days_before_ip_expires < 1 or cls.get_secure_auth().days_before_ip_expires > 90:
             cls._need_to_rewrite = True
             cls.get_secure_auth().days_before_ip_expires = \
                 cls._ask_for_data(
                     get_translation("Enter how many days IP-address will be valid before it expires (int)") +
-                    "\n> ", try_int=True, int_high_than=1, int_low_than=91)
-        if cls.get_secure_auth().days_before_ip_will_be_deleted < cls.get_secure_auth().days_before_ip_expires + 1 or \
+                    "\n> ", try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=90)
+        if cls.get_secure_auth().days_before_ip_will_be_deleted < cls.get_secure_auth().days_before_ip_expires or \
                 cls.get_secure_auth().days_before_ip_will_be_deleted > 356:
             cls._need_to_rewrite = True
             cls.get_secure_auth().days_before_ip_will_be_deleted = \
                 cls._ask_for_data(
-                    get_translation("Enter in how many days expired IP-address will be deleted (int)") +
-                    "\n> ", try_int=True, int_high_than=cls.get_secure_auth().days_before_ip_expires, int_low_than=357)
-        if cls.get_secure_auth().code_length < 2 or \
+                    get_translation("Enter in how many days expired IP-address will be deleted (int)") + "\n> ",
+                    try_int=True, int_high_or_equal_than=cls.get_secure_auth().days_before_ip_expires,
+                    int_low_or_equal_than=356)
+        if cls.get_secure_auth().code_length < 1 or \
                 cls.get_secure_auth().code_length > 60:
             cls._need_to_rewrite = True
             cls.get_secure_auth().code_length = \
                 cls._ask_for_data(
                     get_translation("Enter how many characters the code should consist of (default - 6, int)") + "\n> ",
-                    try_int=True, int_high_than=1, int_low_than=61)
-        if cls.get_secure_auth().mins_before_code_expires < 2 or cls.get_secure_auth().mins_before_code_expires > 30:
+                    try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=60)
+        if cls.get_secure_auth().mins_before_code_expires < 1 or cls.get_secure_auth().mins_before_code_expires > 30:
             cls._need_to_rewrite = True
             cls.get_secure_auth().mins_before_code_expires = \
                 cls._ask_for_data(get_translation("Enter how many minutes code will be valid before it expires (int)") +
-                                  "\n> ", try_int=True, int_high_than=1, int_low_than=31)
+                                  "\n> ", try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=30)
 
         if cls.get_secure_auth().enable_secure_auth:
             print(get_translation("Secure authorization enabled."))
@@ -1500,12 +1515,12 @@ class Config:
                     else:
                         print(get_translation("RSS wouldn't work. Enter url of RSS feed to bot config!"))
 
-                if cls.get_rss_feed_settings().rss_download_delay < 2 or \
+                if cls.get_rss_feed_settings().rss_download_delay < 1 or \
                         cls.get_rss_feed_settings().rss_download_delay > 1440:
                     print(get_translation("RSS download delay doesn't set."))
                     cls.get_rss_feed_settings().rss_download_delay = \
                         cls._ask_for_data(get_translation("Enter RSS download delay (in seconds, int)") + "\n> ",
-                                          try_int=True, int_high_than=1, int_low_than=1441)
+                                          try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=1440)
 
                 cls.get_rss_feed_settings().rss_last_date = \
                     datetime.now().replace(microsecond=0).isoformat()
@@ -1531,22 +1546,22 @@ class Config:
             cls._need_to_rewrite = True
             cls.get_backups_settings().period_of_automatic_backups = \
                 cls._ask_for_data(get_translation("Set period of automatic backups (in minutes, int)") + "\n> ",
-                                  try_int=True, int_high_than=0, int_low_than=1441)
+                                  try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=1440)
         if not cls.get_backups_settings().name_of_the_backups_folder:
             cls._need_to_rewrite = True
             cls.get_backups_settings().name_of_the_backups_folder = \
                 cls._ask_for_data(get_translation("Enter name of the backups folder for each Minecraft server") +
                                   "\n> ")
         if cls.get_backups_settings().max_backups_limit_for_server is not None and \
-                (cls.get_backups_settings().max_backups_limit_for_server < 2 or
-                 cls.get_backups_settings().max_backups_limit_for_server > 1000):
+                (cls.get_backups_settings().max_backups_limit_for_server < 1 or
+                 cls.get_backups_settings().max_backups_limit_for_server > 100):
             cls._need_to_rewrite = True
             if cls._ask_for_data(
                     get_translation("Max backups' count limit for server not found. Would you like to set it?") +
                     " Y/n\n> ", "y"):
                 cls.get_backups_settings().max_backups_limit_for_server = \
                     cls._ask_for_data(get_translation("Set max backups' count limit for server (int)") + "\n> ",
-                                      try_int=True, int_high_than=1, int_low_than=1001)
+                                      try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=100)
             else:
                 cls.get_backups_settings().max_backups_limit_for_server = None
         if cls.get_backups_settings().size_limit_for_server is not None and \
@@ -1567,7 +1582,7 @@ class Config:
                         break
                 size = cls._ask_for_data(
                     get_translation("Backups' size limit for server in {0} (int)").format(unit_of_bytes) + "\n> ",
-                    try_int=True, int_high_than=1, int_low_than=100000)
+                    try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=100000)
                 cls.get_backups_settings().size_limit_for_server = f"{size}{unit_of_bytes}"
             else:
                 cls.get_backups_settings().size_limit_for_server = None

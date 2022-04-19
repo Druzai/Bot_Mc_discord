@@ -21,7 +21,7 @@
     * Secure authorization
         * **Can't guarantee tight security when nickname has spaces** (bot can't kick these players because of Minecraft
           server)
-        * Players' nicks mustn't contain `*` at the start and these characters: `[`,`]`,`<`,`>`
+        * Players' nicks mustn't contain these characters: `[`,`]`,`<`,`>`
         * Has options to ban and unban IP-address regardless of whether secure authorization is enabled or not
     * Autoload if the Minecraft server crashes
     * Auto stop if the Minecraft server online during certain period of time without players
