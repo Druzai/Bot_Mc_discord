@@ -58,11 +58,6 @@ class Poll(commands.Cog):
             seconds += 1
             if timeout <= seconds:
                 current_poll.cancel()
-            if seconds % 10 == 0:
-                try:
-                    _ = await channel.fetch_message(poll_msg.id)
-                except (NotFound, Forbidden, HTTPException):
-                    current_poll.cancel()
         if add_str_count or add_mention or message is not None:
             with suppress(NotFound, Forbidden, HTTPException):
                 await start_msg.delete()
@@ -135,6 +130,11 @@ class Poll(commands.Cog):
         else:
             user = payload.member
         await current_poll.count_del_voice(channel, user, payload.emoji.name == self._emoji_symbols["yes"])
+
+    @commands.Cog.listener()
+    async def on_raw_message_delete(self, payload):
+        if payload.message_id in self.get_polls().keys():
+            self.get_polls()[payload.message_id].cancel()
 
     async def timer(self, ctx, seconds: int, command: str):
         if (datetime.now() - self._await_date[command]).seconds > seconds:  # Starting a poll
