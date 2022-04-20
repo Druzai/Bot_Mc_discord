@@ -507,8 +507,10 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                         groups = [f"**{escape_markdown(g)}**" for g in groups]
                         msg = get_translation(DEATH_MESSAGES[regex]).format(*groups)
                         if death_message != msg:
-                            BotVars.webhook_chat.send(msg, username=get_translation("Server"),
-                                                      avatar_url=BotVars.bot_for_webhooks.user.avatar_url)
+                            avatar_url = Config.get_cross_platform_chat_settings().avatar_url_for_death_messages
+                            if avatar_url is None:
+                                avatar_url = BotVars.bot_for_webhooks.user.avatar_url
+                            BotVars.webhook_chat.send(msg, username=get_translation("Obituary"), avatar_url=avatar_url)
                             death_message = msg
                         break
                 continue

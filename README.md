@@ -44,6 +44,9 @@
         * Custom emojis are converted to text with their own text name and hyperlink to img of emoji if applicable
         * Minecraft players can send custom emojis typing `:emoji_name:`
         * Most of the standard unicode emojis are not processed by the vanilla Minecraft server
+    * Logging of death messages from Minecraft
+        * If you set custom image link in bot config and getting standard avatar in webhook message then your image link
+          is invalid!
     * Some features may not work in versions lower than `1.7.2`!
 * Setting up optional rss feed. Bot will send new items of feed to Discord text channel via webhook
 

@@ -9,6 +9,7 @@ from locale import getdefaultlocale
 from os import mkdir, listdir, remove, getcwd
 from os.path import isfile, isdir
 from pathlib import Path
+from re import search
 from secrets import choice as sec_choice
 from shutil import rmtree
 from string import ascii_letters, digits
@@ -74,6 +75,7 @@ class Cross_platform_chat:
     enable_cross_platform_chat: Optional[bool] = None
     channel_id: Optional[int] = None
     webhook_url: Optional[str] = None
+    avatar_url_for_death_messages: Optional[str] = None
     max_words_in_mention: Optional[int] = None
     max_wrong_symbols_in_mention_from_right: Optional[int] = None
 
@@ -894,12 +896,17 @@ class Config:
     def _ask_for_data(message: str, match_str: Optional[str] = None, try_int=False,
                       int_high_or_equal_than: Optional[int] = None, int_low_or_equal_than: Optional[int] = None,
                       try_float=False, float_high_or_equal_than: Optional[float] = None,
-                      float_low_or_equal_than: Optional[float] = None):
+                      float_low_or_equal_than: Optional[float] = None, try_link=False):
         while True:
             answer = str(input(message)).strip()
             if answer != "":
                 if match_str is not None and answer.lower() != match_str:
                     return False
+                if try_link:
+                    if search(r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|%[0-9a-fA-F][0-9a-fA-F])+", answer):
+                        return answer
+                    else:
+                        continue
                 if try_int or int_high_or_equal_than is not None or int_low_or_equal_than is not None:
                     try:
                         if int_high_or_equal_than is not None and int(answer) < int_high_or_equal_than:
@@ -1405,7 +1412,8 @@ class Config:
                             get_translation("Channel id not found. Would you like to enter it?") + " Y/n\n> ",
                             "y"):
                         cls.get_cross_platform_chat_settings().channel_id = \
-                            cls._ask_for_data(get_translation("Enter channel id") + "\n> ")
+                            cls._ask_for_data(get_translation("Enter channel id") + "\n> ",
+                                              try_int=True, int_high_or_equal_than=1)
                     else:
                         print(get_translation("Cross-platform chat wouldn't work. "
                                               "To make it work type '{0}chat <id>' to create link.")
@@ -1415,10 +1423,17 @@ class Config:
                     if cls._ask_for_data(get_translation("Webhook url for cross-platform chat not found. "
                                                          "Would you like to enter it?") + " Y/n\n> ", "y"):
                         cls.get_cross_platform_chat_settings().webhook_url = \
-                            cls._ask_for_data(get_translation("Enter webhook url") + "\n> ")
+                            cls._ask_for_data(get_translation("Enter webhook url") + "\n> ", try_link=True)
                     else:
                         print(get_translation(
                             "Cross-platform chat wouldn't work. Create webhook and enter it to bot config!"))
+                if cls.get_cross_platform_chat_settings().avatar_url_for_death_messages is None:
+                    if cls._ask_for_data(get_translation("Avatar url for death messages chat not found. "
+                                                         "Would you like to enter it?") + " Y/n\n> ", "y"):
+                        cls.get_cross_platform_chat_settings().avatar_url_for_death_messages = \
+                            cls._ask_for_data(get_translation("Enter url for avatar image") + "\n> ", try_link=True)
+                    else:
+                        print(get_translation("Avatar url for death messages would be taken from bot's avatar."))
             else:
                 cls.get_cross_platform_chat_settings().enable_cross_platform_chat = False
                 print(get_translation("Cross-platform chat wouldn't work."))
@@ -1503,7 +1518,7 @@ class Config:
                     if cls._ask_for_data(get_translation("Webhook RSS url not found. Would you like to enter it?") +
                                          " Y/n\n> ", "y"):
                         cls.get_rss_feed_settings().webhook_url = \
-                            cls._ask_for_data(get_translation("Enter webhook RSS url") + "\n> ")
+                            cls._ask_for_data(get_translation("Enter webhook RSS url") + "\n> ", try_link=True)
                     else:
                         print(get_translation("RSS wouldn't work. Create webhook and enter it to bot config!"))
 
@@ -1511,7 +1526,7 @@ class Config:
                     if cls._ask_for_data(
                             get_translation("RSS url not found. Would you like to enter it?") + " Y/n\n> ", "y"):
                         cls.get_rss_feed_settings().rss_url = cls._ask_for_data(
-                            get_translation("Enter RSS url") + "\n> ")
+                            get_translation("Enter RSS url") + "\n> ", try_link=True)
                     else:
                         print(get_translation("RSS wouldn't work. Enter url of RSS feed to bot config!"))
 
