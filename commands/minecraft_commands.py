@@ -305,14 +305,14 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
-    async def a_add(self, ctx, discord_mention: Member, minecraft_nick: str):
+    async def a_add(self, ctx, discord_mention: Member, *, minecraft_nick: str):
         await bot_associate(ctx, self._bot, discord_mention, "add", minecraft_nick)
 
     @associate.command(pass_context=True, name="del", aliases=["remove"], ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
-    async def a_del(self, ctx, discord_mention: Member, minecraft_nick: str):
+    async def a_del(self, ctx, discord_mention: Member, *, minecraft_nick: str):
         await bot_associate(ctx, self._bot, discord_mention, "del", minecraft_nick)
 
     @commands.group(pass_context=True, aliases=["auth"], invoke_without_command=True)

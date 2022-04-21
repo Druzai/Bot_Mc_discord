@@ -36,7 +36,7 @@ from requests import post as req_post, get as req_get
 
 from commands.poll import Poll
 from components.decorators import MissingAdminPermissions
-from components.localization import get_translation
+from components.localization import get_translation, get_locales, get_current_locale, set_locale
 from components.rss_feed_handle import create_feed_webhook
 from components.watcher_handle import create_watcher, create_chat_webhook
 from config.init_config import Config, BotVars, ServerProperties
@@ -1259,8 +1259,28 @@ async def bot_backup(ctx, bot: commands.Bot, is_reaction=False):
     await send_msg(ctx, add_quotes(bot_message), is_reaction)
 
 
+def check_if_string_in_all_translations(translate_text: str, match_text: str):
+    current_locale = get_current_locale()
+    list_of_locales = get_locales()
+    list_of_locales.remove(current_locale)
+    list_of_locales.append(current_locale)
+    for locale in list_of_locales:
+        set_locale(locale)
+        if match_text == get_translation(translate_text):
+            if locale != current_locale:
+                set_locale(current_locale)
+            return True
+    return False
+
+
 async def bot_associate(ctx, bot: commands.Bot, discord_mention: Member, assoc_command: str, minecraft_nick: str):
     need_to_save = False
+
+    if "☠ " in minecraft_nick and \
+            check_if_string_in_all_translations(translate_text="☠ Obituary ☠", match_text=minecraft_nick):
+        await ctx.send(get_translation("{0}, you don't have permission to control fates! "
+                                       "Not in this life at least...").format(discord_mention.mention))
+        return
 
     if assoc_command == "add":
         if minecraft_nick in [u.user_minecraft_nick for u in Config.get_known_users_list()]:
@@ -2268,7 +2288,13 @@ def _build_nickname_tellraw_for_minecraft_player(server_version: int, nick: str,
     if server_version > 7 and len(nick.split()) == 1 and nick in get_server_players().get("players"):
         tellraw_obj += [{"selector": f"@p[name={nick}]"}]
     elif server_version > 7:
-        hover_string = ["", {"text": f"{nick}\n" + get_translation("Type: Player") + f"\n{get_offline_uuid(nick)}"}]
+        if "☠ " in nick and \
+                check_if_string_in_all_translations(translate_text="☠ Obituary ☠", match_text=nick):
+            entity = get_translation("Entity")
+        else:
+            entity = get_translation("Player")
+        hover_string = ["", {"text": f"{nick}\n" + get_translation("Type: {0}").format(entity) +
+                                     f"\n{get_offline_uuid(nick)}"}]
         if server_version > 11:
             hover_string += [{"text": "\nShift + "}, {"keybind": "key.attack"}]
         tellraw_obj += [{"text": nick,

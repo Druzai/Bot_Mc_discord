@@ -447,8 +447,10 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                                     f"{user_attempts}/{Config.get_secure_auth().max_login_attempts}",
                                     datetime.now().strftime(get_translation("%H:%M:%S %d/%m/%Y")))
                         msg = add_quotes(msg) + "\n"
+                        nick_for_command = nick if " " not in nick else f"\"{nick}\""
                         msg += get_translation("To proceed enter command `{0}` within {1} min") \
-                                   .format(f"{Config.get_settings().bot_settings.prefix}auth login {nick} <code>",
+                                   .format(f"{Config.get_settings().bot_settings.prefix}auth login "
+                                           f"{nick_for_command} <code>",
                                            Config.get_secure_auth().mins_before_code_expires) + "\n"
                         msg += get_translation("To ban this IP-address enter command `{0}`") \
                             .format(f"{Config.get_settings().bot_settings.prefix}auth ban {ip_address} [reason]")
@@ -510,7 +512,8 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                             avatar_url = Config.get_cross_platform_chat_settings().avatar_url_for_death_messages
                             if avatar_url is None:
                                 avatar_url = BotVars.bot_for_webhooks.user.avatar_url
-                            BotVars.webhook_chat.send(msg, username=get_translation("Obituary"), avatar_url=avatar_url)
+                            BotVars.webhook_chat.send(msg, username=get_translation("☠ Obituary ☠"),
+                                                      avatar_url=avatar_url)
                             death_message = msg
                         break
                 continue

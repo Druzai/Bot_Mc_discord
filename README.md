@@ -19,8 +19,7 @@
     * Get info about players on the server
     * Work with server whitelist
     * Secure authorization
-        * **Can't guarantee tight security when nickname has spaces** (bot can't kick these players because of Minecraft
-          server)
+        * **Can't guarantee security when nick has spaces!** (bot can't kick these players because of Minecraft server)
         * Players' nicks mustn't contain these characters: `[`,`]`,`<`,`>`
         * Has options to ban and unban IP-address regardless of whether secure authorization is enabled or not
     * Autoload if the Minecraft server crashes
@@ -28,6 +27,7 @@
     * Auto backup at specified intervals and forced backup by member
         * Auto deleting backup(s) if backup's limit or space exceeded
     * Make yourself an operator for limited amount of time if your Discord account has association with Minecraft nick
+        * **Bot can't do it when nick has spaces!**
 * Changing Minecraft servers on the go while server is down
 * Setting an optional role in Discord. If set then the bot commands for managing the Minecraft server will require this
   role from the member
