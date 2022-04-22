@@ -20,13 +20,13 @@ install: $(target) $(_clean)
 dist_build/Discord_bot.exe:
 	py ./locales/generate_mo.py
 	@echo Translations generated
-	pyinstaller -F --distpath=./dist_build Discord_bot.spec
+	pyinstaller --distpath=./dist_build Discord_bot.spec
 	@echo Built
 
 dist_build/Discord_bot:
 	python3 ./locales/generate_mo.py
 	@echo Translations generated
-	pyinstaller -F --distpath=./dist_build Discord_bot.spec
+	pyinstaller --distpath=./dist_build Discord_bot.spec
 	@echo Built
 
 clear_lin:
