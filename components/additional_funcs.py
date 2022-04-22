@@ -2509,12 +2509,12 @@ if len(argv) > 1 and argv[1] == "-g":
                 'Evoker Fangs', 'Evoker', 'Falling Block', 'Fireball', 'Firework Rocket', 'Ghast', 'Giant', 'Goat',
                 'Guardian', 'Hoglin', 'Husk', 'Ravager', 'Illusioner', 'The Killer Bunny', 'Lightning Bolt', 'Llama',
                 'Llama Spit', 'Magma Cube', 'Ocelot', 'Panda', 'Phantom', 'Piglin', 'Piglin Brute', 'Pillager',
-                'Polar Bear', 'Shulker', 'Shulker Bullet', 'Skeleton', 'Slime', 'Small Fireball', 'Snowball',
-                'Snow Golem', 'Spectral Arrow', 'Spider', 'Stray', 'Strider', 'Primed TNT', 'Trident', 'Vex', 'Butcher',
-                'Cartographer', 'Cleric', 'Farmer', 'Fletcher', 'Leatherworker', 'Librarian', 'Mason', 'Nitwit',
-                'Shepherd', 'Toolsmith', 'Weaponsmith', 'Villager', 'Iron Golem', 'Witch', 'Wither', 'Wither Skeleton',
-                'Wither Skull', 'Wolf', 'Zoglin', 'Zombie', 'Zombified Piglin', 'Zombie Villager',
-                '[Intentional Game Design]', 'Zombie Pigman', 'Warden']
+                'Polar Bear', 'Pufferfish', 'Shulker', 'Shulker Bullet', 'Silverfish', 'Skeleton', 'Slime',
+                'Small Fireball', 'Snowball', 'Snow Golem', 'Spectral Arrow', 'Spider', 'Stray', 'Strider',
+                'Primed TNT', 'Trident', 'Vex', 'Butcher', 'Cartographer', 'Cleric', 'Farmer', 'Fisherman', 'Fletcher',
+                'Leatherworker', 'Librarian', 'Mason', 'Nitwit', 'Shepherd', 'Toolsmith', 'Weaponsmith', 'Villager',
+                'Iron Golem', 'Vindicator', 'Witch', 'Wither', 'Wither Skeleton', 'Wither Skull', 'Wolf', 'Zoglin',
+                'Zombie', 'Zombified Piglin', 'Zombie Villager', '[Intentional Game Design]', 'Zombie Pigman', 'Warden']
 
     for un in UNITS:
         RuntimeTextHandler.add_translation(un)

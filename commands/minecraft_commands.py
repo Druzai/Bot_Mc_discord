@@ -788,10 +788,10 @@ class MinecraftCommands(commands.Cog):
                 await ctx.send(add_quotes(get_translation("My, you have chosen selected server, insane?)\n"
                                                           " ...Patsan ramsi poputal")))
                 return
-            if BotVars.is_server_on:
-                await ctx.send(add_quotes(get_translation(
-                    "You can't change servers, while some instance(s) is/are still running\n"
-                    "Please stop them, before trying again")))
+            if BotVars.is_server_on or BotVars.is_loading or BotVars.is_stopping or BotVars.is_restarting:
+                await ctx.send(add_quotes(
+                    get_translation("You can't change server, while some instance is still running\n"
+                                    "Please stop it, before trying again")))
                 return
 
             if BotVars.watcher_of_log_file is not None:

@@ -70,11 +70,11 @@ def main():
         if len(argv) == 1 or (len(argv) > 1 and argv[1] == "-cs"):
             Config.read_config(change_servers=(len(argv) > 1 and argv[1] == "-cs"))
             setup_print_handlers()
-        bot = commands.Bot(command_prefix=get_prefix, intents=Intents.all())
-        bot.remove_command("help")
+        bot = commands.Bot(command_prefix=get_prefix, intents=Intents.all(), help_command=None)
         for i in [Poll, ChatCommands, MinecraftCommands]:
             bot.add_cog(i(bot))
         create_pot_lines(bot)
+        print(get_translation("Bot started!"))
         BotVars.bot_for_webhooks = bot
         Config.read_server_info()
         print(get_translation("Server info read!"))
