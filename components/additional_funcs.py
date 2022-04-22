@@ -226,7 +226,7 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
         return
     chdir(Config.get_bot_config_path())
     check_time = datetime.now()
-    last_change_presence = datetime.now() - timedelta(seconds=4)
+    last_presence_change = datetime.now() - timedelta(seconds=4)
     while True:
         timedelta_secs = (datetime.now() - check_time).seconds
         if len(get_list_of_processes()) == 0 and timedelta_secs > 5:
@@ -241,7 +241,7 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
             if BotVars.is_restarting:
                 BotVars.is_restarting = False
             return
-        if (datetime.now() - last_change_presence).seconds >= 4:
+        if (datetime.now() - last_presence_change).seconds >= 4:
             if Config.get_selected_server_from_list().server_loading_time:
                 percentage = round((timedelta_secs / Config.get_selected_server_from_list().server_loading_time) * 100)
                 output_bot = get_translation("Loading: ") + ((str(percentage) + "%") if percentage < 101 else "100%...")
@@ -250,7 +250,7 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
                                  .format(Config.get_settings().bot_settings.idle_status) \
                              + get_time_string(timedelta_secs, True)
             await bot.change_presence(activity=Activity(type=ActivityType.listening, name=output_bot))
-            last_change_presence = datetime.now()
+            last_presence_change = datetime.now()
         await asleep(Config.get_timeouts_settings().await_seconds_when_connecting_via_rcon)
         with suppress(ConnectionError, socket.error):
             with connect_query() as cl_q:
@@ -562,6 +562,7 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
         comp = ZIP_DEFLATED
     total = 0
     dt = datetime.now()
+    last_message_change = datetime.now() - timedelta(seconds=4)
     # Count size of all files in directory
     for root, _, files in walk(dir_path):
         for fname in files:
@@ -629,11 +630,12 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
                 fn = Path(root, file)
                 afn = fn.relative_to(dir_path)
                 if forced:
-                    timedelta_secs = (datetime.now() - dt).seconds
-                    if timedelta_secs % 4 == 0:
+                    if (datetime.now() - last_message_change).seconds >= 4:
+                        timedelta_secs = (datetime.now() - dt).seconds
                         percent = round(100 * current / total)
-                        yield add_quotes(f"diff\n{percent}% {get_time_string(timedelta_secs, True)} '{afn}'\n"
+                        yield add_quotes(f"diff\n{percent}% {get_time_string(timedelta_secs, False)} '{afn}'\n"
                                          f"- |{'█' * (percent // 5)}{' ' * (20 - percent // 5)}|")
+                        last_message_change = datetime.now()
                 tries = 0
                 while tries < 3:
                     with suppress(PermissionError):
