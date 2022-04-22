@@ -34,9 +34,10 @@
 * Setting an optional admin role in Discord. If set then commands that interacts with Minecraft server commands will
   execute if member has admin role. Otherwise, member must have `Administrator` permission.
 * Creating optional cross-platform chat between Discord text channel and Minecraft server via bot and webhook
-    * Supported mentions in Discord and Minecraft (also for better recognition you can create list of associations
-      between Discord member and Minecraft nick)
-    * Supported edited messages from Discord and editing messages from Minecraft (message should start with single `*`)
+    * Supported mentions in Discord and Minecraft
+        * Also for better recognition you can create list of associations between Discord member and Minecraft nick
+    * Supported edited messages from Discord and editing messages from Minecraft
+        * Message should start with single `*` or with `*` and space if edited message should start with `**`
     * Supported Discord reply in message
     * Supported url links (shortens if link longer than 256 symbols)
     * Supported attached files to message in Discord
@@ -74,6 +75,7 @@ If you want to see help on all bot's commands use `help` command when bot is run
 Note: some commands will require optional role or/and admin role if you set them in bot config.
 
 To enable cross-platform chat you need to enter in bot setup channel id (or use `chat` command) and webhook url!
+
 And to enable rss feed you also need webhook url!
 
 [How to create webhook and get its url.](https://github.com/Akizo96/de.isekaidev.discord.wbbBridge/wiki/How-to-get-Webhook-ID-&-Token)
@@ -91,7 +93,8 @@ Supported 2 languages:
 ## Requirements
 
 * [Python 3.8-3.10](https://www.python.org/downloads/)
-* For Linux required [screen](https://linuxize.com/post/how-to-use-linux-screen/) command
+* For Linux
+    * Required installed [screen](https://linuxize.com/post/how-to-use-linux-screen/) command
 * Minecraft server not lower than version `1.0.0`
     * Run server 1 or 2 times to accept `eula` and generate `server.properties`
 
@@ -116,7 +119,7 @@ pip install -r requirements.txt
 
 ### Build with pyinstaller
 
-Firstly, you have to install pyinstaller via `pip install pyinstaller==4.0`.
+Firstly, you have to install pyinstaller via `pip install pyinstaller==5.0`.
 
 Type in command prompt `make` in root directory of the project to build it.
 
@@ -124,7 +127,7 @@ Executable file will be in `%project_root_dir%/build_dist`.
 
 ## Run
 
-**Important! If you running Minecraft server between versions  `1.7.2` and `1.18` to avoid critical security
+**Important! If you running Minecraft server between versions `1.7.2` and `1.18` to avoid critical security
 vulnerability `Log4Shell` do instructions stated in
 this [article](https://www.minecraft.net/en-us/article/important-message--security-vulnerability-java-edition)!**
 
