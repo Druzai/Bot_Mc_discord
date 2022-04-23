@@ -32,31 +32,31 @@ All important changes to this project will be documented in this file.
 * Fixed and rewrote many translations
 * Added support of servers' version lower than `1.7.6` for `whitelist` and `op` command
 * Added support of deletion of some nicks for `whitelist` command
-* Better handling on versions lower than `1.7.6` for files: `banned-ips.txt`/`banned-ips.json`, `ops.txt`/`ops.json` and `white-list.txt`/`whitelist.json`
+* Better handling on versions lower than `1.7.6` for files: `banned-ips.txt`, `ops.txt` and `white-list.txt`
 * Fixed handling long tellraw objects and improved their building
 * Speeded up deletion of messages in `clear` command
 
 #### Changes in bot commands
 
 * Changed commands:
-  * Renamed `servers` to `server` and alias `servs` to `serv`
-  * Moved logic:
-    * From `servers show` to `server`
-    * From `ops history` to `op history`
-    * From `ops` to `op info`
-    * From `forceload` to `schedule forceload`
-  * Created commands: `associate add` and `associate del`
-  * Added alias `associate` to `assoc`
-  * Added alias `authorize` to `auth`
-  * Added alias `ls` to all `list` subcommands
-  * Added alias `to` to `reply` subcommand of `clear`
+    * Renamed `servers` to `server` and alias `servs` to `serv`
+    * Moved logic:
+        * From `servers show` to `server`
+        * From `ops history` to `op history`
+        * From `ops` to `op info`
+        * From `forceload` to `schedule forceload`
+    * Created commands: `associate add` and `associate del`
+    * Added alias `associate` to `assoc`
+    * Added alias `authorize` to `auth`
+    * Added alias `ls` to all `list` subcommands
+    * Added alias `to` to `reply` subcommand of `clear`
 
 #### Breaking changes:
 
 * Changed `specific_command_role_id` to `managing_commands_role_id` in bot's configuration file
-* Changed in file `server_config.yml`:
-  * Field `initiator` in category `backups` from `Optional[str]` to `Optional[int]`
-  * Field `user` in category `states` from `Optional[str]` to `Optional[int]`
+* Changed in file `server_config.yml` (**save world backups before starting the new bot's version cause bot will delete them!**):
+    * Field `initiator` in category `backups` from `Optional[str]` to `Optional[int]`
+    * Field `user` in category `states` from `Optional[str]` to `Optional[int]`
 
 ### [1.2.3](https://github.com/Druzai/Bot_Mc_discord/compare/1.2.2...1.2.3) (2021-12-19)
 
