@@ -2506,17 +2506,15 @@ class Error_file_handler:
 if len(argv) > 1 and argv[1] == "-g":
     from components.localization import RuntimeTextHandler
 
-    entities = ['Area Effect Cloud', 'Arrow', 'Axolotl', 'Bee', 'Blaze', 'Cave Spider', 'Creeper', 'Drowned',
-                'Dragon Fireball', 'Elder Guardian', 'End Crystal', 'Ender Dragon', 'Enderman', 'Endermite',
-                'Evoker Fangs', 'Evoker', 'Falling Block', 'Fireball', 'Firework Rocket', 'Ghast', 'Giant', 'Goat',
-                'Guardian', 'Hoglin', 'Husk', 'Ravager', 'Illusioner', 'The Killer Bunny', 'Lightning Bolt', 'Llama',
-                'Llama Spit', 'Magma Cube', 'Ocelot', 'Panda', 'Phantom', 'Piglin', 'Piglin Brute', 'Pillager',
-                'Polar Bear', 'Pufferfish', 'Shulker', 'Shulker Bullet', 'Silverfish', 'Skeleton', 'Slime',
-                'Small Fireball', 'Snowball', 'Snow Golem', 'Spectral Arrow', 'Spider', 'Stray', 'Strider',
-                'Primed TNT', 'Trident', 'Vex', 'Butcher', 'Cartographer', 'Cleric', 'Farmer', 'Fisherman', 'Fletcher',
+    entities = ['Axolotl', 'Bee', 'Blaze', 'Cave Spider', 'Creeper', 'Drowned', 'Dragon Fireball', 'Elder Guardian',
+                'End Crystal', 'Ender Dragon', 'Enderman', 'Endermite', 'Evoker', 'Falling Block', 'Ghast', 'Giant',
+                'Goat', 'Guardian', 'Hoglin', 'Husk', 'Ravager', 'Illusioner', 'The Killer Bunny', 'Lightning Bolt',
+                'Llama', 'Magma Cube', 'Ocelot', 'Panda', 'Phantom', 'Piglin', 'Piglin Brute', 'Pillager', 'Polar Bear',
+                'Pufferfish', 'Shulker', 'Silverfish', 'Skeleton', 'Slime', 'Snow Golem', 'Spider', 'Stray', 'Strider',
+                'Trader Llama', 'Vex', 'Butcher', 'Cartographer', 'Cleric', 'Farmer', 'Fisherman', 'Fletcher',
                 'Leatherworker', 'Librarian', 'Mason', 'Nitwit', 'Shepherd', 'Toolsmith', 'Weaponsmith', 'Villager',
-                'Iron Golem', 'Vindicator', 'Witch', 'Wither', 'Wither Skeleton', 'Wither Skull', 'Wolf', 'Zoglin',
-                'Zombie', 'Zombified Piglin', 'Zombie Villager', '[Intentional Game Design]', 'Zombie Pigman', 'Warden']
+                'Iron Golem', 'Vindicator', 'Witch', 'Wither', 'Wither Skeleton', 'Wolf', 'Zoglin', 'Zombie',
+                'Zombified Piglin', 'Zombie Villager', '[Intentional Game Design]', 'Zombie Pigman', 'Warden']
 
     for un in UNITS:
         RuntimeTextHandler.add_translation(un)
