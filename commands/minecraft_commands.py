@@ -7,12 +7,12 @@ from pathlib import Path
 from random import randint
 from re import search
 from sys import argv
+from typing import TYPE_CHECKING
 
-from discord import Embed, Color as d_Color, DMChannel, Member
+from discord import Embed, Color as d_Color, DMChannel, Member, RawReactionActionEvent
 from discord.ext import commands, tasks
 from psutil import disk_usage
 
-from commands.poll import Poll
 from components import decorators
 from components.additional_funcs import (
     server_checkups, send_error, send_status, save_to_whitelist_json, get_whitelist_entry, get_server_players,
@@ -27,6 +27,9 @@ from components.additional_funcs import (
 from components.localization import get_translation
 from config.init_config import BotVars, Config, ServerProperties
 
+if TYPE_CHECKING:
+    from commands.poll import Poll
+
 
 class MinecraftCommands(commands.Cog):
     _emoji_symbols = {"status": "🗨", "list": "📋", "backup": "💾", "start": "♿",
@@ -34,20 +37,20 @@ class MinecraftCommands(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self._bot: commands.Bot = bot
-        self._IndPoll: Poll = bot.get_cog("Poll")
+        self._IndPoll: 'Poll' = bot.get_cog("Poll")
         self._backups_thread = BackupsThread(self._bot)
         if len(argv) == 1:
             self._backups_thread.start()
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
-    async def status(self, ctx):
+    async def status(self, ctx: commands.Context):
         """Shows server status"""
         await bot_status(ctx, self._bot)
 
     @commands.command(pass_context=True, aliases=["ls"])
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
-    async def list(self, ctx):
+    async def list(self, ctx: commands.Context):
         """Shows list of players"""
         await bot_list(ctx, self._bot)
 
@@ -55,7 +58,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def start(self, ctx):
+    async def start(self, ctx: commands.Context):
         """Start server"""
         await bot_start(ctx, self._bot, self._backups_thread)
 
@@ -64,7 +67,7 @@ class MinecraftCommands(commands.Cog):
                                   embed_links=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def stop(self, ctx, timeout: int = 0):
+    async def stop(self, ctx: commands.Context, timeout: int = 0):
         """Stop server"""
         await bot_stop(ctx, timeout, self._bot, self._IndPoll)
 
@@ -73,7 +76,7 @@ class MinecraftCommands(commands.Cog):
                                   embed_links=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def restart(self, ctx, timeout: int = 0):
+    async def restart(self, ctx: commands.Context, timeout: int = 0):
         """Restart server"""
         await bot_restart(ctx, timeout, self._bot, self._IndPoll, self._backups_thread)
 
@@ -81,7 +84,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def op(self, ctx, minecraft_nick: str, *, reasons: str = ""):
+    async def op(self, ctx: commands.Context, minecraft_nick: str, *, reasons: str = ""):
         doing_opping = BotVars.is_doing_op
         BotVars.is_doing_op = True
         if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and not BotVars.is_restarting:
@@ -213,7 +216,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def o_history(self, ctx, messages_from_end: int = 0):
+    async def o_history(self, ctx: commands.Context, messages_from_end: int = 0):
         if messages_from_end < 0:
             await ctx.send(add_quotes(get_translation("Wrong 1-st argument used!") + "\n" +
                                       get_translation("Integer must be above {0}!").format(0)))
@@ -247,7 +250,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def o_info(self, ctx, for_who: str, show: str):
+    async def o_info(self, ctx: commands.Context, for_who: str, show: str):
         """
         Get info about ops
         :param for_who: "me" or "everyone"
@@ -265,7 +268,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
-    async def o_timeout(self, ctx, new_value: int = None):
+    async def o_timeout(self, ctx: commands.Context, new_value: int = None):
         if new_value is None:
             await ctx.send(add_quotes(get_translation("Timeout for being operator in Minecraft set to {0} sec.")
                                       .format(Config.get_timeouts_settings().await_seconds_when_opped).strip(".") +
@@ -292,7 +295,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
-    async def associate(self, ctx, for_who: str):
+    async def associate(self, ctx: commands.Context, for_who: str):
         """Associates discord user with nick in Minecraft"""
         if for_who not in ["me", "everyone"]:
             await ctx.send(get_translation("Syntax:") +
@@ -305,20 +308,20 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
-    async def a_add(self, ctx, discord_mention: Member, *, minecraft_nick: str):
+    async def a_add(self, ctx: commands.Context, discord_mention: Member, *, minecraft_nick: str):
         await bot_associate(ctx, self._bot, discord_mention, "add", minecraft_nick)
 
     @associate.command(pass_context=True, name="del", aliases=["remove"], ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
-    async def a_del(self, ctx, discord_mention: Member, *, minecraft_nick: str):
+    async def a_del(self, ctx: commands.Context, discord_mention: Member, *, minecraft_nick: str):
         await bot_associate(ctx, self._bot, discord_mention, "del", minecraft_nick)
 
     @commands.group(pass_context=True, aliases=["auth"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
-    async def authorize(self, ctx):
+    async def authorize(self, ctx: commands.Context):
         msg = get_translation("Secure authorization on") if Config.get_secure_auth().enable_secure_auth \
             else get_translation("Secure authorization off")
         msg += "\n" + get_translation("Login attempts allowed - {0}") \
@@ -343,7 +346,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
-    async def a_on(self, ctx):
+    async def a_on(self, ctx: commands.Context):
         Config.get_secure_auth().enable_secure_auth = True
         Config.save_config()
         await ctx.send(add_quotes(get_translation("Secure authorization on")))
@@ -352,7 +355,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
-    async def a_off(self, ctx):
+    async def a_off(self, ctx: commands.Context):
         Config.get_secure_auth().enable_secure_auth = False
         Config.save_config()
         await ctx.send(add_quotes(get_translation("Secure authorization off")))
@@ -360,7 +363,7 @@ class MinecraftCommands(commands.Cog):
     @authorize.command(pass_context=True, name="login", ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @decorators.has_role_or_default()
-    async def a_login(self, ctx, nick: str, code: str):
+    async def a_login(self, ctx: commands.Context, nick: str, code: str):
         if not Config.get_secure_auth().enable_secure_auth:
             await ctx.send(add_quotes(get_translation("Secure authorization is disabled. Enable it to proceed!")))
             return
@@ -416,7 +419,7 @@ class MinecraftCommands(commands.Cog):
     @authorize.command(pass_context=True, name="banlist")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @decorators.has_role_or_default()
-    async def a_banlist(self, ctx):
+    async def a_banlist(self, ctx: commands.Context):
         banned_ips = Config.get_list_of_banned_ips(get_server_version())
         if len(banned_ips) > 0:
             await ctx.send(add_quotes(get_translation("List of banned IP-addresses:") +
@@ -427,7 +430,7 @@ class MinecraftCommands(commands.Cog):
     @authorize.command(pass_context=True, name="ban")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @decorators.has_role_or_default()
-    async def a_ban(self, ctx, ip: IPAddress, *, reason: str = None):
+    async def a_ban(self, ctx: commands.Context, ip: IPAddress, *, reason: str = None):
         has_admin_rights = False
         if not isinstance(ctx.channel, DMChannel):
             with suppress(decorators.MissingAdminPermissions):
@@ -484,7 +487,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
-    async def a_unban(self, ctx, ip: IPAddress):
+    async def a_unban(self, ctx: commands.Context, ip: IPAddress):
         if len(Config.get_list_of_banned_ips(get_server_version())) == 0:
             await ctx.send(add_quotes(get_translation("There are no banned IP-addresses!")))
             return
@@ -503,7 +506,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def a_revoke(self, ctx, ip: IPAddress, nick: str = None):
+    async def a_revoke(self, ctx: commands.Context, ip: IPAddress, nick: str = None):
         if not Config.get_secure_auth().enable_secure_auth:
             await ctx.send(add_quotes(get_translation("Secure authorization is disabled. Enable it to proceed!")))
             return
@@ -569,7 +572,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
-    async def a_r_all(self, ctx):
+    async def a_r_all(self, ctx: commands.Context):
         if not Config.get_secure_auth().enable_secure_auth:
             await ctx.send(add_quotes(get_translation("Secure authorization is disabled. Enable it to proceed!")))
             return
@@ -602,7 +605,7 @@ class MinecraftCommands(commands.Cog):
     @commands.group(pass_context=True, aliases=["sch"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
-    async def schedule(self, ctx):
+    async def schedule(self, ctx: commands.Context):
         msg = bot_shutdown_info(with_timeout=Config.get_settings().bot_settings.auto_shutdown) + \
               "\n\n" + bot_forceload_info()
         await ctx.send(add_quotes(msg))
@@ -610,14 +613,14 @@ class MinecraftCommands(commands.Cog):
     @schedule.group(pass_context=True, name="shutdown", aliases=["sd"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
-    async def s_shutdown(self, ctx):
+    async def s_shutdown(self, ctx: commands.Context):
         await ctx.send(add_quotes(bot_shutdown_info()))
 
     @s_shutdown.command(pass_context=True, name="on")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def s_s_on(self, ctx):
+    async def s_s_on(self, ctx: commands.Context):
         Config.get_settings().bot_settings.auto_shutdown = True
         Config.save_config()
         await ctx.send(add_quotes(bot_shutdown_info(with_timeout=True)))
@@ -626,7 +629,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def s_s_off(self, ctx):
+    async def s_s_off(self, ctx: commands.Context):
         Config.get_settings().bot_settings.auto_shutdown = False
         Config.save_config()
         await ctx.send(add_quotes(bot_shutdown_info()))
@@ -635,7 +638,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def s_s_timeout(self, ctx, new_value: int = None):
+    async def s_s_timeout(self, ctx: commands.Context, new_value: int = None):
         if new_value is None:
             await ctx.send(add_quotes(bot_shutdown_info(with_timeout=True, only_timeout=True)))
         elif new_value < 0:
@@ -652,14 +655,14 @@ class MinecraftCommands(commands.Cog):
     @schedule.group(pass_context=True, name="forceload", aliases=["fl"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
-    async def s_forceload(self, ctx):
+    async def s_forceload(self, ctx: commands.Context):
         await ctx.send(add_quotes(bot_forceload_info()))
 
     @s_forceload.command(pass_context=True, name="on")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def s_f_on(self, ctx):
+    async def s_f_on(self, ctx: commands.Context):
         Config.get_settings().bot_settings.forceload = True
         Config.save_config()
         await ctx.send(add_quotes(bot_forceload_info()))
@@ -668,7 +671,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def s_f_off(self, ctx):
+    async def s_f_off(self, ctx: commands.Context):
         Config.get_settings().bot_settings.forceload = False
         Config.save_config()
         await ctx.send(add_quotes(bot_forceload_info()))
@@ -677,7 +680,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def whitelist(self, ctx):
+    async def whitelist(self, ctx: commands.Context):
         if ServerProperties().white_list:
             await ctx.send(add_quotes(get_translation("The server only allows players from the list of allowed nicks")))
         else:
@@ -687,7 +690,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def w_add(self, ctx, minecraft_nick: str):
+    async def w_add(self, ctx: commands.Context, minecraft_nick: str):
         async with handle_rcon_error(ctx):
             version = get_server_version()
             with connect_rcon() as cl_r:
@@ -703,7 +706,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def w_del(self, ctx, minecraft_nick: str):
+    async def w_del(self, ctx: commands.Context, minecraft_nick: str):
         async with handle_rcon_error(ctx):
             version = get_server_version()
             with connect_rcon() as cl_r:
@@ -723,7 +726,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def w_list(self, ctx):
+    async def w_list(self, ctx: commands.Context):
         async with handle_rcon_error(ctx):
             with connect_rcon() as cl_r:
                 white_list = cl_r.run("whitelist list")
@@ -741,7 +744,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def w_on(self, ctx):
+    async def w_on(self, ctx: commands.Context):
         async with handle_rcon_error(ctx):
             with connect_rcon() as cl_r:
                 cl_r.run("whitelist on")
@@ -752,7 +755,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def w_off(self, ctx):
+    async def w_off(self, ctx: commands.Context):
         async with handle_rcon_error(ctx):
             with connect_rcon() as cl_r:
                 cl_r.run("whitelist off")
@@ -763,7 +766,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def w_reload(self, ctx):
+    async def w_reload(self, ctx: commands.Context):
         async with handle_rcon_error(ctx):
             with connect_rcon() as cl_r:
                 cl_r.run("whitelist reload")
@@ -773,7 +776,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def server(self, ctx):
+    async def server(self, ctx: commands.Context):
         await ctx.send(add_quotes(get_translation("Selected server") + ": " +
                                   Config.get_selected_server_from_list().server_name +
                                   f" [{str(Config.get_settings().selected_server_number)}]"))
@@ -782,7 +785,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def s_select(self, ctx, selected_server: int):
+    async def s_select(self, ctx: commands.Context, selected_server: int):
         if 0 < selected_server <= len(Config.get_settings().servers_list):
             if selected_server == Config.get_settings().selected_server_number:
                 await ctx.send(add_quotes(get_translation("My, you have chosen selected server, insane?)\n"
@@ -814,7 +817,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def s_list(self, ctx):
+    async def s_list(self, ctx: commands.Context):
         total_numb = get_number_of_digits(len(Config.get_settings().servers_list))
         send_ = "```" + get_translation("List of servers") + ":"
         for i in range(1, len(Config.get_settings().servers_list) + 1):
@@ -828,14 +831,14 @@ class MinecraftCommands(commands.Cog):
     @commands.group(pass_context=True, aliases=["bc"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
-    async def backup(self, ctx):
+    async def backup(self, ctx: commands.Context):
         await bot_backup(ctx, self._bot)
 
     @backup.command(pass_context=True, name="on")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def b_on(self, ctx):
+    async def b_on(self, ctx: commands.Context):
         if not Config.get_backups_settings().automatic_backup:
             Config.get_backups_settings().automatic_backup = True
             Config.save_config()
@@ -846,7 +849,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def b_off(self, ctx):
+    async def b_off(self, ctx: commands.Context):
         if Config.get_backups_settings().automatic_backup:
             Config.get_backups_settings().automatic_backup = False
             Config.save_config()
@@ -856,7 +859,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def b_period(self, ctx, minutes: int = None):
+    async def b_period(self, ctx: commands.Context, minutes: int = None):
         if minutes is not None and minutes > 0:
             Config.get_backups_settings().period_of_automatic_backups = minutes
             Config.save_config()
@@ -871,7 +874,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def b_method(self, ctx, compression_method: str = None):
+    async def b_method(self, ctx: commands.Context, compression_method: str = None):
         if compression_method is not None and \
                 compression_method.upper() in Config.get_backups_settings().supported_compression_methods:
             Config.get_backups_settings().compression_method = compression_method.upper()
@@ -887,7 +890,7 @@ class MinecraftCommands(commands.Cog):
     @b_method.command(pass_context=True, name="list", aliases=["ls"])
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
-    async def b_m_list(self, ctx):
+    async def b_m_list(self, ctx: commands.Context):
         await ctx.send(add_quotes(get_translation("Supported compression methods:") + "\n- " +
                                   "\n- ".join(Config.get_backups_settings().supported_compression_methods)))
 
@@ -896,7 +899,7 @@ class MinecraftCommands(commands.Cog):
     @commands.guild_only()
     @commands.cooldown(rate=1, per=15)
     @decorators.has_role_or_default()
-    async def b_force(self, ctx, *, reason: str = None):
+    async def b_force(self, ctx: commands.Context, *, reason: str = None):
         if not BotVars.is_loading and not BotVars.is_stopping and \
                 not BotVars.is_restarting and not BotVars.is_restoring and not BotVars.is_backing_up:
             b_reason = handle_backups_limit_and_size(self._bot)
@@ -926,7 +929,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def b_restore(self, ctx, backup_number: int):
+    async def b_restore(self, ctx: commands.Context, backup_number: int):
         if not BotVars.is_server_on and not BotVars.is_loading and not BotVars.is_stopping and \
                 not BotVars.is_restarting and not BotVars.is_backing_up:
             if 0 < backup_number <= len(Config.get_server_config().backups):
@@ -969,7 +972,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def b_del(self, ctx, backup_number: int):
+    async def b_del(self, ctx: commands.Context, backup_number: int):
         if len(Config.get_server_config().backups) == 0:
             await ctx.send(add_quotes(get_translation("There are no backups for '{0}' server!")
                                       .format(Config.get_selected_server_from_list().server_name)))
@@ -1023,7 +1026,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def b_d_all(self, ctx):
+    async def b_d_all(self, ctx: commands.Context):
         if len(Config.get_server_config().backups) == 0:
             await ctx.send(add_quotes(get_translation("There are no backups for '{0}' server!")
                                       .format(Config.get_selected_server_from_list().server_name)))
@@ -1066,7 +1069,7 @@ class MinecraftCommands(commands.Cog):
     @backup.command(pass_context=True, name="list", aliases=["ls"])
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
-    async def b_list(self, ctx):
+    async def b_list(self, ctx: commands.Context):
         if len(Config.get_server_config().backups) > 0:
             message = get_translation("List of backups for '{0}' server:") \
                           .format(Config.get_selected_server_from_list().server_name) + "\n"
@@ -1105,7 +1108,7 @@ class MinecraftCommands(commands.Cog):
                                   embed_links=True, add_reactions=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def menu(self, ctx):
+    async def menu(self, ctx: commands.Context):
         await delete_after_by_msg(ctx.message, without_delay=True)
         emb = Embed(title=get_translation("List of commands via reactions"),
                     color=d_Color.teal())
@@ -1127,7 +1130,7 @@ class MinecraftCommands(commands.Cog):
         print(get_translation("Starting Minecraft server check-ups"))
 
     @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload):
+    async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
         if payload.message_id == Config.get_settings().bot_settings.menu_id and payload.member.id != self._bot.user.id:
             channel = self._bot.get_channel(payload.channel_id)
             message = await channel.fetch_message(payload.message_id)

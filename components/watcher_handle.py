@@ -561,7 +561,7 @@ def check_if_player_logged_in(line: str, INFO_line: str):
     return nick, ip_address
 
 
-def _get_last_n_lines(file, number_of_lines, last_line):
+def _get_last_n_lines(file: Path, number_of_lines: int, last_line: Optional[str]):
     list_of_lines = []
     with open(file, 'rb') as read_obj:
         read_obj.seek(-2, SEEK_END)

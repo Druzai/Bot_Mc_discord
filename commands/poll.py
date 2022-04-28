@@ -6,8 +6,9 @@ from typing import Union
 
 from discord import (
     Color, Embed, Status, Role, NotFound, Forbidden, HTTPException, DMChannel, Member, InvalidData, TextChannel,
-    GroupChannel
+    GroupChannel, RawReactionActionEvent
 )
+from discord.abc import Messageable
 from discord.ext import commands
 
 from components.localization import get_translation
@@ -44,36 +45,37 @@ class Poll(commands.Cog):
             needed_role = self._bot.guilds[0].get_role(needed_role)
             if needed_role is not None:
                 mention = needed_role.mention
+        start_msg = None
         if add_str_count or add_mention or message is not None:
             start_msg = await channel.send((f"{mention}, " if add_mention else "") +
                                            (f"{message} " if message is not None else "") +
                                            (get_translation("To win the poll needed {0} vote(s)!")
                                             .format(str(need_for_voting)) if add_str_count else ""))
         poll_msg = await self.make_embed(channel, embeded_message)
-        current_poll = Poll.PollContent(channel, command, need_for_voting, needed_role, remove_logs_after, admin_needed)
+        current_poll = PollContent(channel, command, need_for_voting, needed_role, remove_logs_after, admin_needed)
         self._polls[poll_msg.id] = current_poll
         seconds = 0
-        while current_poll.state == Poll.States.NONE:
+        while current_poll.state == States.NONE:
             await asleep(1)
             seconds += 1
             if timeout <= seconds:
                 current_poll.cancel()
-        if add_str_count or add_mention or message is not None:
+        if start_msg is not None:
             with suppress(NotFound, Forbidden, HTTPException):
                 await start_msg.delete()
         with suppress(NotFound, Forbidden, HTTPException):
             await poll_msg.delete()
         del self._polls[poll_msg.id]
-        if current_poll.state == Poll.States.CANCELED:
+        if current_poll.state == States.CANCELED:
             await channel.send("`" + get_translation("Poll result: canceled!") + "`", delete_after=remove_logs_after)
             return
         poll_res = get_translation("granted") if current_poll.state == \
-                                                 Poll.States.GRANTED else get_translation("refused")
+                                                 States.GRANTED else get_translation("refused")
         await channel.send("`" + get_translation("Poll result: permission {0}!").format(poll_res) + "`",
                            delete_after=remove_logs_after)
-        return current_poll.state == Poll.States.GRANTED
+        return current_poll.state == States.GRANTED
 
-    async def make_embed(self, channel, embeded_message: str = None):
+    async def make_embed(self, channel: Messageable, embeded_message: str = None):
         emb = Embed(title=get_translation("Survey. Voting!") if embeded_message is None else embeded_message,
                     color=Color.orange())
         emb.add_field(name=get_translation("yes"), value=self._emoji_symbols.get("yes"))
@@ -84,7 +86,7 @@ class Poll(commands.Cog):
         return add_reactions_to
 
     @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload):
+    async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
         if payload.message_id not in self._polls or \
                 (payload.member is not None and payload.member.id == self._bot.user.id) or \
                 (payload.member is None and payload.user_id == self._bot.user.id):
@@ -110,7 +112,7 @@ class Poll(commands.Cog):
             await message.remove_reaction(payload.emoji, user)
 
     @commands.Cog.listener()
-    async def on_raw_reaction_remove(self, payload):
+    async def on_raw_reaction_remove(self, payload: RawReactionActionEvent):
         if payload.message_id not in self._polls or \
                 (payload.member is not None and payload.member.id == self._bot.user.id) or \
                 (payload.member is None and payload.user_id == self._bot.user.id):
@@ -150,76 +152,78 @@ class Poll(commands.Cog):
     def get_polls(self):
         return self._polls
 
-    class States(Enum):
-        NONE = auto()
-        GRANTED = auto()
-        REFUSED = auto()
-        CANCELED = auto()
 
-    class PollContent:
-        def __init__(self, channel, command: str, need_for_voting=2, needed_role: Role = None,
-                     remove_logs_after=0, admin_needed=False):
-            self.poll_yes = 0
-            self.poll_no = 0
-            self.poll_voted_uniq = {}
-            self.channel = channel
-            self.NFW = need_for_voting
-            self.NR = needed_role
-            self.RLA = remove_logs_after
-            self.state = Poll.States.NONE
-            self.command = command
-            self.AN = admin_needed
+class States(Enum):
+    NONE = auto()
+    GRANTED = auto()
+    REFUSED = auto()
+    CANCELED = auto()
 
-        async def count_add_voice(self, channel, user, emoji, to_left):
-            if self.state is not Poll.States.NONE:
-                await channel.send(f"{user.mention}, " + get_translation("poll've already finished!"),
-                                   delete_after=self.RLA)
-                return False
-            if user.id in self.poll_voted_uniq.keys():
-                await channel.send(f"{user.mention}, " + get_translation("you've already voted!"),
-                                   delete_after=self.RLA)
-                return False
-            if not self.AN and self.NR and self.NR.id not in (e.id for e in user.roles):
+
+class PollContent:
+    def __init__(self, channel: Messageable, command: str, need_for_voting=2, needed_role: Role = None,
+                 remove_logs_after=0, admin_needed=False):
+        self.poll_yes = 0
+        self.poll_no = 0
+        self.poll_voted_uniq = {}
+        self.channel = channel
+        self.NFW = need_for_voting
+        self.NR = needed_role
+        self.RLA = remove_logs_after
+        self.state = States.NONE
+        self.command = command
+        self.AN = admin_needed
+
+    async def count_add_voice(self, channel: Messageable, user: Member, emoji: str, to_left: bool):
+        if self.state is not States.NONE:
+            await channel.send(f"{user.mention}, " + get_translation("poll've already finished!"),
+                               delete_after=self.RLA)
+            return False
+        if user.id in self.poll_voted_uniq.keys():
+            await channel.send(f"{user.mention}, " + get_translation("you've already voted!"),
+                               delete_after=self.RLA)
+            return False
+        if not self.AN and self.NR and self.NR.id not in (e.id for e in user.roles):
+            await channel.send(f"{user.mention}, " +
+                               get_translation("you don't have needed '{0}' role").format(self.NR.name),
+                               delete_after=self.RLA)
+            return False
+        if self.AN and self.NR and self.NR.id not in (e.id for e in user.roles) and \
+                not user.guild_permissions.administrator:
+            if self.NR != "":
                 await channel.send(f"{user.mention}, " +
                                    get_translation("you don't have needed '{0}' role").format(self.NR.name),
                                    delete_after=self.RLA)
-                return False
-            if self.AN and self.NR and self.NR.id not in (e.id for e in user.roles) and \
-                    not user.guild_permissions.administrator:
-                if self.NR != "":
-                    await channel.send(f"{user.mention}, " +
-                                       get_translation("you don't have needed '{0}' role").format(self.NR.name),
-                                       delete_after=self.RLA)
-                await channel.send(f"{user.mention}, " +
-                                   get_translation("you don't have permission 'Administrator'"),
-                                   delete_after=self.RLA)
-                return False
-            self.poll_voted_uniq.update({user.id: emoji})
-            if to_left:
-                self.poll_yes += 1
-            else:
-                self.poll_no += 1
-            if self.poll_yes >= self.NFW:
-                self.state = Poll.States.GRANTED
-            elif self.poll_no >= self.NFW:
-                self.state = Poll.States.REFUSED
-            return True
+            await channel.send(f"{user.mention}, " +
+                               get_translation("you don't have permission 'Administrator'"),
+                               delete_after=self.RLA)
+            return False
+        self.poll_voted_uniq.update({user.id: emoji})
+        if to_left:
+            self.poll_yes += 1
+        else:
+            self.poll_no += 1
+        if self.poll_yes >= self.NFW:
+            self.state = States.GRANTED
+        elif self.poll_no >= self.NFW:
+            self.state = States.REFUSED
+        return True
 
-        async def count_del_voice(self, channel, user, to_left):
-            if self.state is not Poll.States.NONE:
-                await channel.send(f"{user.mention}, " + get_translation("poll've already finished!"),
-                                   delete_after=self.RLA)
-                return
-            if self.NR and self.NR.id not in (e.id for e in user.roles):
-                await channel.send(f"{user.mention}, " +
-                                   get_translation("you don't have needed '{0}' role").format(self.NR.name),
-                                   delete_after=self.RLA)
-                return
-            self.poll_voted_uniq.pop(user.id)
-            if to_left:
-                self.poll_yes -= 1
-            else:
-                self.poll_no -= 1
+    async def count_del_voice(self, channel: Messageable, user: Member, to_left: bool):
+        if self.state is not States.NONE:
+            await channel.send(f"{user.mention}, " + get_translation("poll've already finished!"),
+                               delete_after=self.RLA)
+            return
+        if self.NR and self.NR.id not in (e.id for e in user.roles):
+            await channel.send(f"{user.mention}, " +
+                               get_translation("you don't have needed '{0}' role").format(self.NR.name),
+                               delete_after=self.RLA)
+            return
+        self.poll_voted_uniq.pop(user.id)
+        if to_left:
+            self.poll_yes -= 1
+        else:
+            self.poll_no -= 1
 
-        def cancel(self):
-            self.state = Poll.States.CANCELED
+    def cancel(self):
+        self.state = States.CANCELED

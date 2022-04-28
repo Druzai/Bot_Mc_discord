@@ -14,7 +14,7 @@ from secrets import choice as sec_choice
 from shutil import rmtree
 from string import ascii_letters, digits
 from struct import unpack
-from typing import List, Optional, TYPE_CHECKING, Set
+from typing import List, Optional, TYPE_CHECKING, Set, Union
 
 from cryptography.fernet import InvalidToken
 from discord import Webhook, Member
@@ -28,7 +28,7 @@ from config.crypt_wrapper import encrypt_string, decrypt_string
 
 if TYPE_CHECKING:
     from components.watcher_handle import Watcher
-    from components.additional_funcs import ServerVersion
+    from components.additional_funcs import ServerVersion, IPAddress
 
 
 class BotVars:
@@ -68,6 +68,8 @@ class BotVars:
 
 
 CODE_LETTERS = "WERTYUPASFGHKZXCVBNM23456789$%&+="
+BOLD = "\033[1m"
+END = "\033[0m"
 
 
 @dataclass
@@ -594,7 +596,7 @@ class Config:
                             return None, None
 
     @classmethod
-    def remove_ip_address(cls, ip_address: str, user_nicks: Optional[List[str]] = None):
+    def remove_ip_address(cls, ip_address: Union[str, 'IPAddress'], user_nicks: Optional[List[str]] = None):
         ip_info_to_delete = None
         for i in range(len(cls.get_auth_users())):
             if user_nicks is None or cls.get_auth_users()[i].nick in user_nicks:
@@ -1303,8 +1305,6 @@ class Config:
     def _get_server_start_file_name(cls, working_directory: str):
         file_extensions = [None]
         existing_files = []
-        BOLD = '\033[1m'
-        END = '\033[0m'
         if sys.platform == "linux" or sys.platform == "linux2":
             file_extensions = [".sh"]
             print(get_translation("Bot detected your operating system is Linux.\n"

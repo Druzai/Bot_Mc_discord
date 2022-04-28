@@ -1,6 +1,7 @@
 from sys import platform, exit, argv
 from threading import enumerate as threads
 from traceback import format_exc
+from typing import Union
 
 from colorama import Fore, Style
 from discord import Intents, Permissions
@@ -23,7 +24,7 @@ if platform == "win32":
 VERSION = "1.2.3"
 
 
-def _create_pot_lines_for_subcommands(command, find_str: str):
+def _create_pot_lines_for_subcommands(command: Union[commands.Command, commands.Group], find_str: str):
     if not hasattr(command, "commands") or len(command.commands) == 0:
         return
 

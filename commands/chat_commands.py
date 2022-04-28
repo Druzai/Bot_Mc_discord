@@ -1,10 +1,12 @@
-from typing import Union
+from typing import TYPE_CHECKING, Union
 
 import discord
-from discord import Role, Member, TextChannel, InvalidData, HTTPException, NotFound, Forbidden, DMChannel
+from discord import (
+    Role, Member, TextChannel, InvalidData, HTTPException, NotFound, Forbidden, DMChannel, Message,
+    RawMessageUpdateEvent
+)
 from discord.ext import commands, tasks
 
-from commands.poll import Poll
 from components import decorators
 from components.additional_funcs import (
     handle_message_for_chat, send_error, bot_clear, add_quotes, parse_params_for_help, send_help_of_command,
@@ -15,11 +17,14 @@ from components.localization import get_translation, get_locales, set_locale, ge
 from components.rss_feed_handle import check_on_rss_feed
 from config.init_config import Config, BotVars
 
+if TYPE_CHECKING:
+    from commands.poll import Poll
+
 
 class ChatCommands(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self._bot: commands.Bot = bot
-        self._IndPoll: Poll = bot.get_cog("Poll")
+        self._IndPoll: 'Poll' = bot.get_cog("Poll")
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -43,7 +48,7 @@ class ChatCommands(commands.Cog):
     @commands.group(pass_context=True, aliases=["chn"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
-    async def channel(self, ctx):
+    async def channel(self, ctx: commands.Context):
         try:
             channel = self._bot.get_channel(Config.get_cross_platform_chat_settings().channel_id)
             if channel is None:
@@ -65,7 +70,7 @@ class ChatCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def c_chat(self, ctx, channel: TextChannel = None):
+    async def c_chat(self, ctx: commands.Context, channel: TextChannel = None):
         if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
             await ctx.channel.send(get_translation("Cross-platform chat is disabled in bot config!"))
             return
@@ -81,7 +86,7 @@ class ChatCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def c_commands(self, ctx, channel: TextChannel = None):
+    async def c_commands(self, ctx: commands.Context, channel: TextChannel = None):
         if channel is None:
             channel = ctx.channel
         Config.get_settings().bot_settings.commands_channel_id = channel.id
@@ -91,7 +96,7 @@ class ChatCommands(commands.Cog):
     @commands.group(pass_context=True, invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
-    async def role(self, ctx):
+    async def role(self, ctx: commands.Context):
         role = None
         msg = ""
         if Config.get_settings().bot_settings.managing_commands_role_id is not None:
@@ -116,7 +121,7 @@ class ChatCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
-    async def r_command(self, ctx, role: Role):
+    async def r_command(self, ctx: commands.Context, role: Role):
         Config.get_settings().bot_settings.managing_commands_role_id = role.id
         Config.save_config()
         await ctx.channel.send(
@@ -126,7 +131,7 @@ class ChatCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
-    async def r_c_clear(self, ctx):
+    async def r_c_clear(self, ctx: commands.Context):
         Config.get_settings().bot_settings.managing_commands_role_id = None
         Config.save_config()
         await ctx.channel.send(add_quotes(get_translation("Role for commands that manage "
@@ -136,7 +141,7 @@ class ChatCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
-    async def r_admin(self, ctx, role: Role):
+    async def r_admin(self, ctx: commands.Context, role: Role):
         Config.get_settings().bot_settings.admin_role_id = role.id
         Config.save_config()
         await ctx.channel.send(get_translation("Role {0} set as admin role for bot").format(role.mention))
@@ -145,7 +150,7 @@ class ChatCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
-    async def r_a_clear(self, ctx):
+    async def r_a_clear(self, ctx: commands.Context):
         Config.get_settings().bot_settings.admin_role_id = None
         Config.save_config()
         await ctx.channel.send(add_quotes(get_translation("Admin role has been cleared")))
@@ -153,7 +158,7 @@ class ChatCommands(commands.Cog):
     @commands.group(pass_context=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
-    async def edit(self, ctx, *, edited_message: str):
+    async def edit(self, ctx: commands.Context, *, edited_message: str):
         if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
             await send_msg(ctx, add_quotes(get_translation("Cross-platform chat is disabled in bot config!")), True)
         elif Config.get_cross_platform_chat_settings().channel_id is None:
@@ -215,13 +220,13 @@ class ChatCommands(commands.Cog):
         await delete_after_by_msg(ctx.message)
 
     @commands.Cog.listener()
-    async def on_message(self, message):
+    async def on_message(self, message: Message):
         if Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
                 message.channel.id == Config.get_cross_platform_chat_settings().channel_id:
             await handle_message_for_chat(message, self._bot)
 
     @commands.Cog.listener()
-    async def on_raw_message_edit(self, payload):
+    async def on_raw_message_edit(self, payload: RawMessageUpdateEvent):
         if Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
                 payload.channel_id == Config.get_cross_platform_chat_settings().channel_id:
             after_channel = self._bot.get_channel(payload.channel_id)
@@ -238,7 +243,7 @@ class ChatCommands(commands.Cog):
     @commands.command(pass_context=True, aliases=["lang"], ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
-    async def language(self, ctx, set_language: str = ""):
+    async def language(self, ctx: commands.Context, set_language: str = ""):
         """Get/Select language"""
         if len(set_language) > 0:
             if not set_locale(set_language):
@@ -261,7 +266,7 @@ class ChatCommands(commands.Cog):
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
-    async def prefix(self, ctx, *, new_prefix: str = ""):
+    async def prefix(self, ctx: commands.Context, *, new_prefix: str = ""):
         if not new_prefix:
             await ctx.send(add_quotes(get_translation("Current prefix - '{0}'.")
                                       .format(Config.get_settings().bot_settings.prefix)))
@@ -282,7 +287,7 @@ class ChatCommands(commands.Cog):
                 await ctx.send(add_quotes(get_translation("Changed prefix to '{0}'.").format(new_prefix) +
                                           (" ( ͡° ͜ʖ ͡°)" if check else "")))
 
-    async def bot_check(self, ctx):
+    async def bot_check(self, ctx: commands.Context):
         # Check if user asks help on each command or subcommand
         tokens = ctx.message.content.split()
         if len(tokens) > 1 and tokens[-1] in Config.get_settings().bot_settings.help_arguments:
@@ -306,7 +311,7 @@ class ChatCommands(commands.Cog):
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, embed_links=True, view_channel=True)
     @commands.guild_only()
-    async def help(self, ctx, *commands: str):
+    async def help(self, ctx: commands.Context, *commands: str):
         if len(commands) > 0:
             # Finding command
             command, *subcommands = commands
@@ -351,7 +356,7 @@ class ChatCommands(commands.Cog):
                                             add_reactions=True, embed_links=True, read_message_history=True,
                                             view_channel=True)
     @decorators.has_permissions_with_dm(manage_messages=True)
-    async def clear(self, ctx, count: int = 1, mentions: commands.Greedy[Union[Member, Role]] = None):
+    async def clear(self, ctx: commands.Context, count: int = 1, mentions: commands.Greedy[Union[Member, Role]] = None):
         if not isinstance(ctx.channel, DMChannel):
             await bot_clear(ctx, self._IndPoll, count=count, discord_mentions=mentions)
         else:
@@ -362,7 +367,7 @@ class ChatCommands(commands.Cog):
                                             add_reactions=True, embed_links=True, read_message_history=True,
                                             view_channel=True)
     @decorators.has_permissions_with_dm(manage_messages=True)
-    async def c_all(self, ctx, mentions: commands.Greedy[Union[Member, Role]] = None):
+    async def c_all(self, ctx: commands.Context, mentions: commands.Greedy[Union[Member, Role]] = None):
         if not isinstance(ctx.channel, DMChannel):
             await bot_clear(ctx, self._IndPoll, subcommand="all", discord_mentions=mentions)
         else:
@@ -373,7 +378,7 @@ class ChatCommands(commands.Cog):
                                             add_reactions=True, embed_links=True, read_message_history=True,
                                             view_channel=True)
     @decorators.has_permissions_with_dm(manage_messages=True)
-    async def c_reply(self, ctx, mentions: commands.Greedy[Union[Member, Role]] = None):
+    async def c_reply(self, ctx: commands.Context, mentions: commands.Greedy[Union[Member, Role]] = None):
         if ctx.message.reference is not None:
             if not isinstance(ctx.channel, DMChannel):
                 await bot_clear(ctx, self._IndPoll, subcommand="reply", discord_mentions=mentions)
@@ -392,5 +397,5 @@ class ChatCommands(commands.Cog):
         print(get_translation("Starting RSS feed check"))
 
     @commands.Cog.listener()
-    async def on_command_error(self, ctx, error):
+    async def on_command_error(self, ctx: commands.Context, error: commands.CommandError):
         await send_error(ctx, self._bot, error)

@@ -19,7 +19,7 @@ from textwrap import wrap
 from threading import Thread, Event
 from time import sleep
 from traceback import format_exception
-from typing import Tuple, List, Optional
+from typing import Tuple, List, Optional, Union, TYPE_CHECKING
 from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 
 from colorama import Style, Fore
@@ -27,6 +27,7 @@ from discord import (
     Activity, ActivityType, Message, Status, Member, Role, MessageType, NotFound, HTTPException, Forbidden, Emoji,
     ChannelType, TextChannel
 )
+from discord.abc import Messageable
 from discord.ext import commands
 from discord.utils import get as utils_get
 from mcipc.query import Client as Client_q
@@ -34,12 +35,14 @@ from mcipc.rcon import Client as Client_r, WrongPassword
 from psutil import process_iter, NoSuchProcess, disk_usage, Process
 from requests import post as req_post, get as req_get
 
-from commands.poll import Poll
 from components.decorators import MissingAdminPermissions
 from components.localization import get_translation, get_locales, get_current_locale, set_locale
 from components.rss_feed_handle import create_feed_webhook
 from components.watcher_handle import create_watcher, create_chat_webhook
 from config.init_config import Config, BotVars, ServerProperties
+
+if TYPE_CHECKING:
+    from commands.poll import Poll
 
 if platform == "win32":
     from os import startfile
@@ -94,7 +97,7 @@ REGEX_DEATH_MESSAGES = [sub(r"\{\d}", r"(.+)", m) for m in DEATH_MESSAGES]
 MASS_REGEX_DEATH_MESSAGES = "|".join(REGEX_DEATH_MESSAGES)
 
 
-async def send_msg(ctx, msg: str, is_reaction=False):
+async def send_msg(ctx: Messageable, msg: str, is_reaction=False):
     if is_reaction:
         await ctx.send(content=msg,
                        delete_after=Config.get_timeouts_settings().await_seconds_before_message_deletion)
@@ -106,7 +109,7 @@ def add_quotes(msg: str) -> str:
     return f"```{msg}```"
 
 
-async def delete_after_by_msg(message, ctx=None, without_delay=False):
+async def delete_after_by_msg(message: Union[Message, int], ctx: commands.Context = None, without_delay=False):
     if isinstance(message, Message):
         await message.delete(
             delay=Config.get_timeouts_settings().await_seconds_before_message_deletion if not without_delay else None)
@@ -115,7 +118,7 @@ async def delete_after_by_msg(message, ctx=None, without_delay=False):
             delay=Config.get_timeouts_settings().await_seconds_before_message_deletion if not without_delay else None)
 
 
-def get_author_and_mention(ctx, bot: commands.Bot, is_reaction=False):
+def get_author_and_mention(ctx: Union[commands.Context, Message], bot: commands.Bot, is_reaction=False):
     if is_reaction:
         author_mention = BotVars.react_auth.mention
         author = BotVars.react_auth
@@ -129,7 +132,7 @@ def get_author_and_mention(ctx, bot: commands.Bot, is_reaction=False):
     return author, author_mention
 
 
-async def send_status(ctx, is_reaction=False):
+async def send_status(ctx: commands.Context, is_reaction=False):
     if BotVars.is_server_on:
         if BotVars.is_backing_up:
             await send_msg(ctx, add_quotes(get_translation("Bot is backing up server!")), is_reaction)
@@ -154,7 +157,7 @@ def _ignore_some_tasks_errors(task: Task):
         task.result()
 
 
-async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=False, is_reaction=False):
+async def start_server(ctx: commands.Context, bot: commands.Bot, backups_thread=None, shut_up=False, is_reaction=False):
     BotVars.is_loading = True
     author, author_mention = get_author_and_mention(ctx, bot, is_reaction)
     print(get_translation("Loading server by request of {0}").format(author))
@@ -288,7 +291,7 @@ async def start_server(ctx, bot: commands.Bot, backups_thread=None, shut_up=Fals
     task.add_done_callback(_ignore_some_tasks_errors)
 
 
-async def stop_server(ctx, bot: commands.Bot, poll: Poll,
+async def stop_server(ctx: commands.Context, bot: commands.Bot, poll: 'Poll',
                       how_many_sec=10, is_restart=False, shut_up=False, is_reaction=False):
     no_connection = False
     players_info = None
@@ -576,7 +579,6 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
             use_rcon = True
 
     if use_rcon:
-
         if server_version.minor > 6:
             tellraw_init = ["", {"text": "<"}, {"text": get_bot_display_name(bot), "color": "dark_gray"},
                             {"text": "> "}]
@@ -803,7 +805,7 @@ def get_archive_uncompressed_size(*path: str):
     return total_uncompressed
 
 
-def get_human_readable_size(size, stop_unit=None, round=False):
+def get_human_readable_size(size: Union[int, float], stop_unit=None, round=False):
     human_radix = 1024.
     for u in UNITS[:-1]:
         if size < human_radix or stop_unit == get_translation(u):
@@ -819,7 +821,7 @@ def get_human_readable_size(size, stop_unit=None, round=False):
         return f"{size:.2f} {get_translation(UNITS[-1])}"
 
 
-async def warn_about_auto_backups(ctx, bot: commands.Bot):
+async def warn_about_auto_backups(ctx: commands.Context, bot: commands.Bot):
     if Config.get_backups_settings().automatic_backup:
         if len(Config.get_server_config().backups) > 0 \
                 and handle_backups_limit_and_size(bot) is not None \
@@ -860,7 +862,7 @@ def get_time_string(seconds: int, use_colon=False):
                ("" if seconds % 60 == 0 else f"{str(seconds % 60)}{sec_str}")
 
 
-async def server_checkups(bot: commands.Bot, backups_thread: BackupsThread, poll):
+async def server_checkups(bot: commands.Bot, backups_thread: BackupsThread, poll: 'Poll'):
     try:
         info = get_server_players()
         if info.get("current") != 0:
@@ -951,7 +953,7 @@ async def server_checkups(bot: commands.Bot, backups_thread: BackupsThread, poll
         await asleep(Config.get_timeouts_settings().await_seconds_in_check_ups)
 
 
-async def bot_status(ctx, bot: commands.Bot, is_reaction=False):
+async def bot_status(ctx: commands.Context, bot: commands.Bot, is_reaction=False):
     states = ""
     bot_message = ""
     states_info = Config.get_server_config().states
@@ -1024,7 +1026,7 @@ async def bot_status(ctx, bot: commands.Bot, is_reaction=False):
         await send_msg(ctx, add_quotes(bot_message), is_reaction)
 
 
-async def bot_list(ctx, bot: commands.Bot, is_reaction=False):
+async def bot_list(ctx: commands.Context, bot: commands.Bot, is_reaction=False):
     try:
         info = get_server_players()
         if info.get("current") == 0:
@@ -1063,7 +1065,7 @@ async def bot_list(ctx, bot: commands.Bot, is_reaction=False):
         await send_msg(ctx, f"{author_mention}, " + get_translation("server offline"), is_reaction)
 
 
-async def bot_start(ctx, bot: commands.Bot, backups_thread, is_reaction=False):
+async def bot_start(ctx: commands.Context, bot: commands.Bot, backups_thread, is_reaction=False):
     if not BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and \
             not BotVars.is_backing_up and not BotVars.is_restoring:
         await start_server(ctx, bot=bot, backups_thread=backups_thread, is_reaction=is_reaction)
@@ -1071,7 +1073,7 @@ async def bot_start(ctx, bot: commands.Bot, backups_thread, is_reaction=False):
         await send_status(ctx, is_reaction=is_reaction)
 
 
-async def bot_stop(ctx, command, bot: commands.Bot, poll: Poll, is_reaction=False):
+async def bot_stop(ctx: commands.Context, command, bot: commands.Bot, poll: 'Poll', is_reaction=False):
     if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and \
             not BotVars.is_backing_up and not BotVars.is_restoring:
         if BotVars.is_doing_op:
@@ -1086,7 +1088,8 @@ async def bot_stop(ctx, command, bot: commands.Bot, poll: Poll, is_reaction=Fals
         await send_status(ctx, is_reaction=is_reaction)
 
 
-async def bot_restart(ctx, command, bot: commands.Bot, poll: Poll, backups_thread: BackupsThread, is_reaction=False):
+async def bot_restart(ctx: commands.Context, command, bot: commands.Bot, poll: 'Poll', backups_thread: BackupsThread,
+                      is_reaction=False):
     if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and \
             not BotVars.is_backing_up and not BotVars.is_restoring:
         if BotVars.is_doing_op:
@@ -1101,7 +1104,8 @@ async def bot_restart(ctx, command, bot: commands.Bot, poll: Poll, backups_threa
         await send_status(ctx, is_reaction=is_reaction)
 
 
-async def bot_clear(ctx, poll: Poll, subcommand: str = None, count: int = None, discord_mentions=None):
+async def bot_clear(ctx: commands.Context, poll: 'Poll', subcommand: str = None, count: int = None,
+                    discord_mentions=None):
     message_created = None
     mentions = set()
     if discord_mentions is not None:
@@ -1192,7 +1196,7 @@ async def clear_with_none_limit(ctx: commands.Context, check_condition, after_me
         last_undeleted_message = limited_messages[-1]
 
 
-async def bot_dm_clear(ctx, bot: commands.Bot, subcommand: str = None, count: int = None):
+async def bot_dm_clear(ctx: commands.Context, bot: commands.Bot, subcommand: str = None, count: int = None):
     message_created = None
     if count is not None:
         count += 1
@@ -1210,7 +1214,7 @@ async def bot_dm_clear(ctx, bot: commands.Bot, subcommand: str = None, count: in
             await msg.delete()
 
 
-async def bot_backup(ctx, bot: commands.Bot, is_reaction=False):
+async def bot_backup(ctx: commands.Context, bot: commands.Bot, is_reaction=False):
     bot_message = (get_translation("Automatic backups enabled") if Config.get_backups_settings()
                    .automatic_backup else get_translation("Automatic backups disabled")) + "\n"
     bot_message += get_translation("Automatic backups period set to {0} min").format(Config.get_backups_settings()
@@ -1275,7 +1279,8 @@ def check_if_string_in_all_translations(translate_text: str, match_text: str):
     return False
 
 
-async def bot_associate(ctx, bot: commands.Bot, discord_mention: Member, assoc_command: str, minecraft_nick: str):
+async def bot_associate(ctx: commands.Context, bot: commands.Bot, discord_mention: Member, assoc_command: str,
+                        minecraft_nick: str):
     need_to_save = False
 
     if "☠ " in minecraft_nick and \
@@ -1309,7 +1314,7 @@ async def bot_associate(ctx, bot: commands.Bot, discord_mention: Member, assoc_c
         Config.save_config()
 
 
-async def bot_associate_info(ctx, for_me: bool, show: str = None):
+async def bot_associate_info(ctx: commands.Context, for_me: bool, show: str = None):
     if show is not None:
         message = get_translation("{0}, bot has this data on nicks and number of remaining uses:") \
                       .format(ctx.author.mention) + "\n```"
@@ -1424,7 +1429,6 @@ def parse_params_for_help(command_params: dict, string_to_add: str, create_param
                 params[arg_name] = type(arg_data.default).__name__
             else:
                 params[arg_name] = "Any"
-
         if arg_data.default != inspect._empty or arg_data.kind == arg_data.VAR_POSITIONAL:
             add_data = ""
             if bool(arg_data.default) and arg_data.kind != arg_data.VAR_POSITIONAL:
@@ -1473,7 +1477,8 @@ def check_if_ips_expired():
         Config.save_auth_users()
 
 
-def parse_subcommands_for_help(command, all_params=False) -> Tuple[List[str], List[str]]:
+def parse_subcommands_for_help(command: Union[commands.Command, commands.Group],
+                               all_params=False) -> Tuple[List[str], List[str]]:
     if not hasattr(command, "commands") or len(command.commands) == 0:
         return [], []
     command_commands = sorted(command.commands, key=lambda c: c.name)
@@ -1497,7 +1502,7 @@ def parse_subcommands_for_help(command, all_params=False) -> Tuple[List[str], Li
     return [c.name for c in command_commands], subcommands
 
 
-async def send_help_of_command(ctx, command):
+async def send_help_of_command(ctx: commands.Context, command: Union[commands.Command, commands.Group]):
     subcommands_names, subcommands = parse_subcommands_for_help(command, True)
     str_help = f"{Config.get_settings().bot_settings.prefix}{command}"
     str_help += " " + " | ".join(subcommands_names) if len(subcommands_names) else ""
@@ -1524,7 +1529,7 @@ async def send_help_of_command(ctx, command):
     await ctx.send(add_quotes(f"\n{str_help}"))
 
 
-def find_subcommand(subcommands, command, pos: int):
+def find_subcommand(subcommands: List[str], command: Union[commands.Command, commands.Group], pos: int):
     if hasattr(command, "all_commands") and len(command.all_commands) != 0:
         pos += 1
         for subcomm_name, subcomm in command.all_commands.items():
@@ -1535,7 +1540,7 @@ def find_subcommand(subcommands, command, pos: int):
                     return find_subcommand(subcommands, subcomm, pos)
 
 
-def make_underscored_line(line):
+def make_underscored_line(line: Union[int, float, str]):
     """This func underscores int, float or strings without spaces!"""
     underscore = "\u0332"
     if isinstance(line, int) or isinstance(line, float):
@@ -1567,7 +1572,7 @@ def connect_query():
 
 
 @asynccontextmanager
-async def handle_rcon_error(ctx):
+async def handle_rcon_error(ctx: commands.Context):
     try:
         yield
     except (ConnectionError, socket.error):
@@ -1577,7 +1582,7 @@ async def handle_rcon_error(ctx):
             await ctx.send(add_quotes(get_translation("server offline").capitalize()))
 
 
-def get_offline_uuid(username):
+def get_offline_uuid(username: str):
     data = bytearray(md5(("OfflinePlayer:" + username).encode()).digest())
     data[6] &= 0x0f  # clear version
     data[6] |= 0x30  # set to version 3
@@ -1587,7 +1592,7 @@ def get_offline_uuid(username):
     return "-".join((uuid[:8], uuid[8:12], uuid[12:16], uuid[16:20], uuid[20:]))
 
 
-def get_whitelist_entry(username):
+def get_whitelist_entry(username: str):
     return dict(uuid=get_offline_uuid(username), name=username)
 
 
@@ -1632,7 +1637,7 @@ class IPAddress(commands.Converter):
 
 
 # Handling errors
-async def send_error(ctx: commands.Context, bot: commands.Bot, error, is_reaction=False):
+async def send_error(ctx: commands.Context, bot: commands.Bot, error: commands.CommandError, is_reaction=False):
     author, author_mention = get_author_and_mention(ctx, bot, is_reaction)
     parsed_input = None
     if hasattr(error, "param"):
@@ -1944,7 +1949,7 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
                            get_translation("No players on server!").lower(), True)
 
 
-def _handle_long_tellraw_object(tellraw_obj):
+def _handle_long_tellraw_object(tellraw_obj: list):
     if len(dumps(tellraw_obj)) <= MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH:
         return [tellraw_obj]
 
@@ -2034,7 +2039,7 @@ def _handle_long_tellraw_object(tellraw_obj):
     return res
 
 
-def _split_tellraw_object(tellraw_obj):
+def _split_tellraw_object(tellraw_obj: Union[list, dict]):
     if not isinstance(tellraw_obj, list):
         tellraw_obj = [tellraw_obj]
 
@@ -2212,7 +2217,7 @@ def _handle_attachments_in_message(message: Message):
     return attachments
 
 
-def _build_components_in_message(res_obj, content_name: str, obj, default_text_color: str = None):
+def _build_components_in_message(res_obj: list, content_name: str, obj, default_text_color: str = None):
     if isinstance(obj, list):
         for elem in obj:
             if isinstance(elem, dict):
@@ -2403,13 +2408,13 @@ def get_clck_ru_url(url: str):
 
 
 @contextmanager
-def times(fade_in, duration, fade_out, rcon_client):
+def times(fade_in: Union[int, float], duration: Union[int, float], fade_out: Union[int, float], rcon_client):
     rcon_client.run(f"title @a times {fade_in} {duration} {fade_out}")
     yield
     rcon_client.run("title @a reset")
 
 
-def announce(player, message, rcon_client, subtitle=False):
+def announce(player: str, message: str, rcon_client, subtitle=False):
     if get_server_version().minor >= 11 and not subtitle:
         rcon_client.run(f'title {player} actionbar ' + '{' + f'"text":"{message}"' + ',"bold":true,"color":"gold"}')
     else:
@@ -2418,15 +2423,15 @@ def announce(player, message, rcon_client, subtitle=False):
     rcon_client.run(play_sound(player, "minecraft:entity.arrow.hit_player", "player", 1, 0.75))
 
 
-def play_sound(name, sound, category="master", volume=1, pitch=1.0):
+def play_sound(name: str, sound: str, category="master", volume=1, pitch=1.0):
     return f"/execute as {name} at @s run playsound {sound} {category} @s ~ ~ ~ {volume} {pitch} 1"
 
 
-def play_music(name, sound):
+def play_music(name: str, sound: str):
     return play_sound(name, sound, "music", 99999999999999999999999999999999999999)
 
 
-def stop_music(sound, name="@a"):
+def stop_music(sound: str, name="@a"):
     return f"/stopsound {name} music {sound}"
 
 
