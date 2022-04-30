@@ -73,7 +73,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Install gettext
-        if: matrix.os != 'windows-latest'
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install gettext
@@ -89,7 +89,7 @@ jobs:
         run: make
 
       - name: Upload release asset with *nix
-        if: matrix.os != 'windows-latest'
+        if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -100,7 +100,7 @@ jobs:
           asset_content_type: application/x-executable
 
       - name: Upload release asset with Windows
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2019'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
