@@ -2300,17 +2300,15 @@ def _build_nickname_tellraw_for_minecraft_player(server_version: int, nick: str,
             entity = get_translation("Entity")
         else:
             entity = get_translation("Player")
-        hover_string = ["", {"text": f"{nick}\n" + get_translation("Type: {0}").format(entity) +
-                                     f"\n{get_offline_uuid(nick)}"}]
-        if server_version > 11:
-            hover_string += [{"text": "\nShift + "}, {"keybind": "key.attack"}]
+        hover_string = f"{nick}\n" + get_translation("Type: {0}").format(entity) + f"\n{get_offline_uuid(nick)}"
         tellraw_obj += [{"text": nick,
-                         "insertion": f"/tell {nick} ",
+                         "clickEvent": {"action": "suggest_command", "value": f"/tell {nick} "},
                          "hoverEvent": {"action": "show_text", content_name: hover_string}}]
     else:
         tellraw_obj += [{"text": nick,
+                         "clickEvent": {"action": "suggest_command", "value": f"/tell {nick} "},
                          "hoverEvent": {"action": "show_text",
-                                        content_name: ["", {"text": f"{nick}\n{get_offline_uuid(nick)}"}]}}]
+                                        content_name: f"{nick}\n{get_offline_uuid(nick)}"}}]
     tellraw_obj += [{"text": right_bracket}]
     if default_text_color is not None:
         for i in range(len(tellraw_obj)):
