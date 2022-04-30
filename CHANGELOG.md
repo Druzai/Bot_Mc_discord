@@ -2,14 +2,14 @@
 
 All important changes to this project will be documented in this file.
 
-## [1.3.0 Unreleased](https://github.com/Druzai/Bot_Mc_discord/compare/1.2.3...1.3.0) (2022-xx-xx)
+## [1.3.0](https://github.com/Druzai/Bot_Mc_discord/compare/1.2.3...1.3.0) (2022-05-01)
 
 #### Improvements:
 
 * **Added saving all data on the server to disk before making a backup**
 * **Added support of cross-platform chat and server-related commands for Minecraft versions `1.0.0` - `1.6.4`**
 * Added handling `*.cmd` script and shortcut to `*.bat` or `*.cmd` script as start file on Windows
-* Added editing messages from Minecraft in Discord channel and edit webhook messages from Discord ([#27](https://github.com/Druzai/Bot_Mc_discord/issues/27))
+* Added editing messages from Minecraft in Discord channel and edit webhook messages from Discord via command `edit` ([#27](https://github.com/Druzai/Bot_Mc_discord/issues/27))
 * Added check for edited messages whether they are stored in cache or not
 * Added timeout to stop server when no players found during long period of time ([#29](https://github.com/Druzai/Bot_Mc_discord/issues/29))
 * Added fast-login feature if user is in associations ([#26](https://github.com/Druzai/Bot_Mc_discord/issues/26))
@@ -17,7 +17,7 @@ All important changes to this project will be documented in this file.
 * Added printing server version and server status when it's loading/stopping in `status` command
 * Added ability to send Discord emojis from Minecraft chat
 * Added check if cryptography key is wrong or bot can't decrypt a token
-* Added handling of more granular errors for bot and improved handling of old ones
+* Added handling of more granular errors for bot and improved handling of the old ones
 * Added sending death messages from Minecraft in Discord
 
 #### Fixed:
@@ -38,6 +38,9 @@ All important changes to this project will be documented in this file.
 
 #### Changes in bot commands
 
+* Created commands:
+    * `associate add` and `associate del`
+    * `edit`
 * Changed commands:
     * Renamed `servers` to `server` and alias `servs` to `serv`
     * Moved logic:
@@ -45,7 +48,6 @@ All important changes to this project will be documented in this file.
         * From `ops history` to `op history`
         * From `ops` to `op info`
         * From `forceload` to `schedule forceload`
-    * Created commands: `associate add` and `associate del`
     * Added alias `associate` to `assoc`
     * Added alias `authorize` to `auth`
     * Added alias `ls` to all `list` subcommands
@@ -54,7 +56,7 @@ All important changes to this project will be documented in this file.
 #### Breaking changes:
 
 * Changed `specific_command_role_id` to `managing_commands_role_id` in bot's configuration file
-* Changed in file `server_config.yml` (**save world backups before starting the new bot's version cause bot will delete them!**):
+* Changed in file `server_config.yml` (**save forced world backups before starting the new bot's version cause bot will delete them!**):
     * Field `initiator` in category `backups` from `Optional[str]` to `Optional[int]`
     * Field `user` in category `states` from `Optional[str]` to `Optional[int]`
 
