@@ -3,7 +3,7 @@ from os import path
 
 from cryptography.fernet import Fernet
 
-_fernet: Fernet
+_fernet: Fernet = None
 
 
 def _init():
