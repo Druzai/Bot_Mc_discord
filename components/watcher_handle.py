@@ -17,7 +17,7 @@ from discord import NoMoreItems
 from discord import Webhook, RequestsWebhookAdapter, TextChannel, Role, ChannelType
 from discord.iterators import _AsyncIterator, OLDEST_OBJECT
 from discord.object import Object
-from discord.utils import get as utils_get, escape_markdown
+from discord.utils import get as utils_get, escape_markdown, find as utils_find
 from discord.utils import time_snowflake
 
 from components.localization import get_translation
@@ -303,18 +303,20 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                                         announce(nick, f"@{player_nick} -> @{nick if nick != '@a' else 'everyone'}",
                                                  cl_r)
 
-                if search(r":[^:]+:", player_message):
-                    split_arr = split(r":[^:]+:", player_message)
-                    emojis = [i[1:-1] for i in findall(r":[^:]+:", player_message)]
+                if search(r":\w+:", player_message):
+                    split_arr = split(r":\w+:", player_message)
+                    emojis = findall(r":(\w+):", player_message)
                     i = 1
                     for emoji_name in emojis:
-                        emoji = utils_get(BotVars.bot_for_webhooks.emojis, name=emoji_name)
+                        emoji = utils_find(lambda e: e.name.lower() == emoji_name.lower(),
+                                           BotVars.bot_for_webhooks.emojis)
                         if emoji is None:
-                            emoji = utils_get(BotVars.bot_for_webhooks.guilds[0].emojis, name=emoji_name)
+                            emoji = utils_find(lambda e: e.name.lower() == emoji_name.lower(),
+                                               BotVars.bot_for_webhooks.guilds[0].emojis)
                         if emoji is None:
-                            emoji = emoji_name
+                            emoji = f":{emoji_name}:"
                         else:
-                            emoji = f"<:{emoji.name}:{emoji.id}>"
+                            emoji = str(emoji)
                         split_arr.insert(i, emoji)
                         i += 2
                     player_message = "".join(split_arr)

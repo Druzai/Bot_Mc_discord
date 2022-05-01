@@ -2094,14 +2094,16 @@ async def _handle_components_in_message(result_msg: dict, message: Message, bot:
                                         only_replace_links=False, edit_command=False, version_lower_1_7_2=False):
     # TODO: For now 'webhook.edit_message' doesn't support attachments, wait for discord.py 2.0
     attachments = _handle_attachments_in_message(message) if not edit_command else {}
+    emoji_regex = r"<a?:\w+:\d+>"
     url_regex = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|%[0-9a-fA-F][0-9a-fA-F])+"
 
-    async def repl_emoji(obj: str):
-        emoji_name = search(r":\w+:", obj).group(0)
+    async def repl_emoji(match: str):
+        obj = search(r"<a?:(\w+):(\d+)>", match)
+        emoji_name = f":{obj.group(1)}:"
         if only_replace_links:
             return emoji_name
         else:
-            emoji_id = int(search(r"\d+", obj).group(0))
+            emoji_id = int(obj.group(2))
             emoji = bot.get_emoji(emoji_id)
             if emoji is None:
                 emoji = utils_get(bot.guilds[0].emojis, id=emoji_id)
@@ -2129,7 +2131,7 @@ async def _handle_components_in_message(result_msg: dict, message: Message, bot:
                     "hyperlink": link if len(link) < 257 else get_clck_ru_url(link)}
 
     transformations = {
-        r"<:\w+:\d+>": repl_emoji,
+        emoji_regex: repl_emoji,
         url_regex: repl_url
     }
     mass_regex = "|".join(transformations.keys())
@@ -2139,7 +2141,7 @@ async def _handle_components_in_message(result_msg: dict, message: Message, bot:
         if search(url_regex, match):
             return transformations.get(url_regex)(match)
         else:
-            return await transformations.get(r"<:\w+:\d+>")(match)
+            return await transformations.get(emoji_regex)(match)
 
     for key, ms in result_msg.items():
         if isinstance(ms, list):

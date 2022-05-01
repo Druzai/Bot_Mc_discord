@@ -43,7 +43,7 @@
     * Supported attached files to message in Discord
     * Half supported emojis
         * Custom emojis are converted to text with their own text name and hyperlink to img of emoji if applicable
-        * Minecraft players can send custom emojis typing `:emoji_name:`
+        * Minecraft players can send custom emojis typing `:emoji_name:` (case-insensitive)
         * Most of the standard unicode emojis are not processed by the vanilla Minecraft server
     * Logging of death messages from Minecraft
         * If you set custom image link in bot config and getting standard avatar in webhook message then your image link

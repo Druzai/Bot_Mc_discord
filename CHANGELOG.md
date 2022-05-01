@@ -2,6 +2,16 @@
 
 All important changes to this project will be documented in this file.
 
+### [1.3.1 Unreleased](https://github.com/Druzai/Bot_Mc_discord/compare/1.3.0...1.3.1) (2022-xx-xx)
+
+#### Improvements:
+
+* Added parsing for animated emojis in cross-platform chat
+
+#### Fixed:
+
+* --
+
 ## [1.3.0](https://github.com/Druzai/Bot_Mc_discord/compare/1.2.3...1.3.0) (2022-05-01)
 
 #### Improvements:
