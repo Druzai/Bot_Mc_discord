@@ -7,10 +7,11 @@ All important changes to this project will be documented in this file.
 #### Improvements:
 
 * Added parsing for animated emojis in cross-platform chat
+* Added finding first full match, then if nothing is found trying to find case-insensitive name
 
 #### Fixed:
 
-* --
+* Fixed changing `pygettext.py` on Windows to set default encoding to `UTF-8` if file can't be edited without admin privilege
 
 ## [1.3.0](https://github.com/Druzai/Bot_Mc_discord/compare/1.2.3...1.3.0) (2022-05-01)
 

@@ -202,8 +202,8 @@ via `screen -r %your_session_name%`. Server name you can find in list of virtual
 For adding or updating/fixing translations:
 
 * If you want to add translations, you need to generate `*.pot` file running
-  script [generate_pot.py](locales/generate_pot.py) after you added them. Otherwise, if you want to fix them, then skip
-  this step.
+  script [generate_pot.py](locales/generate_pot.py) (**without admin privilege!**) after you added translations
+  in `*.py` files. Otherwise, if you only want to fix translations, then skip this step.
 * Then you need to update existing `*.po` file yourself for required language or create new one in this
   path: `%project_root_dir%/locales/%language_code%/LC_MESSAGES/lang.po`.
 * For translations to be updated you also need generate updated `*.mo` file running
