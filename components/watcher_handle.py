@@ -308,11 +308,10 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                     emojis = findall(r":(\w+):", player_message)
                     i = 1
                     for emoji_name in emojis:
-                        emoji = utils_find(lambda e: e.name.lower() == emoji_name.lower(),
-                                           BotVars.bot_for_webhooks.emojis)
+                        emoji = utils_get(BotVars.bot_for_webhooks.emojis, name=emoji_name)
                         if emoji is None:
                             emoji = utils_find(lambda e: e.name.lower() == emoji_name.lower(),
-                                               BotVars.bot_for_webhooks.guilds[0].emojis)
+                                               BotVars.bot_for_webhooks.emojis)
                         if emoji is None:
                             emoji = f":{emoji_name}:"
                         else:
