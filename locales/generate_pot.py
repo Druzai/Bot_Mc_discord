@@ -1,8 +1,10 @@
-import ctypes
 from os import path, system, chdir, __file__ as os_file
 from sys import platform, argv, executable
 
-shell32 = ctypes.windll.shell32
+if platform == "win32":
+    import ctypes
+
+    shell32 = ctypes.windll.shell32
 
 
 def run_as_admin():
