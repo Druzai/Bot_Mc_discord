@@ -404,7 +404,13 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                             ban_reason = get_translation("Too many login attempts\nYour IP: {0}").format(ip_address)
                         with suppress(ConnectionError, socket.error):
                             with connect_rcon() as cl_r:
-                                cl_r.run(f"ban-ip {ip_address} " + ban_reason)
+                                if server_version.minor > 2:
+                                    if server_version.minor < 7 or \
+                                            (server_version.minor == 7 and server_version.patch < 6):
+                                        ban_reason = ban_reason.replace("\n", " ")
+                                    cl_r.run(f"ban-ip {ip_address} {ban_reason}")
+                                else:
+                                    cl_r.run(f"ban-ip {ip_address}")
                             if is_invasion_to_ban:
                                 ban_reason = get_translation("Intrusion prevented: User was banned!")
                             else:

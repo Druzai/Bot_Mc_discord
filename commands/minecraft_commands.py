@@ -420,12 +420,20 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @decorators.has_role_or_default()
     async def a_banlist(self, ctx: commands.Context):
-        banned_ips = Config.get_list_of_banned_ips(get_server_version())
-        if len(banned_ips) > 0:
-            await ctx.send(add_quotes(get_translation("List of banned IP-addresses:") +
-                                      "\n- " + "\n- ".join(banned_ips)))
-        else:
-            await ctx.send(add_quotes(get_translation("There are no banned IP-addresses!")))
+        async with handle_rcon_error(ctx):
+            banned_ips = Config.get_list_of_banned_ips_and_reasons(get_server_version())
+            if len(banned_ips) > 0:
+                reason_str = get_translation("Reason: ")
+                outline = (3 + len(reason_str)) * " "
+                n = "\n"
+                await ctx.send(add_quotes(
+                    get_translation("List of banned IP-addresses:") +
+                    "\n- " + "\n- ".join([f"{e['ip']}" +
+                                          (f"\n  {reason_str}'{e['reason'].replace(f'{n}', f'{n}{outline}')}'"
+                                           if e['reason'] is not None else "")
+                                          for e in banned_ips])))
+            else:
+                await ctx.send(add_quotes(get_translation("There are no banned IP-addresses!")))
 
     @authorize.command(pass_context=True, name="ban")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -464,10 +472,12 @@ class MinecraftCommands(commands.Cog):
                                                "that were logged on with this IP-address").format(ctx.author.mention))
                 return
 
-        try:
+        async with handle_rcon_error(ctx):
             server_version = get_server_version()
             with connect_rcon() as cl_r:
                 if reason is not None and server_version.minor > 2:
+                    if server_version.minor < 7 or (server_version.minor == 7 and server_version.patch < 6):
+                        reason = reason.replace("\n", " ")
                     cl_r.run(f"ban-ip {ip} {reason}")
                 else:
                     cl_r.run(f"ban-ip {ip}")
@@ -477,30 +487,20 @@ class MinecraftCommands(commands.Cog):
             await ctx.send(add_quotes(get_translation("Banned IP-address {0}{1}!").format(ip, reason_str)))
             Config.remove_ip_address(ip)
             Config.save_auth_users()
-        except (ConnectionError, socket.error):
-            if BotVars.is_server_on:
-                await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
-            else:
-                await ctx.send(add_quotes(get_translation("server offline").capitalize()))
 
     @authorize.command(pass_context=True, aliases=["pardon"], name="unban", ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
     async def a_unban(self, ctx: commands.Context, ip: IPAddress):
-        if len(Config.get_list_of_banned_ips(get_server_version())) == 0:
+        if len(Config.get_list_of_banned_ips_and_reasons(get_server_version())) == 0:
             await ctx.send(add_quotes(get_translation("There are no banned IP-addresses!")))
             return
 
-        try:
+        async with handle_rcon_error(ctx):
             with connect_rcon() as cl_r:
                 cl_r.run(f"pardon-ip {ip}")
             await ctx.send(add_quotes(get_translation("Unbanned IP-address {0}!").format(ip)))
-        except (ConnectionError, socket.error):
-            if BotVars.is_server_on:
-                await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
-            else:
-                await ctx.send(add_quotes(get_translation("server offline").capitalize()))
 
     @authorize.group(pass_context=True, name="revoke", invoke_without_command=True, ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)

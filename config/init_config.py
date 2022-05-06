@@ -848,22 +848,33 @@ class Config:
         return ops_list
 
     @classmethod
-    def get_list_of_banned_ips(cls, version: 'ServerVersion'):
+    def get_list_of_banned_ips_and_reasons(cls, version: 'ServerVersion') -> List[dict]:
         ban_list = []
         if version.minor < 7 or (version.minor == 7 and version.patch < 6):
             filepath = Path(Config.get_selected_server_from_list().working_directory + "/banned-ips.txt")
             if filepath.is_file():
                 with open(filepath, "r", encoding="utf8") as f:
-                    for line in f.readlines():
-                        if not line.startswith("#") and len(line) > 0 and "|" in line:
-                            ban_list.append(line.split("|")[0])
+                    if version.minor < 3:
+                        ban_list = [{"ip": e.strip(), "reason": None} for e in f.readlines()]
+                    else:
+                        for line in f.readlines():
+                            if not line.startswith("#") and len(line) > 0 and "|" in line:
+                                try:
+                                    ip, *_, reason = line.split("|")
+                                    if len(reason) == 0:
+                                        reason = None
+                                except ValueError:
+                                    ip = line.split("|")[0]
+                                    reason = None
+                                ban_list.append({"ip": ip.strip(), "reason": reason.strip()})
         else:
             filepath = Path(Config.get_selected_server_from_list().working_directory + "/banned-ips.json")
             if filepath.is_file():
                 with suppress(JSONDecodeError):
                     with open(filepath, "r", encoding="utf8") as f:
                         ban_list = load(f)
-                    ban_list = [e["ip"] for e in ban_list]
+                    ban_list = [{"ip": e["ip"], "reason": e["reason"] if len(e["reason"]) > 0 else None}
+                                for e in ban_list]
         return ban_list
 
     @classmethod
