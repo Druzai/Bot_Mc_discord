@@ -7,7 +7,7 @@ All important changes to this project will be documented in this file.
 #### Improvements:
 
 * Added parsing for animated emojis in cross-platform chat
-* Added finding first full match, then if nothing is found trying to find case-insensitive name
+* Improved finding emoji name
 * Added printing reason of ban in command `auth banlist`
 
 #### Fixed:

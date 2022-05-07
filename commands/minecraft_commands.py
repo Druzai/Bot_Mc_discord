@@ -22,7 +22,7 @@ from components.additional_funcs import (
     get_half_members_count_with_role, warn_about_auto_backups, get_archive_uncompressed_size, get_bot_display_name,
     get_server_version, DISCORD_SYMBOLS_IN_MESSAGE_LIMIT, get_number_of_digits, bot_associate, bot_associate_info,
     get_time_string, bot_shutdown_info, bot_forceload_info, get_member_name, handle_rcon_error,
-    check_and_delete_from_whitelist_json, IPAddress
+    check_and_delete_from_whitelist_json, IPv4Address
 )
 from components.localization import get_translation
 from config.init_config import BotVars, Config, ServerProperties
@@ -438,7 +438,7 @@ class MinecraftCommands(commands.Cog):
     @authorize.command(pass_context=True, name="ban")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @decorators.has_role_or_default()
-    async def a_ban(self, ctx: commands.Context, ip: IPAddress, *, reason: str = None):
+    async def a_ban(self, ctx: commands.Context, ip: IPv4Address, *, reason: str = None):
         has_admin_rights = False
         if not isinstance(ctx.channel, DMChannel):
             with suppress(decorators.MissingAdminPermissions):
@@ -492,7 +492,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
-    async def a_unban(self, ctx: commands.Context, ip: IPAddress):
+    async def a_unban(self, ctx: commands.Context, ip: IPv4Address):
         if len(Config.get_list_of_banned_ips_and_reasons(get_server_version())) == 0:
             await ctx.send(add_quotes(get_translation("There are no banned IP-addresses!")))
             return
@@ -506,7 +506,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def a_revoke(self, ctx: commands.Context, ip: IPAddress, nick: str = None):
+    async def a_revoke(self, ctx: commands.Context, ip: IPv4Address, nick: str = None):
         if not Config.get_secure_auth().enable_secure_auth:
             await ctx.send(add_quotes(get_translation("Secure authorization is disabled. Enable it to proceed!")))
             return

@@ -1529,7 +1529,9 @@ async def send_help_of_command(ctx: commands.Context, command: Union[commands.Co
     await ctx.send(add_quotes(f"\n{str_help}"))
 
 
-def find_subcommand(subcommands: List[str], command: Union[commands.Command, commands.Group], pos: int):
+def find_subcommand(subcommands: List[str],
+                    command: Union[commands.Command, commands.Group],
+                    pos: int) -> Optional[Union[commands.Command, commands.Group]]:
     if hasattr(command, "all_commands") and len(command.all_commands) != 0:
         pos += 1
         for subcomm_name, subcomm in command.all_commands.items():
@@ -1629,11 +1631,17 @@ class HelpCommandArgument(commands.CheckFailure):
     pass
 
 
-class IPAddress(commands.Converter):
+class BadIPv4Address(commands.BadArgument):
+    def __init__(self, ip_address: str):
+        self.argument = ip_address
+        super().__init__(f"\"{ip_address}\" is not a recognised IPv4 address.")
+
+
+class IPv4Address(commands.Converter):
     async def convert(self, ctx: commands.Context, argument: str):
         if search(r"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)(\.(?!$)|$)){4}$", argument):
             return argument
-        raise commands.BadArgument(f"Converting to \"IPAddress\" failed for parameter \"ip\".")
+        raise BadIPv4Address(argument)
 
 
 # Handling errors
@@ -1693,10 +1701,16 @@ async def send_error(ctx: commands.Context, bot: commands.Bot, error: commands.C
         await send_msg(ctx, f"{author_mention}\n" +
                        add_quotes(get_translation("Bot couldn't convert bool argument '{0}'!").format(parsed_input)),
                        is_reaction)
-    elif isinstance(error, commands.BadArgument) or isinstance(error, commands.ArgumentParsingError):
+    elif isinstance(error, BadIPv4Address):
+        print(get_translation("{0} passed an invalid IPv4 address as argument '{1}'").format(author, parsed_input))
+        await send_msg(ctx, f"{author_mention}\n" +
+                       add_quotes(get_translation("Bot couldn't convert argument '{0}' "
+                                                  "to an IPv4 address!").format(parsed_input)),
+                       is_reaction)
+    elif isinstance(error, (commands.BadArgument, commands.ArgumentParsingError)):
         conv_args = findall(r"Converting to \".+\" failed for parameter \".+\"\.", "".join(error.args))
         if len(conv_args) > 0:
-            conv_args = [i[1:-1] for i in findall(r"\"[^\"]+\"", conv_args[0])]
+            conv_args = findall(r"\"([^\"]+)\"", conv_args[0])
         if len(conv_args) > 0:
             print(get_translation("{0} passed parameter '{2}' in string \"{3}\" that bot couldn't "
                                   "convert to type '{1}' in command '{4}'")

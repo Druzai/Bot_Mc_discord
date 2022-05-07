@@ -28,7 +28,7 @@ from config.crypt_wrapper import encrypt_string, decrypt_string
 
 if TYPE_CHECKING:
     from components.watcher_handle import Watcher
-    from components.additional_funcs import ServerVersion, IPAddress
+    from components.additional_funcs import ServerVersion, IPv4Address
 
 
 class BotVars:
@@ -596,7 +596,7 @@ class Config:
                             return None, None
 
     @classmethod
-    def remove_ip_address(cls, ip_address: Union[str, 'IPAddress'], user_nicks: Optional[List[str]] = None):
+    def remove_ip_address(cls, ip_address: Union[str, 'IPv4Address'], user_nicks: Optional[List[str]] = None):
         ip_info_to_delete = None
         for i in range(len(cls.get_auth_users())):
             if user_nicks is None or cls.get_auth_users()[i].nick in user_nicks:
