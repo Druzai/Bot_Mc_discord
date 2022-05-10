@@ -32,7 +32,7 @@ from discord.ext import commands
 from discord.utils import get as utils_get
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r, WrongPassword
-from psutil import process_iter, NoSuchProcess, disk_usage, Process
+from psutil import process_iter, NoSuchProcess, disk_usage, Process, AccessDenied
 from requests import post as req_post, get as req_get
 
 from components.decorators import MissingAdminPermissions
@@ -438,8 +438,9 @@ def get_list_of_processes() -> List[Process]:
     list_proc = []
     for proc in process_iter():
         with proc.oneshot():
-            if "java" in proc.name() and Config.get_selected_server_from_list().working_directory == proc.cwd():
-                list_proc.append(proc)
+            with suppress(AccessDenied):
+                if "java" in proc.name() and Config.get_selected_server_from_list().working_directory == proc.cwd():
+                    list_proc.append(proc)
     BotVars.java_processes = list_proc
     return list_proc
 
@@ -448,7 +449,7 @@ def kill_server():
     list_proc = get_list_of_processes()
     if len(list_proc) != 0:
         for p in list_proc:
-            with suppress(NoSuchProcess):
+            with suppress(NoSuchProcess, AccessDenied):
                 p.kill()
 
 
