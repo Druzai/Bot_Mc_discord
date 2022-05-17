@@ -1418,7 +1418,14 @@ def parse_params_for_help(command_params: dict, string_to_add: str, create_param
             converter = True
         if create_params_dict:
             if arg_data.annotation != inspect._empty:
-                if not getattr(arg_data.annotation, '__name__', None) is None:
+                is_union = hasattr(arg_data.annotation, '__origin__') and \
+                           arg_data.annotation.__origin__._name == "Union"
+                if is_union and len(arg_data.annotation.__args__) == 2 and type(None) in arg_data.annotation.__args__:
+                    if arg_data.default != inspect._empty:
+                        params[arg_name] = type(arg_data.default).__name__
+                    else:
+                        params[arg_name] = [a for a in arg_data.annotation.__args__ if a != type(None)][0].__name__
+                elif not is_union and getattr(arg_data.annotation, '__name__', None) is not None:
                     params[arg_name] = getattr(arg_data.annotation, '__name__', None)
                 elif hasattr(arg_data.annotation, 'converter'):
                     params[arg_name] = sub(r"\w*?\.", "", str(arg_data.annotation.converter))
