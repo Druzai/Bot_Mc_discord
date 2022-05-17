@@ -90,10 +90,8 @@ def create_watcher(watcher: Optional[Watcher], server_version: 'ServerVersion'):
 
     if 7 <= server_version.minor:
         path_to_server_log = "logs/latest.log"
-    elif 0 <= server_version.minor < 7:
-        path_to_server_log = "server.log"
     else:
-        return
+        path_to_server_log = "server.log"
 
     return Watcher(watch_file=Path(Config.get_selected_server_from_list().working_directory, path_to_server_log),
                    call_func_on_change=_check_log_file,
@@ -121,11 +119,8 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
     INFO_line = r"\[Server thread/INFO][^\*<>]*:" if server_version.minor > 6 else r"\[INFO]"
 
     if last_line is None:
-        if Config.get_secure_auth().enable_secure_auth:
-            last_lines = last_lines[-5:]
-        else:
-            last_lines = last_lines[-2:]
-    last_lines = [sub(r"§[0-9abcdefklmnor]", "", line) for line in last_lines]
+        last_lines = last_lines[-min(15, Config.get_server_watcher().number_of_lines_to_check_in_console_log):]
+    last_lines = [sub(r"§[\dabcdefklmnor]", "", line) for line in last_lines]
     death_message = ""
 
     for line in last_lines:
@@ -136,9 +131,9 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
             if search(rf"{date_line} {INFO_line} <([^>]*)> (.*)", line):
                 player_nick = search(r"<([^>]*)>", line).group(1)
                 player_message = split(r"<([^>]*)>", line, maxsplit=1)[-1].strip()
-                if search(r"@[^\s]+", player_message):
-                    split_arr = split(r"@[^\s]+", player_message)
-                    mentions = [[i[1:]] for i in findall(r"@[^\s]+", player_message)]
+                if search(r"@\S+", player_message):
+                    split_arr = split(r"@\S+", player_message)
+                    mentions = [[i[1:]] for i in findall(r"@\S+", player_message)]
                     for i_mention in range(len(mentions)):
                         for words_number in range(Config.get_cross_platform_chat_settings().max_words_in_mention + 1):
                             if len(split_arr[1 + i_mention]) < words_number:

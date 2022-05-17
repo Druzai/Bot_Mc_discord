@@ -96,7 +96,7 @@ def main():
     finally:
         if len(argv) == 1 or (len(argv) > 1 and argv[1] == "-cs"):
             for thread in threads():
-                if thread.getName() == "BackupsThread":
+                if thread.name == "BackupsThread":
                     thread.join()
             print(get_translation("Press any key to continue..."))
             listen_keyboard(on_press=lambda _: stop_listening())

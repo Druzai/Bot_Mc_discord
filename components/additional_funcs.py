@@ -51,6 +51,7 @@ UNITS = ("B", "KB", "MB", "GB", "TB", "PB")
 DISCORD_SYMBOLS_IN_MESSAGE_LIMIT = 2000
 MAX_RCON_COMMAND_STR_LENGTH = 1446
 MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH = MAX_RCON_COMMAND_STR_LENGTH - 9 - 2
+ANSI_ESCAPE = compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 
 # Messages taken from https://minecraft.fandom.com/wiki/Death_messages
 DEATH_MESSAGES = ['{0} fell off a ladder', '{0} fell off some vines', '{0} fell off some weeping vines',
@@ -2489,9 +2490,8 @@ class Output_file_handler:
     def write(self, data, **kwargs):
         if data != "\n":
             if self.file is not None:
-                ansi_escape = compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
                 self.file.write(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] "
-                                f"{ansi_escape.sub('', data)}")
+                                f"{ANSI_ESCAPE.sub('', data)}")
             self.stdout.write(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] {data}")
         else:
             if self.file is not None:

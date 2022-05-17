@@ -59,9 +59,9 @@
 | `@a`                    | `@Minecrafters`          |
 | `@all`                  | `@Minecrafters`          |
 | `@e`                    | `@everyone`              |
+| `@everyone`             | `@everyone`              |
 | `@p`                    | `@here`                  |
 | `@here`                 | `@here`                  |
-| `@everyone`             | `@everyone`              |
 | `@AnyRoleOrUserMention` | `@SameRoleOrUserMention` |
 
 `@Minecrafters` - an optional role in Discord for managing the Minecraft server. If not stated then bot will
