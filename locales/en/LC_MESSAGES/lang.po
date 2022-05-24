@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
-"POT-Creation-Date: 2022-05-07 22:17+0300\n"
-"PO-Revision-Date: 2022-05-07 22:19+0300\n"
+"POT-Creation-Date: 2022-05-24 17:36+0300\n"
+"PO-Revision-Date: 2022-05-24 17:36+0300\n"
 "Last-Translator: Druzai <astyn37@gmail.com>\n"
 "Language-Team: \n"
 "Language: en\n"
@@ -17,11 +17,11 @@ msgstr ""
 "Generated-By: pygettext.py 1.5\n"
 "X-Generator: Poedit 3.0.1\n"
 
-#: ..\Discord_bot.py:93
+#: ..\Discord_bot.py:100
 msgid "Bot doesn't have this command line argument!"
 msgstr "Bot doesn't have this command line argument!"
 
-#: ..\Discord_bot.py:96
+#: ..\Discord_bot.py:103
 msgid "bot_help"
 msgstr ""
 "Bot for Minecraft Server\n"
@@ -30,32 +30,32 @@ msgstr ""
 "  -v, --version\tPrint bot's version and exit.\n"
 "  -cs          \tTo edit Minecraft servers in bot's config."
 
-#: ..\Discord_bot.py:109
+#: ..\Discord_bot.py:116
 msgid "Bot started!"
 msgstr "Bot started!"
 
-#: ..\Discord_bot.py:112 ..\commands\minecraft_commands.py:811
+#: ..\Discord_bot.py:119 ..\commands\minecraft_commands.py:811
 msgid "Server info read!"
 msgstr "Server info read!"
 
-#: ..\Discord_bot.py:115
+#: ..\Discord_bot.py:122
 msgid "Bot/Discord Error: Your token is wrong"
 msgstr "Bot/Discord Error: Your token is wrong"
 
-#: ..\Discord_bot.py:117 ..\Discord_bot.py:119
-#: ..\components\additional_funcs.py:1561
+#: ..\Discord_bot.py:124 ..\Discord_bot.py:126
+#: ..\components\additional_funcs.py:1572
 msgid "Bot Error: {0}"
 msgstr "Bot Error: {0}"
 
-#: ..\Discord_bot.py:125
+#: ..\Discord_bot.py:132
 msgid "Bot/Discord Error: Something went wrong ( ͡° ͜ʖ ͡°)"
 msgstr "Bot/Discord Error: Something went wrong ( ͡° ͜ʖ ͡°)"
 
-#: ..\Discord_bot.py:132
+#: ..\Discord_bot.py:139
 msgid "Press any key to continue..."
 msgstr "Press any key to continue..."
 
-#: ..\Discord_bot.py:134
+#: ..\Discord_bot.py:141
 msgid "Bot is stopping..."
 msgstr "Bot is stopping..."
 
@@ -93,806 +93,832 @@ msgstr "PB"
 
 #: ..\_frozen_translations.py:9
 msgid ""
+"{0} was obliterated by a sonically-charged shriek whilst trying to escape "
+"{1} wielding {2}"
+msgstr ""
+"{0} was obliterated by a sonically-charged shriek whilst trying to escape "
+"{1} wielding {2}"
+
+#: ..\_frozen_translations.py:10
+msgid ""
+"{0} was obliterated by a sonically-charged shriek whilst trying to escape {1}"
+msgstr ""
+"{0} was obliterated by a sonically-charged shriek whilst trying to escape {1}"
+
+#: ..\_frozen_translations.py:11
+msgid ""
 "{0} was poked to death by a sweet berry bush whilst trying to escape {1}"
 msgstr ""
 "{0} was poked to death by a sweet berry bush whilst trying to escape {1}"
 
-#: ..\_frozen_translations.py:10
+#: ..\_frozen_translations.py:12
 msgid "{0} went off with a bang due to a firework fired from {2} by {1}"
 msgstr "{0} went off with a bang due to a firework fired from {2} by {1}"
 
-#: ..\_frozen_translations.py:11
+#: ..\_frozen_translations.py:13
 msgid "{0} was skewered by a falling stalactite whilst fighting {1}"
 msgstr "{0} was skewered by a falling stalactite whilst fighting {1}"
 
-#: ..\_frozen_translations.py:12
+#: ..\_frozen_translations.py:14
 msgid "{0} experienced kinetic energy whilst trying to escape {1}"
 msgstr "{0} experienced kinetic energy whilst trying to escape {1}"
 
-#: ..\_frozen_translations.py:13
+#: ..\_frozen_translations.py:15
+msgid "{0} was burnt to a crisp whilst fighting {1} wielding {2}"
+msgstr "{0} was burnt to a crisp whilst fighting {1} wielding {2}"
+
+#: ..\_frozen_translations.py:16
 msgid "{0} was squashed by a falling anvil whilst fighting {1}"
 msgstr "{0} was squashed by a falling anvil whilst fighting {1}"
 
-#: ..\_frozen_translations.py:14
+#: ..\_frozen_translations.py:17
 msgid "{0} was squashed by a falling block whilst fighting {1}"
 msgstr "{0} was squashed by a falling block whilst fighting {1}"
 
-#: ..\_frozen_translations.py:15
+#: ..\_frozen_translations.py:18
 msgid "{0} hit the ground too hard whilst trying to escape {1}"
 msgstr "{0} hit the ground too hard whilst trying to escape {1}"
 
-#: ..\_frozen_translations.py:16
+#: ..\_frozen_translations.py:19
 msgid "{0} died from dehydration whilst trying to escape {1}"
 msgstr "{0} died from dehydration whilst trying to escape {1}"
 
-#: ..\_frozen_translations.py:17
+#: ..\_frozen_translations.py:20
 msgid "{0} walked into a cactus whilst trying to escape {1}"
 msgstr "{0} walked into a cactus whilst trying to escape {1}"
 
-#: ..\_frozen_translations.py:18
+#: ..\_frozen_translations.py:21
 msgid "{0} was killed by magic whilst trying to escape {1}"
 msgstr "{0} was killed by magic whilst trying to escape {1}"
 
-#: ..\_frozen_translations.py:19
+#: ..\_frozen_translations.py:22
 msgid "{0} was impaled on a stalagmite whilst fighting {1}"
 msgstr "{0} was impaled on a stalagmite whilst fighting {1}"
 
-#: ..\_frozen_translations.py:20
+#: ..\_frozen_translations.py:23
 msgid "{0} fell too far and was finished by {1} using {2}"
 msgstr "{0} fell too far and was finished by {1} using {2}"
 
-#: ..\_frozen_translations.py:21
+#: ..\_frozen_translations.py:24
+msgid "{0} was obliterated by a sonically-charged shriek"
+msgstr "{0} was obliterated by a sonically-charged shriek"
+
+#: ..\_frozen_translations.py:25
 msgid "{0} didn't want to live in the same world as {1}"
 msgstr "{0} didn't want to live in the same world as {1}"
 
-#: ..\_frozen_translations.py:22
+#: ..\_frozen_translations.py:26
 msgid "{0} was struck by lightning whilst fighting {1}"
 msgstr "{0} was struck by lightning whilst fighting {1}"
 
-#: ..\_frozen_translations.py:23
+#: ..\_frozen_translations.py:27
 msgid "{0} was burnt to a crisp whilst fighting {1}"
 msgstr "{0} was burnt to a crisp whilst fighting {1}"
 
-#: ..\_frozen_translations.py:24
+#: ..\_frozen_translations.py:28
 msgid "{0} suffocated in a wall whilst fighting {1}"
 msgstr "{0} suffocated in a wall whilst fighting {1}"
 
-#: ..\_frozen_translations.py:25
+#: ..\_frozen_translations.py:29
 msgid "{0} went off with a bang whilst fighting {1}"
 msgstr "{0} went off with a bang whilst fighting {1}"
 
-#: ..\_frozen_translations.py:26
+#: ..\_frozen_translations.py:30
 msgid "{0} was poked to death by a sweet berry bush"
 msgstr "{0} was poked to death by a sweet berry bush"
 
-#: ..\_frozen_translations.py:27
+#: ..\_frozen_translations.py:31
+msgid "{0} was shot by a skull from {1} using {2}"
+msgstr "{0} was shot by a skull from {1} using {2}"
+
+#: ..\_frozen_translations.py:32
 msgid "{0} fell too far and was finished by {1}"
 msgstr "{0} fell too far and was finished by {1}"
 
-#: ..\_frozen_translations.py:28
+#: ..\_frozen_translations.py:33
 msgid "{0} walked into fire whilst fighting {1}"
 msgstr "{0} walked into fire whilst fighting {1}"
 
-#: ..\_frozen_translations.py:29
+#: ..\_frozen_translations.py:34
 msgid "{0} starved to death whilst fighting {1}"
 msgstr "{0} starved to death whilst fighting {1}"
 
-#: ..\_frozen_translations.py:30
+#: ..\_frozen_translations.py:35
 msgid "{0} was skewered by a falling stalactite"
 msgstr "{0} was skewered by a falling stalactite"
 
-#: ..\_frozen_translations.py:31
+#: ..\_frozen_translations.py:36
 msgid "{0} was killed by {2} trying to hurt {1}"
 msgstr "{0} was killed by {2} trying to hurt {1}"
 
-#: ..\_frozen_translations.py:32
+#: ..\_frozen_translations.py:37
 msgid "{0} was doomed to fall by {1} using {2}"
 msgstr "{0} was doomed to fall by {1} using {2}"
 
-#: ..\_frozen_translations.py:33
+#: ..\_frozen_translations.py:38
 msgid "{0} tried to swim in lava to escape {1}"
 msgstr "{0} tried to swim in lava to escape {1}"
 
-#: ..\_frozen_translations.py:34
+#: ..\_frozen_translations.py:39
 msgid "{0} drowned whilst trying to escape {1}"
 msgstr "{0} drowned whilst trying to escape {1}"
 
-#: ..\_frozen_translations.py:35
+#: ..\_frozen_translations.py:40
 msgid "{0} was roasted in dragon breath by {1}"
 msgstr "{0} was roasted in dragon breath by {1}"
 
-#: ..\_frozen_translations.py:36
+#: ..\_frozen_translations.py:41
+msgid "{0} was stung to death by {1} using {2}"
+msgstr "{0} was stung to death by {1} using {2}"
+
+#: ..\_frozen_translations.py:42
 msgid "{0} walked into danger zone due to {1}"
 msgstr "{0} walked into danger zone due to {1}"
 
-#: ..\_frozen_translations.py:37
+#: ..\_frozen_translations.py:43
 msgid "{0} withered away whilst fighting {1}"
 msgstr "{0} withered away whilst fighting {1}"
 
-#: ..\_frozen_translations.py:38
+#: ..\_frozen_translations.py:44
 msgid "{0} was squashed by a falling anvil"
 msgstr "{0} was squashed by a falling anvil"
 
-#: ..\_frozen_translations.py:39
+#: ..\_frozen_translations.py:45
 msgid "{0} was squashed by a falling block"
 msgstr "{0} was squashed by a falling block"
 
-#: ..\_frozen_translations.py:40
+#: ..\_frozen_translations.py:46
 msgid "{0} was fireballed by {1} using {2}"
 msgstr "{0} was fireballed by {1} using {2}"
 
-#: ..\_frozen_translations.py:41
+#: ..\_frozen_translations.py:47
 msgid "{0} discovered the floor was lava"
 msgstr "{0} discovered the floor was lava"
 
-#: ..\_frozen_translations.py:42
+#: ..\_frozen_translations.py:48
 msgid "{0} was blown up by {1} using {2}"
 msgstr "{0} was blown up by {1} using {2}"
 
-#: ..\_frozen_translations.py:43
+#: ..\_frozen_translations.py:49
 msgid "{0} was killed by even more magic"
 msgstr "{0} was killed by even more magic"
 
-#: ..\_frozen_translations.py:44
+#: ..\_frozen_translations.py:50
 msgid "{0} was pummeled by {1} using {2}"
 msgstr "{0} was pummeled by {1} using {2}"
 
-#: ..\_frozen_translations.py:45
+#: ..\_frozen_translations.py:51
 msgid "{0} was killed by {1} using magic"
 msgstr "{0} was killed by {1} using magic"
 
-#: ..\_frozen_translations.py:46
+#: ..\_frozen_translations.py:52
 msgid "{0} was killed trying to hurt {1}"
 msgstr "{0} was killed trying to hurt {1}"
 
-#: ..\_frozen_translations.py:47
+#: ..\_frozen_translations.py:53
 msgid "{0} fell off some twisting vines"
 msgstr "{0} fell off some twisting vines"
 
-#: ..\_frozen_translations.py:48
+#: ..\_frozen_translations.py:54
 msgid "{0} was shot by a skull from {1}"
 msgstr "{0} was shot by a skull from {1}"
 
-#: ..\_frozen_translations.py:49
+#: ..\_frozen_translations.py:55
 msgid "{0} was roasted in dragon breath"
 msgstr "{0} was roasted in dragon breath"
 
-#: ..\_frozen_translations.py:50
+#: ..\_frozen_translations.py:56
 msgid "{0} fell off some weeping vines"
 msgstr "{0} fell off some weeping vines"
 
-#: ..\_frozen_translations.py:51
+#: ..\_frozen_translations.py:57
 msgid "{0} was impaled on a stalagmite"
 msgstr "{0} was impaled on a stalagmite"
 
-#: ..\_frozen_translations.py:52
+#: ..\_frozen_translations.py:58
 msgid "{0} was killed by {1} using {2}"
 msgstr "{0} was killed by {1} using {2}"
 
-#: ..\_frozen_translations.py:53
+#: ..\_frozen_translations.py:59
 msgid "{0} was impaled by {1} with {2}"
 msgstr "{0} was impaled by {1} with {2}"
 
-#: ..\_frozen_translations.py:54 ..\_frozen_translations.py:55
+#: ..\_frozen_translations.py:60
 msgid "{0} was slain by {1} using {2}"
 msgstr "{0} was slain by {1} using {2}"
 
-#: ..\_frozen_translations.py:56
+#: ..\_frozen_translations.py:61
 msgid "{0} experienced kinetic energy"
 msgstr "{0} experienced kinetic energy"
 
-#: ..\_frozen_translations.py:57
+#: ..\_frozen_translations.py:62
 msgid "{0} was frozen to death by {1}"
 msgstr "{0} was frozen to death by {1}"
 
-#: ..\_frozen_translations.py:58
+#: ..\_frozen_translations.py:63
 msgid "{0} was doomed to fall by {1}"
 msgstr "{0} was doomed to fall by {1}"
 
-#: ..\_frozen_translations.py:59
+#: ..\_frozen_translations.py:64
 msgid "{0} was shot by {1} using {2}"
 msgstr "{0} was shot by {1} using {2}"
 
-#: ..\_frozen_translations.py:60
+#: ..\_frozen_translations.py:65
 msgid "{0} was stung to death by {1}"
 msgstr "{0} was stung to death by {1}"
 
-#: ..\_frozen_translations.py:61
+#: ..\_frozen_translations.py:66
 msgid "{0} was shot by a {1}'s skull"
 msgstr "{0} was shot by a {1}'s skull"
 
-#: ..\_frozen_translations.py:62
+#: ..\_frozen_translations.py:67
 msgid "{0} was struck by lightning"
 msgstr "{0} was struck by lightning"
 
-#: ..\_frozen_translations.py:63
+#: ..\_frozen_translations.py:68
 msgid "{0} hit the ground too hard"
 msgstr "{0} hit the ground too hard"
 
-#: ..\_frozen_translations.py:64
+#: ..\_frozen_translations.py:69
 msgid "{0} fell from a high place"
 msgstr "{0} fell from a high place"
 
-#: ..\_frozen_translations.py:65
+#: ..\_frozen_translations.py:70
 msgid "{0} tried to swim in lava"
 msgstr "{0} tried to swim in lava"
 
-#: ..\_frozen_translations.py:66
+#: ..\_frozen_translations.py:71
 msgid "{0} was squished too much"
 msgstr "{0} was squished too much"
 
-#: ..\_frozen_translations.py:67
+#: ..\_frozen_translations.py:72
 msgid "{0} died from dehydration"
 msgstr "{0} died from dehydration"
 
-#: ..\_frozen_translations.py:68
+#: ..\_frozen_translations.py:73
 msgid "{0} was fireballed by {1}"
 msgstr "{0} was fireballed by {1}"
 
-#: ..\_frozen_translations.py:69
+#: ..\_frozen_translations.py:74
 msgid "{0} fell out of the world"
 msgstr "{0} fell out of the world"
 
-#: ..\_frozen_translations.py:70
+#: ..\_frozen_translations.py:75
 msgid "{0} fell out of the water"
 msgstr "{0} fell out of the water"
 
-#: ..\_frozen_translations.py:71
+#: ..\_frozen_translations.py:76
 msgid "{0} fell off scaffolding"
 msgstr "{0} fell off scaffolding"
 
-#: ..\_frozen_translations.py:72
+#: ..\_frozen_translations.py:77
 msgid "{0} suffocated in a wall"
 msgstr "{0} suffocated in a wall"
 
-#: ..\_frozen_translations.py:73
+#: ..\_frozen_translations.py:78
 msgid "{0} was pricked to death"
 msgstr "{0} was pricked to death"
 
-#: ..\_frozen_translations.py:74
+#: ..\_frozen_translations.py:79
 msgid "{0} went off with a bang"
 msgstr "{0} went off with a bang"
 
-#: ..\_frozen_translations.py:75
+#: ..\_frozen_translations.py:80
 msgid "{0} fell off some vines"
 msgstr "{0} fell off some vines"
 
-#: ..\_frozen_translations.py:76
+#: ..\_frozen_translations.py:81
 msgid "{0} fell while climbing"
 msgstr "{0} fell while climbing"
 
-#: ..\_frozen_translations.py:77
+#: ..\_frozen_translations.py:82
 msgid "{0} was squashed by {1}"
 msgstr "{0} was squashed by {1}"
 
-#: ..\_frozen_translations.py:78
+#: ..\_frozen_translations.py:83
 msgid "{0} died because of {1}"
 msgstr "{0} died because of {1}"
 
-#: ..\_frozen_translations.py:79
+#: ..\_frozen_translations.py:84
 msgid "{0} was blown up by {1}"
 msgstr "{0} was blown up by {1}"
 
-#: ..\_frozen_translations.py:80
+#: ..\_frozen_translations.py:85
 msgid "{0} was killed by magic"
 msgstr "{0} was killed by magic"
 
-#: ..\_frozen_translations.py:81
+#: ..\_frozen_translations.py:86
 msgid "{0} was pummeled by {1}"
 msgstr "{0} was pummeled by {1}"
 
-#: ..\_frozen_translations.py:82
+#: ..\_frozen_translations.py:87
 msgid "{0} was doomed to fall"
 msgstr "{0} was doomed to fall"
 
-#: ..\_frozen_translations.py:83
+#: ..\_frozen_translations.py:88
 msgid "{0} was impaled by {1}"
 msgstr "{0} was impaled by {1}"
 
-#: ..\_frozen_translations.py:84
+#: ..\_frozen_translations.py:89
 msgid "{0} was stung to death"
 msgstr "{0} was stung to death"
 
-#: ..\_frozen_translations.py:85
+#: ..\_frozen_translations.py:90
 msgid "{0} fell off a ladder"
 msgstr "{0} fell off a ladder"
 
-#: ..\_frozen_translations.py:86
+#: ..\_frozen_translations.py:91
 msgid "{0} went up in flames"
 msgstr "{0} went up in flames"
 
-#: ..\_frozen_translations.py:87
+#: ..\_frozen_translations.py:92
 msgid "{0} was killed by {1}"
 msgstr "{0} was killed by {1}"
 
-#: ..\_frozen_translations.py:88
+#: ..\_frozen_translations.py:93
 msgid "{0} starved to death"
 msgstr "{0} starved to death"
 
-#: ..\_frozen_translations.py:89 ..\_frozen_translations.py:90
+#: ..\_frozen_translations.py:94
 msgid "{0} was slain by {1}"
 msgstr "{0} was slain by {1}"
 
-#: ..\_frozen_translations.py:91
+#: ..\_frozen_translations.py:95
 msgid "{0} burned to death"
 msgstr "{0} burned to death"
 
-#: ..\_frozen_translations.py:92
+#: ..\_frozen_translations.py:96
 msgid "{0} was shot by {1}"
 msgstr "{0} was shot by {1}"
 
-#: ..\_frozen_translations.py:93
+#: ..\_frozen_translations.py:97
 msgid "{0} froze to death"
 msgstr "{0} froze to death"
 
-#: ..\_frozen_translations.py:94
+#: ..\_frozen_translations.py:98
 msgid "{0} withered away"
 msgstr "{0} withered away"
 
-#: ..\_frozen_translations.py:95
+#: ..\_frozen_translations.py:99
 msgid "{0} drowned"
 msgstr "{0} drowned"
 
-#: ..\_frozen_translations.py:96
+#: ..\_frozen_translations.py:100
 msgid "{0} blew up"
 msgstr "{0} blew up"
 
-#: ..\_frozen_translations.py:97
+#: ..\_frozen_translations.py:101
 msgid "{0} died"
 msgstr "{0} died"
 
-#: ..\_frozen_translations.py:98
+#: ..\_frozen_translations.py:102
 msgid "Axolotl"
 msgstr "Axolotl"
 
-#: ..\_frozen_translations.py:99
+#: ..\_frozen_translations.py:103
 msgid "Bee"
 msgstr "Bee"
 
-#: ..\_frozen_translations.py:100
+#: ..\_frozen_translations.py:104
 msgid "Blaze"
 msgstr "Blaze"
 
-#: ..\_frozen_translations.py:101
+#: ..\_frozen_translations.py:105
 msgid "Cave Spider"
 msgstr "Cave Spider"
 
-#: ..\_frozen_translations.py:102
+#: ..\_frozen_translations.py:106
 msgid "Creeper"
 msgstr "Creeper"
 
-#: ..\_frozen_translations.py:103
+#: ..\_frozen_translations.py:107
 msgid "Drowned"
 msgstr "Drowned"
 
-#: ..\_frozen_translations.py:104
-msgid "Dragon Fireball"
-msgstr "Dragon Fireball"
-
-#: ..\_frozen_translations.py:105
+#: ..\_frozen_translations.py:108
 msgid "Elder Guardian"
 msgstr "Elder Guardian"
 
-#: ..\_frozen_translations.py:106
+#: ..\_frozen_translations.py:109
 msgid "End Crystal"
 msgstr "End Crystal"
 
-#: ..\_frozen_translations.py:107
+#: ..\_frozen_translations.py:110
 msgid "Ender Dragon"
 msgstr "Ender Dragon"
 
-#: ..\_frozen_translations.py:108
+#: ..\_frozen_translations.py:111
 msgid "Enderman"
 msgstr "Enderman"
 
-#: ..\_frozen_translations.py:109
+#: ..\_frozen_translations.py:112
 msgid "Endermite"
 msgstr "Endermite"
 
-#: ..\_frozen_translations.py:110
+#: ..\_frozen_translations.py:113
 msgid "Evoker"
 msgstr "Evoker"
 
-#: ..\_frozen_translations.py:111
-msgid "Falling Block"
-msgstr "Falling Block"
+#: ..\_frozen_translations.py:114
+msgid "Frog"
+msgstr "Frog"
 
-#: ..\_frozen_translations.py:112
+#: ..\_frozen_translations.py:115
 msgid "Ghast"
 msgstr "Ghast"
 
-#: ..\_frozen_translations.py:113
+#: ..\_frozen_translations.py:116
 msgid "Giant"
 msgstr "Giant"
 
-#: ..\_frozen_translations.py:114
+#: ..\_frozen_translations.py:117
 msgid "Goat"
 msgstr "Goat"
 
-#: ..\_frozen_translations.py:115
+#: ..\_frozen_translations.py:118
 msgid "Guardian"
 msgstr "Guardian"
 
-#: ..\_frozen_translations.py:116
+#: ..\_frozen_translations.py:119
 msgid "Hoglin"
 msgstr "Hoglin"
 
-#: ..\_frozen_translations.py:117
+#: ..\_frozen_translations.py:120
 msgid "Husk"
 msgstr "Husk"
 
-#: ..\_frozen_translations.py:118
+#: ..\_frozen_translations.py:121
 msgid "Ravager"
 msgstr "Ravager"
 
-#: ..\_frozen_translations.py:119
+#: ..\_frozen_translations.py:122
 msgid "Illusioner"
 msgstr "Illusioner"
 
-#: ..\_frozen_translations.py:120
+#: ..\_frozen_translations.py:123
 msgid "The Killer Bunny"
 msgstr "The Killer Bunny"
 
-#: ..\_frozen_translations.py:121
+#: ..\_frozen_translations.py:124
 msgid "Lightning Bolt"
 msgstr "Lightning Bolt"
 
-#: ..\_frozen_translations.py:122
+#: ..\_frozen_translations.py:125
 msgid "Llama"
 msgstr "Llama"
 
-#: ..\_frozen_translations.py:123
+#: ..\_frozen_translations.py:126
 msgid "Magma Cube"
 msgstr "Magma Cube"
 
-#: ..\_frozen_translations.py:124
+#: ..\_frozen_translations.py:127
 msgid "Ocelot"
 msgstr "Ocelot"
 
-#: ..\_frozen_translations.py:125
+#: ..\_frozen_translations.py:128
 msgid "Panda"
 msgstr "Panda"
 
-#: ..\_frozen_translations.py:126
+#: ..\_frozen_translations.py:129
 msgid "Phantom"
 msgstr "Phantom"
 
-#: ..\_frozen_translations.py:127
+#: ..\_frozen_translations.py:130
 msgid "Piglin"
 msgstr "Piglin"
 
-#: ..\_frozen_translations.py:128
+#: ..\_frozen_translations.py:131
 msgid "Piglin Brute"
 msgstr "Piglin Brute"
 
-#: ..\_frozen_translations.py:129
+#: ..\_frozen_translations.py:132
 msgid "Pillager"
 msgstr "Pillager"
 
-#: ..\_frozen_translations.py:130
+#: ..\_frozen_translations.py:133
 msgid "Polar Bear"
 msgstr "Polar Bear"
 
-#: ..\_frozen_translations.py:131
+#: ..\_frozen_translations.py:134
 msgid "Pufferfish"
 msgstr "Pufferfish"
 
-#: ..\_frozen_translations.py:132
+#: ..\_frozen_translations.py:135
 msgid "Shulker"
 msgstr "Shulker"
 
-#: ..\_frozen_translations.py:133
+#: ..\_frozen_translations.py:136
 msgid "Silverfish"
 msgstr "Silverfish"
 
-#: ..\_frozen_translations.py:134
+#: ..\_frozen_translations.py:137
 msgid "Skeleton"
 msgstr "Skeleton"
 
-#: ..\_frozen_translations.py:135
+#: ..\_frozen_translations.py:138
 msgid "Slime"
 msgstr "Slime"
 
-#: ..\_frozen_translations.py:136
+#: ..\_frozen_translations.py:139
 msgid "Snow Golem"
 msgstr "Snow Golem"
 
-#: ..\_frozen_translations.py:137
+#: ..\_frozen_translations.py:140
 msgid "Spider"
 msgstr "Spider"
 
-#: ..\_frozen_translations.py:138
+#: ..\_frozen_translations.py:141
 msgid "Stray"
 msgstr "Stray"
 
-#: ..\_frozen_translations.py:139
+#: ..\_frozen_translations.py:142
 msgid "Strider"
 msgstr "Strider"
 
-#: ..\_frozen_translations.py:140
+#: ..\_frozen_translations.py:143
 msgid "Trader Llama"
 msgstr "Trader Llama"
 
-#: ..\_frozen_translations.py:141
+#: ..\_frozen_translations.py:144
 msgid "Vex"
 msgstr "Vex"
 
-#: ..\_frozen_translations.py:142
+#: ..\_frozen_translations.py:145
 msgid "Butcher"
 msgstr "Butcher"
 
-#: ..\_frozen_translations.py:143
+#: ..\_frozen_translations.py:146
 msgid "Cartographer"
 msgstr "Cartographer"
 
-#: ..\_frozen_translations.py:144
+#: ..\_frozen_translations.py:147
 msgid "Cleric"
 msgstr "Cleric"
 
-#: ..\_frozen_translations.py:145
+#: ..\_frozen_translations.py:148
 msgid "Farmer"
 msgstr "Farmer"
 
-#: ..\_frozen_translations.py:146
+#: ..\_frozen_translations.py:149
 msgid "Fisherman"
 msgstr "Fisherman"
 
-#: ..\_frozen_translations.py:147
+#: ..\_frozen_translations.py:150
 msgid "Fletcher"
 msgstr "Fletcher"
 
-#: ..\_frozen_translations.py:148
+#: ..\_frozen_translations.py:151
 msgid "Leatherworker"
 msgstr "Leatherworker"
 
-#: ..\_frozen_translations.py:149
+#: ..\_frozen_translations.py:152
 msgid "Librarian"
 msgstr "Librarian"
 
-#: ..\_frozen_translations.py:150
+#: ..\_frozen_translations.py:153
 msgid "Mason"
 msgstr "Mason"
 
-#: ..\_frozen_translations.py:151
+#: ..\_frozen_translations.py:154
 msgid "Nitwit"
 msgstr "Nitwit"
 
-#: ..\_frozen_translations.py:152
+#: ..\_frozen_translations.py:155
 msgid "Shepherd"
 msgstr "Shepherd"
 
-#: ..\_frozen_translations.py:153
+#: ..\_frozen_translations.py:156
 msgid "Toolsmith"
 msgstr "Toolsmith"
 
-#: ..\_frozen_translations.py:154
+#: ..\_frozen_translations.py:157
 msgid "Weaponsmith"
 msgstr "Weaponsmith"
 
-#: ..\_frozen_translations.py:155
+#: ..\_frozen_translations.py:158
 msgid "Villager"
 msgstr "Villager"
 
-#: ..\_frozen_translations.py:156
+#: ..\_frozen_translations.py:159
 msgid "Iron Golem"
 msgstr "Iron Golem"
 
-#: ..\_frozen_translations.py:157
+#: ..\_frozen_translations.py:160
 msgid "Vindicator"
 msgstr "Vindicator"
 
-#: ..\_frozen_translations.py:158
-msgid "Witch"
-msgstr "Witch"
-
-#: ..\_frozen_translations.py:159
-msgid "Wither"
-msgstr "Wither"
-
-#: ..\_frozen_translations.py:160
-msgid "Wither Skeleton"
-msgstr "Wither Skeleton"
-
 #: ..\_frozen_translations.py:161
-msgid "Wolf"
-msgstr "Wolf"
-
-#: ..\_frozen_translations.py:162
-msgid "Zoglin"
-msgstr "Zoglin"
-
-#: ..\_frozen_translations.py:163
-msgid "Zombie"
-msgstr "Zombie"
-
-#: ..\_frozen_translations.py:164
-msgid "Zombified Piglin"
-msgstr "Zombified Piglin"
-
-#: ..\_frozen_translations.py:165
-msgid "Zombie Villager"
-msgstr "Zombie Villager"
-
-#: ..\_frozen_translations.py:166
-msgid "[Intentional Game Design]"
-msgstr "[Intentional Game Design]"
-
-#: ..\_frozen_translations.py:167
-msgid "Zombie Pigman"
-msgstr "Zombie Pigman"
-
-#: ..\_frozen_translations.py:168
 msgid "Warden"
 msgstr "Warden"
 
+#: ..\_frozen_translations.py:162
+msgid "Witch"
+msgstr "Witch"
+
+#: ..\_frozen_translations.py:163
+msgid "Wither"
+msgstr "Wither"
+
+#: ..\_frozen_translations.py:164
+msgid "Wither Skeleton"
+msgstr "Wither Skeleton"
+
+#: ..\_frozen_translations.py:165
+msgid "Wolf"
+msgstr "Wolf"
+
+#: ..\_frozen_translations.py:166
+msgid "Zoglin"
+msgstr "Zoglin"
+
+#: ..\_frozen_translations.py:167
+msgid "Zombie"
+msgstr "Zombie"
+
+#: ..\_frozen_translations.py:168
+msgid "Zombified Piglin"
+msgstr "Zombified Piglin"
+
 #: ..\_frozen_translations.py:169
+msgid "Zombie Villager"
+msgstr "Zombie Villager"
+
+#: ..\_frozen_translations.py:170
+msgid "[Intentional Game Design]"
+msgstr "[Intentional Game Design]"
+
+#: ..\_frozen_translations.py:171
+msgid "Zombie Pigman"
+msgstr "Zombie Pigman"
+
+#: ..\_frozen_translations.py:172
 msgid "help_brief_associate"
 msgstr "Manages links from Discord to Minecraft"
 
-#: ..\_frozen_translations.py:170
+#: ..\_frozen_translations.py:173
 msgid "help_associate"
 msgstr ""
 "Returns info about linked Minecraft nicks\n"
 "Requires links that creates '{prefix}associate add' command!"
 
-#: ..\_frozen_translations.py:171
+#: ..\_frozen_translations.py:174
 msgid "help_associate_for_who"
 msgstr ""
 "Get info about your nicks - 'me'\n"
 "Or get info about all nicks - 'everyone'"
 
-#: ..\_frozen_translations.py:172
+#: ..\_frozen_translations.py:175
 msgid "help_associate_add"
 msgstr ""
 "**For admin only!**\n"
 "Links user in Discord with nick in Minecraft\n"
 "For more correct work of other commands, it's better to set it up!"
 
-#: ..\_frozen_translations.py:173
+#: ..\_frozen_translations.py:176
 msgid "help_associate_add_discord_mention"
 msgstr "Discord mention of user, example: '@User'"
 
-#: ..\_frozen_translations.py:174
+#: ..\_frozen_translations.py:177
 msgid "help_associate_add_minecraft_nick"
 msgstr "Nick in Minecraft that you want to link to"
 
-#: ..\_frozen_translations.py:175
+#: ..\_frozen_translations.py:178
 msgid "help_associate_del"
 msgstr ""
 "**For admin only!**\n"
 "Unlinks user in Discord with nick in Minecraft"
 
-#: ..\_frozen_translations.py:176
+#: ..\_frozen_translations.py:179
 msgid "help_associate_del_discord_mention"
 msgstr "Discord mention of user, example: '@User'"
 
-#: ..\_frozen_translations.py:177
+#: ..\_frozen_translations.py:180
 msgid "help_associate_del_minecraft_nick"
 msgstr "Nick in Minecraft that you want to unlink to"
 
-#: ..\_frozen_translations.py:178
+#: ..\_frozen_translations.py:181
 msgid "help_brief_authorize"
 msgstr "Handles secure authorization in Minecraft 🔑"
 
-#: ..\_frozen_translations.py:179
+#: ..\_frozen_translations.py:182
 msgid "help_authorize"
 msgstr ""
 "Returns information about secure authorization configuration and authorized "
 "players"
 
-#: ..\_frozen_translations.py:180
+#: ..\_frozen_translations.py:183
 msgid "help_authorize_ban"
 msgstr "Bans specified IP-address"
 
-#: ..\_frozen_translations.py:181
+#: ..\_frozen_translations.py:184
 msgid "help_authorize_ban_ip"
 msgstr "IP-address to search"
 
-#: ..\_frozen_translations.py:182
+#: ..\_frozen_translations.py:185
 msgid "help_authorize_ban_reason"
 msgstr "Reason for ban"
 
-#: ..\_frozen_translations.py:183
+#: ..\_frozen_translations.py:186
 msgid "help_authorize_banlist"
 msgstr "Returns list of bans by IP-address on selected Minecraft server"
 
-#: ..\_frozen_translations.py:184
+#: ..\_frozen_translations.py:187
 msgid "help_authorize_login"
 msgstr ""
 "Confirms and gives access to the user by nick using code\n"
 "Works only if user logged into the Minecraft server at least once"
 
-#: ..\_frozen_translations.py:185
+#: ..\_frozen_translations.py:188
 msgid "help_authorize_login_code"
 msgstr "{code_length}-digit code, not case sensitive"
 
-#: ..\_frozen_translations.py:186
+#: ..\_frozen_translations.py:189
 msgid "help_authorize_login_nick"
 msgstr ""
 "Nick of Minecraft player\n"
 "Note: if nick has spaces, you must enter it in quotes, for example: \"Nick\""
 
-#: ..\_frozen_translations.py:187
+#: ..\_frozen_translations.py:190
 msgid "help_authorize_off"
 msgstr "Disables secure authorization"
 
-#: ..\_frozen_translations.py:188
+#: ..\_frozen_translations.py:191
 msgid "help_authorize_on"
 msgstr "Enables secure authorization"
 
-#: ..\_frozen_translations.py:189
+#: ..\_frozen_translations.py:192
 msgid "help_authorize_revoke"
 msgstr ""
 "Prematurely revokes permission to access by IP-address for nicks in "
 "Minecraft available to you"
 
-#: ..\_frozen_translations.py:190
+#: ..\_frozen_translations.py:193
 msgid "help_authorize_revoke_ip"
 msgstr "IP-address to search"
 
-#: ..\_frozen_translations.py:191
+#: ..\_frozen_translations.py:194
 msgid "help_authorize_revoke_nick"
 msgstr ""
 "Minecraft nick to search\n"
 "If provided only IP-address from this nick will be revoked!"
 
-#: ..\_frozen_translations.py:192
+#: ..\_frozen_translations.py:195
 msgid "help_authorize_revoke_all"
 msgstr "Revokes all logged nicks"
 
-#: ..\_frozen_translations.py:193
+#: ..\_frozen_translations.py:196
 msgid "help_authorize_unban"
 msgstr "Unbans selected IP-address from selected Minecraft server ban list"
 
-#: ..\_frozen_translations.py:194
+#: ..\_frozen_translations.py:197
 msgid "help_authorize_unban_ip"
 msgstr "IP-address to search"
 
-#: ..\_frozen_translations.py:195
+#: ..\_frozen_translations.py:198
 msgid "help_brief_backup"
 msgstr "Makes/manages backups 💾"
 
-#: ..\_frozen_translations.py:196
+#: ..\_frozen_translations.py:199
 msgid "help_backup"
 msgstr "Returns info about backups"
 
-#: ..\_frozen_translations.py:197
+#: ..\_frozen_translations.py:200
 msgid "help_backup_del"
 msgstr ""
 "Deletes backup by provided number for selected Minecraft server\n"
 "Creates a poll to prove your intentions"
 
-#: ..\_frozen_translations.py:198
+#: ..\_frozen_translations.py:201
 msgid "help_backup_del_backup_number"
 msgstr "Backup number from '{prefix}backup list'"
 
-#: ..\_frozen_translations.py:199
+#: ..\_frozen_translations.py:202
 msgid "help_backup_del_all"
 msgstr ""
 "Deletes all backups for selected Minecraft server\n"
 "Creates a poll to prove your intentions"
 
-#: ..\_frozen_translations.py:200
+#: ..\_frozen_translations.py:203
 msgid "help_backup_force"
 msgstr "Makes bot to create a user's backup"
 
-#: ..\_frozen_translations.py:201
+#: ..\_frozen_translations.py:204
 msgid "help_backup_force_reason"
 msgstr "Reason for user's backup"
 
-#: ..\_frozen_translations.py:202
+#: ..\_frozen_translations.py:205
 msgid "help_backup_list"
 msgstr "Shows list of current backups for selected Minecraft server"
 
-#: ..\_frozen_translations.py:203
+#: ..\_frozen_translations.py:206
 msgid "help_backup_method"
 msgstr "Sets provided compression method"
 
-#: ..\_frozen_translations.py:204
+#: ..\_frozen_translations.py:207
 msgid "help_backup_method_compression_method"
 msgstr "Compression method from '{prefix}backup method list'"
 
-#: ..\_frozen_translations.py:205
+#: ..\_frozen_translations.py:208
 msgid "help_backup_method_list"
 msgstr ""
 "Shows list of supported methods\n"
@@ -902,72 +928,72 @@ msgstr ""
 "LZMA - compresses with the highest compression level (most effective, but "
 "slow)"
 
-#: ..\_frozen_translations.py:206
+#: ..\_frozen_translations.py:209
 msgid "help_backup_off"
 msgstr "Disables auto backups"
 
-#: ..\_frozen_translations.py:207
+#: ..\_frozen_translations.py:210
 msgid "help_backup_on"
 msgstr "Enables auto backups"
 
-#: ..\_frozen_translations.py:208
+#: ..\_frozen_translations.py:211
 msgid "help_backup_period"
 msgstr "Sets new auto backups period in minutes"
 
-#: ..\_frozen_translations.py:209
+#: ..\_frozen_translations.py:212
 msgid "help_backup_period_minutes"
 msgstr "Auto backups period in minutes"
 
-#: ..\_frozen_translations.py:210
+#: ..\_frozen_translations.py:213
 msgid "help_backup_restore"
 msgstr ""
 "Restores backup from provided backup number for selected Minecraft server"
 
-#: ..\_frozen_translations.py:211
+#: ..\_frozen_translations.py:214
 msgid "help_backup_restore_backup_number"
 msgstr "Backup number from '{prefix}backup list'"
 
-#: ..\_frozen_translations.py:212
+#: ..\_frozen_translations.py:215
 msgid "help_brief_channel"
 msgstr "Manages text channels for some bot's functions"
 
-#: ..\_frozen_translations.py:213
+#: ..\_frozen_translations.py:216
 msgid "help_channel"
 msgstr ""
 "Manages text channels for some bot's functions\n"
 "Without subcommand returns information about bound channels"
 
-#: ..\_frozen_translations.py:214
+#: ..\_frozen_translations.py:217
 msgid "help_channel_chat"
 msgstr ""
 "Saves text channel for cross-platform chat\n"
 "Without arguments saves text channel from which it was launched"
 
-#: ..\_frozen_translations.py:215
+#: ..\_frozen_translations.py:218
 msgid "help_channel_chat_channel"
 msgstr "Channel mention, like '#channel' or channel id if you're developer"
 
-#: ..\_frozen_translations.py:216
+#: ..\_frozen_translations.py:219
 msgid "help_channel_commands"
 msgstr ""
 "Saves text channel as commands' channel\n"
 "Without arguments saves text channel from which it was launched"
 
-#: ..\_frozen_translations.py:217
+#: ..\_frozen_translations.py:220
 msgid "help_channel_commands_channel"
 msgstr "Channel mention, like '#channel' or channel id if you're developer"
 
-#: ..\_frozen_translations.py:218
+#: ..\_frozen_translations.py:221
 msgid "help_brief_clear"
 msgstr "Deletes messages (ಠ ͜ʖಠ)︻╦╤─  ֎"
 
-#: ..\_frozen_translations.py:219
+#: ..\_frozen_translations.py:222
 msgid "help_clear"
 msgstr ""
 "Deletes specified amount of messages\n"
 "Can be dangerous in bad hands..."
 
-#: ..\_frozen_translations.py:220
+#: ..\_frozen_translations.py:223
 msgid "help_clear_count"
 msgstr ""
 "If positive - the number of messages to delete from the bottom of the "
@@ -975,40 +1001,40 @@ msgstr ""
 "If negative - the number of messages that shouldn't be deleted at the top of "
 "the channel, the rest should be deleted"
 
-#: ..\_frozen_translations.py:221
+#: ..\_frozen_translations.py:224
 msgid "help_clear_mentions"
 msgstr ""
 "Mention of a user/role\n"
 "Indicates whose messages you want to delete (otherwise, it deletes "
 "indiscriminately)"
 
-#: ..\_frozen_translations.py:222
+#: ..\_frozen_translations.py:225
 msgid "help_clear_all"
 msgstr "Deletes all messages in channel"
 
-#: ..\_frozen_translations.py:223
+#: ..\_frozen_translations.py:226
 msgid "help_clear_all_mentions"
 msgstr ""
 "Mention of a user/role\n"
 "Indicates whose messages you want to delete (otherwise, it deletes "
 "indiscriminately)"
 
-#: ..\_frozen_translations.py:224
+#: ..\_frozen_translations.py:227
 msgid "help_clear_reply"
 msgstr "Deletes all messages up to reply message (reply message isn't deleted)"
 
-#: ..\_frozen_translations.py:225
+#: ..\_frozen_translations.py:228
 msgid "help_clear_reply_mentions"
 msgstr ""
 "Mention of a user/role\n"
 "Indicates whose messages you want to delete (otherwise, it deletes "
 "indiscriminately)"
 
-#: ..\_frozen_translations.py:226
+#: ..\_frozen_translations.py:229
 msgid "help_brief_edit"
 msgstr "Changes the message in cross-platform chat"
 
-#: ..\_frozen_translations.py:227
+#: ..\_frozen_translations.py:230
 msgid "help_edit"
 msgstr ""
 "Changes the message (if you sent it) in cross-platform chat\n"
@@ -1017,15 +1043,15 @@ msgstr ""
 "If the command is sent in reply to a message, the bot will edit that "
 "message, otherwise the bot will try to find your last message and edit it"
 
-#: ..\_frozen_translations.py:228
+#: ..\_frozen_translations.py:231
 msgid "help_edit_edited_message"
 msgstr "New content of the edited message"
 
-#: ..\_frozen_translations.py:229
+#: ..\_frozen_translations.py:232
 msgid "help_brief_help"
 msgstr "Shows help of command/subcommand (͡° ͜ʖ ͡°)"
 
-#: ..\_frozen_translations.py:230
+#: ..\_frozen_translations.py:233
 msgid "help_help"
 msgstr ""
 "🥚 You have found an easter egg! 🥚\n"
@@ -1033,274 +1059,274 @@ msgstr ""
 "If argument(s) provided returns help for command or subcommand\n"
 "Example: '{prefix}help command' or '{prefix}help command subcommand...'"
 
-#: ..\_frozen_translations.py:231
+#: ..\_frozen_translations.py:234
 msgid "help_help_commands"
 msgstr "Bot command or subcommand for which you want to see full help"
 
-#: ..\_frozen_translations.py:232
+#: ..\_frozen_translations.py:235
 msgid "help_brief_language"
 msgstr "Manages bot's languages"
 
-#: ..\_frozen_translations.py:233
+#: ..\_frozen_translations.py:236
 msgid "help_language"
 msgstr ""
 "Changes bot's language if argument provided\n"
 "Without arguments returns bot's list of available languages:\n"
 "Two-letter language code and its full name"
 
-#: ..\_frozen_translations.py:234
+#: ..\_frozen_translations.py:237
 msgid "help_language_set_language"
 msgstr ""
 "Two-letter language code of the new language you want to set from bot's list "
 "of available languages"
 
-#: ..\_frozen_translations.py:235
+#: ..\_frozen_translations.py:238
 msgid "help_brief_list"
 msgstr "Returns info about players on server"
 
-#: ..\_frozen_translations.py:236
+#: ..\_frozen_translations.py:239
 msgid "help_list"
 msgstr ""
 "Returns number of players on server and they're nicks if the server online"
 
-#: ..\_frozen_translations.py:237
+#: ..\_frozen_translations.py:240
 msgid "help_brief_menu"
 msgstr "Creates a server management menu t(^ᴗ^t)"
 
-#: ..\_frozen_translations.py:238
+#: ..\_frozen_translations.py:241
 msgid "help_menu"
 msgstr "Creates a server management menu for frequently used commands"
 
-#: ..\_frozen_translations.py:239
+#: ..\_frozen_translations.py:242
 msgid "help_brief_op"
 msgstr "Gives/shows player an operator (͠≖ ͜ʖ͠≖)👌"
 
-#: ..\_frozen_translations.py:240
+#: ..\_frozen_translations.py:243
 msgid "help_op"
 msgstr ""
 "Gives player an operator in Minecraft for limited amount of time\n"
 "Requires link that creates '{prefix}associate add' command!\n"
 "Can be dangerous in bad hands..."
 
-#: ..\_frozen_translations.py:241
+#: ..\_frozen_translations.py:244
 msgid "help_op_minecraft_nick"
 msgstr ""
 "Nick of player you want to give an operator\n"
 "Note: if nick has spaces, you must enter it in quotes, for example: \"Nick\""
 
-#: ..\_frozen_translations.py:242
+#: ..\_frozen_translations.py:245
 msgid "help_op_reasons"
 msgstr ""
 "Reasons for giving an operator\n"
 "Only for logs, can be seen via '{prefix}op history'"
 
-#: ..\_frozen_translations.py:243
+#: ..\_frozen_translations.py:246
 msgid "help_op_history"
 msgstr "Shows info about history of giving operators"
 
-#: ..\_frozen_translations.py:244
+#: ..\_frozen_translations.py:247
 msgid "help_op_history_messages_from_end"
 msgstr "Number of messages to show from the end of history of giving operators"
 
-#: ..\_frozen_translations.py:245
+#: ..\_frozen_translations.py:248
 msgid "help_op_info"
 msgstr ""
 "Returns info about linked Minecraft nicks and their number of remaining uses "
 "for giving an operator\n"
 "Requires links that creates '{prefix}associate add' command!"
 
-#: ..\_frozen_translations.py:246
+#: ..\_frozen_translations.py:249
 msgid "help_op_info_for_who"
 msgstr ""
 "Get info about your nicks - 'me'\n"
 "Or get info about all nicks - 'everyone'"
 
-#: ..\_frozen_translations.py:247
+#: ..\_frozen_translations.py:250
 msgid "help_op_info_show"
 msgstr ""
 "Show info about only seen on server Minecraft nicks - 'seen'\n"
 "Or show info about all Minecraft nicks - 'all'"
 
-#: ..\_frozen_translations.py:248
+#: ..\_frozen_translations.py:251
 msgid "help_op_timeout"
 msgstr ""
 "Changes timeout for being operator in Minecraft\n"
 "Without arguments shows current timeout"
 
-#: ..\_frozen_translations.py:249
+#: ..\_frozen_translations.py:252
 msgid "help_op_timeout_new_value"
 msgstr "Timeout for being operator in Minecraft, in seconds"
 
-#: ..\_frozen_translations.py:250
+#: ..\_frozen_translations.py:253
 msgid "help_brief_prefix"
 msgstr "Returns/changes prefix"
 
-#: ..\_frozen_translations.py:251
+#: ..\_frozen_translations.py:254
 msgid "help_prefix"
 msgstr ""
 "Without arguments returns current prefix\n"
 "With argument - changes prefix to a new one"
 
-#: ..\_frozen_translations.py:252
+#: ..\_frozen_translations.py:255
 msgid "help_prefix_new_prefix"
 msgstr "New prefix for bot"
 
-#: ..\_frozen_translations.py:253
+#: ..\_frozen_translations.py:256
 msgid "help_brief_restart"
 msgstr "Restarts server"
 
-#: ..\_frozen_translations.py:254
+#: ..\_frozen_translations.py:257
 msgid "help_restart"
 msgstr ""
 "Restarts the selected server after number of seconds provided from argument\n"
 "Without arguments starts restarting immediately"
 
-#: ..\_frozen_translations.py:255
+#: ..\_frozen_translations.py:258
 msgid "help_restart_timeout"
 msgstr "Timeout before restarting, in seconds"
 
-#: ..\_frozen_translations.py:256
+#: ..\_frozen_translations.py:259
 msgid "help_brief_role"
 msgstr "Manages roles for some bot's functions"
 
-#: ..\_frozen_translations.py:257
+#: ..\_frozen_translations.py:260
 msgid "help_role"
 msgstr ""
 "Manages roles for some bot's functions\n"
 "Without subcommand returns information about bound roles"
 
-#: ..\_frozen_translations.py:258
+#: ..\_frozen_translations.py:261
 msgid "help_role_admin"
 msgstr "Saves admin role for bot"
 
-#: ..\_frozen_translations.py:259
+#: ..\_frozen_translations.py:262
 msgid "help_role_admin_role"
 msgstr "Role mention, like '@Role' or role id if you're developer"
 
-#: ..\_frozen_translations.py:260
+#: ..\_frozen_translations.py:263
 msgid "help_role_admin_clear"
 msgstr "Unbinds admin role for bot"
 
-#: ..\_frozen_translations.py:261
+#: ..\_frozen_translations.py:264
 msgid "help_role_command"
 msgstr "Saves role for commands that manage Minecraft server"
 
-#: ..\_frozen_translations.py:262
+#: ..\_frozen_translations.py:265
 msgid "help_role_command_role"
 msgstr "Role mention, like '@Role' or role id if you're developer"
 
-#: ..\_frozen_translations.py:263
+#: ..\_frozen_translations.py:266
 msgid "help_role_command_clear"
 msgstr "Unbinds role for commands that manage Minecraft server"
 
-#: ..\_frozen_translations.py:264
+#: ..\_frozen_translations.py:267
 msgid "help_brief_schedule"
 msgstr "Shows info about scheduled tasks"
 
-#: ..\_frozen_translations.py:265
+#: ..\_frozen_translations.py:268
 msgid "help_schedule"
 msgstr ""
 "Shows the current status of tasks:\n"
 "- Scheduled shutdown\n"
 "- Permanent start up (forceload)"
 
-#: ..\_frozen_translations.py:266
+#: ..\_frozen_translations.py:269
 msgid "help_schedule_forceload"
 msgstr ""
 "Allows you to configure/display the current state of the task \"Autoload if "
 "server crashes\""
 
-#: ..\_frozen_translations.py:267
+#: ..\_frozen_translations.py:270
 msgid "help_schedule_forceload_off"
 msgstr "Disables task \"Autoload if server crashes\""
 
-#: ..\_frozen_translations.py:268
+#: ..\_frozen_translations.py:271
 msgid "help_schedule_forceload_on"
 msgstr "Enables task \"Autoload if server crashes\""
 
-#: ..\_frozen_translations.py:269
+#: ..\_frozen_translations.py:272
 msgid "help_schedule_shutdown"
 msgstr ""
 "Allows you to configure/display the current state of the task \"Server "
 "shutdown when idle (no players online)\""
 
-#: ..\_frozen_translations.py:270
+#: ..\_frozen_translations.py:273
 msgid "help_schedule_shutdown_off"
 msgstr "Disables task \"Shutdown of Minecraft server when idle\""
 
-#: ..\_frozen_translations.py:271
+#: ..\_frozen_translations.py:274
 msgid "help_schedule_shutdown_on"
 msgstr "Enables task \"Shutdown of Minecraft server when idle\""
 
-#: ..\_frozen_translations.py:272
+#: ..\_frozen_translations.py:275
 msgid "help_schedule_shutdown_timeout"
 msgstr ""
 "Changes timeout for task \"Shutdown of Minecraft server when idle\"\n"
 "Without arguments shows current timeout"
 
-#: ..\_frozen_translations.py:273
+#: ..\_frozen_translations.py:276
 msgid "help_schedule_shutdown_timeout_new_value"
 msgstr "Timeout before stopping the server, in seconds"
 
-#: ..\_frozen_translations.py:274
+#: ..\_frozen_translations.py:277
 msgid "help_brief_server"
 msgstr "Managing of bot's Minecraft servers (͠◉_◉᷅ )"
 
-#: ..\_frozen_translations.py:275
+#: ..\_frozen_translations.py:278
 msgid "help_server"
 msgstr ""
 "Managing of bot's available Minecraft servers\n"
 "Returns selected server name"
 
-#: ..\_frozen_translations.py:276
+#: ..\_frozen_translations.py:279
 msgid "help_server_list"
 msgstr "Returns list of bot's available Minecraft servers"
 
-#: ..\_frozen_translations.py:277
+#: ..\_frozen_translations.py:280
 msgid "help_server_select"
 msgstr "Selects server from bot's available Minecraft servers"
 
-#: ..\_frozen_translations.py:278
+#: ..\_frozen_translations.py:281
 msgid "help_server_select_selected_server"
 msgstr "Number of server from '{prefix}servers list'"
 
-#: ..\_frozen_translations.py:279
+#: ..\_frozen_translations.py:282
 msgid "help_brief_start"
 msgstr "Starts server"
 
-#: ..\_frozen_translations.py:280
+#: ..\_frozen_translations.py:283
 msgid "help_start"
 msgstr "Starts the selected server"
 
-#: ..\_frozen_translations.py:281
+#: ..\_frozen_translations.py:284
 msgid "help_brief_status"
 msgstr "Returns status of server"
 
-#: ..\_frozen_translations.py:282
+#: ..\_frozen_translations.py:285
 msgid "help_status"
 msgstr ""
 "Returns status of the selected server, name of the selected server, info "
 "when server was started and stopped if it happened"
 
-#: ..\_frozen_translations.py:283
+#: ..\_frozen_translations.py:286
 msgid "help_brief_stop"
 msgstr "Stops server"
 
-#: ..\_frozen_translations.py:284
+#: ..\_frozen_translations.py:287
 msgid "help_stop"
 msgstr ""
 "Stops the selected server after number of seconds provided from argument\n"
 "Without arguments starts stopping immediately"
 
-#: ..\_frozen_translations.py:285
+#: ..\_frozen_translations.py:288
 msgid "help_stop_timeout"
 msgstr "Timeout before stopping, in seconds"
 
-#: ..\_frozen_translations.py:286
+#: ..\_frozen_translations.py:289
 msgid "help_brief_whitelist"
 msgstr "'Whitelist' command from Minecraft"
 
-#: ..\_frozen_translations.py:287
+#: ..\_frozen_translations.py:290
 msgid "help_whitelist"
 msgstr ""
 "Implements all functionality of the 'whitelist' command from Minecraft\n"
@@ -1308,180 +1334,180 @@ msgstr ""
 "can login\n"
 "Shows if the restriction is enabled"
 
-#: ..\_frozen_translations.py:288
+#: ..\_frozen_translations.py:291
 msgid "help_whitelist_add"
 msgstr "Adds a Minecraft nick to the list of allowed nicks"
 
-#: ..\_frozen_translations.py:289
+#: ..\_frozen_translations.py:292
 msgid "help_whitelist_add_minecraft_nick"
 msgstr "Nick of the Minecraft player"
 
-#: ..\_frozen_translations.py:290
+#: ..\_frozen_translations.py:293
 msgid "help_whitelist_del"
 msgstr "Deletes a Minecraft nick from the list of allowed nicks"
 
-#: ..\_frozen_translations.py:291
+#: ..\_frozen_translations.py:294
 msgid "help_whitelist_del_minecraft_nick"
 msgstr "Nick of the Minecraft player"
 
-#: ..\_frozen_translations.py:292
+#: ..\_frozen_translations.py:295
 msgid "help_whitelist_list"
 msgstr "Returns list allowed nicks"
 
-#: ..\_frozen_translations.py:293
+#: ..\_frozen_translations.py:296
 msgid "help_whitelist_off"
 msgstr ""
 "Allows the server to let any players regardless of the list of allowed nicks"
 
-#: ..\_frozen_translations.py:294
+#: ..\_frozen_translations.py:297
 msgid "help_whitelist_on"
 msgstr "Forbids the server to let players not from the list of allowed nicks"
 
-#: ..\_frozen_translations.py:295
+#: ..\_frozen_translations.py:298
 msgid "help_whitelist_reload"
 msgstr "Reloads the list of allowed nicks"
 
-#: ..\_frozen_translations.py:296
+#: ..\_frozen_translations.py:299
 msgid "Add Reactions"
 msgstr "Add Reactions"
 
-#: ..\_frozen_translations.py:297
+#: ..\_frozen_translations.py:300
 msgid "Administrator"
 msgstr "Administrator"
 
-#: ..\_frozen_translations.py:298
+#: ..\_frozen_translations.py:301
 msgid "Attach Files"
 msgstr "Attach Files"
 
-#: ..\_frozen_translations.py:299
+#: ..\_frozen_translations.py:302
 msgid "Ban Members"
 msgstr "Ban Members"
 
-#: ..\_frozen_translations.py:300
+#: ..\_frozen_translations.py:303
 msgid "Change Nickname"
 msgstr "Change Nickname"
 
-#: ..\_frozen_translations.py:301
+#: ..\_frozen_translations.py:304
 msgid "Connect"
 msgstr "Connect"
 
-#: ..\_frozen_translations.py:302
+#: ..\_frozen_translations.py:305
 msgid "Create Instant Invite"
 msgstr "Create Instant Invite"
 
-#: ..\_frozen_translations.py:303
+#: ..\_frozen_translations.py:306
 msgid "Deafen Members"
 msgstr "Deafen Members"
 
-#: ..\_frozen_translations.py:304
+#: ..\_frozen_translations.py:307
 msgid "Embed Links"
 msgstr "Embed Links"
 
-#: ..\_frozen_translations.py:305
+#: ..\_frozen_translations.py:308
 msgid "External Emojis"
 msgstr "External Emojis"
 
-#: ..\_frozen_translations.py:306
+#: ..\_frozen_translations.py:309
 msgid "Kick Members"
 msgstr "Kick Members"
 
-#: ..\_frozen_translations.py:307
+#: ..\_frozen_translations.py:310
 msgid "Manage Channels"
 msgstr "Manage Channels"
 
-#: ..\_frozen_translations.py:308
+#: ..\_frozen_translations.py:311
 msgid "Manage Emojis"
 msgstr "Manage Emojis"
 
-#: ..\_frozen_translations.py:309
+#: ..\_frozen_translations.py:312
 msgid "Manage Server"
 msgstr "Manage Server"
 
-#: ..\_frozen_translations.py:310
+#: ..\_frozen_translations.py:313
 msgid "Manage Messages"
 msgstr "Manage Messages"
 
-#: ..\_frozen_translations.py:311
+#: ..\_frozen_translations.py:314
 msgid "Manage Nicknames"
 msgstr "Manage Nicknames"
 
-#: ..\_frozen_translations.py:312
+#: ..\_frozen_translations.py:315
 msgid "Manage Permissions"
 msgstr "Manage Permissions"
 
-#: ..\_frozen_translations.py:313
+#: ..\_frozen_translations.py:316
 msgid "Manage Roles"
 msgstr "Manage Roles"
 
-#: ..\_frozen_translations.py:314
+#: ..\_frozen_translations.py:317
 msgid "Manage Webhooks"
 msgstr "Manage Webhooks"
 
-#: ..\_frozen_translations.py:315
+#: ..\_frozen_translations.py:318
 msgid "Mention Everyone"
 msgstr "Mention @everyone, @here and all roles"
 
-#: ..\_frozen_translations.py:316
+#: ..\_frozen_translations.py:319
 msgid "Move Members"
 msgstr "Move Members"
 
-#: ..\_frozen_translations.py:317
+#: ..\_frozen_translations.py:320
 msgid "Mute Members"
 msgstr "Mute Members"
 
-#: ..\_frozen_translations.py:318
+#: ..\_frozen_translations.py:321
 msgid "Priority Speaker"
 msgstr "Priority Speaker"
 
-#: ..\_frozen_translations.py:319
+#: ..\_frozen_translations.py:322
 msgid "Read Message History"
 msgstr "Read Message History"
 
-#: ..\_frozen_translations.py:320
+#: ..\_frozen_translations.py:323
 msgid "Read Messages"
 msgstr "Read Messages"
 
-#: ..\_frozen_translations.py:321
+#: ..\_frozen_translations.py:324
 msgid "Request To Speak"
 msgstr "Request To Speak"
 
-#: ..\_frozen_translations.py:322
+#: ..\_frozen_translations.py:325
 msgid "Send Messages"
 msgstr "Send Messages"
 
-#: ..\_frozen_translations.py:323
+#: ..\_frozen_translations.py:326
 msgid "Send Tts Messages"
 msgstr "Send text-to-speech messages"
 
-#: ..\_frozen_translations.py:324
+#: ..\_frozen_translations.py:327
 msgid "Speak"
 msgstr "Speak"
 
-#: ..\_frozen_translations.py:325
+#: ..\_frozen_translations.py:328
 msgid "Stream"
 msgstr "Stream"
 
-#: ..\_frozen_translations.py:326
+#: ..\_frozen_translations.py:329
 msgid "Use External Emojis"
 msgstr "Use External Emojis"
 
-#: ..\_frozen_translations.py:327
+#: ..\_frozen_translations.py:330
 msgid "Use Slash Commands"
 msgstr "Use Application Commands"
 
-#: ..\_frozen_translations.py:328
+#: ..\_frozen_translations.py:331
 msgid "Use Voice Activation"
 msgstr "Use Voice Activation"
 
-#: ..\_frozen_translations.py:329
+#: ..\_frozen_translations.py:332
 msgid "View Audit Log"
 msgstr "View Audit Log"
 
-#: ..\_frozen_translations.py:330
+#: ..\_frozen_translations.py:333
 msgid "View Channel"
 msgstr "View Channels"
 
-#: ..\_frozen_translations.py:331
+#: ..\_frozen_translations.py:334
 msgid "View Server Insights"
 msgstr "View Server Insights"
 
@@ -1561,7 +1587,7 @@ msgstr ""
 "The bot couldn't find any messages sent by your bound Minecraft accounts in "
 "the last 100 messages!"
 
-#: ..\commands\chat_commands.py:200 ..\components\additional_funcs.py:1326
+#: ..\commands\chat_commands.py:200 ..\components\additional_funcs.py:1330
 msgid "{0}, you have no bound nicks"
 msgstr "{0}, you have no bound nicks"
 
@@ -1632,15 +1658,15 @@ msgstr ""
 "Use '{prefix}help' command for more info.\n"
 "Or '{prefix}command {arg_list}' for short."
 
-#: ..\commands\chat_commands.py:394
+#: ..\commands\chat_commands.py:395
 msgid "You didn't provide reply in your message!"
 msgstr "You didn't provide reply in your message!"
 
-#: ..\commands\chat_commands.py:403
+#: ..\commands\chat_commands.py:404
 msgid "Starting RSS feed check"
 msgstr "Starting RSS feed check"
 
-#: ..\commands\minecraft_commands.py:93 ..\components\additional_funcs.py:1033
+#: ..\commands\minecraft_commands.py:93 ..\components\additional_funcs.py:1037
 msgid "There are no players on the server"
 msgstr "There are no players on the server"
 
@@ -1671,8 +1697,8 @@ msgstr "Opped "
 #: ..\commands\minecraft_commands.py:133 ..\commands\minecraft_commands.py:426
 #: ..\commands\minecraft_commands.py:1089
 #: ..\commands\minecraft_commands.py:1092
-#: ..\components\additional_funcs.py:1258
-#: ..\components\additional_funcs.py:1260
+#: ..\components\additional_funcs.py:1262
+#: ..\components\additional_funcs.py:1264
 msgid "Reason: "
 msgstr "Reason: "
 
@@ -1976,16 +2002,16 @@ msgstr "Use server list, there's no such server number on the list!"
 msgid "List of servers"
 msgstr "List of servers"
 
-#: ..\commands\minecraft_commands.py:846 ..\components\additional_funcs.py:1218
+#: ..\commands\minecraft_commands.py:846 ..\components\additional_funcs.py:1222
 msgid "Automatic backups enabled"
 msgstr "Automatic backups enabled"
 
-#: ..\commands\minecraft_commands.py:856 ..\components\additional_funcs.py:1219
+#: ..\commands\minecraft_commands.py:856 ..\components\additional_funcs.py:1223
 msgid "Automatic backups disabled"
 msgstr "Automatic backups disabled"
 
 #: ..\commands\minecraft_commands.py:866 ..\commands\minecraft_commands.py:868
-#: ..\components\additional_funcs.py:1220
+#: ..\components\additional_funcs.py:1224
 msgid "Automatic backups period set to {0} min"
 msgstr "Automatic backups period set to {0} min"
 
@@ -1997,7 +2023,7 @@ msgstr "Automatic backups period can't be lower than 0!"
 msgid "Compression method set to {0}"
 msgstr "Compression method set to {0}"
 
-#: ..\commands\minecraft_commands.py:884 ..\components\additional_funcs.py:1228
+#: ..\commands\minecraft_commands.py:884 ..\components\additional_funcs.py:1232
 msgid "Current compression method - {0}"
 msgstr "Current compression method - {0}"
 
@@ -2096,37 +2122,37 @@ msgstr "List of backups for '{0}' server:"
 msgid "Date: "
 msgstr "Date: "
 
-#: ..\commands\minecraft_commands.py:1082 ..\components\additional_funcs.py:918
-#: ..\components\additional_funcs.py:947 ..\components\additional_funcs.py:963
-#: ..\components\additional_funcs.py:967 ..\components\additional_funcs.py:971
-#: ..\components\additional_funcs.py:975 ..\components\additional_funcs.py:978
-#: ..\components\additional_funcs.py:1252 ..\components\watcher_handle.py:416
+#: ..\commands\minecraft_commands.py:1082 ..\components\additional_funcs.py:922
+#: ..\components\additional_funcs.py:951 ..\components\additional_funcs.py:967
+#: ..\components\additional_funcs.py:971 ..\components\additional_funcs.py:975
+#: ..\components\additional_funcs.py:979 ..\components\additional_funcs.py:982
+#: ..\components\additional_funcs.py:1256 ..\components\watcher_handle.py:416
 #: ..\components\watcher_handle.py:450
 msgid "%H:%M:%S %d/%m/%Y"
 msgstr "%H:%M:%S %d/%m/%Y"
 
 #: ..\commands\minecraft_commands.py:1083
-#: ..\components\additional_funcs.py:1253
+#: ..\components\additional_funcs.py:1257
 msgid "Backup size: "
 msgstr "Backup size: "
 
 #: ..\commands\minecraft_commands.py:1090
-#: ..\components\additional_funcs.py:1258
+#: ..\components\additional_funcs.py:1262
 msgid "Automatic backup"
 msgstr "Automatic backup"
 
 #: ..\commands\minecraft_commands.py:1093
-#: ..\components\additional_funcs.py:1261
+#: ..\components\additional_funcs.py:1265
 msgid "Not stated"
 msgstr "Not stated"
 
 #: ..\commands\minecraft_commands.py:1094
-#: ..\components\additional_funcs.py:1262
+#: ..\components\additional_funcs.py:1266
 msgid "Initiator: "
 msgstr "Initiator: "
 
 #: ..\commands\minecraft_commands.py:1099
-#: ..\components\additional_funcs.py:1264
+#: ..\components\additional_funcs.py:1268
 msgid "The world of the server was restored from this backup"
 msgstr "The world of the server was restored from this backup"
 
@@ -2190,37 +2216,37 @@ msgstr "you don't have needed '{0}' role"
 msgid "you don't have permission 'Administrator'"
 msgstr "you don't have permission 'Administrator'"
 
-#: ..\components\additional_funcs.py:138 ..\components\additional_funcs.py:143
+#: ..\components\additional_funcs.py:141 ..\components\additional_funcs.py:146
 msgid "Bot is backing up server!"
 msgstr "Bot is backing up server!"
 
-#: ..\components\additional_funcs.py:140
+#: ..\components\additional_funcs.py:143
 msgid "server have already started!"
 msgstr "server have already started!"
 
-#: ..\components\additional_funcs.py:145
+#: ..\components\additional_funcs.py:148
 msgid "Bot is restoring server from backup!"
 msgstr "Bot is restoring server from backup!"
 
-#: ..\components\additional_funcs.py:147 ..\components\additional_funcs.py:1020
-#: ..\components\additional_funcs.py:1831
+#: ..\components\additional_funcs.py:150 ..\components\additional_funcs.py:1024
+#: ..\components\additional_funcs.py:1842
 msgid "server is loading!"
 msgstr "server is loading!"
 
-#: ..\components\additional_funcs.py:149 ..\components\additional_funcs.py:1022
-#: ..\components\additional_funcs.py:1828
+#: ..\components\additional_funcs.py:152 ..\components\additional_funcs.py:1026
+#: ..\components\additional_funcs.py:1839
 msgid "server is stopping!"
 msgstr "server is stopping!"
 
-#: ..\components\additional_funcs.py:151
+#: ..\components\additional_funcs.py:154
 msgid "server have already been stopped!"
 msgstr "server have already been stopped!"
 
-#: ..\components\additional_funcs.py:163
+#: ..\components\additional_funcs.py:166
 msgid "Loading server by request of {0}"
 msgstr "Loading server by request of {0}"
 
-#: ..\components\additional_funcs.py:165
+#: ..\components\additional_funcs.py:168
 msgid ""
 "Loading server.......\n"
 "Please wait)"
@@ -2228,93 +2254,93 @@ msgstr ""
 "Loading server.......\n"
 "Please wait)"
 
-#: ..\components\additional_funcs.py:198
+#: ..\components\additional_funcs.py:201
 msgid "Script '{0}' doesn't exist."
 msgstr "Script '{0}' doesn't exist."
 
-#: ..\components\additional_funcs.py:200
+#: ..\components\additional_funcs.py:203
 msgid "Couldn't open script because it doesn't exists! Retreating..."
 msgstr "Couldn't open script because it doesn't exists! Retreating..."
 
-#: ..\components\additional_funcs.py:204
+#: ..\components\additional_funcs.py:207
 msgid "Target script of this shortcut '{0}' doesn't exists."
 msgstr "Target script of this shortcut '{0}' doesn't exists."
 
-#: ..\components\additional_funcs.py:206
+#: ..\components\additional_funcs.py:209
 msgid ""
 "Couldn't open shortcut because target script doesn't exists! Retreating..."
 msgstr ""
 "Couldn't open shortcut because target script doesn't exists! Retreating..."
 
-#: ..\components\additional_funcs.py:210
+#: ..\components\additional_funcs.py:213
 msgid "Couldn't open script! Check naming and extension of the script!"
 msgstr "Couldn't open script! Check naming and extension of the script!"
 
-#: ..\components\additional_funcs.py:211
+#: ..\components\additional_funcs.py:214
 msgid "Couldn't open script because of naming! Retreating..."
 msgstr "Couldn't open script because of naming! Retreating..."
 
-#: ..\components\additional_funcs.py:215
+#: ..\components\additional_funcs.py:218
 msgid ""
 "Couldn't open script because there is no command 'screen'! Install it via "
 "packet manager!"
 msgstr ""
 "Couldn't open script because there is no command 'screen'! Install it via "
 "packet manager!"
-
-#: ..\components\additional_funcs.py:217
-msgid ""
-"Couldn't open script because command 'screen' wasn't installed! Retreating..."
-msgstr ""
-"Couldn't open script because command 'screen' wasn't installed! Retreating..."
 
 #: ..\components\additional_funcs.py:220
+msgid ""
+"Couldn't open script because command 'screen' wasn't installed! Retreating..."
+msgstr ""
+"Couldn't open script because command 'screen' wasn't installed! Retreating..."
+
+#: ..\components\additional_funcs.py:223
 msgid "Target of this shortcut '{0}' isn't '*.bat' file or '*.cmd' file."
 msgstr "Target of this shortcut '{0}' isn't '*.bat' file or '*.cmd' file."
 
-#: ..\components\additional_funcs.py:223
+#: ..\components\additional_funcs.py:226
 msgid ""
 "Couldn't open shortcut because target file isn't a script! Retreating..."
 msgstr ""
 "Couldn't open shortcut because target file isn't a script! Retreating..."
 
-#: ..\components\additional_funcs.py:236 ..\components\additional_funcs.py:237
+#: ..\components\additional_funcs.py:239 ..\components\additional_funcs.py:240
 msgid "Error while loading server! Retreating..."
 msgstr "Error while loading server! Retreating..."
 
-#: ..\components\additional_funcs.py:250
+#: ..\components\additional_funcs.py:253
 msgid "Loading: "
 msgstr "Loading: "
 
-#: ..\components\additional_funcs.py:252
+#: ..\components\additional_funcs.py:255
 msgid "{0}, elapsed time: "
 msgstr "{0}, elapsed time: "
 
-#: ..\components\additional_funcs.py:273
+#: ..\components\additional_funcs.py:276
 msgid "Server on!"
 msgstr "Server on!"
 
-#: ..\components\additional_funcs.py:275
+#: ..\components\additional_funcs.py:278
 msgid "Server's on now"
 msgstr "Server's on now"
 
-#: ..\components\additional_funcs.py:277
+#: ..\components\additional_funcs.py:280
 msgid "Kept you waiting, huh?"
 msgstr "Kept you waiting, huh?"
 
-#: ..\components\additional_funcs.py:303
+#: ..\components\additional_funcs.py:306
 msgid "{0}, bot already has poll on `stop`/`restart` command!"
 msgstr "{0}, bot already has poll on `stop`/`restart` command!"
 
-#: ..\components\additional_funcs.py:312
+#: ..\components\additional_funcs.py:315
 msgid "Bot Exception: Couldn't connect to server, because it's stopped"
 msgstr "Bot Exception: Couldn't connect to server, because it's stopped"
 
-#: ..\components\additional_funcs.py:314
+#: ..\components\additional_funcs.py:317
 msgid "Couldn't connect to server to shut it down! Server stopped..."
 msgstr "Couldn't connect to server to shut it down! Server stopped..."
 
-#: ..\components\additional_funcs.py:338
+#: ..\components\additional_funcs.py:341
 msgid ""
 "this man {0} trying to stop the server with {1} player(s) on it. Will you "
 "let that happen?"
@@ -2322,72 +2348,72 @@ msgstr ""
 "this man {0} trying to stop the server with {1} player(s) on it. Will you "
 "let that happen?"
 
-#: ..\components\additional_funcs.py:352
+#: ..\components\additional_funcs.py:355
 msgid "Stopping server by request of {0}"
 msgstr "Stopping server by request of {0}"
 
-#: ..\components\additional_funcs.py:354
+#: ..\components\additional_funcs.py:357
 msgid "Stopping server"
 msgstr "Stopping server"
 
-#: ..\components\additional_funcs.py:355
+#: ..\components\additional_funcs.py:358
 msgid "Please wait {0} sec."
 msgstr "Please wait {0} sec."
 
-#: ..\components\additional_funcs.py:372
+#: ..\components\additional_funcs.py:375
 msgid "Server's shutting down in {0} seconds"
 msgstr "Server's shutting down in {0} seconds"
 
-#: ..\components\additional_funcs.py:375
+#: ..\components\additional_funcs.py:378
 msgid "Server's restarting in {0} seconds"
 msgstr "Server's restarting in {0} seconds"
 
-#: ..\components\additional_funcs.py:385 ..\components\additional_funcs.py:388
+#: ..\components\additional_funcs.py:388 ..\components\additional_funcs.py:391
 msgid "{0} sec to go"
 msgstr "{0} sec to go"
 
-#: ..\components\additional_funcs.py:405
+#: ..\components\additional_funcs.py:408
 msgid "Bot Exception: Couldn't connect to server, so killing it now..."
 msgstr "Bot Exception: Couldn't connect to server, so killing it now..."
 
-#: ..\components\additional_funcs.py:408
+#: ..\components\additional_funcs.py:411
 msgid "Couldn't connect to server to shut it down! Killing it now..."
 msgstr "Couldn't connect to server to shut it down! Killing it now..."
 
-#: ..\components\additional_funcs.py:415 ..\components\additional_funcs.py:417
+#: ..\components\additional_funcs.py:418 ..\components\additional_funcs.py:420
 msgid "Server's off now"
 msgstr "Server's off now"
 
-#: ..\components\additional_funcs.py:515
+#: ..\components\additional_funcs.py:519
 msgid "Starting auto backup"
 msgstr "Starting auto backup"
 
-#: ..\components\additional_funcs.py:528 ..\components\additional_funcs.py:670
-#: ..\components\additional_funcs.py:672
+#: ..\components\additional_funcs.py:532 ..\components\additional_funcs.py:674
+#: ..\components\additional_funcs.py:676
 msgid "Backup completed!"
 msgstr "Backup completed!"
 
-#: ..\components\additional_funcs.py:587 ..\components\additional_funcs.py:596
+#: ..\components\additional_funcs.py:591 ..\components\additional_funcs.py:600
 msgid "Starting backup triggered by {0} in 3 seconds..."
 msgstr "Starting backup triggered by {0} in 3 seconds..."
 
-#: ..\components\additional_funcs.py:590 ..\components\additional_funcs.py:599
+#: ..\components\additional_funcs.py:594 ..\components\additional_funcs.py:603
 msgid "Starting automatic backup in 3 seconds..."
 msgstr "Starting automatic backup in 3 seconds..."
 
-#: ..\components\additional_funcs.py:606 ..\components\additional_funcs.py:609
+#: ..\components\additional_funcs.py:610 ..\components\additional_funcs.py:613
 msgid "Saving chunks..."
 msgstr "Saving chunks..."
 
-#: ..\components\additional_funcs.py:618 ..\components\additional_funcs.py:621
+#: ..\components\additional_funcs.py:622 ..\components\additional_funcs.py:625
 msgid "Chunks saved!"
 msgstr "Chunks saved!"
 
-#: ..\components\additional_funcs.py:619 ..\components\additional_funcs.py:623
+#: ..\components\additional_funcs.py:623 ..\components\additional_funcs.py:627
 msgid "Creating zip-archive for backup!"
 msgstr "Creating zip-archive for backup!"
 
-#: ..\components\additional_funcs.py:660
+#: ..\components\additional_funcs.py:664
 msgid ""
 "Done in {0}\n"
 "Compression method: {1}"
@@ -2395,27 +2421,27 @@ msgstr ""
 "Done in {0}\n"
 "Compression method: {1}"
 
-#: ..\components\additional_funcs.py:723
+#: ..\components\additional_funcs.py:727
 msgid "Deleted auto backup '{0}.zip' because of {1}"
 msgstr "Deleted auto backup '{0}.zip' because of {1}"
 
-#: ..\components\additional_funcs.py:733
+#: ..\components\additional_funcs.py:737
 msgid "Deleted backup '{0}.zip' made by {1} because of {2}"
 msgstr "Deleted backup '{0}.zip' made by {1} because of {2}"
 
-#: ..\components\additional_funcs.py:736
+#: ..\components\additional_funcs.py:740
 msgid "Deleted all backups because of {0}"
 msgstr "Deleted all backups because of {0}"
 
-#: ..\components\additional_funcs.py:756 ..\components\additional_funcs.py:757
+#: ..\components\additional_funcs.py:760 ..\components\additional_funcs.py:761
 msgid "backups' count limit"
 msgstr "backups' count limit"
 
-#: ..\components\additional_funcs.py:773 ..\components\additional_funcs.py:774
+#: ..\components\additional_funcs.py:777 ..\components\additional_funcs.py:778
 msgid "lack of space"
 msgstr "lack of space"
 
-#: ..\components\additional_funcs.py:829
+#: ..\components\additional_funcs.py:833
 msgid ""
 "Bot has backups only from members for '{0}' server, so keep in mind, that "
 "bot will delete oldest backup on next auto backup!"
@@ -2423,26 +2449,26 @@ msgstr ""
 "Bot has backups only from members for '{0}' server, so keep in mind, that "
 "bot will delete oldest backup on next auto backup!"
 
-#: ..\components\additional_funcs.py:850
+#: ..\components\additional_funcs.py:854
 msgid " sec"
 msgstr " sec"
 
-#: ..\components\additional_funcs.py:859
+#: ..\components\additional_funcs.py:863
 msgid " min"
 msgstr " min"
 
-#: ..\components\additional_funcs.py:895
+#: ..\components\additional_funcs.py:899
 msgid " player(s) online"
 msgstr " player(s) online"
 
-#: ..\components\additional_funcs.py:907
-msgid ""
-"Bot detected: Server is idle for {0} without players! Stopping server now!"
-msgstr ""
-"Bot detected: Server is idle for {0} without players! Stopping server now!"
-
 #: ..\components\additional_funcs.py:911
 msgid ""
+"Bot detected: Server is idle for {0} without players! Stopping server now!"
+msgstr ""
+"Bot detected: Server is idle for {0} without players! Stopping server now!"
+
+#: ..\components\additional_funcs.py:915
+msgid ""
 "Bot detected: Server is idle for {0} without players!\n"
 "Time: {1}\n"
 "Shutting down server now!"
@@ -2451,15 +2477,15 @@ msgstr ""
 "Time: {1}\n"
 "Shutting down server now!"
 
-#: ..\components\additional_funcs.py:926
+#: ..\components\additional_funcs.py:930
 msgid "Server unexpectedly stopped!"
 msgstr "Server unexpectedly stopped!"
 
-#: ..\components\additional_funcs.py:942
+#: ..\components\additional_funcs.py:946
 msgid "Bot detected: Server's offline! Starting up server again!"
 msgstr "Bot detected: Server's offline! Starting up server again!"
 
-#: ..\components\additional_funcs.py:944
+#: ..\components\additional_funcs.py:948
 msgid ""
 "Bot detected: Server's offline!\n"
 "Time: {0}\n"
@@ -2469,124 +2495,124 @@ msgstr ""
 "Time: {0}\n"
 "Starting up server again!"
 
-#: ..\components\additional_funcs.py:962
+#: ..\components\additional_funcs.py:966
 msgid "Server has been started at {0} by member {1}"
 msgstr "Server has been started at {0} by member {1}"
 
-#: ..\components\additional_funcs.py:966
+#: ..\components\additional_funcs.py:970
 msgid "Server has started at {0}"
 msgstr "Server has started at {0}"
 
-#: ..\components\additional_funcs.py:970
+#: ..\components\additional_funcs.py:974
 msgid "Server has been stopped at {0} by member {1}"
 msgstr "Server has been stopped at {0} by member {1}"
 
-#: ..\components\additional_funcs.py:974
+#: ..\components\additional_funcs.py:978
 msgid "Server has stopped at {0}"
 msgstr "Server has stopped at {0}"
 
-#: ..\components\additional_funcs.py:977
+#: ..\components\additional_funcs.py:981
 msgid "Server has crashed at {0}"
 msgstr "Server has crashed at {0}"
 
-#: ..\components\additional_funcs.py:980
+#: ..\components\additional_funcs.py:984
 msgid "Server address: "
 msgstr "Server address: "
 
-#: ..\components\additional_funcs.py:982
+#: ..\components\additional_funcs.py:986
 msgid "Server is backing up"
 msgstr "Server is backing up"
 
-#: ..\components\additional_funcs.py:984
+#: ..\components\additional_funcs.py:988
 msgid "Server is restoring from backup"
 msgstr "Server is restoring from backup"
 
-#: ..\components\additional_funcs.py:985
+#: ..\components\additional_funcs.py:989
 msgid "Selected server: {0}"
 msgstr "Selected server: {0}"
 
-#: ..\components\additional_funcs.py:988
+#: ..\components\additional_funcs.py:992
 msgid "Average server loading time: {0}"
 msgstr "Average server loading time: {0}"
 
-#: ..\components\additional_funcs.py:993
+#: ..\components\additional_funcs.py:997
 msgid "server online"
 msgstr "server online"
 
-#: ..\components\additional_funcs.py:998
+#: ..\components\additional_funcs.py:1002
 msgid "Time in Minecraft: "
 msgstr "Time in Minecraft: "
 
-#: ..\components\additional_funcs.py:1000
+#: ..\components\additional_funcs.py:1004
 msgid "Day, "
 msgstr "Day, "
 
-#: ..\components\additional_funcs.py:1002
+#: ..\components\additional_funcs.py:1006
 msgid "Sunset, "
 msgstr "Sunset, "
 
-#: ..\components\additional_funcs.py:1004
+#: ..\components\additional_funcs.py:1008
 msgid "Night, "
 msgstr "Night, "
 
-#: ..\components\additional_funcs.py:1006
+#: ..\components\additional_funcs.py:1010
 msgid "Sunrise, "
 msgstr "Sunrise, "
 
-#: ..\components\additional_funcs.py:1010
+#: ..\components\additional_funcs.py:1014
 msgid "Server version: {0}"
 msgstr "Server version: {0}"
 
-#: ..\components\additional_funcs.py:1015
+#: ..\components\additional_funcs.py:1019
 msgid "Server thinking..."
 msgstr "Server thinking..."
 
-#: ..\components\additional_funcs.py:1017
+#: ..\components\additional_funcs.py:1021
 msgid "Server's down via rcon"
 msgstr "Server's down via rcon"
 
-#: ..\components\additional_funcs.py:1024
-#: ..\components\additional_funcs.py:1065
-#: ..\components\additional_funcs.py:1584
-#: ..\components\additional_funcs.py:1822
+#: ..\components\additional_funcs.py:1028
+#: ..\components\additional_funcs.py:1069
+#: ..\components\additional_funcs.py:1595
+#: ..\components\additional_funcs.py:1833
 msgid "server offline"
 msgstr "server offline"
 
-#: ..\components\additional_funcs.py:1049
+#: ..\components\additional_funcs.py:1053
 msgid "from"
 msgstr "from"
 
-#: ..\components\additional_funcs.py:1050
+#: ..\components\additional_funcs.py:1054
 msgid "%H:%M %d/%m/%y"
 msgstr "%H:%M %d/%m/%y"
 
-#: ..\components\additional_funcs.py:1059
+#: ..\components\additional_funcs.py:1063
 msgid "Players online: {0} / {1}"
 msgstr "Players online: {0} / {1}"
 
-#: ..\components\additional_funcs.py:1080
-#: ..\components\additional_funcs.py:1096
+#: ..\components\additional_funcs.py:1084
+#: ..\components\additional_funcs.py:1100
 msgid "Some player(s) still have an operator, waiting for them"
 msgstr "Some player(s) still have an operator, waiting for them"
 
-#: ..\components\additional_funcs.py:1100
+#: ..\components\additional_funcs.py:1104
 msgid "Restarting server"
 msgstr "Restarting server"
 
-#: ..\components\additional_funcs.py:1122
+#: ..\components\additional_funcs.py:1126
 msgid "You should mention ONLY members or roles of this server!"
 msgstr "You should mention ONLY members or roles of this server!"
 
-#: ..\components\additional_funcs.py:1141
-#: ..\components\additional_funcs.py:1207
+#: ..\components\additional_funcs.py:1145
+#: ..\components\additional_funcs.py:1211
 msgid "Nothing's done!"
 msgstr "Nothing's done!"
 
-#: ..\components\additional_funcs.py:1158
+#: ..\components\additional_funcs.py:1162
 msgid "{0}, bot already has poll on `clear` command for this channel!"
 msgstr "{0}, bot already has poll on `clear` command for this channel!"
 
-#: ..\components\additional_funcs.py:1163
+#: ..\components\additional_funcs.py:1167
 msgid ""
 "this man {0} trying to delete some history of this channel. Will you let "
 "that happen?"
@@ -2594,290 +2620,290 @@ msgstr ""
 "this man {0} trying to delete some history of this channel. Will you let "
 "that happen?"
 
-#: ..\components\additional_funcs.py:1223
+#: ..\components\additional_funcs.py:1227
 msgid "Max backups' count limit for server - {0}"
 msgstr "Max backups' count limit for server - {0}"
 
-#: ..\components\additional_funcs.py:1226
+#: ..\components\additional_funcs.py:1230
 msgid "Max backups' size limit for server - {0}"
 msgstr "Max backups' size limit for server - {0}"
 
-#: ..\components\additional_funcs.py:1232
+#: ..\components\additional_funcs.py:1236
 msgid "Backups folder info for '{0}' server:"
 msgstr "Backups folder info for '{0}' server:"
 
-#: ..\components\additional_funcs.py:1234
+#: ..\components\additional_funcs.py:1238
 msgid "Used - {0}"
 msgstr "Used - {0}"
 
-#: ..\components\additional_funcs.py:1235
+#: ..\components\additional_funcs.py:1239
 msgid "Free - {0}"
 msgstr "Free - {0}"
 
-#: ..\components\additional_funcs.py:1245
+#: ..\components\additional_funcs.py:1249
 msgid "Stored backups count - {0}"
 msgstr "Stored backups count - {0}"
 
-#: ..\components\additional_funcs.py:1246
+#: ..\components\additional_funcs.py:1250
 msgid "Approximate remaining backups count - {0}"
 msgstr "Approximate remaining backups count - {0}"
 
-#: ..\components\additional_funcs.py:1251
+#: ..\components\additional_funcs.py:1255
 msgid "Last backup: "
 msgstr "Last backup: "
 
-#: ..\components\additional_funcs.py:1288
+#: ..\components\additional_funcs.py:1292
 msgid ""
 "{0}, you don't have permission to control fates! Not in this life at least..."
 msgstr ""
 "{0}, you don't have permission to control fates! Not in this life at least..."
 
-#: ..\components\additional_funcs.py:1297
+#: ..\components\additional_funcs.py:1301
 msgid "This nick is already associated with member {0}."
 msgstr "This nick is already associated with member {0}."
 
-#: ..\components\additional_funcs.py:1302
+#: ..\components\additional_funcs.py:1306
 msgid "Now {0} associates with nick `{1}` in Minecraft."
 msgstr "Now {0} associates with nick `{1}` in Minecraft."
 
-#: ..\components\additional_funcs.py:1309
+#: ..\components\additional_funcs.py:1313
 msgid "Now link {0} -> `{1}` do not exist!"
 msgstr "Now link {0} -> `{1}` do not exist!"
 
-#: ..\components\additional_funcs.py:1312
+#: ..\components\additional_funcs.py:1316
 msgid "Bot don't have `mention to nick` link already!"
 msgstr "Bot don't have `mention to nick` link already!"
 
-#: ..\components\additional_funcs.py:1319
+#: ..\components\additional_funcs.py:1323
 msgid "{0}, bot has this data on nicks and number of remaining uses:"
 msgstr "{0}, bot has this data on nicks and number of remaining uses:"
 
-#: ..\components\additional_funcs.py:1322
+#: ..\components\additional_funcs.py:1326
 msgid "{0}, bot has this data on nicks:"
 msgstr "{0}, bot has this data on nicks:"
 
-#: ..\components\additional_funcs.py:1369
+#: ..\components\additional_funcs.py:1373
 msgid "not seen on server"
 msgstr "not seen on server"
 
-#: ..\components\additional_funcs.py:1380
+#: ..\components\additional_funcs.py:1384
 msgid "Shutdown of Minecraft server when idle"
 msgstr "Shutdown of Minecraft server when idle"
 
-#: ..\components\additional_funcs.py:1380
-#: ..\components\additional_funcs.py:1402
+#: ..\components\additional_funcs.py:1384
+#: ..\components\additional_funcs.py:1406
 msgid "Task: "
 msgstr "Task: "
 
-#: ..\components\additional_funcs.py:1382
-#: ..\components\additional_funcs.py:1403
+#: ..\components\additional_funcs.py:1386
+#: ..\components\additional_funcs.py:1407
 msgid "State: "
 msgstr "State: "
 
-#: ..\components\additional_funcs.py:1384
-#: ..\components\additional_funcs.py:1405 ..\config\init_config.py:1146
+#: ..\components\additional_funcs.py:1388
+#: ..\components\additional_funcs.py:1409 ..\config\init_config.py:1146
 #: ..\config\init_config.py:1153
 msgid "Active"
 msgstr "Active"
 
-#: ..\components\additional_funcs.py:1386
-#: ..\components\additional_funcs.py:1407 ..\config\init_config.py:1148
+#: ..\components\additional_funcs.py:1390
+#: ..\components\additional_funcs.py:1411 ..\config\init_config.py:1148
 #: ..\config\init_config.py:1155
 msgid "Disabled"
 msgstr "Disabled"
 
-#: ..\components\additional_funcs.py:1388
+#: ..\components\additional_funcs.py:1392
 msgid "Timeout: {0} sec"
 msgstr "Timeout: {0} sec"
 
-#: ..\components\additional_funcs.py:1397 ..\config\init_config.py:1190
+#: ..\components\additional_funcs.py:1401 ..\config\init_config.py:1190
 msgid "Server will be stopped immediately."
 msgstr "Server will be stopped immediately."
 
-#: ..\components\additional_funcs.py:1402
+#: ..\components\additional_funcs.py:1406
 msgid "Autoload if server crashes"
 msgstr "Autoload if server crashes"
 
-#: ..\components\additional_funcs.py:1513
+#: ..\components\additional_funcs.py:1524
 msgid "Description"
 msgstr "Description"
 
-#: ..\components\additional_funcs.py:1517
+#: ..\components\additional_funcs.py:1528
 msgid "Aliases"
 msgstr "Aliases"
 
-#: ..\components\additional_funcs.py:1520
+#: ..\components\additional_funcs.py:1531
 msgid "Subcommands"
 msgstr "Subcommands"
 
-#: ..\components\additional_funcs.py:1523
+#: ..\components\additional_funcs.py:1534
 msgid "Parameters"
 msgstr "Parameters"
 
-#: ..\components\additional_funcs.py:1562
+#: ..\components\additional_funcs.py:1573
 msgid "Rcon password '{0}' doesn't match with its value in '{1}'!"
 msgstr "Rcon password '{0}' doesn't match with its value in '{1}'!"
 
-#: ..\components\additional_funcs.py:1582
+#: ..\components\additional_funcs.py:1593
 msgid "Couldn't connect to server, try again("
 msgstr "Couldn't connect to server, try again("
 
-#: ..\components\additional_funcs.py:1664
+#: ..\components\additional_funcs.py:1675
 msgid "{0} didn't input the argument '{1}' of type '{2}' in command '{3}'"
 msgstr "{0} didn't input the argument '{1}' of type '{2}' in command '{3}'"
 
-#: ..\components\additional_funcs.py:1668
+#: ..\components\additional_funcs.py:1679
 msgid "Required argument '{0}' of type '{1}' is missing!"
 msgstr "Required argument '{0}' of type '{1}' is missing!"
 
-#: ..\components\additional_funcs.py:1672
+#: ..\components\additional_funcs.py:1683
 msgid "{0} passed too many arguments to command '{1}'"
 msgstr "{0} passed too many arguments to command '{1}'"
 
-#: ..\components\additional_funcs.py:1675
+#: ..\components\additional_funcs.py:1686
 msgid "You passed too many arguments to this command!"
 msgstr "You passed too many arguments to this command!"
 
-#: ..\components\additional_funcs.py:1678
+#: ..\components\additional_funcs.py:1689
 msgid "{0} passed member mention '{1}' that can't be found"
 msgstr "{0} passed member mention '{1}' that can't be found"
 
-#: ..\components\additional_funcs.py:1680
+#: ..\components\additional_funcs.py:1691
 msgid "Member '{0}' not found!"
 msgstr "Member '{0}' not found!"
 
-#: ..\components\additional_funcs.py:1682
+#: ..\components\additional_funcs.py:1693
 msgid "{0} passed user mention '{1}' that can't be found"
 msgstr "{0} passed user mention '{1}' that can't be found"
 
-#: ..\components\additional_funcs.py:1684
+#: ..\components\additional_funcs.py:1695
 msgid "User '{0}' not found!"
 msgstr "User '{0}' not found!"
 
-#: ..\components\additional_funcs.py:1686
+#: ..\components\additional_funcs.py:1697
 msgid "{0} passed role mention '{1}' that can't be found"
 msgstr "{0} passed role mention '{1}' that can't be found"
 
-#: ..\components\additional_funcs.py:1688
+#: ..\components\additional_funcs.py:1699
 msgid "Role '{0}' not found!"
 msgstr "Role '{0}' not found!"
 
-#: ..\components\additional_funcs.py:1690
-#: ..\components\additional_funcs.py:1692
+#: ..\components\additional_funcs.py:1701
+#: ..\components\additional_funcs.py:1703
 msgid "Bot can't read messages in channel '{0}'"
 msgstr "Bot can't read messages in channel '{0}'"
 
-#: ..\components\additional_funcs.py:1696
+#: ..\components\additional_funcs.py:1707
 msgid "{0} passed channel mention '{1}' that can't be found"
 msgstr "{0} passed channel mention '{1}' that can't be found"
 
-#: ..\components\additional_funcs.py:1698
+#: ..\components\additional_funcs.py:1709
 msgid "Channel '{0}' not found!"
 msgstr "Channel '{0}' not found!"
 
-#: ..\components\additional_funcs.py:1700
+#: ..\components\additional_funcs.py:1711
 msgid "{0} passed bad bool argument '{1}'"
 msgstr "{0} passed bad bool argument '{1}'"
 
-#: ..\components\additional_funcs.py:1702
+#: ..\components\additional_funcs.py:1713
 msgid "Bot couldn't convert bool argument '{0}'!"
 msgstr "Bot couldn't convert bool argument '{0}'!"
 
-#: ..\components\additional_funcs.py:1705
+#: ..\components\additional_funcs.py:1716
 msgid "{0} passed an invalid IPv4 address as argument '{1}'"
 msgstr "{0} passed an invalid IPv4 address as argument '{1}'"
 
-#: ..\components\additional_funcs.py:1707
+#: ..\components\additional_funcs.py:1718
 msgid "Bot couldn't convert argument '{0}' to an IPv4 address!"
 msgstr "Bot couldn't convert argument '{0}' to an IPv4 address!"
 
-#: ..\components\additional_funcs.py:1715
-msgid ""
-"{0} passed parameter '{2}' in string \"{3}\" that bot couldn't convert to "
-"type '{1}' in command '{4}'"
-msgstr ""
-"{0} passed parameter '{2}' in string \"{3}\" that bot couldn't convert to "
-"type '{1}' in command '{4}'"
-
-#: ..\components\additional_funcs.py:1720
-msgid ""
-"Bot didn't recognized parameter '{1}'\n"
-"Received: '{2}'\n"
-"Expected: value of type '{0}'"
-msgstr ""
-"Bot didn't recognized parameter '{1}'\n"
-"Received: '{2}'\n"
-"Expected: value of type '{0}'"
-
 #: ..\components\additional_funcs.py:1726
+msgid ""
+"{0} passed parameter '{2}' in string \"{3}\" that bot couldn't convert to "
+"type '{1}' in command '{4}'"
+msgstr ""
+"{0} passed parameter '{2}' in string \"{3}\" that bot couldn't convert to "
+"type '{1}' in command '{4}'"
+
+#: ..\components\additional_funcs.py:1731
+msgid ""
+"Bot didn't recognized parameter '{1}'\n"
+"Received: '{2}'\n"
+"Expected: value of type '{0}'"
+msgstr ""
+"Bot didn't recognized parameter '{1}'\n"
+"Received: '{2}'\n"
+"Expected: value of type '{0}'"
+
+#: ..\components\additional_funcs.py:1737
 msgid "{0} passed string \"{1}\" that can't be parsed in command '{2}'"
 msgstr "{0} passed string \"{1}\" that can't be parsed in command '{2}'"
 
-#: ..\components\additional_funcs.py:1729
+#: ..\components\additional_funcs.py:1740
 msgid "Bot couldn't parse user string '{0}' in this command!"
 msgstr "Bot couldn't parse user string '{0}' in this command!"
 
-#: ..\components\additional_funcs.py:1733
+#: ..\components\additional_funcs.py:1744
 msgid "{0} don't have some permissions to run command"
 msgstr "{0} don't have some permissions to run command"
 
-#: ..\components\additional_funcs.py:1737
+#: ..\components\additional_funcs.py:1748
 msgid "You don't have these permissions to run this command:"
 msgstr "You don't have these permissions to run this command:"
 
-#: ..\components\additional_funcs.py:1740
+#: ..\components\additional_funcs.py:1751
 msgid "Bot doesn't have some permissions"
 msgstr "Bot doesn't have some permissions"
 
-#: ..\components\additional_funcs.py:1744
+#: ..\components\additional_funcs.py:1755
 msgid "Bot don't have these permissions to run this command:"
 msgstr "Bot don't have these permissions to run this command:"
 
-#: ..\components\additional_funcs.py:1755
+#: ..\components\additional_funcs.py:1766
 msgid "{0} don't have role '{1}' to run command"
 msgstr "{0} don't have role '{1}' to run command"
 
-#: ..\components\additional_funcs.py:1757
+#: ..\components\additional_funcs.py:1768
 msgid "You don't have role '{0}' to run this command!"
 msgstr "You don't have role '{0}' to run this command!"
 
-#: ..\components\additional_funcs.py:1760
+#: ..\components\additional_funcs.py:1771
 msgid "{0} entered non-existent command"
 msgstr "{0} entered non-existent command"
 
-#: ..\components\additional_funcs.py:1762
+#: ..\components\additional_funcs.py:1773
 msgid "You entered non-existent command!"
 msgstr "You entered non-existent command!"
 
-#: ..\components\additional_funcs.py:1764
+#: ..\components\additional_funcs.py:1775
 msgid "{0} entered wrong argument(s) of command '{1}'"
 msgstr "{0} entered wrong argument(s) of command '{1}'"
 
-#: ..\components\additional_funcs.py:1767
+#: ..\components\additional_funcs.py:1778
 msgid "You entered wrong argument(s) of this command!"
 msgstr "You entered wrong argument(s) of this command!"
 
-#: ..\components\additional_funcs.py:1770
+#: ..\components\additional_funcs.py:1781
 msgid "{0} entered disabled command"
 msgstr "{0} entered disabled command"
 
-#: ..\components\additional_funcs.py:1772
+#: ..\components\additional_funcs.py:1783
 msgid "You entered disabled command!"
 msgstr "You entered disabled command!"
 
-#: ..\components\additional_funcs.py:1774
+#: ..\components\additional_funcs.py:1785
 msgid "{0} entered a command that only works in the guild"
 msgstr "{0} entered a command that only works in the guild"
 
-#: ..\components\additional_funcs.py:1776
+#: ..\components\additional_funcs.py:1787
 msgid "This command only works on server!"
 msgstr "This command only works on server!"
 
-#: ..\components\additional_funcs.py:1781
+#: ..\components\additional_funcs.py:1792
 msgid "{0} triggered a command more than {1} time(s) per {2} sec"
 msgstr "{0} triggered a command more than {1} time(s) per {2} sec"
 
-#: ..\components\additional_funcs.py:1784
+#: ..\components\additional_funcs.py:1795
 msgid ""
 "You triggered this command more than {0} time(s) per {1} sec.\n"
 "Try again in {2} sec..."
@@ -2885,35 +2911,35 @@ msgstr ""
 "You triggered this command more than {0} time(s) per {1} sec.\n"
 "Try again in {2} sec..."
 
-#: ..\components\additional_funcs.py:1798
+#: ..\components\additional_funcs.py:1809
 msgid "Ignoring exception in command '{0}{1}':"
 msgstr "Ignoring exception in command '{0}{1}':"
 
-#: ..\components\additional_funcs.py:1819
+#: ..\components\additional_funcs.py:1830
 msgid "this chat can't work! Cross-platform chat disabled!"
 msgstr "this chat can't work! Cross-platform chat disabled!"
 
-#: ..\components\additional_funcs.py:1825
+#: ..\components\additional_funcs.py:1836
 msgid "server is restarting!"
 msgstr "server is restarting!"
 
-#: ..\components\additional_funcs.py:1963
+#: ..\components\additional_funcs.py:1974
 msgid "No players on server!"
 msgstr "No players on server!"
 
-#: ..\components\additional_funcs.py:2316
+#: ..\components\additional_funcs.py:2327
 msgid "Entity"
 msgstr "Entity"
 
-#: ..\components\additional_funcs.py:2318
+#: ..\components\additional_funcs.py:2329
 msgid "Player"
 msgstr "Player"
 
-#: ..\components\additional_funcs.py:2319
+#: ..\components\additional_funcs.py:2330
 msgid "Type: {0}"
 msgstr "Type: {0}"
 
-#: ..\components\additional_funcs.py:2360
+#: ..\components\additional_funcs.py:2371
 msgid "Minecraft server is not in release state! Proceed with caution!"
 msgstr "Minecraft server is not in release state! Proceed with caution!"
 

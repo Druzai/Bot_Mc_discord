@@ -9,13 +9,14 @@ All important changes to this project will be documented in this file.
 * Added parsing for animated emojis in cross-platform chat
 * Improved finding emoji name
 * Added printing reason of ban in command `auth banlist`
+* Added new translation strings for death messages for version `1.19`
 
 #### Fixed:
 
 * Fixed changing `pygettext.py` on Windows to set default encoding to `UTF-8` if file can't be edited without admin privilege
 * Fixed `\n` processing in command `auth ban` for Minecraft servers below version `1.7.6`
 * Added suppression if error `AccessDenied` is raised
-* Made parameter `count` in `clear` command not required when only roles specified
+* Made parameter `count` in `clear` command not required when only roles are specified
 
 ## [1.3.0](https://github.com/Druzai/Bot_Mc_discord/compare/1.2.3...1.3.0) (2022-05-01)
 

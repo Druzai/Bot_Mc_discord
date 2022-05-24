@@ -496,9 +496,9 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
         if Config.get_cross_platform_chat_settings().channel_id is not None:
             from components.additional_funcs import DEATH_MESSAGES, REGEX_DEATH_MESSAGES, MASS_REGEX_DEATH_MESSAGES
 
-            if search(MASS_REGEX_DEATH_MESSAGES, line):
+            if search(f"{INFO_line} {MASS_REGEX_DEATH_MESSAGES}", line):
                 for regex in range(len(REGEX_DEATH_MESSAGES)):
-                    message_match = search(fr"{INFO_line} {REGEX_DEATH_MESSAGES[regex]}", line)
+                    message_match = search(f"{INFO_line} {REGEX_DEATH_MESSAGES[regex]}", line)
                     if message_match:
                         groups = list(message_match.groups())
                         if len(groups) == 3 and DEATH_MESSAGES[regex].find("{1}") > DEATH_MESSAGES[regex].find("{2}"):
