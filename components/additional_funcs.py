@@ -93,7 +93,8 @@ DEATH_MESSAGES = [
     '{0} was killed by {1}', '{0} was poked to death by a sweet berry bush',
     '{0} was poked to death by a sweet berry bush whilst trying to escape {1}', '{0} was stung to death',
     '{0} was stung to death by {1} using {2}', '{0} was stung to death by {1}', '{0} froze to death',
-    '{0} was frozen to death by {1}', '{0} fell out of the water', "{0} was shot by a {1}'s skull"
+    '{0} was frozen to death by {1}', '{0} fell out of the water', "{0} was shot by a {1}'s skull",
+    '{0} was fell too far and was finished by {1}', '{0} was fell too far and was finished by {1} using {2}'
 ]
 DEATH_MESSAGES = sorted(DEATH_MESSAGES, key=lambda s: len(s), reverse=True)
 REGEX_DEATH_MESSAGES = [sub(r"\{\d}", r"(.+)", m) for m in DEATH_MESSAGES]
