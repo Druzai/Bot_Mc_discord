@@ -464,13 +464,13 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                             async def send_message_and_poll(member, msg, poll, nick, ip_address):
                                 await member.send(msg)
                                 if await poll.run(channel=member,
-                                                  embeded_message=get_translation("Login without code?\n(Less safe)"),
+                                                  embed_message=get_translation("Login without code?\n(Less safe)"),
                                                   command=f"auth login {nick} {ip_address}",
                                                   need_for_voting=1,
                                                   timeout=Config.get_secure_auth().mins_before_code_expires * 60,
                                                   remove_logs_after=5,
                                                   add_mention=False,
-                                                  add_str_count=False):
+                                                  add_votes_count=False):
                                     Config.update_ip_address(nick, ip_address, whitelist=True)
                                     Config.save_auth_users()
                                     await member.send(get_translation("{0}, bot gave access to the nick "

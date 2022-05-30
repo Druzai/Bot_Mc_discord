@@ -27,9 +27,9 @@ class Poll(commands.Cog):
 
     async def run(self, channel: Union[Member, TextChannel, GroupChannel, DMChannel], command: str, message: str = None,
                   need_for_voting=2, needed_role: int = None, timeout=60 * 60, remove_logs_after=None,
-                  admin_needed=False, add_mention=True, add_str_count=True, embeded_message: str = None):
-        if message is None and embeded_message is None:
-            raise ValueError("'message' and 'embeded_message' is not stated!")
+                  admin_needed=False, add_mention=True, add_votes_count=True, embed_message: str = None):
+        if message is None and embed_message is None:
+            raise ValueError("'message' and 'embed_message' is not stated!")
         if not isinstance(channel, Member) and not isinstance(channel, DMChannel):
             if isinstance(channel, GroupChannel):
                 members_count = len([m for m in channel.recipients if not m.bot])
@@ -46,12 +46,12 @@ class Poll(commands.Cog):
             if needed_role is not None:
                 mention = needed_role.mention
         start_msg = None
-        if add_str_count or add_mention or message is not None:
+        if add_votes_count or add_mention or message is not None:
             start_msg = await channel.send((f"{mention}, " if add_mention else "") +
                                            (f"{message} " if message is not None else "") +
                                            (get_translation("To win the poll needed {0} vote(s)!")
-                                            .format(str(need_for_voting)) if add_str_count else ""))
-        poll_msg = await self.make_embed(channel, embeded_message)
+                                            .format(str(need_for_voting)) if add_votes_count else ""))
+        poll_msg = await self.make_embed(channel, embed_message)
         current_poll = PollContent(channel, command, need_for_voting, needed_role, remove_logs_after, admin_needed)
         self._polls[poll_msg.id] = current_poll
         seconds = 0
@@ -63,20 +63,22 @@ class Poll(commands.Cog):
         if start_msg is not None:
             with suppress(NotFound, Forbidden, HTTPException):
                 await start_msg.delete()
-        with suppress(NotFound, Forbidden, HTTPException):
-            await poll_msg.delete()
         del self._polls[poll_msg.id]
         if current_poll.state == States.CANCELED:
-            await channel.send("`" + get_translation("Poll result: canceled!") + "`", delete_after=remove_logs_after)
-            return
-        poll_res = get_translation("granted") if current_poll.state == \
-                                                 States.GRANTED else get_translation("refused")
-        await channel.send("`" + get_translation("Poll result: permission {0}!").format(poll_res) + "`",
-                           delete_after=remove_logs_after)
-        return current_poll.state == States.GRANTED
+            poll_res = "`" + get_translation("Poll result: canceled!") + "`"
+        else:
+            poll_res = get_translation("granted") if current_poll.state == \
+                                                     States.GRANTED else get_translation("refused")
+            poll_res = "`" + get_translation("Poll result: permission {0}!").format(poll_res) + "`"
+        try:
+            await poll_msg.edit(content=poll_res, embed=None)
+            await poll_msg.delete(delay=remove_logs_after)
+        except (NotFound, Forbidden, HTTPException):
+            await channel.send(poll_res, delete_after=remove_logs_after)
+        return None if current_poll.state == States.CANCELED else current_poll.state == States.GRANTED
 
-    async def make_embed(self, channel: Messageable, embeded_message: str = None):
-        emb = Embed(title=get_translation("Survey. Voting!") if embeded_message is None else embeded_message,
+    async def make_embed(self, channel: Messageable, embed_message: str = None):
+        emb = Embed(title=get_translation("Survey. Voting!") if embed_message is None else embed_message,
                     color=Color.orange())
         emb.add_field(name=get_translation("yes"), value=self._emoji_symbols.get("yes"))
         emb.add_field(name=get_translation("no"), value=self._emoji_symbols.get("no"))
