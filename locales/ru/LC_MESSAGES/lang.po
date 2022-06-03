@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
 "POT-Creation-Date: 2022-05-29 14:21+0300\n"
-"PO-Revision-Date: 2022-05-29 14:24+0300\n"
+"PO-Revision-Date: 2022-06-03 21:12+0300\n"
 "Last-Translator: Druzai <astyn37@gmail.com>\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -96,12 +96,12 @@ msgstr "ПБ"
 msgid ""
 "{0} was obliterated by a sonically-charged shriek whilst trying to escape "
 "{1} wielding {2}"
-msgstr "{0} был поражён звуковым ударом, спасаясь от {1}, вооруженного {2}"
+msgstr "{0} был уничтожен звуковым зарядом, спасаясь от {1} c {2}"
 
 #: ..\_frozen_translations.py:10
 msgid ""
 "{0} was obliterated by a sonically-charged shriek whilst trying to escape {1}"
-msgstr "{0} был поражён звуковым ударом, спасаясь от {1}"
+msgstr "{0} был уничтожен звуковым ударом, спасаясь от {1}"
 
 #: ..\_frozen_translations.py:11
 msgid ""
@@ -122,7 +122,7 @@ msgstr "{0} преобразовал кинетическую энергию в�
 
 #: ..\_frozen_translations.py:15
 msgid "{0} was burnt to a crisp whilst fighting {1} wielding {2}"
-msgstr "{0} был сожжён дотла, пока боролся с {1}, вооруженного {2}"
+msgstr "{0} был поджарен, пока боролся с {1}, с помощью {2}"
 
 #: ..\_frozen_translations.py:16
 msgid "{0} was squashed by a falling anvil whilst fighting {1}"
@@ -162,7 +162,7 @@ msgstr "{0} упал с высоты и был добит {1} с помощью 
 
 #: ..\_frozen_translations.py:25
 msgid "{0} was obliterated by a sonically-charged shriek"
-msgstr "{0} был поражён звуковым ударом"
+msgstr "{0} был уничтожен звуковым зарядом"
 
 #: ..\_frozen_translations.py:26
 msgid "{0} didn't want to live in the same world as {1}"
