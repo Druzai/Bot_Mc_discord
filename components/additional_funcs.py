@@ -2537,14 +2537,15 @@ if len(argv) > 1 and argv[1] == "-g":
     from components.localization import RuntimeTextHandler
 
     entities = [
-        'Axolotl', 'Bee', 'Blaze', 'Cave Spider', 'Creeper', 'Drowned', 'Elder Guardian', 'End Crystal', 'Ender Dragon',
-        'Enderman', 'Endermite', 'Evoker', 'Frog', 'Ghast', 'Giant', 'Goat', 'Guardian', 'Hoglin', 'Husk', 'Ravager',
-        'Illusioner', 'The Killer Bunny', 'Lightning Bolt', 'Llama', 'Magma Cube', 'Ocelot', 'Panda', 'Phantom',
-        'Piglin', 'Piglin Brute', 'Pillager', 'Polar Bear', 'Pufferfish', 'Shulker', 'Silverfish', 'Skeleton', 'Slime',
-        'Snow Golem', 'Spider', 'Stray', 'Strider', 'Trader Llama', 'Vex', 'Butcher', 'Cartographer', 'Cleric',
-        'Farmer', 'Fisherman', 'Fletcher', 'Leatherworker', 'Librarian', 'Mason', 'Nitwit', 'Shepherd', 'Toolsmith',
-        'Weaponsmith', 'Villager', 'Iron Golem', 'Vindicator', 'Warden', 'Witch', 'Wither', 'Wither Skeleton', 'Wolf',
-        'Zoglin', 'Zombie', 'Zombified Piglin', 'Zombie Villager', '[Intentional Game Design]', 'Zombie Pigman'
+        'Area Effect Cloud', 'Arrow', 'Axolotl', 'Bee', 'Blaze', 'Cave Spider', 'Creeper', 'Drowned', 'Elder Guardian',
+        'End Crystal', 'Ender Dragon', 'Enderman', 'Endermite', 'Evoker', 'Frog', 'Ghast', 'Giant', 'Goat', 'Guardian',
+        'Hoglin', 'Husk', 'Ravager', 'Illusioner', 'The Killer Bunny', 'Lightning Bolt', 'Llama', 'Magma Cube',
+        'Ocelot', 'Panda', 'Phantom', 'Piglin', 'Piglin Brute', 'Pillager', 'Polar Bear', 'Pufferfish', 'Shulker',
+        'Silverfish', 'Skeleton', 'Slime', 'Snowball', 'Snow Golem', 'Spectral Arrow', 'Spider', 'Stray', 'Strider',
+        'Trader Llama', 'Vex', 'Butcher', 'Cartographer', 'Cleric', 'Farmer', 'Fisherman', 'Fletcher', 'Leatherworker',
+        'Librarian', 'Mason', 'Nitwit', 'Shepherd', 'Toolsmith', 'Weaponsmith', 'Villager', 'Iron Golem', 'Vindicator',
+        'Warden', 'Witch', 'Wither', 'Wither Skeleton', 'Wolf', 'Zoglin', 'Zombie', 'Zombified Piglin',
+        'Zombie Villager', '[Intentional Game Design]', 'Zombie Pigman'
     ]
 
     for un in UNITS:
