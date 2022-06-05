@@ -10,6 +10,7 @@ All important changes to this project will be documented in this file.
 * Improved finding emoji name
 * Added printing reason of ban in command `auth banlist`
 * Added new translation strings for death messages for version `1.19`
+* Added printing info if bot couldn't archive some files into a backup
 
 #### Fixed:
 
@@ -18,6 +19,7 @@ All important changes to this project will be documented in this file.
 * Added suppression if error `AccessDenied` is raised
 * Made parameter `count` in `clear` command not required when only roles are specified
 * Changed to edit poll message instead of sending a new one
+* Fixed choosing `say` instead of `tellraw` when sending `Backup completed!` to Minecraft chat
 
 ## [1.3.0](https://github.com/Druzai/Bot_Mc_discord/compare/1.2.3...1.3.0) (2022-05-01)
 

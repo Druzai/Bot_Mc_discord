@@ -519,18 +519,24 @@ class BackupsThread(Thread):
                 if not BotVars.is_auto_backup_disable:
                     print(get_translation("Starting auto backup"))
                     handle_backups_limit_and_size(self._bot, auto_backups=True)
-
                     # Creating auto backup
                     file_name = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
-                    next(create_zip_archive(self._bot, file_name,
-                                            Path(Config.get_selected_server_from_list().working_directory,
-                                                 Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
-                                            Path(Config.get_selected_server_from_list().working_directory,
-                                                 ServerProperties().level_name).as_posix(),
-                                            Config.get_backups_settings().compression_method), None)
+                    obj = next(create_zip_archive(self._bot, file_name,
+                                                  Path(Config.get_selected_server_from_list().working_directory,
+                                                       Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
+                                                  Path(Config.get_selected_server_from_list().working_directory,
+                                                       ServerProperties().level_name).as_posix(),
+                                                  Config.get_backups_settings().compression_method), None)
                     Config.add_backup_info(file_name=file_name)
                     Config.save_server_config()
                     print(get_translation("Backup completed!"))
+                    if isinstance(obj, list) and len(obj) > 0:
+                        print(get_translation("Bot couldn't archive some files "
+                                              "to this backup, they located in path '{0}'")
+                              .format(Path(Config.get_selected_server_from_list().working_directory,
+                                           ServerProperties().level_name).as_posix()))
+                        print(get_translation("List of these files:"))
+                        print(", ".join(obj))
 
                 if BotVars.is_server_on and players_count == 0:
                     if not BotVars.is_auto_backup_disable:
@@ -552,8 +558,8 @@ class BackupsThread(Thread):
         sleep(max(timeout, 0.5))
 
 
-def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path: str, compression,
-                       forced=False, user=None):
+def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path: str, compression: str,
+                       forced=False, user: Member = None):
     """
     recursively .zip a directory
     """
@@ -568,6 +574,7 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
         comp = ZIP_LZMA
     else:
         comp = ZIP_DEFLATED
+    list_of_unarchived_files = []
     total = 0
     dt = datetime.now()
     last_message_change = datetime.now() - timedelta(seconds=4)
@@ -598,7 +605,7 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
             with connect_rcon() as cl_r:
                 if server_version.minor < 7:
                     if forced:
-                        cl_r.say(get_translation("Starting backup triggered by {0} in 3 seconds...") \
+                        cl_r.say(get_translation("Starting backup triggered by {0} in 3 seconds...")
                                  .format(f"{user.display_name}#{user.discriminator}"))
                     else:
                         cl_r.say(get_translation("Starting automatic backup in 3 seconds..."))
@@ -652,6 +659,8 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
                         break
                     tries += 1
                     sleep(1)
+                if tries >= 3:
+                    list_of_unarchived_files.append(afn.as_posix())
                 current += getsize(fn)
 
     if forced:
@@ -671,12 +680,21 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
         with suppress(ConnectionError, socket.error):
             with connect_rcon() as cl_r:
                 cl_r.run("save-on")
-                if server_version.patch < 7:
+                if server_version.minor < 7:
                     cl_r.say(get_translation("Backup completed!"))
                 else:
                     cl_r.tellraw("@a", tellraw_init + [{"text": get_translation("Backup completed!"),
                                                         "color": "dark_green"}])
+                if len(list_of_unarchived_files) > 0:
+                    if server_version.minor < 7:
+                        cl_r.say(get_translation("Bot couldn't archive some files into this backup!"))
+                    else:
+                        cl_r.tellraw("@a", tellraw_init +
+                                     [{"text": get_translation("Bot couldn't archive some files to this backup!"),
+                                       "color": "dark_red"}])
     BotVars.is_backing_up = False
+    if len(list_of_unarchived_files) > 0:
+        yield list_of_unarchived_files
 
 
 def restore_from_zip_archive(zip_name: str, zip_path: str, dir_path: str):

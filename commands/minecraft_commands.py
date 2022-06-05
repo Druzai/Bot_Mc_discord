@@ -909,19 +909,33 @@ class MinecraftCommands(commands.Cog):
                 return
             await warn_about_auto_backups(ctx, self._bot)
 
+            print(get_translation("Starting backup triggered by {0}")
+                  .format(f"{ctx.author.display_name}#{ctx.author.discriminator}"))
             msg = await ctx.send(add_quotes(get_translation("Starting backup...")))
             file_name = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
-            for string in create_zip_archive(self._bot, file_name,
-                                             Path(Config.get_selected_server_from_list().working_directory,
-                                                  Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
-                                             Path(Config.get_selected_server_from_list().working_directory,
-                                                  ServerProperties().level_name).as_posix(),
-                                             Config.get_backups_settings().compression_method, forced=True,
-                                             user=ctx.author):
-                await msg.edit(content=string)
+            list_obj = None
+            for obj in create_zip_archive(self._bot, file_name,
+                                          Path(Config.get_selected_server_from_list().working_directory,
+                                               Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
+                                          Path(Config.get_selected_server_from_list().working_directory,
+                                               ServerProperties().level_name).as_posix(),
+                                          Config.get_backups_settings().compression_method, forced=True,
+                                          user=ctx.author):
+                if isinstance(obj, str):
+                    await msg.edit(content=obj)
+                elif isinstance(obj, list):
+                    list_obj = obj
             Config.add_backup_info(file_name=file_name, reason=reason, initiator=ctx.author.id)
             Config.save_server_config()
             self._backups_thread.skip()
+            print(get_translation("Backup completed!"))
+            if isinstance(list_obj, list):
+                await ctx.send(add_quotes(get_translation("Bot couldn't archive some files to this backup!")))
+                print(get_translation("Bot couldn't archive some files to this backup, they located in path '{0}'")
+                      .format(Path(Config.get_selected_server_from_list().working_directory,
+                                   ServerProperties().level_name).as_posix()))
+                print(get_translation("List of these files:"))
+                print(", ".join(list_obj))
         else:
             await send_status(ctx)
 
