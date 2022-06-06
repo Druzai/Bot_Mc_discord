@@ -660,7 +660,7 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
                     tries += 1
                     sleep(1)
                 if tries >= 3:
-                    list_of_unarchived_files.append(afn.as_posix())
+                    list_of_unarchived_files.append(f"'{afn.as_posix()}'")
                 current += getsize(fn)
 
     if forced:

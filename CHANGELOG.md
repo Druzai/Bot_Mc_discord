@@ -9,7 +9,7 @@ All important changes to this project will be documented in this file.
 * Added parsing for animated emojis in cross-platform chat
 * Improved finding emoji name
 * Added printing reason of ban in command `auth banlist`
-* Added new translation strings for death messages for version `1.19`
+* Added new translation strings for death messages for version `1.19` and updated old ones
 * Added printing info if bot couldn't archive some files into a backup
 
 #### Fixed:

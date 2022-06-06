@@ -340,7 +340,7 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                                     (server_timestamp is None or server_timestamp < last_message_timestamp):
                                 edited_message = True
                                 BotVars.webhook_chat.edit_message(message_id=last_message.id,
-                                                                  content=player_message[1:])
+                                                                  content=player_message[1:].strip())
 
                 if not edited_message:
                     player_url_pic = None
