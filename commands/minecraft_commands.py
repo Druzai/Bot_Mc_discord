@@ -22,7 +22,7 @@ from components.additional_funcs import (
     get_half_members_count_with_role, warn_about_auto_backups, get_archive_uncompressed_size, get_bot_display_name,
     get_server_version, DISCORD_SYMBOLS_IN_MESSAGE_LIMIT, get_number_of_digits, bot_associate, bot_associate_info,
     get_time_string, bot_shutdown_info, bot_forceload_info, get_member_name, handle_rcon_error,
-    check_and_delete_from_whitelist_json, IPv4Address
+    check_and_delete_from_whitelist_json, IPv4Address, handle_unhandled_error_in_task
 )
 from components.localization import get_translation
 from config.init_config import BotVars, Config, ServerProperties
@@ -41,6 +41,7 @@ class MinecraftCommands(commands.Cog):
         self._backups_thread = BackupsThread(self._bot)
         if len(argv) == 1:
             self._backups_thread.start()
+            self.checkups_task.change_interval(seconds=Config.get_timeouts_settings().await_seconds_in_check_ups)
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
@@ -1136,7 +1137,8 @@ class MinecraftCommands(commands.Cog):
 
     @tasks.loop()
     async def checkups_task(self):
-        await server_checkups(self._bot, self._backups_thread, self._IndPoll)
+        with handle_unhandled_error_in_task():
+            await server_checkups(self._bot, self._backups_thread, self._IndPoll)
 
     @checkups_task.before_loop
     async def before_checkups(self):

@@ -11,6 +11,7 @@ All important changes to this project will be documented in this file.
 * Added printing reason of ban in command `auth banlist`
 * Added new translation strings for death messages for version `1.19` and updated old ones
 * Added printing info if bot couldn't archive some files into a backup
+* Added printing timestamp when bot catches exception in internal task
 
 #### Fixed:
 

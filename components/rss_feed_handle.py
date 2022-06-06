@@ -1,4 +1,3 @@
-from asyncio import sleep as asleep
 from contextlib import suppress
 from datetime import datetime
 from time import mktime
@@ -34,7 +33,6 @@ async def check_on_rss_feed():
         if send:
             Config.get_rss_feed_settings().rss_last_date = new_date.isoformat()
             Config.save_config()
-    await asleep(Config.get_rss_feed_settings().rss_download_delay)
 
 
 def create_feed_webhook():

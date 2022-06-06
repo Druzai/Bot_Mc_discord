@@ -972,8 +972,6 @@ async def server_checkups(bot: commands.Bot, backups_thread: BackupsThread, poll
             await start_server(ctx=channel, bot=bot, backups_thread=backups_thread, shut_up=True)
     if Config.get_secure_auth().enable_secure_auth:
         check_if_ips_expired()
-    if Config.get_timeouts_settings().await_seconds_in_check_ups > 0:
-        await asleep(Config.get_timeouts_settings().await_seconds_in_check_ups)
 
 
 async def bot_status(ctx: commands.Context, bot: commands.Bot, is_reaction=False):
@@ -1824,14 +1822,32 @@ async def send_error(ctx: commands.Context, bot: commands.Bot, error: commands.C
                              commands.MissingRole(Config.get_settings().bot_settings.admin_role_id), is_reaction)
         await send_error(ctx, bot, commands.MissingPermissions(['administrator']), is_reaction)
     else:
-        exc = "".join(format_exception(type(error.original), error.original, error.original.__traceback__)).rstrip("\n")
-        print(get_translation("Ignoring exception in command '{0}{1}':")
-              .format(Config.get_settings().bot_settings.prefix, ctx.command) +
-              f"\n{Fore.RED}{exc}{Style.RESET_ALL}")
+        print_unhandled_error(error.original, get_translation("Ignoring exception in command '{0}{1}':")
+                              .format(Config.get_settings().bot_settings.prefix, ctx.command))
         await send_msg(ctx, f"{author_mention}\n" +
                        add_quotes(error.original.__class__.__name__ +
                                   (": " + ", ".join([str(a) for a in error.original.args])
                                    if len(error.original.args) > 0 else "")), is_reaction)
+
+
+def print_unhandled_error(error, error_title: str):
+    exc = "".join(format_exception(type(error), error, error.__traceback__)).rstrip("\n")
+    print(f"{error_title}\n{Fore.RED}{exc}{Style.RESET_ALL}")
+
+
+def func_name(func_number: int = 1):
+    return sys._getframe(func_number).f_code.co_name
+
+
+@contextmanager
+def handle_unhandled_error_in_task(func_number: int = 2):
+    try:
+        yield
+    except (KeyboardInterrupt, CancelledError):
+        pass
+    except BaseException as error:
+        print_unhandled_error(error, get_translation("Ignoring exception in internal background task '{0}':")
+                              .format(func_name(func_number=func_number + 1)))
 
 
 async def handle_message_for_chat(message: Message, bot: commands.Bot,

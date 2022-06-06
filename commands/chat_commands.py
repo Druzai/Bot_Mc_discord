@@ -1,3 +1,4 @@
+from sys import argv
 from typing import TYPE_CHECKING, Union, Optional
 
 import discord
@@ -11,7 +12,7 @@ from components import decorators
 from components.additional_funcs import (
     handle_message_for_chat, send_error, bot_clear, add_quotes, parse_params_for_help, send_help_of_command,
     parse_subcommands_for_help, find_subcommand, make_underscored_line, create_webhooks, bot_dm_clear,
-    delete_after_by_msg, send_msg, HelpCommandArgument
+    delete_after_by_msg, send_msg, HelpCommandArgument, handle_unhandled_error_in_task
 )
 from components.localization import get_translation, get_locales, set_locale, get_current_locale
 from components.rss_feed_handle import check_on_rss_feed
@@ -25,6 +26,8 @@ class ChatCommands(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self._bot: commands.Bot = bot
         self._IndPoll: 'Poll' = bot.get_cog("Poll")
+        if len(argv) == 1:
+            self.rss_feed_task.change_interval(seconds=Config.get_rss_feed_settings().rss_download_delay)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -390,7 +393,8 @@ class ChatCommands(commands.Cog):
 
     @tasks.loop()
     async def rss_feed_task(self):
-        await check_on_rss_feed()
+        with handle_unhandled_error_in_task():
+            await check_on_rss_feed()
 
     @rss_feed_task.before_loop
     async def before_rss_feed(self):
