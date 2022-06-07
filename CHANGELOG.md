@@ -9,15 +9,16 @@ All important changes to this project will be documented in this file.
 * Added parsing for animated emojis in cross-platform chat
 * Improved finding emoji name
 * Added printing reason of ban in command `auth banlist`
-* Added new translation strings for death messages for version `1.19` and updated old ones
+* Added new translation strings for death messages for version `1.19` and updated the old ones
 * Added printing info if bot couldn't archive some files into a backup
 * Added printing timestamp when bot catches exception in internal task
+* Added handling of stickers in message for cross-platform chat from Discord to Minecraft
 
 #### Fixed:
 
 * Fixed changing `pygettext.py` on Windows to set default encoding to `UTF-8` if file can't be edited without admin privilege
 * Fixed `\n` processing in command `auth ban` for Minecraft servers below version `1.7.6`
-* Added suppression if error `AccessDenied` is raised
+* Added suppression if exception `AccessDenied` is raised
 * Made parameter `count` in `clear` command not required when only roles are specified
 * Changed to edit poll message instead of sending a new one
 * Fixed choosing `say` instead of `tellraw` when sending `Backup completed!` to Minecraft chat

@@ -1854,7 +1854,7 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
                                   on_edit=False, before_message: Message = None, edit_command: bool = False):
     if message.author.id == bot.user.id or (message.content.startswith(Config.get_settings().bot_settings.prefix) and
                                             not edit_command) or str(message.author.discriminator) == "0000" or \
-            (len(message.content) == 0 and len(message.attachments) == 0):
+            (len(message.content) == 0 and len(message.attachments) == 0 and len(await get_stickers(message)) == 0):
         return
 
     author_mention = get_author_and_mention(message, bot, False)[1]
@@ -2152,8 +2152,8 @@ async def _handle_reply_in_message(message: Message, result_msg: dict) -> Tuple[
 
 async def _handle_components_in_message(result_msg: dict, message: Message, bot: commands.Bot,
                                         only_replace_links=False, edit_command=False, version_lower_1_7_2=False):
-    # TODO: For now 'webhook.edit_message' doesn't support attachments, wait for discord.py 2.0
-    attachments = _handle_attachments_in_message(message) if not edit_command else {}
+    # TODO: For now 'webhook.edit_message' doesn't support attachments and stickers, wait for discord.py 2.0
+    attachments = await _handle_attachments_in_message(message) if not edit_command else {}
     emoji_regex = r"<a?:\w+:\d+>"
     url_regex = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|%[0-9a-fA-F][0-9a-fA-F])+"
 
@@ -2248,19 +2248,52 @@ async def _handle_components_in_message(result_msg: dict, message: Message, bot:
     return result_msg
 
 
-def _handle_attachments_in_message(message: Message):
+class CustomSticker:
+    def __init__(self, *, data):
+        from discord.asset import Asset
+        from discord.enums import StickerType
+
+        self.name: str = data['name']
+        self.id: int = int(data['id'])
+
+        def try_enum(s: StickerType):
+            lookup = {
+                StickerType.png: 'png',
+                StickerType.apng: 'png',
+                StickerType.lottie: 'json',
+            }
+            return lookup[s]
+        self.format: str = try_enum(StickerType(data['format_type']))
+        self.image_url: str = f'{Asset.BASE}/stickers/{self.id}.{self.format}'
+
+
+async def get_stickers(message: Message):
+    # TODO: Workaround to get stickers before discord.py 2.0 will come out
+    data = await message._state.http.get_message(message.channel.id, message.id)
+    return [CustomSticker(data=data) for data in data.get('sticker_items', [])]
+
+
+async def _handle_attachments_in_message(message: Message):
     attachments = {}
     messages = [message]
     if message.reference is not None:
         messages.append(message.reference.resolved)
     for i in range(len(messages)):
-        if len(messages[i].attachments) != 0:
+        stickers = await get_stickers(messages[i])
+        if len(stickers) != 0 or len(messages[i].attachments) != 0:
             if i == 0:
                 attachments["content"] = []
                 iattach = attachments["content"]
             else:
                 attachments["reply"] = []
                 iattach = attachments["reply"]
+        if len(stickers) != 0:
+            for sticker in stickers:
+                iattach.append({"text": sticker.name})
+                if sticker.image_url is not None:
+                    iattach[-1].update({"hyperlink": sticker.image_url if len(sticker.image_url) < 257
+                    else get_clck_ru_url(sticker.image_url)})
+        if len(messages[i].attachments) != 0:
             for attachment in messages[i].attachments:
                 need_hover = True
                 if "." in attachment.filename:

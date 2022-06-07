@@ -40,6 +40,7 @@
         * Message should start with single `*` or with `*` and space if edited message should start with `**`
     * Supported Discord reply in message
     * Supported url links (shortens if link longer than 256 symbols)
+    * Supported stickers in message
     * Supported attached files to message in Discord
     * Half supported emojis
         * Custom emojis are converted to text with their own text name and hyperlink to img of emoji if applicable
