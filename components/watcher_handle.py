@@ -503,14 +503,16 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                         groups = [g.strip() for g in message_match.groups()]
                         if len(groups) == 3 and DEATH_MESSAGES[regex].find("{1}") > DEATH_MESSAGES[regex].find("{2}"):
                             groups = [groups[0], groups[2], groups[1]]
-                        if search(r"^\'.+\'$", DEATH_MESSAGES[regex].format(*groups)):
+                        if search(r"^\'.+\'$", DEATH_MESSAGES[regex].format(*groups)) or \
+                                (len(groups) == 1 and search(r"^\'.+", DEATH_MESSAGES[regex].format(*groups))):
                             stripped_group = [groups[0][1:]]
-                            if DEATH_MESSAGES[regex].find("{1}") > DEATH_MESSAGES[regex].find("{2}"):
-                                stripped_group.append(groups[1][:-1])
-                                if len(groups) == 3:
-                                    stripped_group.append(groups[2])
-                            else:
-                                stripped_group.extend([groups[1], groups[2][:-1]])
+                            if len(groups) > 1:
+                                if DEATH_MESSAGES[regex].find("{1}") > DEATH_MESSAGES[regex].find("{2}"):
+                                    stripped_group.append(groups[1][:-1])
+                                    if len(groups) == 3:
+                                        stripped_group.append(groups[2])
+                                else:
+                                    stripped_group.extend([groups[1], groups[2][:-1]])
                             groups = stripped_group
                         if len(groups) > 1:
                             groups[1] = get_translation(groups[1])
