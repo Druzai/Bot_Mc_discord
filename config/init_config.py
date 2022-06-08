@@ -779,6 +779,10 @@ class Config:
                 rmtree(file_path, ignore_errors=True)
                 print(get_translation("Deleted folder in path '{0}'").format(file_path.as_posix()))
         print(get_translation("Done!"))
+        # Check if last backup is older than time of stopped server
+        if len(cls.get_server_config().backups) > 0 and cls.get_server_config().states.stopped_info.date is not None:
+            BotVars.is_auto_backup_disable = cls.get_server_config().states.stopped_info.date < \
+                                             max([b.file_creation_date for b in cls.get_server_config().backups])
 
         filepath = Path(cls.get_selected_server_from_list().working_directory, "server.properties")
         if not filepath.exists():
