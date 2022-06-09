@@ -1,5 +1,6 @@
 import datetime as dt
 import sys
+from ast import literal_eval
 from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -318,9 +319,9 @@ class ServerProperties:
             self.filepath = filepath
             with open(filepath, "r", encoding="utf8") as f:
                 for line in f.readlines():
-                    if line.startswith("#") or len(line) == 0:
+                    if line.startswith("#") or len(line) == 0 or line.find("=") == -1:
                         continue
-                    ctx = iter(reversed(line.split("=")))
+                    ctx = iter(reversed(line.split("=", maxsplit=1)))
                     self.properties[next(ctx)] = next(ctx, "").strip()
         else:
             raise FileNotFoundError(get_translation("File '{0}' doesn't exist!").format(filepath.as_posix()))
@@ -351,12 +352,16 @@ class ServerProperties:
         return repr(self.properties)
 
     @staticmethod
-    def _parse_from_parameter(value, is_bool=False, is_int=False):
+    def _parse_from_parameter(value: Optional[str], is_bool=False, is_int=False):
         if value is None or value == "":
             return value
         else:
             if is_bool:
-                return value == "true"
+                try:
+                    res = literal_eval(value.capitalize())
+                except ValueError:
+                    res = None
+                return res if isinstance(res, bool) else None
             elif is_int:
                 try:
                     return int(value)
@@ -366,7 +371,7 @@ class ServerProperties:
                 return value
 
     @staticmethod
-    def _parse_to_parameter(value):
+    def _parse_to_parameter(value: Union[str, int, bool, None]):
         if value is None:
             return ""
         else:
@@ -384,7 +389,7 @@ class ServerProperties:
         return self._parse_from_parameter(self["enable-query"], is_bool=True)
 
     @enable_query.setter
-    def enable_query(self, value):
+    def enable_query(self, value: bool):
         self["enable-query"] = self._parse_to_parameter(value)
 
     @property
@@ -392,7 +397,7 @@ class ServerProperties:
         return self._parse_from_parameter(self["query.port"], is_int=True)
 
     @query_port.setter
-    def query_port(self, value):
+    def query_port(self, value: int):
         self["query.port"] = self._parse_to_parameter(value)
 
     @property
@@ -400,7 +405,7 @@ class ServerProperties:
         return self._parse_from_parameter(self["enable-rcon"], is_bool=True)
 
     @enable_rcon.setter
-    def enable_rcon(self, value):
+    def enable_rcon(self, value: bool):
         self["enable-rcon"] = self._parse_to_parameter(value)
 
     @property
@@ -408,7 +413,7 @@ class ServerProperties:
         return self._parse_from_parameter(self["rcon.port"], is_int=True)
 
     @rcon_port.setter
-    def rcon_port(self, value):
+    def rcon_port(self, value: int):
         self["rcon.port"] = self._parse_to_parameter(value)
 
     @property
@@ -416,7 +421,7 @@ class ServerProperties:
         return self._parse_from_parameter(self["rcon.password"])
 
     @rcon_password.setter
-    def rcon_password(self, value):
+    def rcon_password(self, value: str):
         self["rcon.password"] = self._parse_to_parameter(value)
 
     @property
@@ -424,7 +429,7 @@ class ServerProperties:
         return self._parse_from_parameter(self["force-gamemode"], is_bool=True)
 
     @force_gamemode.setter
-    def force_gamemode(self, value):
+    def force_gamemode(self, value: bool):
         self["force-gamemode"] = self._parse_to_parameter(value)
 
     @property
@@ -432,7 +437,7 @@ class ServerProperties:
         return self._parse_from_parameter(self["online-mode"], is_bool=True)
 
     @online_mode.setter
-    def online_mode(self, value):
+    def online_mode(self, value: bool):
         self["online-mode"] = self._parse_to_parameter(value)
 
     @property
@@ -440,7 +445,7 @@ class ServerProperties:
         return self._parse_from_parameter(self["level-name"])
 
     @level_name.setter
-    def level_name(self, value):
+    def level_name(self, value: str):
         self["level-name"] = self._parse_to_parameter(value)
 
     @property
@@ -448,7 +453,7 @@ class ServerProperties:
         return self._parse_from_parameter(self["white-list"], is_bool=True)
 
     @white_list.setter
-    def white_list(self, value):
+    def white_list(self, value: bool):
         self["white-list"] = self._parse_to_parameter(value)
 
 
@@ -797,6 +802,10 @@ class Config:
         # Check server parameters
         changed_parameters = []
         changed = False
+        if not server_properties.force_gamemode:
+            changed = True
+            server_properties.force_gamemode = True
+            changed_parameters.append("force-gamemode=true")
         if not server_properties.enable_query:
             changed = True
             server_properties.enable_query = True
@@ -819,10 +828,6 @@ class Config:
             changed_parameters.append(f"rcon.password={server_properties.rcon_password}")
             changed_parameters.append(get_translation("Reminder: For better security "
                                                       "you have to change this password for a more secure one."))
-        if not server_properties.force_gamemode:
-            changed = True
-            server_properties.force_gamemode = True
-            changed_parameters.append("force-gamemode=true")
         if changed:
             server_properties.save()
             print("------")
