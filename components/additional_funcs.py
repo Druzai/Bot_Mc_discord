@@ -513,8 +513,10 @@ class BackupsThread(Thread):
                     with suppress(ConnectionError, socket.error):
                         players_count = get_server_players().get("current")
                     if players_count != 0:
-                        if BotVars.is_auto_backup_disable:
-                            BotVars.is_auto_backup_disable = False
+                        BotVars.is_auto_backup_disable = False
+                elif Config.get_server_config().states.started_info.date > \
+                        max([b.file_creation_date for b in Config.get_server_config().backups]):
+                    BotVars.is_auto_backup_disable = False
 
                 if not BotVars.is_auto_backup_disable:
                     print(get_translation("Starting auto backup"))
@@ -539,12 +541,9 @@ class BackupsThread(Thread):
                         print(", ".join(obj))
 
                 if BotVars.is_server_on and players_count == 0:
-                    if not BotVars.is_auto_backup_disable:
-                        BotVars.is_auto_backup_disable = True
-
-                if not BotVars.is_server_on:
-                    if not BotVars.is_auto_backup_disable:
-                        BotVars.is_auto_backup_disable = True
+                    BotVars.is_auto_backup_disable = True
+                elif not BotVars.is_server_on:
+                    BotVars.is_auto_backup_disable = True
                 self._backing_up = False
 
     def skip(self):
@@ -2263,6 +2262,7 @@ class CustomSticker:
                 StickerType.lottie: 'json',
             }
             return lookup[s]
+
         self.format: str = try_enum(StickerType(data['format_type']))
         self.image_url: str = f'{Asset.BASE}/stickers/{self.id}.{self.format}'
 
