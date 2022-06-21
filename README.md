@@ -121,7 +121,7 @@ pip install -r requirements.txt
 
 ### Build with pyinstaller
 
-Firstly, you have to install pyinstaller via `pip install pyinstaller==5.0`.
+Firstly, you have to install pyinstaller via `pip install pyinstaller==5.1`.
 
 Type in command prompt `make` in root directory of the project to build it.
 
