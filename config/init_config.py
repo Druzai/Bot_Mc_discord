@@ -747,9 +747,10 @@ class Config:
                                .format(cls.get_selected_server_from_list().working_directory))
         cls.read_server_config()
         # Ensure we have backups folder
-        with suppress(FileExistsError):
-            mkdir(Path(cls.get_selected_server_from_list().working_directory,
-                       cls.get_backups_settings().name_of_the_backups_folder))
+        backups_folder = Path(cls.get_selected_server_from_list().working_directory,
+                              cls.get_backups_settings().name_of_the_backups_folder)
+        if not backups_folder.exists():
+            mkdir(backups_folder)
         # Remove nonexistent backups from server config
         list_to_remove = []
         for backup in cls.get_server_config().backups:
@@ -1173,7 +1174,7 @@ class Config:
         if cls.get_timeouts_settings().await_seconds_in_check_ups < 5 or \
                 cls.get_timeouts_settings().await_seconds_in_check_ups > 60:
             cls._need_to_rewrite = True
-            print(get_translation("Timeout between check-ups 'Server on/off' set below 6. Change this option."))
+            print(get_translation("Timeout between check-ups 'Server on/off' set below 5. Change this option."))
             print(get_translation("Note: If your machine has processor with frequency 2-2.5 GHz, "
                                   "you have to set this option at least to '8' seconds "
                                   "or higher for the bot to work properly."))

@@ -26,7 +26,7 @@ class ChatCommands(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self._bot: commands.Bot = bot
         self._IndPoll: 'Poll' = bot.get_cog("Poll")
-        if len(argv) == 1:
+        if len(argv) == 1 and Config.get_rss_feed_settings().enable_rss_feed:
             self.rss_feed_task.change_interval(seconds=Config.get_rss_feed_settings().rss_download_delay)
 
     @commands.Cog.listener()
@@ -235,7 +235,7 @@ class ChatCommands(commands.Cog):
             after_channel = self._bot.get_channel(payload.channel_id)
             if after_channel is None:
                 after_channel = await self._bot.fetch_channel(payload.channel_id)
-            after_message = await after_channel.fetch_message(payload.message_id)
+            after_message = Message(state=after_channel._state, channel=after_channel, data=payload.data)
 
             if payload.cached_message is not None and after_message.content == payload.cached_message.content and \
                     after_message.attachments == payload.cached_message.attachments:
