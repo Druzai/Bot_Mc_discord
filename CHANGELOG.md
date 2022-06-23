@@ -6,6 +6,7 @@ All important changes to this project will be documented in this file.
 
 #### Improvements:
 * Added check if last backup datetime is older than datetime of stopped server
+* Updated dependencies
 
 #### Fixed:
 * --

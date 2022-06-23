@@ -28,34 +28,54 @@ if TYPE_CHECKING:
 
 
 class Watcher:
-    _running = True
-    _thread = None
+    def __init__(self, watch_file: Path, call_func_on_change, **kwargs):
+        self._running = False
+        self._thread = None
+        self._filename: Path = watch_file
+        self._call_func_on_change = call_func_on_change
+        self._kwargs = kwargs
 
-    # Constructor
-    def __init__(self, watch_file: Path, call_func_on_change=None, *args, **kwargs):
+    def start(self):
+        self._running = True
+        self._thread = WatchThread(self._filename, self._call_func_on_change, **self._kwargs)
+        self._thread.start()
+
+    def stop(self):
+        self._running = False
+        if self._thread is not None:
+            self._thread.join()
+            self._thread = None
+
+    def is_running(self):
+        return self._running
+
+
+class WatchThread(Thread):
+    def __init__(self, watch_file: Path, call_func_on_change, **kwargs):
+        super().__init__()
+        self.name = "WatchThread"
+        self.daemon = True
+        self._running = True
         self._cached_stamp = None
+        self._last_line = None
         self._filename: Path = watch_file
         self._call_func_on_change = call_func_on_change
         self._refresh_delay_secs = Config.get_server_watcher().refresh_delay_of_console_log
-        self._args = args
         self._kwargs = kwargs
 
     # Look for changes
     def look(self):
         stamp = stat(self._filename).st_mtime
         if stamp != self._cached_stamp:
-            temp = self._cached_stamp
             self._cached_stamp = stamp
-            if self._call_func_on_change is not None and temp is not None:
-                BotVars.watcher_last_line = self._call_func_on_change(file=self._filename,
-                                                                      last_line=BotVars.watcher_last_line,
-                                                                      *self._args, **self._kwargs)
+            if self._call_func_on_change is not None:
+                self._last_line = self._call_func_on_change(file=self._filename,
+                                                            last_line=self._last_line, **self._kwargs)
 
     # Keep watching in a loop
-    def watch(self):
+    def run(self):
         while self._running:
             try:
-                # Look for changes
                 sleep(self._refresh_delay_secs)
                 self.look()
             except FileNotFoundError:
@@ -70,18 +90,9 @@ class Watcher:
                 print(get_translation("Watcher Unhandled Error: {0}").format(exc_info()[0]) +
                       f"\n{Style.DIM}{Fore.RED}{exc}{Style.RESET_ALL}")
 
-    def start(self):
-        self._thread = Thread(target=self.watch, daemon=True)
-        self._thread.start()
-
-    def stop(self):
+    def join(self, timeout=0.5):
         self._running = False
-        if self._thread is not None:
-            self._thread.join()
-            self._thread = None
-
-    def is_running(self):
-        return self._running
+        sleep(max(timeout, 0.5))
 
 
 def create_watcher(watcher: Optional[Watcher], server_version: 'ServerVersion'):
@@ -119,7 +130,7 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
     INFO_line = r"\[Server thread/INFO][^\*<>]*:" if server_version.minor > 6 else r"\[INFO]"
 
     if last_line is None:
-        last_lines = last_lines[-min(15, Config.get_server_watcher().number_of_lines_to_check_in_console_log):]
+        last_lines = last_lines[-min(50, Config.get_server_watcher().number_of_lines_to_check_in_console_log):]
     last_lines = [sub(r"§[\dabcdefklmnor]", "", line) for line in last_lines]
     death_message = ""
 

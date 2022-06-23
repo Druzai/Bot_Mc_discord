@@ -48,7 +48,6 @@ class BotVars:
     players_login_dict: dict = {}  # Dict of logged nicks and datetime of their login
     java_processes: List[Process] = []
     watcher_of_log_file: 'Watcher' = None
-    watcher_last_line: str = None
     webhook_chat: Webhook = None
     webhook_rss: Webhook = None
     bot_for_webhooks: Bot = None
