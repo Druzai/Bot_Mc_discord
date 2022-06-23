@@ -341,8 +341,7 @@ async def stop_server(ctx: commands.Context, bot: commands.Bot, poll: 'Poll',
                 if not await poll.run(channel=ctx.channel,
                                       message=get_translation("this man {0} trying to stop the server with {1} "
                                                               "player(s) on it. Will you let that happen?")
-                                              .format(get_author_and_mention(ctx, bot, is_reaction)[1],
-                                                      players_info["current"]),
+                                              .format(author_mention, players_info["current"]),
                                       command="stop",
                                       needed_role=Config.get_settings().bot_settings.managing_commands_role_id,
                                       remove_logs_after=5):
@@ -514,7 +513,8 @@ class BackupsThread(Thread):
                         players_count = get_server_players().get("current")
                     if players_count != 0:
                         BotVars.is_auto_backup_disable = False
-                elif Config.get_server_config().states.started_info.date > \
+                elif len(Config.get_server_config().backups) > 0 and \
+                        Config.get_server_config().states.started_info.date > \
                         max([b.file_creation_date for b in Config.get_server_config().backups]):
                     BotVars.is_auto_backup_disable = False
 
@@ -523,22 +523,28 @@ class BackupsThread(Thread):
                     handle_backups_limit_and_size(self._bot, auto_backups=True)
                     # Creating auto backup
                     file_name = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
-                    obj = next(create_zip_archive(self._bot, file_name,
-                                                  Path(Config.get_selected_server_from_list().working_directory,
-                                                       Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
-                                                  Path(Config.get_selected_server_from_list().working_directory,
-                                                       ServerProperties().level_name).as_posix(),
-                                                  Config.get_backups_settings().compression_method), None)
-                    Config.add_backup_info(file_name=file_name)
-                    Config.save_server_config()
-                    print(get_translation("Backup completed!"))
-                    if isinstance(obj, list) and len(obj) > 0:
-                        print(get_translation("Bot couldn't archive some files "
-                                              "to this backup, they located in path '{0}'")
-                              .format(Path(Config.get_selected_server_from_list().working_directory,
-                                           ServerProperties().level_name).as_posix()))
-                        print(get_translation("List of these files:"))
-                        print(", ".join(obj))
+                    level_name_path = Path(Config.get_selected_server_from_list().working_directory,
+                                           ServerProperties().level_name).as_posix()
+                    try:
+                        obj = next(create_zip_archive(self._bot, file_name,
+                                                      Path(Config.get_selected_server_from_list().working_directory,
+                                                           Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
+                                                      level_name_path,
+                                                      Config.get_backups_settings().compression_method), None)
+                        Config.add_backup_info(file_name=file_name)
+                        Config.save_server_config()
+                        print(get_translation("Backup completed!"))
+                        if isinstance(obj, list) and len(obj) > 0:
+                            print(get_translation("Bot couldn't archive some files "
+                                                  "to this backup, they located in path '{0}'")
+                                  .format(Path(Config.get_selected_server_from_list().working_directory,
+                                               ServerProperties().level_name).as_posix()))
+                            print(get_translation("List of these files:"))
+                            print(", ".join(obj))
+                    except FileNotFoundError:
+                        print(get_translation("The world folder in path '{0}' doesn't exist or is empty!")
+                              .format(level_name_path))
+                        print(get_translation("Backup cancelled!"))
 
                 if BotVars.is_server_on and players_count == 0:
                     BotVars.is_auto_backup_disable = True
@@ -577,6 +583,12 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
     total = 0
     dt = datetime.now()
     last_message_change = datetime.now() - timedelta(seconds=4)
+
+    # Check if world folder doesn't exist or is empty
+    dir_obj = Path(dir_path)
+    if not dir_obj.exists() or not dir_obj.is_dir() or next(dir_obj.rglob('*'), None) is None:
+        raise FileNotFoundError()
+
     # Count size of all files in directory
     for root, _, files in walk(dir_path):
         for fname in files:
@@ -1875,6 +1887,11 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
         await send_msg(message.channel, f"{author_mention}\n" +
                        add_quotes(get_translation("server is loading!").capitalize()), True)
     else:
+        if get_server_players().get("current") == 0:
+            await send_msg(message.channel, f"{author_mention}, " +
+                           get_translation("No players on server!").lower(), True)
+            return
+
         server_version = get_server_version()
         reply_from_minecraft_user = None
         if server_version.minor < 7:
@@ -1942,7 +1959,7 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
             with connect_rcon() as cl_r:
                 for m in messages:
                     cl_r.say(m if m != "" else space)
-        elif get_server_players().get("current") > 0:
+        else:
             content_name = "contents" if server_version.minor >= 16 else "value"
             result_msg = _clean_message(message, edit_command)
             if not edit_command:
@@ -2003,9 +2020,6 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
                                              f"@{message.author.display_name} "
                                              f"-> @{nick if nick != '@a' else 'everyone'}",
                                              cl_r)
-        else:
-            await send_msg(message.channel, f"{author_mention}, " +
-                           get_translation("No players on server!").lower(), True)
 
 
 def _handle_long_tellraw_object(tellraw_obj: list):

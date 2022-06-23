@@ -915,28 +915,37 @@ class MinecraftCommands(commands.Cog):
             msg = await ctx.send(add_quotes(get_translation("Starting backup...")))
             file_name = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
             list_obj = None
-            for obj in create_zip_archive(self._bot, file_name,
-                                          Path(Config.get_selected_server_from_list().working_directory,
-                                               Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
-                                          Path(Config.get_selected_server_from_list().working_directory,
-                                               ServerProperties().level_name).as_posix(),
-                                          Config.get_backups_settings().compression_method, forced=True,
-                                          user=ctx.author):
-                if isinstance(obj, str):
-                    await msg.edit(content=obj)
-                elif isinstance(obj, list):
-                    list_obj = obj
-            Config.add_backup_info(file_name=file_name, reason=reason, initiator=ctx.author.id)
-            Config.save_server_config()
-            self._backups_thread.skip()
-            print(get_translation("Backup completed!"))
-            if isinstance(list_obj, list):
-                await ctx.send(add_quotes(get_translation("Bot couldn't archive some files to this backup!")))
-                print(get_translation("Bot couldn't archive some files to this backup, they located in path '{0}'")
-                      .format(Path(Config.get_selected_server_from_list().working_directory,
-                                   ServerProperties().level_name).as_posix()))
-                print(get_translation("List of these files:"))
-                print(", ".join(list_obj))
+            level_name = ServerProperties().level_name
+            try:
+                for obj in create_zip_archive(self._bot, file_name,
+                                              Path(Config.get_selected_server_from_list().working_directory,
+                                                   Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
+                                              Path(Config.get_selected_server_from_list().working_directory,
+                                                   level_name).as_posix(),
+                                              Config.get_backups_settings().compression_method, forced=True,
+                                              user=ctx.author):
+                    if isinstance(obj, str):
+                        await msg.edit(content=obj)
+                    elif isinstance(obj, list):
+                        list_obj = obj
+                Config.add_backup_info(file_name=file_name, reason=reason, initiator=ctx.author.id)
+                Config.save_server_config()
+                self._backups_thread.skip()
+                print(get_translation("Backup completed!"))
+                if isinstance(list_obj, list):
+                    await ctx.send(add_quotes(get_translation("Bot couldn't archive some files to this backup!")))
+                    print(get_translation("Bot couldn't archive some files to this backup, they located in path '{0}'")
+                          .format(Path(Config.get_selected_server_from_list().working_directory,
+                                       ServerProperties().level_name).as_posix()))
+                    print(get_translation("List of these files:"))
+                    print(", ".join(list_obj))
+            except FileNotFoundError:
+                await msg.edit(content=add_quotes(get_translation("Backup cancelled!") + "\n" +
+                                                  get_translation("The world folder '{0}' doesn't exist or is empty!")
+                                                  .format(level_name)))
+                print(get_translation("The world folder in path '{0}' doesn't exist or is empty!")
+                      .format(Path(Config.get_selected_server_from_list().working_directory, level_name).as_posix()))
+                print(get_translation("Backup cancelled!"))
         else:
             await send_status(ctx)
 
