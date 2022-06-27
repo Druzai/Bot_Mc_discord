@@ -10,7 +10,8 @@ All important changes to this project will be documented in this file.
 * Updated dependencies
 
 #### Fixed:
-* --
+* Fixed parsing `ops.json`
+* Fixed checking for players in `handle_message_for_chat`
 
 ### [1.3.1](https://github.com/Druzai/Bot_Mc_discord/compare/1.3.0...1.3.1) (2022-06-07)
 

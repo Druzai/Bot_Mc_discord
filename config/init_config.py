@@ -856,7 +856,7 @@ class Config:
             if filepath.is_file():
                 with open(filepath, "r", encoding="utf8") as f:
                     json_ops = load(f)
-                ops_list = [v for k, v in json_ops.items() if k == "name"]
+                ops_list = [d["name"] for d in json_ops if d.get("name", None) is not None]
         return ops_list
 
     @classmethod
