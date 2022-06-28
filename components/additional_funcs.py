@@ -1440,6 +1440,29 @@ def bot_forceload_info():
     return msg
 
 
+def get_param_type(arg_data):
+    if arg_data.annotation != inspect._empty:
+        is_union = hasattr(arg_data.annotation, '__origin__') and arg_data.annotation.__origin__._name == "Union"
+        if is_union and len(arg_data.annotation.__args__) == 2 and type(None) in arg_data.annotation.__args__:
+            if arg_data.default != inspect._empty:
+                param_type = type(arg_data.default).__name__
+            else:
+                param_type = [a for a in arg_data.annotation.__args__ if a != type(None)][0].__name__
+        elif not is_union and getattr(arg_data.annotation, '__name__', None) is not None:
+            param_type = getattr(arg_data.annotation, '__name__', None)
+        elif hasattr(arg_data.annotation, 'converter'):
+            param_type = sub(r"\w*?\.", "", str(arg_data.annotation.converter))
+            if not isinstance(arg_data.annotation.converter, typing._GenericAlias):
+                param_type = param_type.strip("<>").lstrip("class").strip("' ")
+        else:
+            param_type = sub(r"\w*?\.", "", str(arg_data.annotation))
+    elif arg_data.annotation == inspect._empty and arg_data.default != inspect._empty:
+        param_type = type(arg_data.default).__name__
+    else:
+        param_type = "Any"
+    return param_type
+
+
 def parse_params_for_help(command_params: dict, string_to_add: str, create_params_dict=False) -> Tuple[str, dict]:
     params = {}
     converter = False
@@ -1448,26 +1471,7 @@ def parse_params_for_help(command_params: dict, string_to_add: str, create_param
                 and isinstance(arg_data.annotation.converter, typing._GenericAlias):
             converter = True
         if create_params_dict:
-            if arg_data.annotation != inspect._empty:
-                is_union = hasattr(arg_data.annotation, '__origin__') and \
-                           arg_data.annotation.__origin__._name == "Union"
-                if is_union and len(arg_data.annotation.__args__) == 2 and type(None) in arg_data.annotation.__args__:
-                    if arg_data.default != inspect._empty:
-                        params[arg_name] = type(arg_data.default).__name__
-                    else:
-                        params[arg_name] = [a for a in arg_data.annotation.__args__ if a != type(None)][0].__name__
-                elif not is_union and getattr(arg_data.annotation, '__name__', None) is not None:
-                    params[arg_name] = getattr(arg_data.annotation, '__name__', None)
-                elif hasattr(arg_data.annotation, 'converter'):
-                    params[arg_name] = sub(r"\w*?\.", "", str(arg_data.annotation.converter))
-                    if not isinstance(arg_data.annotation.converter, typing._GenericAlias):
-                        params[arg_name] = params[arg_name].strip("<>").lstrip("class").strip("' ")
-                else:
-                    params[arg_name] = sub(r"\w*?\.", "", str(arg_data.annotation))
-            elif arg_data.annotation == inspect._empty and arg_data.default != inspect._empty:
-                params[arg_name] = type(arg_data.default).__name__
-            else:
-                params[arg_name] = "Any"
+            params[arg_name] = get_param_type(arg_data)
         if arg_data.default != inspect._empty or arg_data.kind == arg_data.VAR_POSITIONAL:
             add_data = ""
             if bool(arg_data.default) and arg_data.kind != arg_data.VAR_POSITIONAL:
@@ -1688,7 +1692,7 @@ async def send_error(ctx: commands.Context, bot: commands.Bot, error: commands.C
     author, author_mention = get_author_and_mention(ctx, bot, is_reaction)
     parsed_input = None
     if hasattr(error, "param"):
-        error_param_type = sub(r"\w*?\.", "", str(error.param.annotation)).strip("<>").lstrip("class").strip("' ")
+        error_param_type = get_param_type(error.param)
         error_param_name = error.param.name
     else:
         error_param_type = ""
