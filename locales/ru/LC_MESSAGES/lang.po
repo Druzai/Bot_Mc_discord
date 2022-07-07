@@ -1774,8 +1774,8 @@ msgid "an operator will be taken away from you all will now."
 msgstr "у вас всех сейчас заберут оператора."
 
 #: ..\commands\minecraft_commands.py:200
-msgid "Deopped all "
-msgstr "Deop'нул всех "
+msgid "Deopped all"
+msgstr "Deop'нул всех"
 
 #: ..\commands\minecraft_commands.py:201
 msgid "|| Note: "

@@ -21,8 +21,8 @@ from components.additional_funcs import (
     get_folder_size, send_message_of_deleted_backup, handle_backups_limit_and_size, bot_backup, delete_after_by_msg,
     get_half_members_count_with_role, warn_about_auto_backups, get_archive_uncompressed_size, get_bot_display_name,
     get_server_version, DISCORD_SYMBOLS_IN_MESSAGE_LIMIT, get_number_of_digits, bot_associate, bot_associate_info,
-    get_time_string, bot_shutdown_info, bot_forceload_info, get_member_name, handle_rcon_error,
-    check_and_delete_from_whitelist_json, IPv4Address, handle_unhandled_error_in_task
+    get_time_string, bot_shutdown_info, bot_forceload_info, get_member_name, handle_rcon_error, IPv4Address,
+    check_and_delete_from_whitelist_json, handle_unhandled_error_in_task, check_if_string_in_all_translations
 )
 from components.localization import get_translation
 from config.init_config import BotVars, Config, ServerProperties
@@ -197,7 +197,7 @@ class MinecraftCommands(commands.Cog):
                                 cl_r.run(f"defaultgamemode {gamemode}")
                         break
                 Config.append_to_op_log(
-                    datetime.now().strftime("%d/%m/%Y %H:%M:%S") + " || " + get_translation("Deopped all ") +
+                    datetime.now().strftime("%d/%m/%Y %H:%M:%S") + " || " + get_translation("Deopped all") + " " +
                     (str(get_translation("|| Note: ") +
                          get_translation("from {0} people in belated list operator was taken away")
                          .format(len(BotVars.op_deop_list))) if len(BotVars.op_deop_list) > 1 else ""))
@@ -226,7 +226,8 @@ class MinecraftCommands(commands.Cog):
         if "".join(log) == "":
             await ctx.send(add_quotes(get_translation("There is no history of giving an operator to players yet...")))
             return
-        log = [lg for lg in log if not lg.split("||")[1].lstrip().startswith("Deop")]
+        log = [lg for lg in log if not check_if_string_in_all_translations(translate_text="Deopped all",
+                                                                           match_text=lg.split("||")[1].strip())]
         for line in range(len(log)):
             arr = log[line].split("||")
             date = datetime.strptime(arr[0].strip(), "%d/%m/%Y %H:%M:%S").strftime(get_translation("%H:%M %d/%m/%Y"))

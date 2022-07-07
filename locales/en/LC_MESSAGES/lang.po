@@ -1755,8 +1755,8 @@ msgid "an operator will be taken away from you all will now."
 msgstr "an operator will be taken away from you all will now."
 
 #: ..\commands\minecraft_commands.py:200
-msgid "Deopped all "
-msgstr "Deopped all "
+msgid "Deopped all"
+msgstr "Deopped all"
 
 #: ..\commands\minecraft_commands.py:201
 msgid "|| Note: "
