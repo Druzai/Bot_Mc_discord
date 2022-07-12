@@ -1036,7 +1036,7 @@ async def bot_status(ctx: commands.Context, bot: commands.Bot, is_reaction=False
                     message += get_translation("Night, ")
                 else:
                     message += get_translation("Sunrise, ")
-                message += str((6 + time_ticks // 1000) % 24) + ":" + f"{((time_ticks % 1000) * 60 // 1000):02d}\n"
+                message += f"{(6 + time_ticks // 1000) % 24}:{((time_ticks % 1000) * 60 // 1000):02d}\n"
                 bot_message += message
             server_info_splits = server_info.split("\n", maxsplit=1)
             server_version_str = get_translation("Server version: {0}").format(server_version.version_string)
@@ -1302,11 +1302,13 @@ def check_if_string_in_all_translations(translate_text: str, match_text: str):
     list_of_locales = get_locales()
     list_of_locales.remove(current_locale)
     list_of_locales.append(current_locale)
+    if match_text == get_translation(translate_text):
+        return True
+
     for locale in list_of_locales:
         set_locale(locale)
-        if match_text == get_translation(translate_text):
-            if locale != current_locale:
-                set_locale(current_locale)
+        if locale != current_locale and match_text == get_translation(translate_text):
+            set_locale(current_locale)
             return True
     return False
 

@@ -129,7 +129,7 @@ Executable file will be in `%project_root_dir%/build_dist`.
 
 ## Run
 
-**Important! If you running Minecraft server between versions `1.7.2` and `1.18` to avoid critical security
+**Important! If you're running Minecraft server between versions `1.7.2` and `1.18` to avoid critical security
 vulnerability `Log4Shell` do instructions stated in
 this [article](https://www.minecraft.net/en-us/article/important-message--security-vulnerability-java-edition)!**
 

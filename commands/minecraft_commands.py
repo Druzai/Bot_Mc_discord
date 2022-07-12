@@ -1009,8 +1009,7 @@ class MinecraftCommands(commands.Cog):
                     await delete_after_by_msg(ctx.message)
                     await ctx.send(get_translation("{0}, bot already has poll on `backup del` command!")
                                    .format(ctx.author.mention),
-                                   delete_after=Config.get_timeouts_settings()
-                                   .await_seconds_before_message_deletion)
+                                   delete_after=Config.get_timeouts_settings().await_seconds_before_message_deletion)
                     return
 
                 if await self._IndPoll.timer(ctx, 5, "backup_del"):

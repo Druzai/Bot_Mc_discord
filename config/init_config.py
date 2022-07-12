@@ -15,7 +15,7 @@ from secrets import choice as sec_choice
 from shutil import rmtree
 from string import ascii_letters, digits
 from struct import unpack
-from typing import List, Optional, TYPE_CHECKING, Set, Union
+from typing import List, Optional, TYPE_CHECKING, Set, Union, Dict
 
 from cryptography.fernet import InvalidToken
 from discord import Webhook, Member
@@ -860,7 +860,7 @@ class Config:
         return ops_list
 
     @classmethod
-    def get_list_of_banned_ips_and_reasons(cls, version: 'ServerVersion') -> List[dict]:
+    def get_list_of_banned_ips_and_reasons(cls, version: 'ServerVersion') -> List[Dict[str, Optional[str]]]:
         ban_list = []
         if version.minor < 7 or (version.minor == 7 and version.patch < 6):
             filepath = Path(Config.get_selected_server_from_list().working_directory + "/banned-ips.txt")
@@ -873,12 +873,13 @@ class Config:
                             if not line.startswith("#") and len(line) > 0 and "|" in line:
                                 try:
                                     ip, *_, reason = line.split("|")
+                                    reason = reason.strip()
                                     if len(reason) == 0:
                                         reason = None
                                 except ValueError:
                                     ip = line.split("|")[0]
                                     reason = None
-                                ban_list.append({"ip": ip.strip(), "reason": reason.strip()})
+                                ban_list.append({"ip": ip.strip(), "reason": reason})
         else:
             filepath = Path(Config.get_selected_server_from_list().working_directory + "/banned-ips.json")
             if filepath.is_file():

@@ -98,8 +98,7 @@ class Poll(commands.Cog):
             with suppress(InvalidData, HTTPException, NotFound, Forbidden):
                 channel = await self._bot.fetch_channel(payload.channel_id)
         current_poll = self._polls[payload.message_id]
-        emoji = self._emoji_symbols["yes"] if payload.emoji.name == \
-                                              self._emoji_symbols["yes"] else self._emoji_symbols["no"]
+        emoji = self._emoji_symbols["yes" if payload.emoji.name == self._emoji_symbols["yes"] else "no"]
         if payload.member is None:
             if isinstance(channel, DMChannel):
                 user = await self._bot.fetch_user(payload.user_id)
