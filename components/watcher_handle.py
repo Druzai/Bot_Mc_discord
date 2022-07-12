@@ -139,9 +139,10 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
             continue
 
         if Config.get_cross_platform_chat_settings().channel_id is not None:
-            if search(rf"{date_line} {INFO_line} <([^>]*)> (.*)", line):
-                player_nick = search(r"<([^>]*)>", line).group(1)
-                player_message = split(r"<([^>]*)>", line, maxsplit=1)[-1].strip()
+            match = search(rf"{date_line} {INFO_line}( \[Not Secure])? <(?P<nick>[^>]*)> (?P<message>.*)", line)
+            if match is not None:
+                player_nick = match.group("nick")
+                player_message = match.group("message")
                 if search(r"@\S+", player_message):
                     split_arr = split(r"@\S+", player_message)
                     mentions = [[i[1:]] for i in findall(r"@\S+", player_message)]
@@ -563,9 +564,9 @@ def _get_members_nicks_of_the_role(role: Role, mention_nicks: list):
 
 
 def check_if_player_logged_out(line: str, INFO_line: str):
-    match = search(rf"{INFO_line} ([^\[\]<>]+) lost connection:", line)
+    match = search(rf"{INFO_line} (?P<nick>[^\[\]<>]+) lost connection:", line)
     if match:
-        nick = match.group(1).strip()
+        nick = match.group("nick").strip()
         reason = split(r"lost connection:", line, maxsplit=1)[-1].strip()
     else:
         nick, reason = None, None
@@ -573,10 +574,13 @@ def check_if_player_logged_out(line: str, INFO_line: str):
 
 
 def check_if_player_logged_in(line: str, INFO_line: str):
-    match = search(rf"{INFO_line} ([^\[\]<>]+)\[/(\d+\.\d+\.\d+\.\d+):\d+] logged in with entity id \d+ at", line)
+    match = search(
+        rf"{INFO_line} (?P<nick>[^\[\]<>]+)\[/(?P<ip>\d+\.\d+\.\d+\.\d+):\d+] logged in with entity id \d+ at",
+        line
+    )
     if match:
-        nick = match.group(1).strip()
-        ip_address = match.group(2).strip()
+        nick = match.group("nick").strip()
+        ip_address = match.group("ip").strip()
     else:
         nick = None
         ip_address = None
