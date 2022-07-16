@@ -1867,6 +1867,17 @@ def handle_unhandled_error_in_task(func_number: int = 2):
                               .format(func_name(func_number=func_number + 1)))
 
 
+@contextmanager
+def handle_unhandled_error_in_events(func_number: int = 2):
+    try:
+        yield
+    except KeyboardInterrupt:
+        pass
+    except BaseException as error:
+        print_unhandled_error(error, get_translation("Ignoring exception in internal event '{0}':")
+                              .format(func_name(func_number=func_number + 1)))
+
+
 async def handle_message_for_chat(message: Message, bot: commands.Bot,
                                   on_edit=False, before_message: Message = None, edit_command: bool = False):
     if message.author.id == bot.user.id or (message.content.startswith(Config.get_settings().bot_settings.prefix) and

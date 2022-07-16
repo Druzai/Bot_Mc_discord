@@ -22,7 +22,8 @@ from components.additional_funcs import (
     get_half_members_count_with_role, warn_about_auto_backups, get_archive_uncompressed_size, get_bot_display_name,
     get_server_version, DISCORD_SYMBOLS_IN_MESSAGE_LIMIT, get_number_of_digits, bot_associate, bot_associate_info,
     get_time_string, bot_shutdown_info, bot_forceload_info, get_member_name, handle_rcon_error, IPv4Address,
-    check_and_delete_from_whitelist_json, handle_unhandled_error_in_task, check_if_string_in_all_translations
+    check_and_delete_from_whitelist_json, handle_unhandled_error_in_task, check_if_string_in_all_translations,
+    handle_unhandled_error_in_events
 )
 from components.localization import get_translation
 from config.init_config import BotVars, Config, ServerProperties
@@ -1156,35 +1157,37 @@ class MinecraftCommands(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
-        if payload.message_id == Config.get_settings().bot_settings.menu_id and payload.member.id != self._bot.user.id:
-            channel = self._bot.get_channel(payload.channel_id)
-            message = await channel.fetch_message(payload.message_id)
-            await message.remove_reaction(payload.emoji, payload.member)
-            if payload.emoji.name in self._emoji_symbols.values():
-                BotVars.react_auth = payload.member
-                if payload.emoji.name == self._emoji_symbols.get("status"):
-                    await bot_status(channel, self._bot, is_reaction=True)
-                elif payload.emoji.name == self._emoji_symbols.get("list"):
-                    await bot_list(channel, self._bot, is_reaction=True)
-                elif payload.emoji.name == self._emoji_symbols.get("backup"):
-                    await bot_backup(channel, self._bot, is_reaction=True)
-                elif payload.emoji.name == self._emoji_symbols.get("update"):
-                    if self.checkups_task.is_running():
-                        self.checkups_task.restart()
-                    return
-                else:
-                    if Config.get_settings().bot_settings.managing_commands_role_id is None or \
-                            Config.get_settings().bot_settings.managing_commands_role_id \
-                            in (e.id for e in payload.member.roles):
-                        if payload.emoji.name == self._emoji_symbols.get("start"):
-                            await bot_start(channel, self._bot, self._backups_thread, is_reaction=True)
-                        elif payload.emoji.name == self._emoji_symbols.get("stop 10"):
-                            await bot_stop(channel, command=10, bot=self._bot, poll=self._IndPoll, is_reaction=True)
-                        elif payload.emoji.name == self._emoji_symbols.get("restart 10"):
-                            await bot_restart(channel, command=10, bot=self._bot, poll=self._IndPoll,
-                                              backups_thread=self._backups_thread, is_reaction=True)
+        with handle_unhandled_error_in_events():
+            if payload.message_id == Config.get_settings().bot_settings.menu_id and\
+                    payload.member.id != self._bot.user.id:
+                channel = self._bot.get_channel(payload.channel_id)
+                message = await channel.fetch_message(payload.message_id)
+                await message.remove_reaction(payload.emoji, payload.member)
+                if payload.emoji.name in self._emoji_symbols.values():
+                    BotVars.react_auth = payload.member
+                    if payload.emoji.name == self._emoji_symbols.get("status"):
+                        await bot_status(channel, self._bot, is_reaction=True)
+                    elif payload.emoji.name == self._emoji_symbols.get("list"):
+                        await bot_list(channel, self._bot, is_reaction=True)
+                    elif payload.emoji.name == self._emoji_symbols.get("backup"):
+                        await bot_backup(channel, self._bot, is_reaction=True)
+                    elif payload.emoji.name == self._emoji_symbols.get("update"):
+                        if self.checkups_task.is_running():
+                            self.checkups_task.restart()
+                        return
                     else:
-                        await send_error(channel, self._bot,
-                                         commands.MissingRole(Config.get_settings().bot_settings
-                                                              .managing_commands_role_id),
-                                         is_reaction=True)
+                        if Config.get_settings().bot_settings.managing_commands_role_id is None or \
+                                Config.get_settings().bot_settings.managing_commands_role_id \
+                                in (e.id for e in payload.member.roles):
+                            if payload.emoji.name == self._emoji_symbols.get("start"):
+                                await bot_start(channel, self._bot, self._backups_thread, is_reaction=True)
+                            elif payload.emoji.name == self._emoji_symbols.get("stop 10"):
+                                await bot_stop(channel, command=10, bot=self._bot, poll=self._IndPoll, is_reaction=True)
+                            elif payload.emoji.name == self._emoji_symbols.get("restart 10"):
+                                await bot_restart(channel, command=10, bot=self._bot, poll=self._IndPoll,
+                                                  backups_thread=self._backups_thread, is_reaction=True)
+                        else:
+                            await send_error(channel, self._bot,
+                                             commands.MissingRole(Config.get_settings().bot_settings
+                                                                  .managing_commands_role_id),
+                                             is_reaction=True)

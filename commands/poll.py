@@ -11,6 +11,7 @@ from discord import (
 from discord.abc import Messageable
 from discord.ext import commands
 
+from components.additional_funcs import handle_unhandled_error_in_events
 from components.localization import get_translation
 from config.init_config import Config
 
@@ -89,55 +90,58 @@ class Poll(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
-        if payload.message_id not in self._polls or \
-                (payload.member is not None and payload.member.id == self._bot.user.id) or \
-                (payload.member is None and payload.user_id == self._bot.user.id):
-            return
-        channel = self._bot.get_channel(payload.channel_id)
-        if channel is None:
-            with suppress(InvalidData, HTTPException, NotFound, Forbidden):
-                channel = await self._bot.fetch_channel(payload.channel_id)
-        current_poll = self._polls[payload.message_id]
-        emoji = self._emoji_symbols["yes" if payload.emoji.name == self._emoji_symbols["yes"] else "no"]
-        if payload.member is None:
-            if isinstance(channel, DMChannel):
-                user = await self._bot.fetch_user(payload.user_id)
+        with handle_unhandled_error_in_events():
+            if payload.message_id not in self._polls or \
+                    (payload.member is not None and payload.member.id == self._bot.user.id) or \
+                    (payload.member is None and payload.user_id == self._bot.user.id):
+                return
+            channel = self._bot.get_channel(payload.channel_id)
+            if channel is None:
+                with suppress(InvalidData, HTTPException, NotFound, Forbidden):
+                    channel = await self._bot.fetch_channel(payload.channel_id)
+            current_poll = self._polls[payload.message_id]
+            emoji = self._emoji_symbols["yes" if payload.emoji.name == self._emoji_symbols["yes"] else "no"]
+            if payload.member is None:
+                if isinstance(channel, DMChannel):
+                    user = await self._bot.fetch_user(payload.user_id)
+                else:
+                    user = await self._bot.guilds[0].fetch_member(payload.user_id)
             else:
-                user = await self._bot.guilds[0].fetch_member(payload.user_id)
-        else:
-            user = payload.member
-        if payload.emoji.name not in self._emoji_symbols.values() \
-                or not await current_poll.count_add_voice(channel, user, emoji,
-                                                          payload.emoji.name == self._emoji_symbols["yes"]):
-            message = await channel.fetch_message(payload.message_id)
-            await message.remove_reaction(payload.emoji, user)
+                user = payload.member
+            if payload.emoji.name not in self._emoji_symbols.values() \
+                    or not await current_poll.count_add_voice(channel, user, emoji,
+                                                              payload.emoji.name == self._emoji_symbols["yes"]):
+                message = await channel.fetch_message(payload.message_id)
+                await message.remove_reaction(payload.emoji, user)
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload: RawReactionActionEvent):
-        if payload.message_id not in self._polls or \
-                (payload.member is not None and payload.member.id == self._bot.user.id) or \
-                (payload.member is None and payload.user_id == self._bot.user.id):
-            return
-        current_poll = self._polls[payload.message_id]
-        if payload.emoji.name not in [v for k, v in current_poll.poll_voted_uniq.items() if k == payload.user_id]:
-            return
-        channel = self._bot.get_channel(payload.channel_id)
-        if channel is None:
-            with suppress(InvalidData, HTTPException, NotFound, Forbidden):
-                channel = await self._bot.fetch_channel(payload.channel_id)
-        if payload.member is None:
-            if isinstance(channel, DMChannel):
-                user = await self._bot.fetch_user(payload.user_id)
+        with handle_unhandled_error_in_events():
+            if payload.message_id not in self._polls or \
+                    (payload.member is not None and payload.member.id == self._bot.user.id) or \
+                    (payload.member is None and payload.user_id == self._bot.user.id):
+                return
+            current_poll = self._polls[payload.message_id]
+            if payload.emoji.name not in [v for k, v in current_poll.poll_voted_uniq.items() if k == payload.user_id]:
+                return
+            channel = self._bot.get_channel(payload.channel_id)
+            if channel is None:
+                with suppress(InvalidData, HTTPException, NotFound, Forbidden):
+                    channel = await self._bot.fetch_channel(payload.channel_id)
+            if payload.member is None:
+                if isinstance(channel, DMChannel):
+                    user = await self._bot.fetch_user(payload.user_id)
+                else:
+                    user = await self._bot.guilds[0].fetch_member(payload.user_id)
             else:
-                user = await self._bot.guilds[0].fetch_member(payload.user_id)
-        else:
-            user = payload.member
-        await current_poll.count_del_voice(channel, user, payload.emoji.name == self._emoji_symbols["yes"])
+                user = payload.member
+            await current_poll.count_del_voice(channel, user, payload.emoji.name == self._emoji_symbols["yes"])
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload):
-        if payload.message_id in self.get_polls().keys():
-            self.get_polls()[payload.message_id].cancel()
+        with handle_unhandled_error_in_events():
+            if payload.message_id in self.get_polls().keys():
+                self.get_polls()[payload.message_id].cancel()
 
     async def timer(self, ctx, seconds: int, command: str):
         if (datetime.now() - self._await_date[command]).seconds > seconds:  # Starting a poll

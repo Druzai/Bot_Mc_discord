@@ -12,7 +12,7 @@ from components import decorators
 from components.additional_funcs import (
     handle_message_for_chat, send_error, bot_clear, add_quotes, parse_params_for_help, send_help_of_command,
     parse_subcommands_for_help, find_subcommand, make_underscored_line, create_webhooks, bot_dm_clear,
-    delete_after_by_msg, send_msg, HelpCommandArgument, handle_unhandled_error_in_task
+    delete_after_by_msg, send_msg, HelpCommandArgument, handle_unhandled_error_in_task, handle_unhandled_error_in_events
 )
 from components.localization import get_translation, get_locales, set_locale, get_current_locale
 from components.rss_feed_handle import check_on_rss_feed
@@ -31,22 +31,23 @@ class ChatCommands(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        print("------")
-        print(get_translation("Logged in Discord as"))
-        print(f"{self._bot.user.name}#{self._bot.user.discriminator}")
-        print(get_translation('Version of discord.py') + " - " + discord.__version__)
-        print("------")
-        create_webhooks()
-        if Config.get_rss_feed_settings().enable_rss_feed and not self.rss_feed_task.is_running():
-            self.rss_feed_task.start()
-        elif self.rss_feed_task.is_running():
-            self.rss_feed_task.restart()
-        if not self._bot.get_cog("MinecraftCommands").checkups_task.is_running():
-            self._bot.get_cog("MinecraftCommands").checkups_task.start()
-        else:
-            self._bot.get_cog("MinecraftCommands").checkups_task.restart()
-        print(get_translation("Bot is ready!"))
-        print(get_translation("To stop the bot press Ctrl + C"))
+        with handle_unhandled_error_in_events():
+            print("------")
+            print(get_translation("Logged in Discord as"))
+            print(f"{self._bot.user.name}#{self._bot.user.discriminator}")
+            print(get_translation('Version of discord.py') + " - " + discord.__version__)
+            print("------")
+            create_webhooks()
+            if Config.get_rss_feed_settings().enable_rss_feed and not self.rss_feed_task.is_running():
+                self.rss_feed_task.start()
+            elif self.rss_feed_task.is_running():
+                self.rss_feed_task.restart()
+            if not self._bot.get_cog("MinecraftCommands").checkups_task.is_running():
+                self._bot.get_cog("MinecraftCommands").checkups_task.start()
+            else:
+                self._bot.get_cog("MinecraftCommands").checkups_task.restart()
+            print(get_translation("Bot is ready!"))
+            print(get_translation("To stop the bot press Ctrl + C"))
 
     @commands.group(pass_context=True, aliases=["chn"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -224,24 +225,26 @@ class ChatCommands(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: Message):
-        if Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
-                message.channel.id == Config.get_cross_platform_chat_settings().channel_id:
-            await handle_message_for_chat(message, self._bot)
+        with handle_unhandled_error_in_events():
+            if Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
+                    message.channel.id == Config.get_cross_platform_chat_settings().channel_id:
+                await handle_message_for_chat(message, self._bot)
 
     @commands.Cog.listener()
     async def on_raw_message_edit(self, payload: RawMessageUpdateEvent):
-        if Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
-                payload.channel_id == Config.get_cross_platform_chat_settings().channel_id:
-            after_channel = self._bot.get_channel(payload.channel_id)
-            if after_channel is None:
-                after_channel = await self._bot.fetch_channel(payload.channel_id)
-            after_message = Message(state=after_channel._state, channel=after_channel, data=payload.data)
+        with handle_unhandled_error_in_events():
+            if Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
+                    payload.channel_id == Config.get_cross_platform_chat_settings().channel_id:
+                after_channel = self._bot.get_channel(payload.channel_id)
+                if after_channel is None:
+                    after_channel = await self._bot.fetch_channel(payload.channel_id)
+                after_message = Message(state=after_channel._state, channel=after_channel, data=payload.data)
 
-            if payload.cached_message is not None and after_message.content == payload.cached_message.content and \
-                    after_message.attachments == payload.cached_message.attachments:
-                return
-            await handle_message_for_chat(after_message, self._bot,
-                                          on_edit=True, before_message=payload.cached_message)
+                if payload.cached_message is not None and after_message.content == payload.cached_message.content and \
+                        after_message.attachments == payload.cached_message.attachments:
+                    return
+                await handle_message_for_chat(after_message, self._bot,
+                                              on_edit=True, before_message=payload.cached_message)
 
     @commands.command(pass_context=True, aliases=["lang"], ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -403,4 +406,5 @@ class ChatCommands(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: commands.CommandError):
-        await send_error(ctx, self._bot, error)
+        with handle_unhandled_error_in_events():
+            await send_error(ctx, self._bot, error)
