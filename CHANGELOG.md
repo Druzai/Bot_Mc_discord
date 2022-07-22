@@ -12,7 +12,7 @@ All important changes to this project will be documented in this file.
 #### Fixed:
 * Fixed parsing `ops.json`
 * Fixed checking for players in `handle_message_for_chat`
-* Fixed regex for finding unsecured player's messages in log file
+* Fixed regex for finding unsecured player's messages in log file for version `1.19.1`
 
 ### [1.3.1](https://github.com/Druzai/Bot_Mc_discord/compare/1.3.0...1.3.1) (2022-06-07)
 

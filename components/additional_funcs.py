@@ -1308,7 +1308,6 @@ def check_if_string_in_all_translations(translate_text: str, match_text: str):
     for locale in list_of_locales:
         set_locale(locale)
         if locale != current_locale and match_text == get_translation(translate_text):
-            set_locale(current_locale)
             return True
     return False
 
