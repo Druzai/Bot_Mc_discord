@@ -239,6 +239,7 @@ class Server_settings:
     working_directory: str = ""
     start_file_name: str = ""
     server_loading_time: Optional[int] = None
+    enforce_offline_mode: bool = False
 
 
 @dataclass
@@ -438,6 +439,14 @@ class ServerProperties:
     @online_mode.setter
     def online_mode(self, value: bool):
         self["online-mode"] = self._parse_to_parameter(value)
+
+    @property
+    def enforce_secure_profile(self):
+        return self._parse_from_parameter(self["enforce-secure-profile"], is_bool=True)
+
+    @enforce_secure_profile.setter
+    def enforce_secure_profile(self, value: bool):
+        self["enforce-secure-profile"] = self._parse_to_parameter(value)
 
     @property
     def level_name(self):
@@ -805,6 +814,15 @@ class Config:
         # Check server parameters
         changed_parameters = []
         changed = False
+        if cls.get_selected_server_from_list().enforce_offline_mode:
+            if server_properties.online_mode:
+                changed = True
+                server_properties.online_mode = False
+                changed_parameters.append("online-mode=false")
+            if server_properties.enforce_secure_profile:
+                changed = True
+                server_properties.enforce_secure_profile = False
+                changed_parameters.append("enforce-secure-profile=false")
         if not server_properties.force_gamemode:
             changed = True
             server_properties.force_gamemode = True
@@ -1298,6 +1316,10 @@ class Config:
             server.server_name = cls._ask_for_data(get_translation("Enter server name") + "\n> ")
             server.working_directory = cls._get_server_working_directory()
             server.start_file_name = cls._get_server_start_file_name(server.working_directory)
+            server.enforce_offline_mode = bool(cls._ask_for_data(get_translation("Do you want the bot to set server "
+                                                                                 "properties to offline mode "
+                                                                                 "(without Internet access)?") +
+                                                                 " Y/n\n> ", "y"))
         else:
             if cls._ask_for_data(
                     get_translation("Change server name '{0}'?").format(server.server_name) + " Y/n\n> ", "y"):
@@ -1310,6 +1332,14 @@ class Config:
                     get_translation("Change server start file name '{0}'?").format(server.start_file_name) +
                     " Y/n\n> ", "y"):
                 server.start_file_name = cls._get_server_start_file_name(server.working_directory)
+            if cls._ask_for_data(
+                    get_translation("Change server's enforce offline mode?").format(server.start_file_name) +
+                    " Y/n\n> ", "y"):
+                server.enforce_offline_mode = bool(cls._ask_for_data(get_translation("Do you want the bot to set "
+                                                                                     "server properties to "
+                                                                                     "offline mode "
+                                                                                     "(without Internet access)?") +
+                                                                     " Y/n\n> ", "y"))
         return server
 
     @classmethod

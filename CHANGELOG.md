@@ -7,6 +7,7 @@ All important changes to this project will be documented in this file.
 #### Improvements:
 * Added check if last backup datetime is older than datetime of stopped server
 * Added check if world folder doesn't exist or is empty
+* Added option to enforce offline mode for selected server
 * Updated dependencies
 
 #### Fixed:
