@@ -79,13 +79,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install gettext
 
-      - name: Update certifi and install gettext for macOS
+      - name: Update certificates and install gettext for macOS
         if: matrix.os == 'macos-latest'
         run: |
-          pip install --upgrade certifi
-          CERT_PATH=$(python -m certifi)
-          export SSL_CERT_FILE=${CERT_PATH}
-          export REQUESTS_CA_BUNDLE=${CERT_PATH}
+          python ./.github/workflows/update_certificates_for_macos.py
           brew update
           brew install gettext
 
