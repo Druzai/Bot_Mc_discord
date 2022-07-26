@@ -97,6 +97,9 @@ Supported 2 languages:
 * [Python 3.8-3.10](https://www.python.org/downloads/)
 * For Linux
     * Required installed [screen](https://linuxize.com/post/how-to-use-linux-screen/) command
+* For macOS
+    * You have to update certificates by running script in `/Applications/Python 3.XX/Install Certificates.command`
+    * Also required installed [screen](https://brewinstall.org/install-screen-mac-osx/) command
 * Minecraft server not lower than version `1.0.0`
     * Run server 1 or 2 times to accept `eula` and generate `server.properties`
 
