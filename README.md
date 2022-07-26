@@ -226,6 +226,11 @@ For adding or updating/fixing translations:
 * For translations to be updated you also need generate updated `*.mo` file running
   script [generate_mo.py](locales/generate_mo.py).
 
+On Linux or macOS you may need to install `gettext`:
+
+* Linux: `sudo apt install gettext`
+* macOS: `brew install gettext`
+
 ## Tested platforms
 
 * Windows 7 or higher (64 bit)
