@@ -171,7 +171,7 @@ shortcut by doing these steps:
 
 After creating shortcut you can specify it as start file for bot instead of script in config setup.
 
-### Linux and macOS
+### Linux
 
 On the desktop version of Linux just start bot executable file.
 
@@ -195,7 +195,18 @@ java_parameters=''
 exec java -Xms${min_ram} -Xmx${max_ram} ${java_parameters} -Dfile.encoding=UTF-8 -jar ${your_jar_file} nogui
 ```
 
-**On macOS you can instead specify `*.command` file. Contents of the file are identical to `*.sh` file on Linux.**
+For server process bot will start a virtual terminal session via `screen` command. You can connect to it
+via `screen -r %your_session_name%`. You can find server name in list of virtual sessions - `screen -ls`.
+
+### macOS
+
+On macOS you should start bot executable file from terminal `%path_to_bot%/bot_executable_file`. Because if you just
+double click on executable file, current working directory will be set as your home directory (`~`) and bot couldn't
+find config and key.
+
+For the bot to properly start the Minecraft server you have to have `*.command` or `*.sh` file (in bot setting you can
+set name for this script) in your root Minecraft server directory! Example of file can be seen above in [Linux](#linux)
+section.
 
 For server process bot will start a virtual terminal session via `screen` command. You can connect to it
 via `screen -r %your_session_name%`. You can find server name in list of virtual sessions - `screen -ls`.
