@@ -47,6 +47,13 @@ def generate_pot_file():
         system("python3 ./Discord_bot.py -g")
         chdir("locales")
         system_code = system("pygettext3 -d lang -o lang.pot -v -k get_translation ../*.py ../*/*.py")
+    elif platform == "darwin":
+        system("python3 ./Discord_bot.py -g")
+        chdir("locales")
+        python_home = "/".join(os_file.split("/")[:-3])
+        python_version = os_file.split("/")[-2]
+        system_code = system(f"python \"{python_home}/share/doc/{python_version}/examples/Tools/i18n/pygettext.py\" "
+                             "-d lang -o lang.pot -v -k get_translation ../*.py ../*/*.py")
     elif platform == "win32":
         if not shell32.IsUserAnAdmin():
             system("py .\\Discord_bot.py -g")

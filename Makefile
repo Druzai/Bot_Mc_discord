@@ -1,4 +1,4 @@
-ifeq ($(OS),Windows_NT)
+ifeq ($(OS), Windows_NT)
     uname_S := Windows
 else
     uname_S := $(shell uname -s)
@@ -9,6 +9,10 @@ ifeq ($(uname_S), Windows)
     _clean = clear_win
 endif
 ifeq ($(uname_S), Linux)
+    target = dist_build/Discord_bot
+    _clean = clear_lin
+endif
+ifeq ($(uname_S), Darwin)
     target = dist_build/Discord_bot
     _clean = clear_lin
 endif

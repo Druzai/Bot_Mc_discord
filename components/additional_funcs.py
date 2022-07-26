@@ -171,8 +171,11 @@ async def start_server(ctx: commands.Context, bot: commands.Bot, backups_thread=
     try:
         if not isfile(Config.get_selected_server_from_list().start_file_name):
             raise FileNotFoundError()
-        if platform == "linux" or platform == "linux2":
-            if ".sh" not in Config.get_selected_server_from_list().start_file_name:
+        if platform == "linux" or platform == "linux2" or platform == "darwin":
+            exts = [".sh"]
+            if platform == "darwin":
+                exts.append(".command")
+            if not any(ext in Config.get_selected_server_from_list().start_file_name for ext in exts):
                 raise NameError()
             code = system(f"screen -dmS {Config.get_selected_server_from_list().server_name.replace(' ', '_')} "
                           f"./{Config.get_selected_server_from_list().start_file_name}")
