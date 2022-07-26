@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - add-macos-support
 
 jobs:
   create_release:
