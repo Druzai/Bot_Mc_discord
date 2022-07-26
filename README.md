@@ -95,11 +95,9 @@ Supported 2 languages:
 ## Requirements
 
 * [Python 3.8-3.10](https://www.python.org/downloads/)
-* For Linux
-    * Required installed [screen](https://linuxize.com/post/how-to-use-linux-screen/) command
-* For macOS
-    * You have to update certificates by running script in `/Applications/Python 3.XX/Install Certificates.command`
-    * Also required installed [screen](https://brewinstall.org/install-screen-mac-osx/) command
+* For Linux and macOS
+    * Required installed screen command [(Linux)](https://linuxize.com/post/how-to-use-linux-screen/)
+      [(macOS)](https://brewinstall.org/install-screen-mac-osx/)
 * Minecraft server not lower than version `1.0.0`
     * Run server 1 or 2 times to accept `eula` and generate `server.properties`
 
@@ -122,6 +120,8 @@ Type in command prompt, you must have [requirements.txt](requirements.txt) in ro
 pip install -r requirements.txt
 ```
 
+For macOS you have to update certificates by running script `/Applications/Python 3.XX/Install Certificates.command`
+
 ### Build with pyinstaller
 
 Firstly, you have to install pyinstaller via `pip install pyinstaller==5.1`.
@@ -137,15 +137,15 @@ vulnerability `Log4Shell` do instructions stated in
 this [article](https://www.minecraft.net/en-us/article/important-message--security-vulnerability-java-edition)!**
 
 For Minecraft server lower than version `1.17` for cross-platform chat to work properly you have to have
-argument `-Dfile.encoding=UTF-8` when you're executing `*.bat`, `*.cmd`, shortcut or `*.sh` script (necessary for
-Windows).
+argument `-Dfile.encoding=UTF-8` when you're executing `*.bat`, `*.cmd`, shortcut, `*.sh` or `*.command` script (
+necessary for Windows).
 
 ### Windows
 
 Just start bot executable file.
 
-For the bot to properly start the Minecraft server you have to have `*.bat` or `*.cmd` file (in bot setting you can set
-name for this script) in your root Minecraft server directory! Example of file:
+For the bot to properly start the Minecraft server you have to have `*.bat` or `*.cmd` script (in bot setting you can
+set name for this script) in your root Minecraft server directory! Example of file:
 
 ```batch
 @echo off
@@ -184,7 +184,7 @@ On the server version of Linux you have to start bot executable file using termi
 screen -dmS %your_session_name% %path_to_bot%/bot_executable_file
 ```
 
-For the bot to properly start the Minecraft server you have to have `*.sh` file (in bot setting you can set name for
+For the bot to properly start the Minecraft server you have to have `*.sh` script (in bot setting you can set name for
 this script) in your root Minecraft server directory! Example of file:
 
 ```shell
@@ -207,7 +207,7 @@ On macOS you should start bot executable file from terminal `%path_to_bot%/bot_e
 double click on executable file, current working directory will be set as your home directory (`~`) and bot couldn't
 find config and key.
 
-For the bot to properly start the Minecraft server you have to have `*.command` or `*.sh` file (in bot setting you can
+For the bot to properly start the Minecraft server you have to have `*.command` or `*.sh` script (in bot setting you can
 set name for this script) in your root Minecraft server directory! Example of file can be seen above in [Linux](#linux)
 section.
 
