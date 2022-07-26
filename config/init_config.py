@@ -1369,6 +1369,11 @@ class Config:
             print(get_translation("Bot detected your operating system is Windows.\n"
                                   "Bot will search for '*.bat' file, '*.cmd' file or shortcut.\n"
                                   "You need to enter file name {0}without{1} file extension!").format(BOLD, END))
+        elif sys.platform == "darwin":
+            file_extensions = [".command", ".sh"]
+            print(get_translation("Bot detected your operating system is macOS.\n"
+                                  "Bot will search for '*.command' or '*.sh' file.\n"
+                                  "You need to enter file name {0}without{1} file extension!").format(BOLD, END))
         else:
             print(get_translation("Bot couldn't detect your operating system.\n"
                                   "You need to enter file name {0}with{1} file extension!").format(BOLD, END))

@@ -141,8 +141,8 @@ Windows).
 
 Just start bot executable file.
 
-For the bot to properly start the Minecraft server you have to have `*.bat` or `*.cmd` (in bot setting you can set name
-for this script) in your root Minecraft server directory! Example of file:
+For the bot to properly start the Minecraft server you have to have `*.bat` or `*.cmd` file (in bot setting you can set
+name for this script) in your root Minecraft server directory! Example of file:
 
 ```batch
 @echo off
@@ -171,7 +171,7 @@ shortcut by doing these steps:
 
 After creating shortcut you can specify it as start file for bot instead of script in config setup.
 
-### Linux
+### Linux and macOS
 
 On the desktop version of Linux just start bot executable file.
 
@@ -181,8 +181,8 @@ On the server version of Linux you have to start bot executable file using termi
 screen -dmS %your_session_name% %path_to_bot%/bot_executable_file
 ```
 
-For the bot to properly start the Minecraft server you have to have `*.sh` (in bot setting you can set name for this
-script) in your root Minecraft server directory! Example of file:
+For the bot to properly start the Minecraft server you have to have `*.sh` file (in bot setting you can set name for
+this script) in your root Minecraft server directory! Example of file:
 
 ```shell
 # min_ram, max_ram - consists how many min and max GB you're allocating for server on start up
@@ -192,11 +192,13 @@ min_ram='1G'
 max_ram='3G'
 your_jar_file='server.jar'
 java_parameters=''
-java -Xms${min_ram} -Xmx${max_ram} ${java_parameters} -Dfile.encoding=UTF-8 -jar ${your_jar_file} nogui
+exec java -Xms${min_ram} -Xmx${max_ram} ${java_parameters} -Dfile.encoding=UTF-8 -jar ${your_jar_file} nogui
 ```
 
+**On macOS you can instead specify `*.command` file. Contents of the file are identical to `*.sh` file on Linux.**
+
 For server process bot will start a virtual terminal session via `screen` command. You can connect to it
-via `screen -r %your_session_name%`. Server name you can find in list of virtual sessions - `screen -ls`.
+via `screen -r %your_session_name%`. You can find server name in list of virtual sessions - `screen -ls`.
 
 ## Localization
 
@@ -214,3 +216,4 @@ For adding or updating/fixing translations:
 
 * Windows 7 or higher (64 bit)
 * Linux (Debian-based) (64 bit)
+* macOS 11 or higher (64 bit)
