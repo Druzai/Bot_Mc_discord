@@ -95,8 +95,10 @@ def main():
               f"\n{Fore.RED}{exc}{Style.RESET_ALL}")
     finally:
         if len(argv) == 1 or (len(argv) > 1 and argv[1] == "-cs"):
+            if BotVars.watcher_of_log_file is not None and BotVars.watcher_of_log_file.is_running():
+                BotVars.watcher_of_log_file.stop()
             for thread in threads():
-                if thread.name == "BackupsThread":
+                if thread.name != "MainThread":
                     thread.join()
             print(get_translation("Press any key to continue..."))
             listen_keyboard(on_press=lambda _: stop_listening())
