@@ -175,7 +175,7 @@ async def start_server(ctx: commands.Context, bot: commands.Bot, backups_thread=
             exts = [".sh"]
             if platform == "darwin":
                 exts.append(".command")
-            if not any(ext not in Config.get_selected_server_from_list().start_file_name for ext in exts):
+            if not any(ext in Config.get_selected_server_from_list().start_file_name for ext in exts):
                 raise NameError()
             code = system(f"screen -dmS {Config.get_selected_server_from_list().server_name.replace(' ', '_')} "
                           f"./{Config.get_selected_server_from_list().start_file_name}")

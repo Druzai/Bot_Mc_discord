@@ -1357,24 +1357,25 @@ class Config:
 
     @classmethod
     def _get_server_start_file_name(cls, working_directory: str):
-        file_extensions = [None]
+        file_extensions = []
         existing_files = []
         if sys.platform == "linux" or sys.platform == "linux2":
-            file_extensions = [".sh"]
+            file_extensions.append(".sh")
             print(get_translation("Bot detected your operating system is Linux.\n"
                                   "Bot will search for '*.sh' file.\n"
                                   "You need to enter file name {0}without{1} file extension!").format(BOLD, END))
         elif sys.platform == "win32":
-            file_extensions = [".bat", ".cmd", ".lnk", ".bat.lnk", ".cmd.lnk"]
+            file_extensions.extend([".bat", ".cmd", ".lnk", ".bat.lnk", ".cmd.lnk"])
             print(get_translation("Bot detected your operating system is Windows.\n"
                                   "Bot will search for '*.bat' file, '*.cmd' file or shortcut.\n"
                                   "You need to enter file name {0}without{1} file extension!").format(BOLD, END))
         elif sys.platform == "darwin":
-            file_extensions = [".command", ".sh"]
+            file_extensions.extend([".command", ".sh"])
             print(get_translation("Bot detected your operating system is macOS.\n"
                                   "Bot will search for '*.command' or '*.sh' file.\n"
                                   "You need to enter file name {0}without{1} file extension!").format(BOLD, END))
         else:
+            file_extensions.append(None)
             print(get_translation("Bot couldn't detect your operating system.\n"
                                   "You need to enter file name {0}with{1} file extension!").format(BOLD, END))
         while True:
