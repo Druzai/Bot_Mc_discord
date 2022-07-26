@@ -28,6 +28,6 @@ if __name__ == '__main__':
             if platform != "darwin":
                 print("Check if you have gettext installed\nTo install: 'sudo apt install gettext'")
             else:
-                print("Check if you have gettext installed\nTo install: 'sudo brew install gettext'")
+                print("Check if you have gettext installed\nTo install: 'brew install gettext'")
     else:
         print("Your system is unknown")
