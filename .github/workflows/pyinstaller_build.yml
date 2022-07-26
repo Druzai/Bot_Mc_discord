@@ -82,8 +82,8 @@ jobs:
       - name: Install gettext for macOS
         if: matrix.os == 'macos-latest'
         run: |
-          sudo brew update
-          sudo brew install gettext
+          brew update
+          brew install gettext
 
       - name: Lint with flake8
         run: |
