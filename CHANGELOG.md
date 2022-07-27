@@ -2,7 +2,7 @@
 
 All important changes to this project will be documented in this file.
 
-### [1.3.2 Unreleased](https://github.com/Druzai/Bot_Mc_discord/compare/1.3.1...1.3.2) (2022-xx-xx)
+### [1.3.2](https://github.com/Druzai/Bot_Mc_discord/compare/1.3.1...1.3.2) (2022-07-28)
 
 #### Improvements:
 * Added check if last backup datetime is older than datetime of stopped server
