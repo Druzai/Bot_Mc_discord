@@ -181,11 +181,11 @@ class Backups:
             return None
         else:
             if self.size_limit_for_server[-2:].upper() == "MB":
-                return int(self.size_limit_for_server[:-2]) * 1024 * 1024
+                return int(self.size_limit_for_server[:-2]) * 1048576
             elif self.size_limit_for_server[-2:].upper() == "GB":
-                return int(self.size_limit_for_server[:-2]) * 1024 * 1024 * 1024
+                return int(self.size_limit_for_server[:-2]) * 1073741824
             elif self.size_limit_for_server[-2:].upper() == "TB":
-                return int(self.size_limit_for_server[:-2]) * 1024 * 1024 * 1024 * 1024
+                return int(self.size_limit_for_server[:-2]) * 1099511627776
 
     @property
     def supported_compression_methods(self):
@@ -503,9 +503,9 @@ class Config:
         bot_path: str
             bot pyinstaller path if there is one
         """
-        if getattr(sys, 'frozen', False):
+        if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
             return sys._MEIPASS
-        elif __file__:
+        else:
             return cls._current_bot_path
 
     @classmethod
@@ -937,10 +937,17 @@ class Config:
         Conf.save(config=Conf.structured(class_instance), f=filepath)
 
     @staticmethod
-    def _ask_for_data(message: str, match_str: Optional[str] = None, try_int=False,
-                      int_high_or_equal_than: Optional[int] = None, int_low_or_equal_than: Optional[int] = None,
-                      try_float=False, float_high_or_equal_than: Optional[float] = None,
-                      float_low_or_equal_than: Optional[float] = None, try_link=False):
+    def _ask_for_data(
+            message: str,
+            match_str: Optional[str] = None,
+            try_int=False,
+            int_high_or_equal_than: Optional[int] = None,
+            int_low_or_equal_than: Optional[int] = None,
+            try_float=False,
+            float_high_or_equal_than: Optional[float] = None,
+            float_low_or_equal_than: Optional[float] = None,
+            try_link=False
+    ):
         while True:
             answer = str(input(message)).strip()
             if answer != "":
@@ -1199,7 +1206,8 @@ class Config:
             cls.get_timeouts_settings().await_seconds_in_check_ups = \
                 cls._ask_for_data(
                     get_translation("Set timeout between check-ups 'Server on/off' (in seconds, int)") + "\n> ",
-                    try_int=True, int_high_or_equal_than=5, int_low_or_equal_than=60)
+                    try_int=True, int_high_or_equal_than=5, int_low_or_equal_than=60
+                )
         print(get_translation("Timeout between check-ups 'Server on/off' set to {0} sec.")
               .format(cls.get_timeouts_settings().await_seconds_in_check_ups))
 
@@ -1540,7 +1548,8 @@ class Config:
             cls.get_secure_auth().days_before_ip_expires = \
                 cls._ask_for_data(
                     get_translation("Enter how many days IP-address will be valid before it expires (int)") +
-                    "\n> ", try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=90)
+                    "\n> ", try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=90
+                )
         if cls.get_secure_auth().days_before_ip_will_be_deleted < cls.get_secure_auth().days_before_ip_expires or \
                 cls.get_secure_auth().days_before_ip_will_be_deleted > 356:
             cls._need_to_rewrite = True
@@ -1548,14 +1557,16 @@ class Config:
                 cls._ask_for_data(
                     get_translation("Enter in how many days expired IP-address will be deleted (int)") + "\n> ",
                     try_int=True, int_high_or_equal_than=cls.get_secure_auth().days_before_ip_expires,
-                    int_low_or_equal_than=356)
+                    int_low_or_equal_than=356
+                )
         if cls.get_secure_auth().code_length < 1 or \
                 cls.get_secure_auth().code_length > 60:
             cls._need_to_rewrite = True
             cls.get_secure_auth().code_length = \
                 cls._ask_for_data(
                     get_translation("Enter how many characters the code should consist of (default - 6, int)") + "\n> ",
-                    try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=60)
+                    try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=60
+                )
         if cls.get_secure_auth().mins_before_code_expires < 1 or cls.get_secure_auth().mins_before_code_expires > 30:
             cls._need_to_rewrite = True
             cls.get_secure_auth().mins_before_code_expires = \
@@ -1585,8 +1596,8 @@ class Config:
                 if cls.get_rss_feed_settings().rss_url is None:
                     if cls._ask_for_data(
                             get_translation("RSS url not found. Would you like to enter it?") + " Y/n\n> ", "y"):
-                        cls.get_rss_feed_settings().rss_url = cls._ask_for_data(
-                            get_translation("Enter RSS url") + "\n> ", try_link=True)
+                        cls.get_rss_feed_settings().rss_url = \
+                            cls._ask_for_data(get_translation("Enter RSS url") + "\n> ", try_link=True)
                     else:
                         print(get_translation("RSS wouldn't work. Enter url of RSS feed to bot config!"))
 

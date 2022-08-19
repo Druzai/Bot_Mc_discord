@@ -103,8 +103,10 @@ MASS_REGEX_DEATH_MESSAGES = "|".join(REGEX_DEATH_MESSAGES)
 
 async def send_msg(ctx: Messageable, msg: str, is_reaction=False):
     if is_reaction:
-        await ctx.send(content=msg,
-                       delete_after=Config.get_timeouts_settings().await_seconds_before_message_deletion)
+        await ctx.send(
+            content=msg,
+            delete_after=Config.get_timeouts_settings().await_seconds_before_message_deletion
+        )
     else:
         await ctx.send(msg)
 
@@ -116,10 +118,12 @@ def add_quotes(msg: str) -> str:
 async def delete_after_by_msg(message: Union[Message, int], ctx: commands.Context = None, without_delay=False):
     if isinstance(message, Message):
         await message.delete(
-            delay=Config.get_timeouts_settings().await_seconds_before_message_deletion if not without_delay else None)
+            delay=Config.get_timeouts_settings().await_seconds_before_message_deletion if not without_delay else None
+        )
     elif isinstance(message, int):
         await (await ctx.channel.fetch_message(message)).delete(
-            delay=Config.get_timeouts_settings().await_seconds_before_message_deletion if not without_delay else None)
+            delay=Config.get_timeouts_settings().await_seconds_before_message_deletion if not without_delay else None
+        )
 
 
 def get_author_and_mention(ctx: Union[commands.Context, Message], bot: commands.Bot, is_reaction=False):
@@ -224,8 +228,7 @@ async def start_server(ctx: commands.Context, bot: commands.Bot, backups_thread=
                 await send_msg(ctx, add_quotes(get_translation("Couldn't open script because command 'screen' "
                                                                "wasn't installed! Retreating...")), is_reaction)
             else:
-                print(get_translation("Target of this shortcut '{0}' "
-                                      "isn't '*.bat' file or '*.cmd' file.")
+                print(get_translation("Target of this shortcut '{0}' isn't '*.bat' file or '*.cmd' file.")
                       .format(Config.get_selected_server_from_list().start_file_name))
                 await send_msg(ctx, add_quotes(get_translation("Couldn't open shortcut because target file "
                                                                "isn't a script! Retreating...")),
@@ -507,7 +510,8 @@ class BackupsThread(Thread):
                 if BotVars.is_loading or BotVars.is_stopping or BotVars.is_restarting:
                     while True:
                         sleep(Config.get_timeouts_settings().await_seconds_when_connecting_via_rcon)
-                        if not BotVars.is_loading and not BotVars.is_stopping and not BotVars.is_restarting:
+                        if (not BotVars.is_loading and not BotVars.is_stopping and not BotVars.is_restarting) or \
+                                self._terminate:
                             break
 
                 players_count = 0
@@ -529,11 +533,14 @@ class BackupsThread(Thread):
                     level_name_path = Path(Config.get_selected_server_from_list().working_directory,
                                            ServerProperties().level_name).as_posix()
                     try:
-                        obj = next(create_zip_archive(self._bot, file_name,
-                                                      Path(Config.get_selected_server_from_list().working_directory,
-                                                           Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
-                                                      level_name_path,
-                                                      Config.get_backups_settings().compression_method), None)
+                        obj = next(create_zip_archive(
+                            self._bot,
+                            file_name,
+                            Path(Config.get_selected_server_from_list().working_directory,
+                                 Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
+                            level_name_path,
+                            Config.get_backups_settings().compression_method
+                        ), None)
                         Config.add_backup_info(file_name=file_name)
                         Config.save_server_config()
                         print(get_translation("Backup completed!"))
@@ -590,6 +597,7 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
     # Check if world folder doesn't exist or is empty
     dir_obj = Path(dir_path)
     if not dir_obj.exists() or not dir_obj.is_dir() or next(dir_obj.rglob('*'), None) is None:
+        BotVars.is_backing_up = False
         raise FileNotFoundError()
 
     # Count size of all files in directory
@@ -1123,8 +1131,14 @@ async def bot_stop(ctx: commands.Context, command, bot: commands.Bot, poll: 'Pol
         await send_status(ctx, is_reaction=is_reaction)
 
 
-async def bot_restart(ctx: commands.Context, command, bot: commands.Bot, poll: 'Poll', backups_thread: BackupsThread,
-                      is_reaction=False):
+async def bot_restart(
+        ctx: commands.Context,
+        command,
+        bot: commands.Bot,
+        poll: 'Poll',
+        backups_thread: BackupsThread,
+        is_reaction=False
+):
     if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and \
             not BotVars.is_backing_up and not BotVars.is_restoring:
         if BotVars.is_doing_op:
@@ -1139,8 +1153,13 @@ async def bot_restart(ctx: commands.Context, command, bot: commands.Bot, poll: '
         await send_status(ctx, is_reaction=is_reaction)
 
 
-async def bot_clear(ctx: commands.Context, poll: 'Poll', subcommand: str = None, count: int = None,
-                    discord_mentions=None):
+async def bot_clear(
+        ctx: commands.Context,
+        poll: 'Poll',
+        subcommand: str = None,
+        count: int = None,
+        discord_mentions=None
+):
     message_created = None
     mentions = set()
     if discord_mentions is not None:
@@ -1315,8 +1334,13 @@ def check_if_string_in_all_translations(translate_text: str, match_text: str):
     return False
 
 
-async def bot_associate(ctx: commands.Context, bot: commands.Bot, discord_mention: Member, assoc_command: str,
-                        minecraft_nick: str):
+async def bot_associate(
+        ctx: commands.Context,
+        bot: commands.Bot,
+        discord_mention: Member,
+        assoc_command: str,
+        minecraft_nick: str
+):
     need_to_save = False
 
     if "☠ " in minecraft_nick and \
@@ -1524,8 +1548,10 @@ def check_if_ips_expired():
         Config.save_auth_users()
 
 
-def parse_subcommands_for_help(command: Union[commands.Command, commands.Group],
-                               all_params=False) -> Tuple[List[str], List[str]]:
+def parse_subcommands_for_help(
+        command: Union[commands.Command, commands.Group],
+        all_params=False
+) -> Tuple[List[str], List[str]]:
     if not hasattr(command, "commands") or len(command.commands) == 0:
         return [], []
     command_commands = sorted(command.commands, key=lambda c: c.name)
@@ -1576,9 +1602,11 @@ async def send_help_of_command(ctx: commands.Context, command: Union[commands.Co
     await ctx.send(add_quotes(f"\n{str_help}"))
 
 
-def find_subcommand(subcommands: List[str],
-                    command: Union[commands.Command, commands.Group],
-                    pos: int) -> Optional[Union[commands.Command, commands.Group]]:
+def find_subcommand(
+        subcommands: List[str],
+        command: Union[commands.Command, commands.Group],
+        pos: int
+) -> Optional[Union[commands.Command, commands.Group]]:
     if hasattr(command, "all_commands") and len(command.all_commands) != 0:
         pos += 1
         for subcomm_name, subcomm in command.all_commands.items():
@@ -1882,8 +1910,9 @@ def handle_unhandled_error_in_events(func_number: int = 2):
 
 async def handle_message_for_chat(message: Message, bot: commands.Bot,
                                   on_edit=False, before_message: Message = None, edit_command: bool = False):
-    if message.author.id == bot.user.id or (message.content.startswith(Config.get_settings().bot_settings.prefix) and
-                                            not edit_command) or str(message.author.discriminator) == "0000" or \
+    if message.author.id == bot.user.id or \
+            (message.content.startswith(Config.get_settings().bot_settings.prefix) and not edit_command) or \
+            str(message.author.discriminator) == "0000" or \
             (len(message.content) == 0 and len(message.attachments) == 0 and len(await get_stickers(message)) == 0):
         return
 
@@ -1924,8 +1953,14 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
             result_msg = _clean_message(message, edit_command)
             if not edit_command:
                 result_msg, reply_from_minecraft_user = await _handle_reply_in_message(message, result_msg)
-            result_msg = await _handle_components_in_message(result_msg, message, bot, only_replace_links=True,
-                                                             edit_command=edit_command, version_lower_1_7_2=True)
+            result_msg = await _handle_components_in_message(
+                result_msg,
+                message,
+                bot,
+                only_replace_links=True,
+                edit_command=edit_command,
+                version_lower_1_7_2=True
+            )
             msg = ""
             if result_msg.get("reply", None) is not None:
                 msg += space
@@ -1983,22 +2018,28 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
             result_msg = _clean_message(message, edit_command)
             if not edit_command:
                 result_msg, reply_from_minecraft_user = await _handle_reply_in_message(message, result_msg)
-            result_msg = await _handle_components_in_message(result_msg, message, bot,
-                                                             edit_command=edit_command)
+            result_msg = await _handle_components_in_message(result_msg, message, bot, edit_command=edit_command)
             # Building object for tellraw
             res_obj = [""]
             if result_msg.get("reply", None) is not None:
                 if not reply_from_minecraft_user:
-                    res_obj += _build_nickname_tellraw_for_discord_member(server_version.minor, result_msg["reply"][1],
-                                                                          content_name, brackets_color="gray",
-                                                                          left_bracket=result_msg["reply"][0],
-                                                                          right_bracket=result_msg["reply"][2])
+                    res_obj += _build_nickname_tellraw_for_discord_member(
+                        server_version.minor,
+                        result_msg["reply"][1],
+                        content_name,
+                        brackets_color="gray",
+                        left_bracket=result_msg["reply"][0],
+                        right_bracket=result_msg["reply"][2]
+                    )
                 else:
-                    res_obj += _build_nickname_tellraw_for_minecraft_player(server_version.minor,
-                                                                            result_msg["reply"][1], content_name,
-                                                                            default_text_color="gray",
-                                                                            left_bracket=result_msg["reply"][0],
-                                                                            right_bracket=result_msg["reply"][2])
+                    res_obj += _build_nickname_tellraw_for_minecraft_player(
+                        server_version.minor,
+                        result_msg["reply"][1],
+                        content_name,
+                        default_text_color="gray",
+                        left_bracket=result_msg["reply"][0],
+                        right_bracket=result_msg["reply"][2]
+                    )
                 _build_components_in_message(res_obj, content_name, result_msg["reply"][-1], "gray")
             if not edit_command:
                 res_obj += _build_nickname_tellraw_for_discord_member(server_version.minor, message.author,
@@ -2009,8 +2050,12 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
             if on_edit:
                 if before_message is not None:
                     result_before = _clean_message(before_message)
-                    result_before = await _handle_components_in_message(result_before, before_message, bot,
-                                                                        only_replace_links=True)
+                    result_before = await _handle_components_in_message(
+                        result_before,
+                        before_message,
+                        bot,
+                        only_replace_links=True
+                    )
                     res_obj.append({"text": "*", "color": "gold",
                                     "hoverEvent": {"action": "show_text",
                                                    content_name: shorten_string(result_before["content"], 250)}})
@@ -2416,9 +2461,14 @@ def _search_mentions_in_message(message: Message, edit_command=False) -> set:
     return set(nicks)
 
 
-def _build_nickname_tellraw_for_minecraft_player(server_version: int, nick: str, content_name: str,
-                                                 default_text_color: str = None, left_bracket: str = "<",
-                                                 right_bracket: str = "> "):
+def _build_nickname_tellraw_for_minecraft_player(
+        server_version: int,
+        nick: str,
+        content_name: str,
+        default_text_color: str = None,
+        left_bracket: str = "<",
+        right_bracket: str = "> "
+):
     tellraw_obj = [{"text": left_bracket}]
     if server_version > 7 and len(nick.split()) == 1 and nick in get_server_players().get("players"):
         tellraw_obj += [{"selector": f"@p[name={nick}]"}]
@@ -2444,9 +2494,14 @@ def _build_nickname_tellraw_for_minecraft_player(server_version: int, nick: str,
     return tellraw_obj
 
 
-def _build_nickname_tellraw_for_discord_member(server_version: int, author: Member, content_name: str,
-                                               brackets_color: str = None, left_bracket: str = "<",
-                                               right_bracket: str = "> "):
+def _build_nickname_tellraw_for_discord_member(
+        server_version: int,
+        author: Member,
+        content_name: str,
+        brackets_color: str = None,
+        left_bracket: str = "<",
+        right_bracket: str = "> "
+):
     hover_string = ["", {"text": f"{author.display_name}\n"
                                  f"{author.name}#{author.discriminator}"}]
     if server_version > 11:

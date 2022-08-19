@@ -26,9 +26,20 @@ class Poll(commands.Cog):
         for command in ["clear", "stop", "backup_del", "backup_del_all"]:
             self._await_date[command] = datetime.now()
 
-    async def run(self, channel: Union[Member, TextChannel, GroupChannel, DMChannel], command: str, message: str = None,
-                  need_for_voting=2, needed_role: int = None, timeout=60 * 60, remove_logs_after=None,
-                  admin_needed=False, add_mention=True, add_votes_count=True, embed_message: str = None):
+    async def run(
+            self,
+            channel: Union[Member, TextChannel, GroupChannel, DMChannel],
+            command: str,
+            message: str = None,
+            need_for_voting=2,
+            needed_role: int = None,
+            timeout=3600,
+            remove_logs_after=None,
+            admin_needed=False,
+            add_mention=True,
+            add_votes_count=True,
+            embed_message: str = None
+    ):
         if message is None and embed_message is None:
             raise ValueError("'message' and 'embed_message' is not stated!")
         if not isinstance(channel, Member) and not isinstance(channel, DMChannel):

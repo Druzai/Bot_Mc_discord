@@ -104,10 +104,12 @@ def create_watcher(watcher: Optional[Watcher], server_version: 'ServerVersion'):
     else:
         path_to_server_log = "server.log"
 
-    return Watcher(watch_file=Path(Config.get_selected_server_from_list().working_directory, path_to_server_log),
-                   call_func_on_change=_check_log_file,
-                   server_version=server_version,
-                   poll=BotVars.bot_for_webhooks.get_cog("Poll"))
+    return Watcher(
+        watch_file=Path(Config.get_selected_server_from_list().working_directory, path_to_server_log),
+        call_func_on_change=_check_log_file,
+        server_version=server_version,
+        poll=BotVars.bot_for_webhooks.get_cog("Poll")
+    )
 
 
 def create_chat_webhook():
