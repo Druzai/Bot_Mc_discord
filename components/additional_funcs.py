@@ -2258,14 +2258,14 @@ async def _handle_components_in_message(result_msg: dict, message: Message, bot:
                 if "tenor" in link and "view" in link:
                     return "[gif]"
                 elif len(link) > 30:
-                    return get_clck_ru_url(link)
+                    return get_shortened_url(link)
                 else:
                     return link
             else:
                 return "[gif]" if "tenor" in link and "view" in link else shorten_string(link, 30)
         else:
             return {"text": "[gif]" if "tenor" in link and "view" in link else shorten_string(link, 30),
-                    "hyperlink": link if len(link) < 257 else get_clck_ru_url(link)}
+                    "hyperlink": link if len(link) < 257 else get_shortened_url(link)}
 
     transformations = {
         emoji_regex: repl_emoji,
@@ -2370,7 +2370,7 @@ async def _handle_attachments_in_message(message: Message):
                 iattach.append({"text": sticker.name})
                 if sticker.image_url is not None:
                     iattach[-1].update({"hyperlink": sticker.image_url if len(sticker.image_url) < 257
-                    else get_clck_ru_url(sticker.image_url)})
+                    else get_shortened_url(sticker.image_url)})
         if len(messages[i].attachments) != 0:
             for attachment in messages[i].attachments:
                 need_hover = True
@@ -2384,7 +2384,7 @@ async def _handle_attachments_in_message(message: Message):
                     a_type = f"[{shorten_string(attachment.filename, max_length=20)}]"
                 iattach.append({"text": a_type,
                                 "hyperlink": attachment.url if len(attachment.url) < 257
-                                else get_clck_ru_url(attachment.url)})
+                                else get_shortened_url(attachment.url)})
                 if need_hover:
                     iattach[-1].update({"hover": attachment.filename})
     return attachments
@@ -2584,8 +2584,13 @@ def shorten_string(string: str, max_length: int):
         return string
 
 
-def get_clck_ru_url(url: str):
-    return req_post("https://clck.ru/--", params={"url": url}).text
+def get_shortened_url(url: str):
+    for service_url in ["https://clck.ru/--", "https://tinyurl.com/api-create.php"]:
+        response = req_post(service_url, params={"url": url})
+        if response.ok and response.text != "":
+            return response.text
+    print(get_translation("Bot couldn't shorten the URL \"{0}\" using link shortening services.").format(url))
+    return url
 
 
 @contextmanager

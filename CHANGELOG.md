@@ -2,6 +2,16 @@
 
 All important changes to this project will be documented in this file.
 
+### [1.3.3 Unreleased](https://github.com/Druzai/Bot_Mc_discord/compare/1.3.2...1.3.3) (2022-xx-xx)
+
+#### Improvements:
+
+* Added `tinyURL` as another link shortening service
+
+#### Fixed:
+
+* --
+
 ### [1.3.2](https://github.com/Druzai/Bot_Mc_discord/compare/1.3.1...1.3.2) (2022-07-28)
 
 #### Improvements:
