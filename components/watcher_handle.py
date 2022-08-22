@@ -1,6 +1,5 @@
-import datetime as dt
 import socket
-from asyncio import run_coroutine_threadsafe, Queue, QueueEmpty, new_event_loop
+from asyncio import run_coroutine_threadsafe
 from contextlib import suppress
 from datetime import datetime
 from os import SEEK_END, stat
@@ -13,12 +12,8 @@ from traceback import format_exc
 from typing import TYPE_CHECKING, Optional
 
 from colorama import Fore, Style
-from discord import NoMoreItems
-from discord import Webhook, RequestsWebhookAdapter, TextChannel, Role, ChannelType
-from discord.iterators import _AsyncIterator, OLDEST_OBJECT
-from discord.object import Object
+from discord import SyncWebhook, TextChannel, Role, ChannelType
 from discord.utils import get as utils_get, escape_markdown, find as utils_find
-from discord.utils import time_snowflake
 
 from components.localization import get_translation
 from config.init_config import Config, BotVars
@@ -114,8 +109,7 @@ def create_watcher(watcher: Optional[Watcher], server_version: 'ServerVersion'):
 
 def create_chat_webhook():
     if Config.get_cross_platform_chat_settings().webhook_url:
-        BotVars.webhook_chat = Webhook.from_url(url=Config.get_cross_platform_chat_settings().webhook_url,
-                                                adapter=RequestsWebhookAdapter())
+        BotVars.webhook_chat = SyncWebhook.from_url(url=Config.get_cross_platform_chat_settings().webhook_url)
 
 
 def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str = None, poll=None):
@@ -335,10 +329,9 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                     if chn is None:
                         print(get_translation("Bot Error: Couldn't find channel for cross-platform chat!"))
                     else:
-                        # TODO: Change to 'channel.history' and 'async for' when discord.py 2.0 is out!
                         async def get_last_message(channel: TextChannel):
                             last_msg = None
-                            async for message in HistoryIterator(channel, limit=100):
+                            async for message in channel.history(limit=100):
                                 if message.author.discriminator == "0000" and message.author.name == player_nick:
                                     last_msg = message
                                     break
@@ -347,9 +340,11 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                         last_message = run_coroutine_threadsafe(get_last_message(chn),
                                                                 BotVars.bot_for_webhooks.loop).result()
                         if last_message is not None:
-                            last_message_timestamp = int((last_message.edited_at or last_message.created_at)
-                                                         .replace(tzinfo=dt.timezone.utc).timestamp())
+                            last_message_timestamp = int((last_message.edited_at or
+                                                          last_message.created_at).timestamp())
                             server_timestamp = Config.get_server_config().states.started_info.date_stamp
+                            # Check if edited message not older 5 hours and
+                            # server was started earlier then message editing
                             if int(datetime.now().timestamp()) < last_message_timestamp + 18000 and \
                                     (server_timestamp is None or server_timestamp < last_message_timestamp):
                                 edited_message = True
@@ -361,8 +356,8 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                     for user in Config.get_settings().known_users:
                         if user.user_minecraft_nick.lower() == player_nick.lower():
                             possible_user = BotVars.bot_for_webhooks.guilds[0].get_member(user.user_discord_id)
-                            if possible_user is not None:
-                                player_url_pic = possible_user.avatar_url
+                            if possible_user is not None and possible_user.avatar is not None:
+                                player_url_pic = possible_user.avatar.url
                                 break
 
                     BotVars.webhook_chat.send(player_message, username=player_nick, avatar_url=player_url_pic)
@@ -612,148 +607,3 @@ def _get_last_n_lines(file: Path, number_of_lines: int, last_line: Optional[str]
         if len(buffer) > 0:
             list_of_lines.append(buffer[::-1].decode().strip())
     return list(reversed(list_of_lines))
-
-
-# Workaround for getting 'channel.history' from other sync thread
-class HistoryIterator(_AsyncIterator):
-    def __init__(self, messageable, limit,
-                 before=None, after=None, around=None, oldest_first=None):
-
-        if isinstance(before, datetime):
-            before = Object(id=time_snowflake(before, high=False))
-        if isinstance(after, datetime):
-            after = Object(id=time_snowflake(after, high=True))
-        if isinstance(around, datetime):
-            around = Object(id=time_snowflake(around))
-
-        if oldest_first is None:
-            self.reverse = after is not None
-        else:
-            self.reverse = oldest_first
-
-        self.messageable = messageable
-        self.limit = limit
-        self.before = before
-        self.after = after or OLDEST_OBJECT
-        self.around = around
-
-        self._filter = None  # message dict -> bool
-
-        self.state = self.messageable._state
-        self.logs_from = self.state.http.logs_from
-        try:
-            self.messages = Queue()
-        except RuntimeError:
-            self.messages = Queue(loop=new_event_loop())
-
-        if self.around:
-            if self.limit is None:
-                raise ValueError('history does not support around with limit=None')
-            if self.limit > 101:
-                raise ValueError("history max limit 101 when specifying around parameter")
-            elif self.limit == 101:
-                self.limit = 100  # Thanks discord
-
-            self._retrieve_messages = self._retrieve_messages_around_strategy
-            if self.before and self.after:
-                self._filter = lambda m: self.after.id < int(m['id']) < self.before.id
-            elif self.before:
-                self._filter = lambda m: int(m['id']) < self.before.id
-            elif self.after:
-                self._filter = lambda m: self.after.id < int(m['id'])
-        else:
-            if self.reverse:
-                self._retrieve_messages = self._retrieve_messages_after_strategy
-                if (self.before):
-                    self._filter = lambda m: int(m['id']) < self.before.id
-            else:
-                self._retrieve_messages = self._retrieve_messages_before_strategy
-                if (self.after and self.after != OLDEST_OBJECT):
-                    self._filter = lambda m: int(m['id']) > self.after.id
-
-    async def next(self):
-        if self.messages.empty():
-            await self.fill_messages()
-
-        try:
-            return self.messages.get_nowait()
-        except QueueEmpty:
-            raise NoMoreItems()
-
-    def _get_retrieve(self):
-        l = self.limit
-        if l is None or l > 100:
-            r = 100
-        else:
-            r = l
-        self.retrieve = r
-        return r > 0
-
-    async def flatten(self):
-        # this is similar to fill_messages except it uses a list instead
-        # of a queue to place the messages in.
-        result = []
-        channel = await self.messageable._get_channel()
-        self.channel = channel
-        while self._get_retrieve():
-            data = await self._retrieve_messages(self.retrieve)
-            if len(data) < 100:
-                self.limit = 0  # terminate the infinite loop
-
-            if self.reverse:
-                data = reversed(data)
-            if self._filter:
-                data = filter(self._filter, data)
-
-            for element in data:
-                result.append(self.state.create_message(channel=channel, data=element))
-        return result
-
-    async def fill_messages(self):
-        if not hasattr(self, 'channel'):
-            # do the required set up
-            channel = await self.messageable._get_channel()
-            self.channel = channel
-
-        if self._get_retrieve():
-            data = await self._retrieve_messages(self.retrieve)
-            if len(data) < 100:
-                self.limit = 0  # terminate the infinite loop
-
-            if self.reverse:
-                data = reversed(data)
-            if self._filter:
-                data = filter(self._filter, data)
-
-            channel = self.channel
-            for element in data:
-                await self.messages.put(self.state.create_message(channel=channel, data=element))
-
-    async def _retrieve_messages(self, retrieve):
-        pass
-
-    async def _retrieve_messages_before_strategy(self, retrieve):
-        before = self.before.id if self.before else None
-        data = await self.logs_from(self.channel.id, retrieve, before=before)
-        if len(data):
-            if self.limit is not None:
-                self.limit -= retrieve
-            self.before = Object(id=int(data[-1]['id']))
-        return data
-
-    async def _retrieve_messages_after_strategy(self, retrieve):
-        after = self.after.id if self.after else None
-        data = await self.logs_from(self.channel.id, retrieve, after=after)
-        if len(data):
-            if self.limit is not None:
-                self.limit -= retrieve
-            self.after = Object(id=int(data[0]['id']))
-        return data
-
-    async def _retrieve_messages_around_strategy(self, retrieve):
-        if self.around:
-            around = self.around.id if self.around else None
-            data = await self.logs_from(self.channel.id, retrieve, around=around)
-            self.around = None
-            return data
-        return []

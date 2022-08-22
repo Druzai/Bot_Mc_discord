@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
-"POT-Creation-Date: 2022-08-19 22:11+0300\n"
-"PO-Revision-Date: 2022-08-19 22:12+0300\n"
+"POT-Creation-Date: 2022-08-22 18:42+0300\n"
+"PO-Revision-Date: 2022-08-22 18:57+0300\n"
 "Last-Translator: Druzai <astyn37@gmail.com>\n"
 "Language-Team: \n"
 "Language: en\n"
@@ -17,11 +17,11 @@ msgstr ""
 "Generated-By: pygettext.py 1.5\n"
 "X-Generator: Poedit 3.1.1\n"
 
-#: ..\Discord_bot.py:62
+#: ..\Discord_bot.py:63
 msgid "Bot doesn't have this command line argument!"
 msgstr "Bot doesn't have this command line argument!"
 
-#: ..\Discord_bot.py:65
+#: ..\Discord_bot.py:66
 msgid "bot_help"
 msgstr ""
 "Bot for Minecraft Server\n"
@@ -30,32 +30,32 @@ msgstr ""
 "  -v, --version\tPrint bot's version and exit.\n"
 "  -cs          \tTo edit Minecraft servers in bot's config."
 
-#: ..\Discord_bot.py:78
+#: ..\Discord_bot.py:84
 msgid "Bot started!"
 msgstr "Bot started!"
 
-#: ..\Discord_bot.py:81 ..\commands\minecraft_commands.py:814
+#: ..\Discord_bot.py:87 ..\commands\minecraft_commands.py:817
 msgid "Server info read!"
 msgstr "Server info read!"
 
-#: ..\Discord_bot.py:84
+#: ..\Discord_bot.py:90
 msgid "Bot/Discord Error: Your token is wrong"
 msgstr "Bot/Discord Error: Your token is wrong"
 
-#: ..\Discord_bot.py:86 ..\Discord_bot.py:88
-#: ..\components\additional_funcs.py:1636
+#: ..\Discord_bot.py:92 ..\Discord_bot.py:94
+#: ..\components\additional_funcs.py:1692
 msgid "Bot Error: {0}"
 msgstr "Bot Error: {0}"
 
-#: ..\Discord_bot.py:94
+#: ..\Discord_bot.py:100
 msgid "Bot/Discord Error: Something went wrong ( ͡° ͜ʖ ͡°)"
 msgstr "Bot/Discord Error: Something went wrong ( ͡° ͜ʖ ͡°)"
 
-#: ..\Discord_bot.py:103
+#: ..\Discord_bot.py:109
 msgid "Press any key to continue..."
 msgstr "Press any key to continue..."
 
-#: ..\Discord_bot.py:105
+#: ..\Discord_bot.py:111
 msgid "Bot is stopping..."
 msgstr "Bot is stopping..."
 
@@ -1420,118 +1420,158 @@ msgid "Create Instant Invite"
 msgstr "Create Instant Invite"
 
 #: ..\_frozen_translations.py:312
+msgid "Create Private Threads"
+msgstr "Create Private Threads"
+
+#: ..\_frozen_translations.py:313
+msgid "Create Public Threads"
+msgstr "Create Public Threads"
+
+#: ..\_frozen_translations.py:314
 msgid "Deafen Members"
 msgstr "Deafen Members"
 
-#: ..\_frozen_translations.py:313
+#: ..\_frozen_translations.py:315
 msgid "Embed Links"
 msgstr "Embed Links"
 
-#: ..\_frozen_translations.py:314
+#: ..\_frozen_translations.py:316
 msgid "External Emojis"
 msgstr "External Emojis"
 
-#: ..\_frozen_translations.py:315
+#: ..\_frozen_translations.py:317
+msgid "External Stickers"
+msgstr "External Stickers"
+
+#: ..\_frozen_translations.py:318
 msgid "Kick Members"
 msgstr "Kick Members"
 
-#: ..\_frozen_translations.py:316
+#: ..\_frozen_translations.py:319
 msgid "Manage Channels"
 msgstr "Manage Channels"
 
-#: ..\_frozen_translations.py:317
+#: ..\_frozen_translations.py:320
 msgid "Manage Emojis"
 msgstr "Manage Emojis"
 
-#: ..\_frozen_translations.py:318
+#: ..\_frozen_translations.py:321
+msgid "Manage Emojis And Stickers"
+msgstr "Manage Emojis And Stickers"
+
+#: ..\_frozen_translations.py:322
+msgid "Manage Events"
+msgstr "Manage Events"
+
+#: ..\_frozen_translations.py:323
 msgid "Manage Server"
 msgstr "Manage Server"
 
-#: ..\_frozen_translations.py:319
+#: ..\_frozen_translations.py:324
 msgid "Manage Messages"
 msgstr "Manage Messages"
 
-#: ..\_frozen_translations.py:320
+#: ..\_frozen_translations.py:325
 msgid "Manage Nicknames"
 msgstr "Manage Nicknames"
 
-#: ..\_frozen_translations.py:321
+#: ..\_frozen_translations.py:326
 msgid "Manage Permissions"
 msgstr "Manage Permissions"
 
-#: ..\_frozen_translations.py:322
+#: ..\_frozen_translations.py:327
 msgid "Manage Roles"
 msgstr "Manage Roles"
 
-#: ..\_frozen_translations.py:323
+#: ..\_frozen_translations.py:328
+msgid "Manage Threads"
+msgstr "Manage Threads"
+
+#: ..\_frozen_translations.py:329
 msgid "Manage Webhooks"
 msgstr "Manage Webhooks"
 
-#: ..\_frozen_translations.py:324
+#: ..\_frozen_translations.py:330
 msgid "Mention Everyone"
 msgstr "Mention @everyone, @here and all roles"
 
-#: ..\_frozen_translations.py:325
+#: ..\_frozen_translations.py:331
+msgid "Moderate Members"
+msgstr "Moderate Members"
+
+#: ..\_frozen_translations.py:332
 msgid "Move Members"
 msgstr "Move Members"
 
-#: ..\_frozen_translations.py:326
+#: ..\_frozen_translations.py:333
 msgid "Mute Members"
 msgstr "Mute Members"
 
-#: ..\_frozen_translations.py:327
+#: ..\_frozen_translations.py:334
 msgid "Priority Speaker"
 msgstr "Priority Speaker"
 
-#: ..\_frozen_translations.py:328
+#: ..\_frozen_translations.py:335
 msgid "Read Message History"
 msgstr "Read Message History"
 
-#: ..\_frozen_translations.py:329
+#: ..\_frozen_translations.py:336
 msgid "Read Messages"
 msgstr "Read Messages"
 
-#: ..\_frozen_translations.py:330
+#: ..\_frozen_translations.py:337
 msgid "Request To Speak"
 msgstr "Request To Speak"
 
-#: ..\_frozen_translations.py:331
+#: ..\_frozen_translations.py:338
 msgid "Send Messages"
 msgstr "Send Messages"
 
-#: ..\_frozen_translations.py:332
+#: ..\_frozen_translations.py:339
+msgid "Send Messages In Threads"
+msgstr "Send Messages In Threads"
+
+#: ..\_frozen_translations.py:340
 msgid "Send Tts Messages"
 msgstr "Send text-to-speech messages"
 
-#: ..\_frozen_translations.py:333
+#: ..\_frozen_translations.py:341
 msgid "Speak"
 msgstr "Speak"
 
-#: ..\_frozen_translations.py:334
+#: ..\_frozen_translations.py:342
 msgid "Stream"
 msgstr "Stream"
 
-#: ..\_frozen_translations.py:335
+#: ..\_frozen_translations.py:343
+msgid "Use Application Commands"
+msgstr "Use Application Commands"
+
+#: ..\_frozen_translations.py:344
+msgid "Use Embedded Activities"
+msgstr "Use Activities"
+
+#: ..\_frozen_translations.py:345
 msgid "Use External Emojis"
 msgstr "Use External Emojis"
 
-#: ..\_frozen_translations.py:336
-msgid "Use Slash Commands"
-msgstr "Use Application Commands"
+#: ..\_frozen_translations.py:346
+msgid "Use External Stickers"
+msgstr "Use External Stickers"
 
-#: ..\_frozen_translations.py:337
+#: ..\_frozen_translations.py:347
 msgid "Use Voice Activation"
 msgstr "Use Voice Activation"
 
-#: ..\_frozen_translations.py:338
+#: ..\_frozen_translations.py:348
 msgid "View Audit Log"
 msgstr "View Audit Log"
 
-#: ..\_frozen_translations.py:339
+#: ..\_frozen_translations.py:349
 msgid "View Channel"
 msgstr "View Channels"
 
-#: ..\_frozen_translations.py:340
+#: ..\_frozen_translations.py:350
 msgid "View Server Insights"
 msgstr "View Server Insights"
 
@@ -1611,32 +1651,32 @@ msgstr ""
 "The bot couldn't find any messages sent by your bound Minecraft accounts in "
 "the last 100 messages!"
 
-#: ..\commands\chat_commands.py:198 ..\components\additional_funcs.py:1386
+#: ..\commands\chat_commands.py:198 ..\components\additional_funcs.py:1442
 msgid "{0}, you have no bound nicks"
 msgstr "{0}, you have no bound nicks"
 
-#: ..\commands\chat_commands.py:209
+#: ..\commands\chat_commands.py:216
 msgid "Can't edit this message, it's not owned by cross-platform chat webhook!"
 msgstr ""
 "Can't edit this message, it's not owned by cross-platform chat webhook!"
 
-#: ..\commands\chat_commands.py:215 ..\commands\chat_commands.py:218
+#: ..\commands\chat_commands.py:222 ..\commands\chat_commands.py:225
 msgid "Owner: "
 msgstr "Owner: "
 
-#: ..\commands\chat_commands.py:222
+#: ..\commands\chat_commands.py:229
 msgid "You're not in channel for Minecraft cross-platform chat!"
 msgstr "You're not in channel for Minecraft cross-platform chat!"
 
-#: ..\commands\chat_commands.py:244
+#: ..\commands\chat_commands.py:251
 msgid "Failed to parse data of edited message with exception - "
 msgstr "Failed to parse data of edited message with exception - "
 
-#: ..\commands\chat_commands.py:247
+#: ..\commands\chat_commands.py:254
 msgid "Fetching message with id '{0}'..."
 msgstr "Fetching message with id '{0}'..."
 
-#: ..\commands\chat_commands.py:263
+#: ..\commands\chat_commands.py:274
 msgid ""
 "Bot doesn't have this language!\n"
 "Check list of available languages via {0}language"
@@ -1644,39 +1684,39 @@ msgstr ""
 "Bot doesn't have this language!\n"
 "Check list of available languages via {0}language"
 
-#: ..\commands\chat_commands.py:269
+#: ..\commands\chat_commands.py:280
 msgid "Language switched successfully!"
 msgstr "Language switched successfully!"
 
-#: ..\commands\chat_commands.py:277
+#: ..\commands\chat_commands.py:288
 msgid "Available languages:"
 msgstr "Available languages:"
 
-#: ..\commands\chat_commands.py:284
+#: ..\commands\chat_commands.py:295
 msgid "Current prefix - '{0}'."
 msgstr "Current prefix - '{0}'."
 
-#: ..\commands\chat_commands.py:295
+#: ..\commands\chat_commands.py:306
 msgid "Prefix can't have spaces!"
 msgstr "Prefix can't have spaces!"
 
-#: ..\commands\chat_commands.py:300
+#: ..\commands\chat_commands.py:311
 msgid "Changed prefix to '{0}'."
 msgstr "Changed prefix to '{0}'."
 
-#: ..\commands\chat_commands.py:320 ..\commands\chat_commands.py:340
+#: ..\commands\chat_commands.py:331 ..\commands\chat_commands.py:351
 msgid "Bot doesn't have such subcommand!"
 msgstr "Bot doesn't have such subcommand!"
 
-#: ..\commands\chat_commands.py:342
+#: ..\commands\chat_commands.py:353
 msgid "Bot doesn't have such command!"
 msgstr "Bot doesn't have such command!"
 
-#: ..\commands\chat_commands.py:348
+#: ..\commands\chat_commands.py:359
 msgid "List of all commands, prefix - {0}"
 msgstr "List of all commands, prefix - {0}"
 
-#: ..\commands\chat_commands.py:358
+#: ..\commands\chat_commands.py:369
 msgid ""
 "Values in [square brackets] are optional.\n"
 "Values in <angle brackets> have to be provided by you.\n"
@@ -1690,15 +1730,15 @@ msgstr ""
 "Use '{prefix}help' command for more info.\n"
 "Or '{prefix}command {arg_list}' for short."
 
-#: ..\commands\chat_commands.py:402
+#: ..\commands\chat_commands.py:413
 msgid "You didn't provide reply in your message!"
 msgstr "You didn't provide reply in your message!"
 
-#: ..\commands\chat_commands.py:412
+#: ..\commands\chat_commands.py:423
 msgid "Starting RSS feed check"
 msgstr "Starting RSS feed check"
 
-#: ..\commands\minecraft_commands.py:95 ..\components\additional_funcs.py:1076
+#: ..\commands\minecraft_commands.py:95 ..\components\additional_funcs.py:1101
 msgid "There are no players on the server"
 msgstr "There are no players on the server"
 
@@ -1726,11 +1766,11 @@ msgstr "{0}, you've already been given an operator!"
 msgid "Opped "
 msgstr "Opped "
 
-#: ..\commands\minecraft_commands.py:135 ..\commands\minecraft_commands.py:429
-#: ..\commands\minecraft_commands.py:1114
+#: ..\commands\minecraft_commands.py:135 ..\commands\minecraft_commands.py:432
 #: ..\commands\minecraft_commands.py:1117
-#: ..\components\additional_funcs.py:1312
-#: ..\components\additional_funcs.py:1314
+#: ..\commands\minecraft_commands.py:1120
+#: ..\components\additional_funcs.py:1368
+#: ..\components\additional_funcs.py:1370
 msgid "Reason: "
 msgstr "Reason: "
 
@@ -1786,9 +1826,9 @@ msgstr ""
 msgid "{0}, you have no time limit, but you are all doomed..."
 msgstr "{0}, you have no time limit, but you are all doomed..."
 
-#: ..\commands\minecraft_commands.py:223 ..\commands\minecraft_commands.py:283
-#: ..\commands\minecraft_commands.py:286 ..\commands\minecraft_commands.py:648
-#: ..\commands\minecraft_commands.py:651
+#: ..\commands\minecraft_commands.py:223 ..\commands\minecraft_commands.py:286
+#: ..\commands\minecraft_commands.py:289 ..\commands\minecraft_commands.py:651
+#: ..\commands\minecraft_commands.py:654
 msgid "Wrong 1-st argument used!"
 msgstr "Wrong 1-st argument used!"
 
@@ -1800,78 +1840,78 @@ msgstr "Integer must be above {0}!"
 msgid "There is no history of giving an operator to players yet..."
 msgstr "There is no history of giving an operator to players yet..."
 
-#: ..\commands\minecraft_commands.py:234
+#: ..\commands\minecraft_commands.py:236
 msgid "%H:%M %d/%m/%Y"
 msgstr "%H:%M %d/%m/%Y"
 
-#: ..\commands\minecraft_commands.py:263 ..\commands\minecraft_commands.py:304
+#: ..\commands\minecraft_commands.py:266 ..\commands\minecraft_commands.py:307
 msgid "Syntax:"
 msgstr "Syntax:"
 
-#: ..\commands\minecraft_commands.py:276 ..\commands\minecraft_commands.py:291
+#: ..\commands\minecraft_commands.py:279 ..\commands\minecraft_commands.py:294
 #: ..\config\init_config.py:1240
 msgid "Timeout for being operator in Minecraft set to {0} sec."
 msgstr "Timeout for being operator in Minecraft set to {0} sec."
 
-#: ..\commands\minecraft_commands.py:280 ..\commands\minecraft_commands.py:294
+#: ..\commands\minecraft_commands.py:283 ..\commands\minecraft_commands.py:297
 #: ..\config\init_config.py:1243
 msgid "Limitation doesn't exist, padawan."
 msgstr "Limitation doesn't exist, padawan."
 
-#: ..\commands\minecraft_commands.py:284 ..\commands\minecraft_commands.py:649
+#: ..\commands\minecraft_commands.py:287 ..\commands\minecraft_commands.py:652
 msgid "Integer must be above or equal {0}!"
 msgstr "Integer must be above or equal {0}!"
 
-#: ..\commands\minecraft_commands.py:287 ..\commands\minecraft_commands.py:652
+#: ..\commands\minecraft_commands.py:290 ..\commands\minecraft_commands.py:655
 msgid "Integer must be below or equal {0}!"
 msgstr "Integer must be below or equal {0}!"
 
-#: ..\commands\minecraft_commands.py:328 ..\commands\minecraft_commands.py:355
+#: ..\commands\minecraft_commands.py:331 ..\commands\minecraft_commands.py:358
 msgid "Secure authorization on"
 msgstr "Secure authorization on"
 
-#: ..\commands\minecraft_commands.py:329 ..\commands\minecraft_commands.py:364
+#: ..\commands\minecraft_commands.py:332 ..\commands\minecraft_commands.py:367
 msgid "Secure authorization off"
 msgstr "Secure authorization off"
 
-#: ..\commands\minecraft_commands.py:330
+#: ..\commands\minecraft_commands.py:333
 msgid "Login attempts allowed - {0}"
 msgstr "Login attempts allowed - {0}"
 
-#: ..\commands\minecraft_commands.py:332
+#: ..\commands\minecraft_commands.py:335
 msgid "Session expiration time in days - {0}"
 msgstr "Session expiration time in days - {0}"
 
-#: ..\commands\minecraft_commands.py:334
+#: ..\commands\minecraft_commands.py:337
 msgid "Code expiration time in minutes - {0}"
 msgstr "Code expiration time in minutes - {0}"
 
-#: ..\commands\minecraft_commands.py:337
+#: ..\commands\minecraft_commands.py:340
 msgid "Information about authorized users:"
 msgstr "Information about authorized users:"
 
-#: ..\commands\minecraft_commands.py:371 ..\commands\minecraft_commands.py:452
-#: ..\commands\minecraft_commands.py:514 ..\commands\minecraft_commands.py:580
+#: ..\commands\minecraft_commands.py:374 ..\commands\minecraft_commands.py:455
+#: ..\commands\minecraft_commands.py:517 ..\commands\minecraft_commands.py:583
 msgid "Secure authorization is disabled. Enable it to proceed!"
 msgstr "Secure authorization is disabled. Enable it to proceed!"
 
-#: ..\commands\minecraft_commands.py:376
+#: ..\commands\minecraft_commands.py:379
 msgid "Bot couldn't find nick and/or code in the IP-addresses without access!"
 msgstr "Bot couldn't find nick and/or code in the IP-addresses without access!"
 
-#: ..\commands\minecraft_commands.py:381
+#: ..\commands\minecraft_commands.py:384
 msgid "{0}, bot already has poll on `auth login {1}` command!"
 msgstr "{0}, bot already has poll on `auth login {1}` command!"
 
-#: ..\commands\minecraft_commands.py:392
+#: ..\commands\minecraft_commands.py:395
 msgid "You don't have this nick in associations!"
 msgstr "You don't have this nick in associations!"
 
-#: ..\commands\minecraft_commands.py:397
+#: ..\commands\minecraft_commands.py:400
 msgid "This code expired! Try to login again to get another one!"
 msgstr "This code expired! Try to login again to get another one!"
 
-#: ..\commands\minecraft_commands.py:401
+#: ..\commands\minecraft_commands.py:404
 msgid ""
 "this man {0} trying to login as `{1}`. Bot requesting create link {0} -> "
 "{1}. Will you let that happen?"
@@ -1879,27 +1919,27 @@ msgstr ""
 "this man {0} trying to login as `{1}`. Bot requesting create link {0} -> "
 "{1}. Will you let that happen?"
 
-#: ..\commands\minecraft_commands.py:417 ..\components\watcher_handle.py:490
+#: ..\commands\minecraft_commands.py:420 ..\components\watcher_handle.py:485
 msgid "{0}, bot gave access to the nick `{1}` with IP-address `{2}`!"
 msgstr "{0}, bot gave access to the nick `{1}` with IP-address `{2}`!"
 
-#: ..\commands\minecraft_commands.py:420
+#: ..\commands\minecraft_commands.py:423
 msgid "Your code for this nick is wrong. Try again."
 msgstr "Your code for this nick is wrong. Try again."
 
-#: ..\commands\minecraft_commands.py:433
+#: ..\commands\minecraft_commands.py:436
 msgid "List of banned IP-addresses:"
 msgstr "List of banned IP-addresses:"
 
-#: ..\commands\minecraft_commands.py:439 ..\commands\minecraft_commands.py:500
+#: ..\commands\minecraft_commands.py:442 ..\commands\minecraft_commands.py:503
 msgid "There are no banned IP-addresses!"
 msgstr "There are no banned IP-addresses!"
 
-#: ..\commands\minecraft_commands.py:457 ..\commands\minecraft_commands.py:530
+#: ..\commands\minecraft_commands.py:460 ..\commands\minecraft_commands.py:533
 msgid "{0}, you don't have bound nicks, use `{1}associate add` first..."
 msgstr "{0}, you don't have bound nicks, use `{1}associate add` first..."
 
-#: ..\commands\minecraft_commands.py:474 ..\commands\minecraft_commands.py:552
+#: ..\commands\minecraft_commands.py:477 ..\commands\minecraft_commands.py:555
 msgid ""
 "{0}, there are no nicks in your possession that were logged on with this IP-"
 "address"
@@ -1907,71 +1947,71 @@ msgstr ""
 "{0}, there are no nicks in your possession that were logged on with this IP-"
 "address"
 
-#: ..\commands\minecraft_commands.py:489
+#: ..\commands\minecraft_commands.py:492
 msgid "with reason '{0}'"
 msgstr "with reason '{0}'"
 
-#: ..\commands\minecraft_commands.py:490
+#: ..\commands\minecraft_commands.py:493
 msgid "Banned IP-address {0}{1}!"
 msgstr "Banned IP-address {0}{1}!"
 
-#: ..\commands\minecraft_commands.py:506
+#: ..\commands\minecraft_commands.py:509
 msgid "Unbanned IP-address {0}!"
 msgstr "Unbanned IP-address {0}!"
 
-#: ..\commands\minecraft_commands.py:518 ..\commands\minecraft_commands.py:584
+#: ..\commands\minecraft_commands.py:521 ..\commands\minecraft_commands.py:587
 msgid "Bot has no users who tried to enter or entered Minecraft server!"
 msgstr "Bot has no users who tried to enter or entered Minecraft server!"
 
-#: ..\commands\minecraft_commands.py:549
+#: ..\commands\minecraft_commands.py:552
 msgid "{0}, there are no nicks that were logged on with this IP-address"
 msgstr "{0}, there are no nicks that were logged on with this IP-address"
 
-#: ..\commands\minecraft_commands.py:563
+#: ..\commands\minecraft_commands.py:566
 msgid "These nicks were revoked with this IP-address:"
 msgstr "These nicks were revoked with this IP-address:"
 
-#: ..\commands\minecraft_commands.py:569
+#: ..\commands\minecraft_commands.py:572
 msgid "One of the sessions for this nick has been ended"
 msgstr "One of the sessions for this nick has been ended"
 
-#: ..\commands\minecraft_commands.py:570
+#: ..\commands\minecraft_commands.py:573
 msgid "These nicks bound this IP-address were kicked from Minecraft server:"
 msgstr "These nicks bound this IP-address were kicked from Minecraft server:"
 
-#: ..\commands\minecraft_commands.py:597
+#: ..\commands\minecraft_commands.py:600
 msgid "All these nicks were revoked:"
 msgstr "All these nicks were revoked:"
 
-#: ..\commands\minecraft_commands.py:603
+#: ..\commands\minecraft_commands.py:606
 msgid "All sessions for this nick have been ended"
 msgstr "All sessions for this nick have been ended"
 
-#: ..\commands\minecraft_commands.py:605
+#: ..\commands\minecraft_commands.py:608
 msgid "These nicks were kicked from Minecraft server:"
 msgstr "These nicks were kicked from Minecraft server:"
 
-#: ..\commands\minecraft_commands.py:688
+#: ..\commands\minecraft_commands.py:691
 msgid "The server only allows players from the list of allowed nicks"
 msgstr "The server only allows players from the list of allowed nicks"
 
-#: ..\commands\minecraft_commands.py:690
+#: ..\commands\minecraft_commands.py:693
 msgid "The server allows players regardless of their nick"
 msgstr "The server allows players regardless of their nick"
 
-#: ..\commands\minecraft_commands.py:705
+#: ..\commands\minecraft_commands.py:708
 msgid "Added {0} to the list of allowed nicks"
 msgstr "Added {0} to the list of allowed nicks"
 
-#: ..\commands\minecraft_commands.py:723
+#: ..\commands\minecraft_commands.py:726
 msgid "Removed {0} from the list of allowed nicks"
 msgstr "Removed {0} from the list of allowed nicks"
 
-#: ..\commands\minecraft_commands.py:726
+#: ..\commands\minecraft_commands.py:729
 msgid "Nick not found in the list of allowed nicks"
 msgstr "Nick not found in the list of allowed nicks"
 
-#: ..\commands\minecraft_commands.py:741
+#: ..\commands\minecraft_commands.py:744
 msgid ""
 "Allowed nicks - {0}:\n"
 "{1}"
@@ -1979,17 +2019,17 @@ msgstr ""
 "Allowed nicks - {0}:\n"
 "{1}"
 
-#: ..\commands\minecraft_commands.py:744
+#: ..\commands\minecraft_commands.py:747
 msgid "No nicks allowed to login"
 msgstr "No nicks allowed to login"
 
-#: ..\commands\minecraft_commands.py:754
+#: ..\commands\minecraft_commands.py:757
 msgid ""
 "The server is forbidden to let players not from the list of allowed nicknames"
 msgstr ""
 "The server is forbidden to let players not from the list of allowed nicknames"
 
-#: ..\commands\minecraft_commands.py:765
+#: ..\commands\minecraft_commands.py:768
 msgid ""
 "The server is allowed to let any players regardless of the list of allowed "
 "nicknames"
@@ -1997,16 +2037,16 @@ msgstr ""
 "The server is allowed to let any players regardless of the list of allowed "
 "nicknames"
 
-#: ..\commands\minecraft_commands.py:776
+#: ..\commands\minecraft_commands.py:779
 msgid "Reloaded the list of allowed nicks"
 msgstr "Reloaded the list of allowed nicks"
 
-#: ..\commands\minecraft_commands.py:783 ..\commands\minecraft_commands.py:808
-#: ..\commands\minecraft_commands.py:811
+#: ..\commands\minecraft_commands.py:786 ..\commands\minecraft_commands.py:811
+#: ..\commands\minecraft_commands.py:814
 msgid "Selected server"
 msgstr "Selected server"
 
-#: ..\commands\minecraft_commands.py:794
+#: ..\commands\minecraft_commands.py:797
 msgid ""
 "My, you have chosen selected server, insane?)\n"
 " ...Patsan ramsi poputal"
@@ -2014,7 +2054,7 @@ msgstr ""
 "My, you have chosen selected server, insane?)\n"
 " ...Patsan ramsi poputal"
 
-#: ..\commands\minecraft_commands.py:799
+#: ..\commands\minecraft_commands.py:802
 msgid ""
 "You can't change server, while some instance is still running\n"
 "Please stop it, before trying again"
@@ -2022,44 +2062,44 @@ msgstr ""
 "You can't change server, while some instance is still running\n"
 "Please stop it, before trying again"
 
-#: ..\commands\minecraft_commands.py:813
+#: ..\commands\minecraft_commands.py:816
 msgid "Server properties read!"
 msgstr "Server properties read!"
 
-#: ..\commands\minecraft_commands.py:816
+#: ..\commands\minecraft_commands.py:819
 msgid "Use server list, there's no such server number on the list!"
 msgstr "Use server list, there's no such server number on the list!"
 
-#: ..\commands\minecraft_commands.py:825
+#: ..\commands\minecraft_commands.py:828
 msgid "List of servers"
 msgstr "List of servers"
 
-#: ..\commands\minecraft_commands.py:849 ..\components\additional_funcs.py:1272
+#: ..\commands\minecraft_commands.py:852 ..\components\additional_funcs.py:1328
 msgid "Automatic backups enabled"
 msgstr "Automatic backups enabled"
 
-#: ..\commands\minecraft_commands.py:859 ..\components\additional_funcs.py:1273
+#: ..\commands\minecraft_commands.py:862 ..\components\additional_funcs.py:1329
 msgid "Automatic backups disabled"
 msgstr "Automatic backups disabled"
 
-#: ..\commands\minecraft_commands.py:869 ..\commands\minecraft_commands.py:871
-#: ..\components\additional_funcs.py:1274
+#: ..\commands\minecraft_commands.py:872 ..\commands\minecraft_commands.py:874
+#: ..\components\additional_funcs.py:1330
 msgid "Automatic backups period set to {0} min"
 msgstr "Automatic backups period set to {0} min"
 
-#: ..\commands\minecraft_commands.py:874
+#: ..\commands\minecraft_commands.py:877
 msgid "Automatic backups period can't be lower than 0!"
 msgstr "Automatic backups period can't be lower than 0!"
 
-#: ..\commands\minecraft_commands.py:885
+#: ..\commands\minecraft_commands.py:888
 msgid "Compression method set to {0}"
 msgstr "Compression method set to {0}"
 
-#: ..\commands\minecraft_commands.py:887 ..\components\additional_funcs.py:1282
+#: ..\commands\minecraft_commands.py:890 ..\components\additional_funcs.py:1338
 msgid "Current compression method - {0}"
 msgstr "Current compression method - {0}"
 
-#: ..\commands\minecraft_commands.py:890
+#: ..\commands\minecraft_commands.py:893
 msgid ""
 "Bot doesn't have such compression method!\n"
 "Supported:"
@@ -2067,11 +2107,11 @@ msgstr ""
 "Bot doesn't have such compression method!\n"
 "Supported:"
 
-#: ..\commands\minecraft_commands.py:897
+#: ..\commands\minecraft_commands.py:900
 msgid "Supported compression methods:"
 msgstr "Supported compression methods:"
 
-#: ..\commands\minecraft_commands.py:910
+#: ..\commands\minecraft_commands.py:913
 msgid ""
 "Can't create backup because of {0}\n"
 "Delete some backups to proceed!"
@@ -2079,47 +2119,47 @@ msgstr ""
 "Can't create backup because of {0}\n"
 "Delete some backups to proceed!"
 
-#: ..\commands\minecraft_commands.py:915
+#: ..\commands\minecraft_commands.py:918
 msgid "Starting backup triggered by {0}"
 msgstr "Starting backup triggered by {0}"
 
-#: ..\commands\minecraft_commands.py:917
+#: ..\commands\minecraft_commands.py:920
 msgid "Starting backup..."
 msgstr "Starting backup..."
 
-#: ..\commands\minecraft_commands.py:936 ..\components\additional_funcs.py:546
-#: ..\components\additional_funcs.py:706 ..\components\additional_funcs.py:708
+#: ..\commands\minecraft_commands.py:939 ..\components\additional_funcs.py:563
+#: ..\components\additional_funcs.py:723 ..\components\additional_funcs.py:725
 msgid "Backup completed!"
 msgstr "Backup completed!"
 
-#: ..\commands\minecraft_commands.py:938 ..\components\additional_funcs.py:715
+#: ..\commands\minecraft_commands.py:941 ..\components\additional_funcs.py:732
 msgid "Bot couldn't archive some files to this backup!"
 msgstr "Bot couldn't archive some files to this backup!"
 
-#: ..\commands\minecraft_commands.py:939 ..\components\additional_funcs.py:548
+#: ..\commands\minecraft_commands.py:942 ..\components\additional_funcs.py:565
 msgid ""
 "Bot couldn't archive some files to this backup, they located in path '{0}'"
 msgstr ""
 "Bot couldn't archive some files to this backup, they located in path '{0}'"
 
-#: ..\commands\minecraft_commands.py:942 ..\components\additional_funcs.py:552
+#: ..\commands\minecraft_commands.py:945 ..\components\additional_funcs.py:569
 msgid "List of these files:"
 msgstr "List of these files:"
 
-#: ..\commands\minecraft_commands.py:945 ..\commands\minecraft_commands.py:950
-#: ..\components\additional_funcs.py:557
+#: ..\commands\minecraft_commands.py:948 ..\commands\minecraft_commands.py:953
+#: ..\components\additional_funcs.py:574
 msgid "Backup cancelled!"
 msgstr "Backup cancelled!"
 
-#: ..\commands\minecraft_commands.py:946
+#: ..\commands\minecraft_commands.py:949
 msgid "The world folder '{0}' doesn't exist or is empty!"
 msgstr "The world folder '{0}' doesn't exist or is empty!"
 
-#: ..\commands\minecraft_commands.py:948 ..\components\additional_funcs.py:555
+#: ..\commands\minecraft_commands.py:951 ..\components\additional_funcs.py:572
 msgid "The world folder in path '{0}' doesn't exist or is empty!"
 msgstr "The world folder in path '{0}' doesn't exist or is empty!"
 
-#: ..\commands\minecraft_commands.py:972
+#: ..\commands\minecraft_commands.py:975
 msgid ""
 "There are not enough space on disk to restore from backup!\n"
 "Free - {0}\n"
@@ -2131,31 +2171,31 @@ msgstr ""
 "Required at least - {1}\n"
 "Delete some backups to proceed!"
 
-#: ..\commands\minecraft_commands.py:978
+#: ..\commands\minecraft_commands.py:981
 msgid "Starting restore from backup..."
 msgstr "Starting restore from backup..."
 
-#: ..\commands\minecraft_commands.py:989 ..\config\init_config.py:795
+#: ..\commands\minecraft_commands.py:992 ..\config\init_config.py:795
 msgid "Done!"
 msgstr "Done!"
 
-#: ..\commands\minecraft_commands.py:992 ..\commands\minecraft_commands.py:1047
+#: ..\commands\minecraft_commands.py:995 ..\commands\minecraft_commands.py:1050
 msgid ""
 "Bot doesn't have backup with this number in backups list for current server!"
 msgstr ""
 "Bot doesn't have backup with this number in backups list for current server!"
 
-#: ..\commands\minecraft_commands.py:1003
-#: ..\commands\minecraft_commands.py:1056
-#: ..\commands\minecraft_commands.py:1128
+#: ..\commands\minecraft_commands.py:1006
+#: ..\commands\minecraft_commands.py:1059
+#: ..\commands\minecraft_commands.py:1131
 msgid "There are no backups for '{0}' server!"
 msgstr "There are no backups for '{0}' server!"
 
-#: ..\commands\minecraft_commands.py:1011
+#: ..\commands\minecraft_commands.py:1014
 msgid "{0}, bot already has poll on `backup del` command!"
 msgstr "{0}, bot already has poll on `backup del` command!"
 
-#: ..\commands\minecraft_commands.py:1021
+#: ..\commands\minecraft_commands.py:1024
 msgid ""
 "this man {0} trying to delete {1} backup by {2} of '{3}' server. Will you "
 "let that happen?"
@@ -2163,15 +2203,15 @@ msgstr ""
 "this man {0} trying to delete {1} backup by {2} of '{3}' server. Will you "
 "let that happen?"
 
-#: ..\commands\minecraft_commands.py:1044
+#: ..\commands\minecraft_commands.py:1047
 msgid "Deleted backup {0}.zip of '{1}' server"
 msgstr "Deleted backup {0}.zip of '{1}' server"
 
-#: ..\commands\minecraft_commands.py:1062
+#: ..\commands\minecraft_commands.py:1065
 msgid "{0}, bot already has poll on `backup del all` command!"
 msgstr "{0}, bot already has poll on `backup del all` command!"
 
-#: ..\commands\minecraft_commands.py:1070
+#: ..\commands\minecraft_commands.py:1073
 msgid ""
 "this man {0} trying to delete all backups of '{1}' server. Will you let that "
 "happen?"
@@ -2179,59 +2219,60 @@ msgstr ""
 "this man {0} trying to delete all backups of '{1}' server. Will you let that "
 "happen?"
 
-#: ..\commands\minecraft_commands.py:1091
+#: ..\commands\minecraft_commands.py:1094
 msgid "Deleted all backups of '{0}' server"
 msgstr "Deleted all backups of '{0}' server"
 
-#: ..\commands\minecraft_commands.py:1099
+#: ..\commands\minecraft_commands.py:1102
 msgid "List of backups for '{0}' server:"
 msgstr "List of backups for '{0}' server:"
 
-#: ..\commands\minecraft_commands.py:1106
+#: ..\commands\minecraft_commands.py:1109
 msgid "Date: "
 msgstr "Date: "
 
-#: ..\commands\minecraft_commands.py:1107 ..\components\additional_funcs.py:963
-#: ..\components\additional_funcs.py:992 ..\components\additional_funcs.py:1006
-#: ..\components\additional_funcs.py:1010
-#: ..\components\additional_funcs.py:1014
-#: ..\components\additional_funcs.py:1018
-#: ..\components\additional_funcs.py:1021
-#: ..\components\additional_funcs.py:1306 ..\components\watcher_handle.py:430
-#: ..\components\watcher_handle.py:464
+#: ..\commands\minecraft_commands.py:1110 ..\components\additional_funcs.py:980
+#: ..\components\additional_funcs.py:1009
+#: ..\components\additional_funcs.py:1027
+#: ..\components\additional_funcs.py:1031
+#: ..\components\additional_funcs.py:1035
+#: ..\components\additional_funcs.py:1039
+#: ..\components\additional_funcs.py:1042
+#: ..\components\additional_funcs.py:1362 ..\components\watcher_handle.py:425
+#: ..\components\watcher_handle.py:459
 msgid "%H:%M:%S %d/%m/%Y"
 msgstr "%H:%M:%S %d/%m/%Y"
 
-#: ..\commands\minecraft_commands.py:1108
-#: ..\components\additional_funcs.py:1307
+#: ..\commands\minecraft_commands.py:1111
+#: ..\components\additional_funcs.py:1363
 msgid "Backup size: "
 msgstr "Backup size: "
 
-#: ..\commands\minecraft_commands.py:1115
-#: ..\components\additional_funcs.py:1312
+#: ..\commands\minecraft_commands.py:1118
+#: ..\components\additional_funcs.py:1368
 msgid "Automatic backup"
 msgstr "Automatic backup"
 
-#: ..\commands\minecraft_commands.py:1118
-#: ..\components\additional_funcs.py:1315
+#: ..\commands\minecraft_commands.py:1121
+#: ..\components\additional_funcs.py:1371
 msgid "Not stated"
 msgstr "Not stated"
 
-#: ..\commands\minecraft_commands.py:1119
-#: ..\components\additional_funcs.py:1316
+#: ..\commands\minecraft_commands.py:1122
+#: ..\components\additional_funcs.py:1372
 msgid "Initiator: "
 msgstr "Initiator: "
 
-#: ..\commands\minecraft_commands.py:1124
-#: ..\components\additional_funcs.py:1318
+#: ..\commands\minecraft_commands.py:1127
+#: ..\components\additional_funcs.py:1374
 msgid "The world of the server was restored from this backup"
 msgstr "The world of the server was restored from this backup"
 
-#: ..\commands\minecraft_commands.py:1138
+#: ..\commands\minecraft_commands.py:1141
 msgid "List of commands via reactions"
 msgstr "List of commands via reactions"
 
-#: ..\commands\minecraft_commands.py:1156
+#: ..\commands\minecraft_commands.py:1159
 msgid "Starting Minecraft server check-ups"
 msgstr "Starting Minecraft server check-ups"
 
@@ -2287,37 +2328,37 @@ msgstr "you don't have needed '{0}' role"
 msgid "you don't have permission 'Administrator'"
 msgstr "you don't have permission 'Administrator'"
 
-#: ..\components\additional_funcs.py:146 ..\components\additional_funcs.py:151
+#: ..\components\additional_funcs.py:150 ..\components\additional_funcs.py:155
 msgid "Bot is backing up server!"
 msgstr "Bot is backing up server!"
 
-#: ..\components\additional_funcs.py:148
+#: ..\components\additional_funcs.py:152
 msgid "server have already started!"
 msgstr "server have already started!"
 
-#: ..\components\additional_funcs.py:153
+#: ..\components\additional_funcs.py:157
 msgid "Bot is restoring server from backup!"
 msgstr "Bot is restoring server from backup!"
 
-#: ..\components\additional_funcs.py:155 ..\components\additional_funcs.py:1063
-#: ..\components\additional_funcs.py:1936
+#: ..\components\additional_funcs.py:159 ..\components\additional_funcs.py:1084
+#: ..\components\additional_funcs.py:2001
 msgid "server is loading!"
 msgstr "server is loading!"
 
-#: ..\components\additional_funcs.py:157 ..\components\additional_funcs.py:1065
-#: ..\components\additional_funcs.py:1933
+#: ..\components\additional_funcs.py:161 ..\components\additional_funcs.py:1086
+#: ..\components\additional_funcs.py:1998
 msgid "server is stopping!"
 msgstr "server is stopping!"
 
-#: ..\components\additional_funcs.py:159
+#: ..\components\additional_funcs.py:163
 msgid "server have already been stopped!"
 msgstr "server have already been stopped!"
 
-#: ..\components\additional_funcs.py:171
+#: ..\components\additional_funcs.py:181
 msgid "Loading server by request of {0}"
 msgstr "Loading server by request of {0}"
 
-#: ..\components\additional_funcs.py:173
+#: ..\components\additional_funcs.py:183
 msgid ""
 "Loading server.......\n"
 "Please wait)"
@@ -2325,33 +2366,33 @@ msgstr ""
 "Loading server.......\n"
 "Please wait)"
 
-#: ..\components\additional_funcs.py:209
+#: ..\components\additional_funcs.py:219
 msgid "Script '{0}' doesn't exist."
 msgstr "Script '{0}' doesn't exist."
 
-#: ..\components\additional_funcs.py:211
+#: ..\components\additional_funcs.py:221
 msgid "Couldn't open script because it doesn't exists! Retreating..."
 msgstr "Couldn't open script because it doesn't exists! Retreating..."
 
-#: ..\components\additional_funcs.py:215
+#: ..\components\additional_funcs.py:225
 msgid "Target script of this shortcut '{0}' doesn't exists."
 msgstr "Target script of this shortcut '{0}' doesn't exists."
 
-#: ..\components\additional_funcs.py:217
+#: ..\components\additional_funcs.py:227
 msgid ""
 "Couldn't open shortcut because target script doesn't exists! Retreating..."
 msgstr ""
 "Couldn't open shortcut because target script doesn't exists! Retreating..."
 
-#: ..\components\additional_funcs.py:221
+#: ..\components\additional_funcs.py:231
 msgid "Couldn't open script! Check naming and extension of the script!"
 msgstr "Couldn't open script! Check naming and extension of the script!"
 
-#: ..\components\additional_funcs.py:222
+#: ..\components\additional_funcs.py:232
 msgid "Couldn't open script because of naming! Retreating..."
 msgstr "Couldn't open script because of naming! Retreating..."
 
-#: ..\components\additional_funcs.py:226
+#: ..\components\additional_funcs.py:236
 msgid ""
 "Couldn't open script because there is no command 'screen'! Install it via "
 "packet manager!"
@@ -2359,59 +2400,59 @@ msgstr ""
 "Couldn't open script because there is no command 'screen'! Install it via "
 "packet manager!"
 
-#: ..\components\additional_funcs.py:228
+#: ..\components\additional_funcs.py:238
 msgid ""
 "Couldn't open script because command 'screen' wasn't installed! Retreating..."
 msgstr ""
 "Couldn't open script because command 'screen' wasn't installed! Retreating..."
 
-#: ..\components\additional_funcs.py:231
+#: ..\components\additional_funcs.py:241
 msgid "Target of this shortcut '{0}' isn't '*.bat' file or '*.cmd' file."
 msgstr "Target of this shortcut '{0}' isn't '*.bat' file or '*.cmd' file."
 
-#: ..\components\additional_funcs.py:233
+#: ..\components\additional_funcs.py:243
 msgid ""
 "Couldn't open shortcut because target file isn't a script! Retreating..."
 msgstr ""
 "Couldn't open shortcut because target file isn't a script! Retreating..."
 
-#: ..\components\additional_funcs.py:246 ..\components\additional_funcs.py:247
+#: ..\components\additional_funcs.py:256 ..\components\additional_funcs.py:257
 msgid "Error while loading server! Retreating..."
 msgstr "Error while loading server! Retreating..."
 
-#: ..\components\additional_funcs.py:260
+#: ..\components\additional_funcs.py:270
 msgid "Loading: "
 msgstr "Loading: "
 
-#: ..\components\additional_funcs.py:262
+#: ..\components\additional_funcs.py:272
 msgid "{0}, elapsed time: "
 msgstr "{0}, elapsed time: "
 
-#: ..\components\additional_funcs.py:283
+#: ..\components\additional_funcs.py:293
 msgid "Server on!"
 msgstr "Server on!"
 
-#: ..\components\additional_funcs.py:285
+#: ..\components\additional_funcs.py:295
 msgid "Server's on now"
 msgstr "Server's on now"
 
-#: ..\components\additional_funcs.py:287
+#: ..\components\additional_funcs.py:297
 msgid "Kept you waiting, huh?"
 msgstr "Kept you waiting, huh?"
 
-#: ..\components\additional_funcs.py:313
+#: ..\components\additional_funcs.py:330
 msgid "{0}, bot already has poll on `stop`/`restart` command!"
 msgstr "{0}, bot already has poll on `stop`/`restart` command!"
 
-#: ..\components\additional_funcs.py:322
+#: ..\components\additional_funcs.py:339
 msgid "Bot Exception: Couldn't connect to server, because it's stopped"
 msgstr "Bot Exception: Couldn't connect to server, because it's stopped"
 
-#: ..\components\additional_funcs.py:324
+#: ..\components\additional_funcs.py:341
 msgid "Couldn't connect to server to shut it down! Server stopped..."
 msgstr "Couldn't connect to server to shut it down! Server stopped..."
 
-#: ..\components\additional_funcs.py:348
+#: ..\components\additional_funcs.py:365
 msgid ""
 "this man {0} trying to stop the server with {1} player(s) on it. Will you "
 "let that happen?"
@@ -2419,67 +2460,67 @@ msgstr ""
 "this man {0} trying to stop the server with {1} player(s) on it. Will you "
 "let that happen?"
 
-#: ..\components\additional_funcs.py:361
+#: ..\components\additional_funcs.py:378
 msgid "Stopping server by request of {0}"
 msgstr "Stopping server by request of {0}"
 
-#: ..\components\additional_funcs.py:363
+#: ..\components\additional_funcs.py:380
 msgid "Stopping server"
 msgstr "Stopping server"
 
-#: ..\components\additional_funcs.py:364
+#: ..\components\additional_funcs.py:381
 msgid "Please wait {0} sec."
 msgstr "Please wait {0} sec."
 
-#: ..\components\additional_funcs.py:381
+#: ..\components\additional_funcs.py:398
 msgid "Server's shutting down in {0} seconds"
 msgstr "Server's shutting down in {0} seconds"
 
-#: ..\components\additional_funcs.py:384
+#: ..\components\additional_funcs.py:401
 msgid "Server's restarting in {0} seconds"
 msgstr "Server's restarting in {0} seconds"
 
-#: ..\components\additional_funcs.py:394 ..\components\additional_funcs.py:397
+#: ..\components\additional_funcs.py:411 ..\components\additional_funcs.py:414
 msgid "{0} sec to go"
 msgstr "{0} sec to go"
 
-#: ..\components\additional_funcs.py:414
+#: ..\components\additional_funcs.py:431
 msgid "Bot Exception: Couldn't connect to server, so killing it now..."
 msgstr "Bot Exception: Couldn't connect to server, so killing it now..."
 
-#: ..\components\additional_funcs.py:417
+#: ..\components\additional_funcs.py:434
 msgid "Couldn't connect to server to shut it down! Killing it now..."
 msgstr "Couldn't connect to server to shut it down! Killing it now..."
 
-#: ..\components\additional_funcs.py:424 ..\components\additional_funcs.py:426
+#: ..\components\additional_funcs.py:441 ..\components\additional_funcs.py:443
 msgid "Server's off now"
 msgstr "Server's off now"
 
-#: ..\components\additional_funcs.py:529
+#: ..\components\additional_funcs.py:546
 msgid "Starting auto backup"
 msgstr "Starting auto backup"
 
-#: ..\components\additional_funcs.py:621 ..\components\additional_funcs.py:630
+#: ..\components\additional_funcs.py:638 ..\components\additional_funcs.py:647
 msgid "Starting backup triggered by {0} in 3 seconds..."
 msgstr "Starting backup triggered by {0} in 3 seconds..."
 
-#: ..\components\additional_funcs.py:624 ..\components\additional_funcs.py:633
+#: ..\components\additional_funcs.py:641 ..\components\additional_funcs.py:650
 msgid "Starting automatic backup in 3 seconds..."
 msgstr "Starting automatic backup in 3 seconds..."
 
-#: ..\components\additional_funcs.py:640 ..\components\additional_funcs.py:643
+#: ..\components\additional_funcs.py:657 ..\components\additional_funcs.py:660
 msgid "Saving chunks..."
 msgstr "Saving chunks..."
 
-#: ..\components\additional_funcs.py:652 ..\components\additional_funcs.py:655
+#: ..\components\additional_funcs.py:669 ..\components\additional_funcs.py:672
 msgid "Chunks saved!"
 msgstr "Chunks saved!"
 
-#: ..\components\additional_funcs.py:653 ..\components\additional_funcs.py:657
+#: ..\components\additional_funcs.py:670 ..\components\additional_funcs.py:674
 msgid "Creating zip-archive for backup!"
 msgstr "Creating zip-archive for backup!"
 
-#: ..\components\additional_funcs.py:696
+#: ..\components\additional_funcs.py:713
 msgid ""
 "Done in {0}\n"
 "Compression method: {1}"
@@ -2487,31 +2528,31 @@ msgstr ""
 "Done in {0}\n"
 "Compression method: {1}"
 
-#: ..\components\additional_funcs.py:712
+#: ..\components\additional_funcs.py:729
 msgid "Bot couldn't archive some files into this backup!"
 msgstr "Bot couldn't archive some files into this backup!"
 
-#: ..\components\additional_funcs.py:768
+#: ..\components\additional_funcs.py:785
 msgid "Deleted auto backup '{0}.zip' because of {1}"
 msgstr "Deleted auto backup '{0}.zip' because of {1}"
 
-#: ..\components\additional_funcs.py:778
+#: ..\components\additional_funcs.py:795
 msgid "Deleted backup '{0}.zip' made by {1} because of {2}"
 msgstr "Deleted backup '{0}.zip' made by {1} because of {2}"
 
-#: ..\components\additional_funcs.py:781
+#: ..\components\additional_funcs.py:798
 msgid "Deleted all backups because of {0}"
 msgstr "Deleted all backups because of {0}"
 
-#: ..\components\additional_funcs.py:801 ..\components\additional_funcs.py:802
+#: ..\components\additional_funcs.py:818 ..\components\additional_funcs.py:819
 msgid "backups' count limit"
 msgstr "backups' count limit"
 
-#: ..\components\additional_funcs.py:818 ..\components\additional_funcs.py:819
+#: ..\components\additional_funcs.py:835 ..\components\additional_funcs.py:836
 msgid "lack of space"
 msgstr "lack of space"
 
-#: ..\components\additional_funcs.py:874
+#: ..\components\additional_funcs.py:891
 msgid ""
 "Bot has backups only from members for '{0}' server, so keep in mind, that "
 "bot will delete oldest backup on next auto backup!"
@@ -2519,25 +2560,25 @@ msgstr ""
 "Bot has backups only from members for '{0}' server, so keep in mind, that "
 "bot will delete oldest backup on next auto backup!"
 
-#: ..\components\additional_funcs.py:895
+#: ..\components\additional_funcs.py:912
 msgid " sec"
 msgstr " sec"
 
-#: ..\components\additional_funcs.py:904
+#: ..\components\additional_funcs.py:921
 msgid " min"
 msgstr " min"
 
-#: ..\components\additional_funcs.py:940
+#: ..\components\additional_funcs.py:957
 msgid " player(s) online"
 msgstr " player(s) online"
 
-#: ..\components\additional_funcs.py:952
+#: ..\components\additional_funcs.py:969
 msgid ""
 "Bot detected: Server is idle for {0} without players! Stopping server now!"
 msgstr ""
 "Bot detected: Server is idle for {0} without players! Stopping server now!"
 
-#: ..\components\additional_funcs.py:956
+#: ..\components\additional_funcs.py:973
 msgid ""
 "Bot detected: Server is idle for {0} without players!\n"
 "Time: {1}\n"
@@ -2547,15 +2588,15 @@ msgstr ""
 "Time: {1}\n"
 "Shutting down server now!"
 
-#: ..\components\additional_funcs.py:971
+#: ..\components\additional_funcs.py:988
 msgid "Server unexpectedly stopped!"
 msgstr "Server unexpectedly stopped!"
 
-#: ..\components\additional_funcs.py:987
+#: ..\components\additional_funcs.py:1004
 msgid "Bot detected: Server's offline! Starting up server again!"
 msgstr "Bot detected: Server's offline! Starting up server again!"
 
-#: ..\components\additional_funcs.py:989
+#: ..\components\additional_funcs.py:1006
 msgid ""
 "Bot detected: Server's offline!\n"
 "Time: {0}\n"
@@ -2565,124 +2606,124 @@ msgstr ""
 "Time: {0}\n"
 "Starting up server again!"
 
-#: ..\components\additional_funcs.py:1005
+#: ..\components\additional_funcs.py:1026
 msgid "Server has been started at {0} by member {1}"
 msgstr "Server has been started at {0} by member {1}"
 
-#: ..\components\additional_funcs.py:1009
+#: ..\components\additional_funcs.py:1030
 msgid "Server has started at {0}"
 msgstr "Server has started at {0}"
 
-#: ..\components\additional_funcs.py:1013
+#: ..\components\additional_funcs.py:1034
 msgid "Server has been stopped at {0} by member {1}"
 msgstr "Server has been stopped at {0} by member {1}"
 
-#: ..\components\additional_funcs.py:1017
+#: ..\components\additional_funcs.py:1038
 msgid "Server has stopped at {0}"
 msgstr "Server has stopped at {0}"
 
-#: ..\components\additional_funcs.py:1020
+#: ..\components\additional_funcs.py:1041
 msgid "Server has crashed at {0}"
 msgstr "Server has crashed at {0}"
 
-#: ..\components\additional_funcs.py:1023
+#: ..\components\additional_funcs.py:1044
 msgid "Server address: "
 msgstr "Server address: "
 
-#: ..\components\additional_funcs.py:1025
+#: ..\components\additional_funcs.py:1046
 msgid "Server is backing up"
 msgstr "Server is backing up"
 
-#: ..\components\additional_funcs.py:1027
+#: ..\components\additional_funcs.py:1048
 msgid "Server is restoring from backup"
 msgstr "Server is restoring from backup"
 
-#: ..\components\additional_funcs.py:1028
+#: ..\components\additional_funcs.py:1049
 msgid "Selected server: {0}"
 msgstr "Selected server: {0}"
 
-#: ..\components\additional_funcs.py:1031
+#: ..\components\additional_funcs.py:1052
 msgid "Average server loading time: {0}"
 msgstr "Average server loading time: {0}"
 
-#: ..\components\additional_funcs.py:1036
+#: ..\components\additional_funcs.py:1057
 msgid "server online"
 msgstr "server online"
 
-#: ..\components\additional_funcs.py:1041
+#: ..\components\additional_funcs.py:1062
 msgid "Time in Minecraft: "
 msgstr "Time in Minecraft: "
 
-#: ..\components\additional_funcs.py:1043
+#: ..\components\additional_funcs.py:1064
 msgid "Day, "
 msgstr "Day, "
 
-#: ..\components\additional_funcs.py:1045
+#: ..\components\additional_funcs.py:1066
 msgid "Sunset, "
 msgstr "Sunset, "
 
-#: ..\components\additional_funcs.py:1047
+#: ..\components\additional_funcs.py:1068
 msgid "Night, "
 msgstr "Night, "
 
-#: ..\components\additional_funcs.py:1049
+#: ..\components\additional_funcs.py:1070
 msgid "Sunrise, "
 msgstr "Sunrise, "
 
-#: ..\components\additional_funcs.py:1053
+#: ..\components\additional_funcs.py:1074
 msgid "Server version: {0}"
 msgstr "Server version: {0}"
 
-#: ..\components\additional_funcs.py:1058
+#: ..\components\additional_funcs.py:1079
 msgid "Server thinking..."
 msgstr "Server thinking..."
 
-#: ..\components\additional_funcs.py:1060
+#: ..\components\additional_funcs.py:1081
 msgid "Server's down via rcon"
 msgstr "Server's down via rcon"
 
-#: ..\components\additional_funcs.py:1067
-#: ..\components\additional_funcs.py:1108
-#: ..\components\additional_funcs.py:1659
-#: ..\components\additional_funcs.py:1927
+#: ..\components\additional_funcs.py:1088
+#: ..\components\additional_funcs.py:1133
+#: ..\components\additional_funcs.py:1715
+#: ..\components\additional_funcs.py:1992
 msgid "server offline"
 msgstr "server offline"
 
-#: ..\components\additional_funcs.py:1092
+#: ..\components\additional_funcs.py:1117
 msgid "from"
 msgstr "from"
 
-#: ..\components\additional_funcs.py:1093
+#: ..\components\additional_funcs.py:1118
 msgid "%H:%M %d/%m/%y"
 msgstr "%H:%M %d/%m/%y"
 
-#: ..\components\additional_funcs.py:1102
+#: ..\components\additional_funcs.py:1127
 msgid "Players online: {0} / {1}"
 msgstr "Players online: {0} / {1}"
 
-#: ..\components\additional_funcs.py:1123
-#: ..\components\additional_funcs.py:1145
+#: ..\components\additional_funcs.py:1159
+#: ..\components\additional_funcs.py:1181
 msgid "Some player(s) still have an operator, waiting for them"
 msgstr "Some player(s) still have an operator, waiting for them"
 
-#: ..\components\additional_funcs.py:1149
+#: ..\components\additional_funcs.py:1185
 msgid "Restarting server"
 msgstr "Restarting server"
 
-#: ..\components\additional_funcs.py:1176
+#: ..\components\additional_funcs.py:1212
 msgid "You should mention ONLY members or roles of this server!"
 msgstr "You should mention ONLY members or roles of this server!"
 
-#: ..\components\additional_funcs.py:1195
-#: ..\components\additional_funcs.py:1261
+#: ..\components\additional_funcs.py:1234
+#: ..\components\additional_funcs.py:1313
 msgid "Nothing's done!"
 msgstr "Nothing's done!"
 
-#: ..\components\additional_funcs.py:1212
+#: ..\components\additional_funcs.py:1252
 msgid "{0}, bot already has poll on `clear` command for this channel!"
 msgstr "{0}, bot already has poll on `clear` command for this channel!"
 
-#: ..\components\additional_funcs.py:1217
+#: ..\components\additional_funcs.py:1257
 msgid ""
 "this man {0} trying to delete some history of this channel. Will you let "
 "that happen?"
@@ -2690,204 +2731,212 @@ msgstr ""
 "this man {0} trying to delete some history of this channel. Will you let "
 "that happen?"
 
-#: ..\components\additional_funcs.py:1277
+#: ..\components\additional_funcs.py:1333
 msgid "Max backups' count limit for server - {0}"
 msgstr "Max backups' count limit for server - {0}"
 
-#: ..\components\additional_funcs.py:1280
+#: ..\components\additional_funcs.py:1336
 msgid "Max backups' size limit for server - {0}"
 msgstr "Max backups' size limit for server - {0}"
 
-#: ..\components\additional_funcs.py:1286
+#: ..\components\additional_funcs.py:1342
 msgid "Backups folder info for '{0}' server:"
 msgstr "Backups folder info for '{0}' server:"
 
-#: ..\components\additional_funcs.py:1288
+#: ..\components\additional_funcs.py:1344
 msgid "Used - {0}"
 msgstr "Used - {0}"
 
-#: ..\components\additional_funcs.py:1289
+#: ..\components\additional_funcs.py:1345
 msgid "Free - {0}"
 msgstr "Free - {0}"
 
-#: ..\components\additional_funcs.py:1299
+#: ..\components\additional_funcs.py:1355
 msgid "Stored backups count - {0}"
 msgstr "Stored backups count - {0}"
 
-#: ..\components\additional_funcs.py:1300
+#: ..\components\additional_funcs.py:1356
 msgid "Approximate remaining backups count - {0}"
 msgstr "Approximate remaining backups count - {0}"
 
-#: ..\components\additional_funcs.py:1305
+#: ..\components\additional_funcs.py:1361
 msgid "Last backup: "
 msgstr "Last backup: "
 
-#: ..\components\additional_funcs.py:1348
+#: ..\components\additional_funcs.py:1404
 msgid ""
 "{0}, you don't have permission to control fates! Not in this life at least..."
 msgstr ""
 "{0}, you don't have permission to control fates! Not in this life at least..."
 
-#: ..\components\additional_funcs.py:1357
+#: ..\components\additional_funcs.py:1413
 msgid "This nick is already associated with member {0}."
 msgstr "This nick is already associated with member {0}."
 
-#: ..\components\additional_funcs.py:1362
+#: ..\components\additional_funcs.py:1418
 msgid "Now {0} associates with nick `{1}` in Minecraft."
 msgstr "Now {0} associates with nick `{1}` in Minecraft."
 
-#: ..\components\additional_funcs.py:1369
+#: ..\components\additional_funcs.py:1425
 msgid "Now link {0} -> `{1}` do not exist!"
 msgstr "Now link {0} -> `{1}` do not exist!"
 
-#: ..\components\additional_funcs.py:1372
+#: ..\components\additional_funcs.py:1428
 msgid "Bot don't have `mention to nick` link already!"
 msgstr "Bot don't have `mention to nick` link already!"
 
-#: ..\components\additional_funcs.py:1379
+#: ..\components\additional_funcs.py:1435
 msgid "{0}, bot has this data on nicks and number of remaining uses:"
 msgstr "{0}, bot has this data on nicks and number of remaining uses:"
 
-#: ..\components\additional_funcs.py:1382
+#: ..\components\additional_funcs.py:1438
 msgid "{0}, bot has this data on nicks:"
 msgstr "{0}, bot has this data on nicks:"
 
-#: ..\components\additional_funcs.py:1429
+#: ..\components\additional_funcs.py:1485
 msgid "not seen on server"
 msgstr "not seen on server"
 
-#: ..\components\additional_funcs.py:1440
+#: ..\components\additional_funcs.py:1496
 msgid "Shutdown of Minecraft server when idle"
 msgstr "Shutdown of Minecraft server when idle"
 
-#: ..\components\additional_funcs.py:1440
-#: ..\components\additional_funcs.py:1462
+#: ..\components\additional_funcs.py:1496
+#: ..\components\additional_funcs.py:1518
 msgid "Task: "
 msgstr "Task: "
 
-#: ..\components\additional_funcs.py:1442
-#: ..\components\additional_funcs.py:1463
+#: ..\components\additional_funcs.py:1498
+#: ..\components\additional_funcs.py:1519
 msgid "State: "
 msgstr "State: "
 
-#: ..\components\additional_funcs.py:1444
-#: ..\components\additional_funcs.py:1465 ..\config\init_config.py:1184
+#: ..\components\additional_funcs.py:1500
+#: ..\components\additional_funcs.py:1521 ..\config\init_config.py:1184
 #: ..\config\init_config.py:1191
 msgid "Active"
 msgstr "Active"
 
-#: ..\components\additional_funcs.py:1446
-#: ..\components\additional_funcs.py:1467 ..\config\init_config.py:1186
+#: ..\components\additional_funcs.py:1502
+#: ..\components\additional_funcs.py:1523 ..\config\init_config.py:1186
 #: ..\config\init_config.py:1193
 msgid "Disabled"
 msgstr "Disabled"
 
-#: ..\components\additional_funcs.py:1448
+#: ..\components\additional_funcs.py:1504
 msgid "Timeout: {0} sec"
 msgstr "Timeout: {0} sec"
 
-#: ..\components\additional_funcs.py:1457 ..\config\init_config.py:1229
+#: ..\components\additional_funcs.py:1513 ..\config\init_config.py:1229
 msgid "Server will be stopped immediately."
 msgstr "Server will be stopped immediately."
 
-#: ..\components\additional_funcs.py:1462
+#: ..\components\additional_funcs.py:1518
 msgid "Autoload if server crashes"
 msgstr "Autoload if server crashes"
 
-#: ..\components\additional_funcs.py:1586
+#: ..\components\additional_funcs.py:1642
 msgid "Description"
 msgstr "Description"
 
-#: ..\components\additional_funcs.py:1590
+#: ..\components\additional_funcs.py:1646
 msgid "Aliases"
 msgstr "Aliases"
 
-#: ..\components\additional_funcs.py:1593
+#: ..\components\additional_funcs.py:1649
 msgid "Subcommands"
 msgstr "Subcommands"
 
-#: ..\components\additional_funcs.py:1596
+#: ..\components\additional_funcs.py:1652
 msgid "Parameters"
 msgstr "Parameters"
 
-#: ..\components\additional_funcs.py:1637
+#: ..\components\additional_funcs.py:1693
 msgid "Rcon password '{0}' doesn't match with its value in '{1}'!"
 msgstr "Rcon password '{0}' doesn't match with its value in '{1}'!"
 
-#: ..\components\additional_funcs.py:1657
+#: ..\components\additional_funcs.py:1713
 msgid "Couldn't connect to server, try again("
 msgstr "Couldn't connect to server, try again("
 
-#: ..\components\additional_funcs.py:1739
+#: ..\components\additional_funcs.py:1800
 msgid "{0} didn't input the argument '{1}' of type '{2}' in command '{3}'"
 msgstr "{0} didn't input the argument '{1}' of type '{2}' in command '{3}'"
 
-#: ..\components\additional_funcs.py:1743
+#: ..\components\additional_funcs.py:1804
 msgid "Required argument '{0}' of type '{1}' is missing!"
 msgstr "Required argument '{0}' of type '{1}' is missing!"
 
-#: ..\components\additional_funcs.py:1747
+#: ..\components\additional_funcs.py:1808
 msgid "{0} passed too many arguments to command '{1}'"
 msgstr "{0} passed too many arguments to command '{1}'"
 
-#: ..\components\additional_funcs.py:1750
+#: ..\components\additional_funcs.py:1811
 msgid "You passed too many arguments to this command!"
 msgstr "You passed too many arguments to this command!"
 
-#: ..\components\additional_funcs.py:1753
+#: ..\components\additional_funcs.py:1814
 msgid "{0} passed member mention '{1}' that can't be found"
 msgstr "{0} passed member mention '{1}' that can't be found"
 
-#: ..\components\additional_funcs.py:1755
+#: ..\components\additional_funcs.py:1816
 msgid "Member '{0}' not found!"
 msgstr "Member '{0}' not found!"
 
-#: ..\components\additional_funcs.py:1757
+#: ..\components\additional_funcs.py:1818
 msgid "{0} passed user mention '{1}' that can't be found"
 msgstr "{0} passed user mention '{1}' that can't be found"
 
-#: ..\components\additional_funcs.py:1759
+#: ..\components\additional_funcs.py:1820
 msgid "User '{0}' not found!"
 msgstr "User '{0}' not found!"
 
-#: ..\components\additional_funcs.py:1761
+#: ..\components\additional_funcs.py:1822
 msgid "{0} passed role mention '{1}' that can't be found"
 msgstr "{0} passed role mention '{1}' that can't be found"
 
-#: ..\components\additional_funcs.py:1763
+#: ..\components\additional_funcs.py:1824
 msgid "Role '{0}' not found!"
 msgstr "Role '{0}' not found!"
 
-#: ..\components\additional_funcs.py:1765
-#: ..\components\additional_funcs.py:1767
+#: ..\components\additional_funcs.py:1826
+#: ..\components\additional_funcs.py:1828
 msgid "Bot can't read messages in channel '{0}'"
 msgstr "Bot can't read messages in channel '{0}'"
 
-#: ..\components\additional_funcs.py:1771
+#: ..\components\additional_funcs.py:1832
 msgid "{0} passed channel mention '{1}' that can't be found"
 msgstr "{0} passed channel mention '{1}' that can't be found"
 
-#: ..\components\additional_funcs.py:1773
+#: ..\components\additional_funcs.py:1834
 msgid "Channel '{0}' not found!"
 msgstr "Channel '{0}' not found!"
 
-#: ..\components\additional_funcs.py:1775
+#: ..\components\additional_funcs.py:1836
+msgid "{0} passed thread mention '{1}' that can't be found"
+msgstr "{0} passed thread mention '{1}' that can't be found"
+
+#: ..\components\additional_funcs.py:1838
+msgid "Thread '{0}' not found!"
+msgstr "Thread '{0}' not found!"
+
+#: ..\components\additional_funcs.py:1840
 msgid "{0} passed bad bool argument '{1}'"
 msgstr "{0} passed bad bool argument '{1}'"
 
-#: ..\components\additional_funcs.py:1777
+#: ..\components\additional_funcs.py:1842
 msgid "Bot couldn't convert bool argument '{0}'!"
 msgstr "Bot couldn't convert bool argument '{0}'!"
 
-#: ..\components\additional_funcs.py:1780
+#: ..\components\additional_funcs.py:1845
 msgid "{0} passed an invalid IPv4 address as argument '{1}'"
 msgstr "{0} passed an invalid IPv4 address as argument '{1}'"
 
-#: ..\components\additional_funcs.py:1782
+#: ..\components\additional_funcs.py:1847
 msgid "Bot couldn't convert argument '{0}' to an IPv4 address!"
 msgstr "Bot couldn't convert argument '{0}' to an IPv4 address!"
 
-#: ..\components\additional_funcs.py:1790
+#: ..\components\additional_funcs.py:1855
 msgid ""
 "{0} passed parameter '{2}' in string \"{3}\" that bot couldn't convert to "
 "type '{1}' in command '{4}'"
@@ -2895,7 +2944,7 @@ msgstr ""
 "{0} passed parameter '{2}' in string \"{3}\" that bot couldn't convert to "
 "type '{1}' in command '{4}'"
 
-#: ..\components\additional_funcs.py:1795
+#: ..\components\additional_funcs.py:1860
 msgid ""
 "Bot didn't recognized parameter '{1}'\n"
 "Received: '{2}'\n"
@@ -2905,75 +2954,75 @@ msgstr ""
 "Received: '{2}'\n"
 "Expected: value of type '{0}'"
 
-#: ..\components\additional_funcs.py:1801
+#: ..\components\additional_funcs.py:1866
 msgid "{0} passed string \"{1}\" that can't be parsed in command '{2}'"
 msgstr "{0} passed string \"{1}\" that can't be parsed in command '{2}'"
 
-#: ..\components\additional_funcs.py:1804
+#: ..\components\additional_funcs.py:1869
 msgid "Bot couldn't parse user string '{0}' in this command!"
 msgstr "Bot couldn't parse user string '{0}' in this command!"
 
-#: ..\components\additional_funcs.py:1808
+#: ..\components\additional_funcs.py:1873
 msgid "{0} don't have some permissions to run command"
 msgstr "{0} don't have some permissions to run command"
 
-#: ..\components\additional_funcs.py:1812
+#: ..\components\additional_funcs.py:1877
 msgid "You don't have these permissions to run this command:"
 msgstr "You don't have these permissions to run this command:"
 
-#: ..\components\additional_funcs.py:1815
+#: ..\components\additional_funcs.py:1880
 msgid "Bot doesn't have some permissions"
 msgstr "Bot doesn't have some permissions"
 
-#: ..\components\additional_funcs.py:1819
+#: ..\components\additional_funcs.py:1884
 msgid "Bot don't have these permissions to run this command:"
 msgstr "Bot don't have these permissions to run this command:"
 
-#: ..\components\additional_funcs.py:1830
+#: ..\components\additional_funcs.py:1895
 msgid "{0} don't have role '{1}' to run command"
 msgstr "{0} don't have role '{1}' to run command"
 
-#: ..\components\additional_funcs.py:1832
+#: ..\components\additional_funcs.py:1897
 msgid "You don't have role '{0}' to run this command!"
 msgstr "You don't have role '{0}' to run this command!"
 
-#: ..\components\additional_funcs.py:1835
+#: ..\components\additional_funcs.py:1900
 msgid "{0} entered non-existent command"
 msgstr "{0} entered non-existent command"
 
-#: ..\components\additional_funcs.py:1837
+#: ..\components\additional_funcs.py:1902
 msgid "You entered non-existent command!"
 msgstr "You entered non-existent command!"
 
-#: ..\components\additional_funcs.py:1839
+#: ..\components\additional_funcs.py:1904
 msgid "{0} entered wrong argument(s) of command '{1}'"
 msgstr "{0} entered wrong argument(s) of command '{1}'"
 
-#: ..\components\additional_funcs.py:1842
+#: ..\components\additional_funcs.py:1907
 msgid "You entered wrong argument(s) of this command!"
 msgstr "You entered wrong argument(s) of this command!"
 
-#: ..\components\additional_funcs.py:1845
+#: ..\components\additional_funcs.py:1910
 msgid "{0} entered disabled command"
 msgstr "{0} entered disabled command"
 
-#: ..\components\additional_funcs.py:1847
+#: ..\components\additional_funcs.py:1912
 msgid "You entered disabled command!"
 msgstr "You entered disabled command!"
 
-#: ..\components\additional_funcs.py:1849
+#: ..\components\additional_funcs.py:1914
 msgid "{0} entered a command that only works in the guild"
 msgstr "{0} entered a command that only works in the guild"
 
-#: ..\components\additional_funcs.py:1851
+#: ..\components\additional_funcs.py:1916
 msgid "This command only works on server!"
 msgstr "This command only works on server!"
 
-#: ..\components\additional_funcs.py:1856
+#: ..\components\additional_funcs.py:1921
 msgid "{0} triggered a command more than {1} time(s) per {2} sec"
 msgstr "{0} triggered a command more than {1} time(s) per {2} sec"
 
-#: ..\components\additional_funcs.py:1859
+#: ..\components\additional_funcs.py:1924
 msgid ""
 "You triggered this command more than {0} time(s) per {1} sec.\n"
 "Try again in {2} sec..."
@@ -2981,47 +3030,47 @@ msgstr ""
 "You triggered this command more than {0} time(s) per {1} sec.\n"
 "Try again in {2} sec..."
 
-#: ..\components\additional_funcs.py:1872
+#: ..\components\additional_funcs.py:1937
 msgid "Ignoring exception in command '{0}{1}':"
 msgstr "Ignoring exception in command '{0}{1}':"
 
-#: ..\components\additional_funcs.py:1896
+#: ..\components\additional_funcs.py:1961
 msgid "Ignoring exception in internal background task '{0}':"
 msgstr "Ignoring exception in internal background task '{0}':"
 
-#: ..\components\additional_funcs.py:1907
+#: ..\components\additional_funcs.py:1972
 msgid "Ignoring exception in internal event '{0}':"
 msgstr "Ignoring exception in internal event '{0}':"
 
-#: ..\components\additional_funcs.py:1924
+#: ..\components\additional_funcs.py:1989
 msgid "this chat can't work! Cross-platform chat disabled!"
 msgstr "this chat can't work! Cross-platform chat disabled!"
 
-#: ..\components\additional_funcs.py:1930
+#: ..\components\additional_funcs.py:1995
 msgid "server is restarting!"
 msgstr "server is restarting!"
 
-#: ..\components\additional_funcs.py:1940
+#: ..\components\additional_funcs.py:2005
 msgid "No players on server!"
 msgstr "No players on server!"
 
-#: ..\components\additional_funcs.py:2478
+#: ..\components\additional_funcs.py:2522
 msgid "Entity"
 msgstr "Entity"
 
-#: ..\components\additional_funcs.py:2480
+#: ..\components\additional_funcs.py:2524
 msgid "Player"
 msgstr "Player"
 
-#: ..\components\additional_funcs.py:2481
+#: ..\components\additional_funcs.py:2525
 msgid "Type: {0}"
 msgstr "Type: {0}"
 
-#: ..\components\additional_funcs.py:2527
+#: ..\components\additional_funcs.py:2571
 msgid "Minecraft server is not in release state! Proceed with caution!"
 msgstr "Minecraft server is not in release state! Proceed with caution!"
 
-#: ..\components\additional_funcs.py:2592
+#: ..\components\additional_funcs.py:2636
 msgid "Bot couldn't shorten the URL \"{0}\" using link shortening services."
 msgstr "Bot couldn't shorten the URL \"{0}\" using link shortening services."
 
@@ -3031,11 +3080,11 @@ msgid ""
 msgstr ""
 "Date from bot config is invalid. Bot will use current date for checking..."
 
-#: ..\components\watcher_handle.py:82
+#: ..\components\watcher_handle.py:77
 msgid "Watcher Error: File '{0}' wasn't found!"
 msgstr "Watcher Error: File '{0}' wasn't found!"
 
-#: ..\components\watcher_handle.py:84
+#: ..\components\watcher_handle.py:79
 msgid ""
 "Watcher Error: Can't decode strings from file '{0}', check that Minecraft "
 "server saves it in utf-8 encoding!\n"
@@ -3047,15 +3096,15 @@ msgstr ""
 "(Ensure you have '-Dfile.encoding=UTF-8' as one of the arguments to start "
 "the server in start script)"
 
-#: ..\components\watcher_handle.py:90
+#: ..\components\watcher_handle.py:85
 msgid "Watcher Unhandled Error: {0}"
 msgstr "Watcher Unhandled Error: {0}"
 
-#: ..\components\watcher_handle.py:336
+#: ..\components\watcher_handle.py:330
 msgid "Bot Error: Couldn't find channel for cross-platform chat!"
 msgstr "Bot Error: Couldn't find channel for cross-platform chat!"
 
-#: ..\components\watcher_handle.py:410
+#: ..\components\watcher_handle.py:405
 msgid ""
 "Intrusion attempt on already logged in nick\n"
 "Your IP: {0}"
@@ -3063,7 +3112,7 @@ msgstr ""
 "Intrusion attempt on already logged in nick\n"
 "Your IP: {0}"
 
-#: ..\components\watcher_handle.py:413
+#: ..\components\watcher_handle.py:408
 msgid ""
 "Too many login attempts\n"
 "Your IP: {0}"
@@ -3071,15 +3120,15 @@ msgstr ""
 "Too many login attempts\n"
 "Your IP: {0}"
 
-#: ..\components\watcher_handle.py:424
+#: ..\components\watcher_handle.py:419
 msgid "Intrusion prevented: User was banned!"
 msgstr "Intrusion prevented: User was banned!"
 
-#: ..\components\watcher_handle.py:428
+#: ..\components\watcher_handle.py:423
 msgid "Too many login attempts: User was banned!"
 msgstr "Too many login attempts: User was banned!"
 
-#: ..\components\watcher_handle.py:429
+#: ..\components\watcher_handle.py:424
 msgid ""
 "Nick: {0}\n"
 "IP: {1}\n"
@@ -3089,11 +3138,11 @@ msgstr ""
 "IP: {1}\n"
 "Time: {2}"
 
-#: ..\components\watcher_handle.py:435
+#: ..\components\watcher_handle.py:430
 msgid "You don't own this logged in nick"
 msgstr "You don't own this logged in nick"
 
-#: ..\components\watcher_handle.py:437
+#: ..\components\watcher_handle.py:432
 msgid ""
 "Not authorized\n"
 "Your IP: {0}\n"
@@ -3103,15 +3152,15 @@ msgstr ""
 "Your IP: {0}\n"
 "Code: {1}"
 
-#: ..\components\watcher_handle.py:450
+#: ..\components\watcher_handle.py:445
 msgid "Status:"
 msgstr "Status:"
 
-#: ..\components\watcher_handle.py:453
+#: ..\components\watcher_handle.py:448
 msgid "Previously used nicknames:"
 msgstr "Previously used nicknames:"
 
-#: ..\components\watcher_handle.py:460
+#: ..\components\watcher_handle.py:455
 msgid ""
 "Connection attempt detected!\n"
 "Nick: {0}\n"
@@ -3125,15 +3174,15 @@ msgstr ""
 "{2}Connection attempts: {3}\n"
 "Time: {4}"
 
-#: ..\components\watcher_handle.py:467
+#: ..\components\watcher_handle.py:462
 msgid "To proceed enter command `{0}` within {1} min"
 msgstr "To proceed enter command `{0}` within {1} min"
 
-#: ..\components\watcher_handle.py:471
+#: ..\components\watcher_handle.py:466
 msgid "To ban this IP-address enter command `{0}`"
 msgstr "To ban this IP-address enter command `{0}`"
 
-#: ..\components\watcher_handle.py:481
+#: ..\components\watcher_handle.py:476
 msgid ""
 "Login without code?\n"
 "(Less safe)"
@@ -3141,7 +3190,7 @@ msgstr ""
 "Login without code?\n"
 "(Less safe)"
 
-#: ..\components\watcher_handle.py:540
+#: ..\components\watcher_handle.py:535
 msgid "☠ Obituary ☠"
 msgstr "☠ Obituary ☠"
 
@@ -3381,11 +3430,11 @@ msgstr "Enter commands' channel id"
 
 #: ..\config\init_config.py:1155
 msgid ""
-"Bot send some push events to the channel it can post. To make it work right "
-"type '{0}channel commands' to create a link."
+"Bot will send some push events to the channel it can post to. To make it "
+"work right type '{0}channel commands' to create a link."
 msgstr ""
-"Bot send some push events to the channel it can post. To make it work right "
-"type '{0}channel commands' to create a link."
+"Bot will send some push events to the channel it can post to. To make it "
+"work right type '{0}channel commands' to create a link."
 
 #: ..\config\init_config.py:1164
 msgid "Set gaming status"

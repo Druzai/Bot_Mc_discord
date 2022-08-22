@@ -6,7 +6,7 @@ from typing import Union
 
 from discord import (
     Color, Embed, Status, Role, NotFound, Forbidden, HTTPException, DMChannel, Member, InvalidData, TextChannel,
-    GroupChannel, RawReactionActionEvent
+    GroupChannel, RawReactionActionEvent, Thread
 )
 from discord.abc import Messageable
 from discord.ext import commands
@@ -28,7 +28,7 @@ class Poll(commands.Cog):
 
     async def run(
             self,
-            channel: Union[Member, TextChannel, GroupChannel, DMChannel],
+            channel: Union[Member, TextChannel, GroupChannel, DMChannel, Thread],
             command: str,
             message: str = None,
             need_for_voting=2,

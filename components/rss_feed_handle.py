@@ -2,7 +2,7 @@ from contextlib import suppress
 from datetime import datetime
 from time import mktime
 
-from discord import Webhook, RequestsWebhookAdapter
+from discord import SyncWebhook
 from feedparser import parse
 
 from components.localization import get_translation
@@ -37,5 +37,4 @@ async def check_on_rss_feed():
 
 def create_feed_webhook():
     if Config.get_rss_feed_settings().rss_url and Config.get_rss_feed_settings().webhook_url:
-        BotVars.webhook_rss = Webhook.from_url(url=Config.get_rss_feed_settings().webhook_url,
-                                               adapter=RequestsWebhookAdapter())
+        BotVars.webhook_rss = SyncWebhook.from_url(url=Config.get_rss_feed_settings().webhook_url)

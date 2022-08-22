@@ -131,7 +131,7 @@ class MinecraftCommands(commands.Cog):
                 return
 
             BotVars.op_deop_list.append(minecraft_nick)
-            Config.append_to_op_log(datetime.now().strftime("%d/%m/%Y %H:%M:%S") + " || " + get_translation("Opped ") +
+            Config.append_to_op_log(datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " || " + get_translation("Opped ") +
                                     minecraft_nick + (" || " + get_translation("Reason: ") + reasons
                                                       if reasons else ""))
             await_time_op = Config.get_timeouts_settings().await_seconds_when_opped
@@ -198,7 +198,7 @@ class MinecraftCommands(commands.Cog):
                                 cl_r.run(f"defaultgamemode {gamemode}")
                         break
                 Config.append_to_op_log(
-                    datetime.now().strftime("%d/%m/%Y %H:%M:%S") + " || " + get_translation("Deopped all") + " " +
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " || " + get_translation("Deopped all") + " " +
                     (str(get_translation("|| Note: ") +
                          get_translation("from {0} people in belated list operator was taken away")
                          .format(len(BotVars.op_deop_list))) if len(BotVars.op_deop_list) > 1 else ""))
@@ -231,7 +231,10 @@ class MinecraftCommands(commands.Cog):
                                                                            match_text=lg.split("||")[1].strip())]
         for line in range(len(log)):
             arr = log[line].split("||")
-            date = datetime.strptime(arr[0].strip(), "%d/%m/%Y %H:%M:%S").strftime(get_translation("%H:%M %d/%m/%Y"))
+            for format_line in ["%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M:%S"]:
+                with suppress(ValueError):
+                    date = datetime.strptime(arr[0].strip(), format_line).strftime(get_translation("%H:%M %d/%m/%Y"))
+                    break
             log[line] = f"{date} <{' '.join(arr[1].strip().split()[1:])}>" + \
                         (f": {' '.join(arr[2].strip().split()[1:])}" if len(arr) == 3 else "") + "\n"
         if len("".join(log)) + 6 > DISCORD_SYMBOLS_IN_MESSAGE_LIMIT:

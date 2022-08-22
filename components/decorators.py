@@ -1,16 +1,22 @@
+from typing import Any
+
 from discord import DMChannel, Permissions
-from discord.abc import GuildChannel
 from discord.ext.commands import NoPrivateMessage, MissingRole, CommandError, BotMissingPermissions, MissingPermissions
+from discord.ext.commands._types import BotT, Check
+from discord.ext.commands.context import Context
 from discord.ext.commands.core import check
 from discord.utils import get as utils_get
 
 from config.init_config import Config
 
 
-def has_role_or_default():
-    def predicate(ctx):
+def has_role_or_default() -> Check[Any]:
+    def predicate(ctx: Context[BotT]) -> bool:
         if isinstance(ctx.channel, DMChannel):
             return True
+
+        if ctx.guild is None:
+            raise NoPrivateMessage()
 
         config_role_id = Config.get_settings().bot_settings.managing_commands_role_id
         if config_role_id is None:
@@ -27,8 +33,8 @@ class MissingAdminPermissions(CommandError):
     pass
 
 
-def is_admin(ctx):
-    if not isinstance(ctx.channel, GuildChannel):
+def is_admin(ctx: Context[BotT]) -> bool:
+    if ctx.guild is None:
         raise NoPrivateMessage()
 
     admin_role_id = Config.get_settings().bot_settings.admin_role_id
@@ -38,18 +44,17 @@ def is_admin(ctx):
     return True
 
 
-def has_admin_role():
+def has_admin_role() -> Check[Any]:
     return check(is_admin)
 
 
-def has_permissions_with_dm(**perms):
+def has_permissions_with_dm(**perms) -> Check[Any]:
     invalid = set(perms) - set(Permissions.VALID_FLAGS)
     if invalid:
-        raise TypeError('Invalid permission(s): %s' % (', '.join(invalid)))
+        raise TypeError(f"Invalid permission(s): {', '.join(invalid)}")
 
-    def predicate(ctx):
-        ch = ctx.channel
-        permissions: Permissions = ch.permissions_for(ctx.author)
+    def predicate(ctx: Context[BotT]) -> bool:
+        permissions = ctx.permissions
 
         if isinstance(ctx.channel, DMChannel):
             perms["manage_messages"] = False
@@ -64,15 +69,13 @@ def has_permissions_with_dm(**perms):
     return check(predicate)
 
 
-def bot_has_permissions_with_dm(**perms):
+def bot_has_permissions_with_dm(**perms) -> Check[Any]:
     invalid = set(perms) - set(Permissions.VALID_FLAGS)
     if invalid:
-        raise TypeError('Invalid permission(s): %s' % (', '.join(invalid)))
+        raise TypeError(f"Invalid permission(s): {', '.join(invalid)}")
 
-    def predicate(ctx):
-        guild = ctx.guild
-        me = guild.me if guild is not None else ctx.bot.user
-        permissions: Permissions = ctx.channel.permissions_for(me)
+    def predicate(ctx: Context[BotT]) -> bool:
+        permissions = ctx.bot_permissions
 
         if isinstance(ctx.channel, DMChannel):
             perms["manage_messages"] = False

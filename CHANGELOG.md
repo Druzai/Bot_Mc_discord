@@ -2,15 +2,24 @@
 
 All important changes to this project will be documented in this file.
 
-### [1.3.3 Unreleased](https://github.com/Druzai/Bot_Mc_discord/compare/1.3.2...1.3.3) (2022-xx-xx)
+### [1.4.0 Unreleased](https://github.com/Druzai/Bot_Mc_discord/compare/1.3.2...1.4.0) (2022-xx-xx)
 
 #### Improvements:
 
+* Updated discord.py from `1.7.3` to `2.0.0`
+* Updated cryptography and requests
 * Added `tinyURL` as another link shortening service
+* Added support for attachments in webhooks
+* Bot can write and reply in threads
 
 #### Fixed:
 
 * --
+
+#### Breaking changes:
+
+* Changed date format for logging (`bot.log` and `op.log`)
+  * From `DD/MM/YYYY` to `YYYY-MM-DD` 
 
 ### [1.3.2](https://github.com/Druzai/Bot_Mc_discord/compare/1.3.1...1.3.2) (2022-07-28)
 

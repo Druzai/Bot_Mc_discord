@@ -18,7 +18,7 @@ from struct import unpack
 from typing import List, Optional, TYPE_CHECKING, Set, Union, Dict
 
 from cryptography.fernet import InvalidToken
-from discord import Webhook, Member
+from discord import SyncWebhook, Member
 from discord.ext.commands import Bot
 from jsons import load as sload, DeserializationError
 from omegaconf import OmegaConf as Conf
@@ -48,8 +48,8 @@ class BotVars:
     players_login_dict: dict = {}  # Dict of logged nicks and datetime of their login
     java_processes: List[Process] = []
     watcher_of_log_file: 'Watcher' = None
-    webhook_chat: Webhook = None
-    webhook_rss: Webhook = None
+    webhook_chat: SyncWebhook = None
+    webhook_rss: SyncWebhook = None
     bot_for_webhooks: Bot = None
 
     @classmethod
@@ -1152,8 +1152,8 @@ class Config:
                     cls._ask_for_data(get_translation("Enter commands' channel id") + "\n> ",
                                       try_int=True, int_high_or_equal_than=1)
             else:
-                print(get_translation("Bot send some push events to the channel it can post. To make it work right type"
-                                      " '{0}channel commands' to create a link.")
+                print(get_translation("Bot will send some push events to the channel it can post to."
+                                      " To make it work right type '{0}channel commands' to create a link.")
                       .format(cls._settings_instance.bot_settings.prefix))
 
     @classmethod

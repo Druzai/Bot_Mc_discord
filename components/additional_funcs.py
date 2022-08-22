@@ -19,13 +19,13 @@ from textwrap import wrap
 from threading import Thread, Event
 from time import sleep
 from traceback import format_exception
-from typing import Tuple, List, Optional, Union, TYPE_CHECKING
+from typing import Tuple, List, Optional, Union, TYPE_CHECKING, AsyncIterator
 from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 
 from colorama import Style, Fore
 from discord import (
     Activity, ActivityType, Message, Status, Member, Role, MessageType, NotFound, HTTPException, Forbidden, Emoji,
-    ChannelType, TextChannel
+    ChannelType, TextChannel, VoiceChannel, Thread as ChannelThread, GroupChannel
 )
 from discord.abc import Messageable
 from discord.ext import commands
@@ -126,7 +126,11 @@ async def delete_after_by_msg(message: Union[Message, int], ctx: commands.Contex
         )
 
 
-def get_author_and_mention(ctx: Union[commands.Context, Message], bot: commands.Bot, is_reaction=False):
+def get_author_and_mention(
+        ctx: Union[commands.Context, Message, TextChannel, VoiceChannel, ChannelThread, GroupChannel],
+        bot: commands.Bot,
+        is_reaction=False
+):
     if is_reaction:
         author_mention = BotVars.react_auth.mention
         author = BotVars.react_auth
@@ -165,7 +169,13 @@ def _ignore_some_tasks_errors(task: Task):
         task.result()
 
 
-async def start_server(ctx: commands.Context, bot: commands.Bot, backups_thread=None, shut_up=False, is_reaction=False):
+async def start_server(
+        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel],
+        bot: commands.Bot,
+        backups_thread=None,
+        shut_up=False,
+        is_reaction=False
+):
     BotVars.is_loading = True
     author, author_mention = get_author_and_mention(ctx, bot, is_reaction)
     print(get_translation("Loading server by request of {0}").format(author))
@@ -301,8 +311,15 @@ async def start_server(ctx: commands.Context, bot: commands.Bot, backups_thread=
     task.add_done_callback(_ignore_some_tasks_errors)
 
 
-async def stop_server(ctx: commands.Context, bot: commands.Bot, poll: 'Poll',
-                      how_many_sec=10, is_restart=False, shut_up=False, is_reaction=False):
+async def stop_server(
+        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel],
+        bot: commands.Bot,
+        poll: 'Poll',
+        how_many_sec=10,
+        is_restart=False,
+        shut_up=False,
+        is_reaction=False
+):
     no_connection = False
     players_info = None
 
@@ -996,7 +1013,11 @@ async def server_checkups(bot: commands.Bot, backups_thread: BackupsThread, poll
         check_if_ips_expired()
 
 
-async def bot_status(ctx: commands.Context, bot: commands.Bot, is_reaction=False):
+async def bot_status(
+        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel],
+        bot: commands.Bot,
+        is_reaction=False
+):
     states = ""
     bot_message = ""
     states_info = Config.get_server_config().states
@@ -1069,7 +1090,11 @@ async def bot_status(ctx: commands.Context, bot: commands.Bot, is_reaction=False
         await send_msg(ctx, add_quotes(bot_message), is_reaction)
 
 
-async def bot_list(ctx: commands.Context, bot: commands.Bot, is_reaction=False):
+async def bot_list(
+        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel],
+        bot: commands.Bot,
+        is_reaction=False
+):
     try:
         info = get_server_players()
         if info.get("current") == 0:
@@ -1108,7 +1133,12 @@ async def bot_list(ctx: commands.Context, bot: commands.Bot, is_reaction=False):
         await send_msg(ctx, f"{author_mention}, " + get_translation("server offline"), is_reaction)
 
 
-async def bot_start(ctx: commands.Context, bot: commands.Bot, backups_thread, is_reaction=False):
+async def bot_start(
+        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel],
+        bot: commands.Bot,
+        backups_thread,
+        is_reaction=False
+):
     if not BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and \
             not BotVars.is_backing_up and not BotVars.is_restoring:
         await start_server(ctx, bot=bot, backups_thread=backups_thread, is_reaction=is_reaction)
@@ -1116,7 +1146,13 @@ async def bot_start(ctx: commands.Context, bot: commands.Bot, backups_thread, is
         await send_status(ctx, is_reaction=is_reaction)
 
 
-async def bot_stop(ctx: commands.Context, command, bot: commands.Bot, poll: 'Poll', is_reaction=False):
+async def bot_stop(
+        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel],
+        command,
+        bot: commands.Bot,
+        poll: 'Poll',
+        is_reaction=False
+):
     if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and \
             not BotVars.is_backing_up and not BotVars.is_restoring:
         if BotVars.is_doing_op:
@@ -1132,7 +1168,7 @@ async def bot_stop(ctx: commands.Context, command, bot: commands.Bot, poll: 'Pol
 
 
 async def bot_restart(
-        ctx: commands.Context,
+        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel],
         command,
         bot: commands.Bot,
         poll: 'Poll',
@@ -1180,14 +1216,17 @@ async def bot_clear(
     if subcommand is None:
         if count > 0:
             lim = count if count < delete_limit else delete_limit + 1
-            if delete_limit == 0 or len(await ctx.channel.history(limit=lim).flatten()) <= delete_limit:
+            if delete_limit == 0 or len([m async for m in ctx.channel.history(limit=lim)]) <= delete_limit:
                 await ctx.message.delete()
                 await clear_with_big_limit(ctx, count=count, check_condition=check_condition)
                 return
         elif count < 0:
-            message_created = (await ctx.channel.history(limit=-count, oldest_first=True).flatten())[-1]
-            if delete_limit == 0 or len(await ctx.channel.history(limit=delete_limit + 1, after=message_created,
-                                                                  oldest_first=True).flatten()) <= delete_limit:
+            message_created = await get_last_element_of_async_iterator(
+                ctx.channel.history(limit=-count, oldest_first=True)
+            )
+            if delete_limit == 0 or len([m async for m in ctx.channel.history(limit=delete_limit + 1,
+                                                                              after=message_created,
+                                                                              oldest_first=True)]) <= delete_limit:
                 await ctx.message.delete()
                 await clear_with_none_limit(ctx, check_condition=check_condition, after_message=message_created)
                 return
@@ -1195,14 +1234,15 @@ async def bot_clear(
             await send_msg(ctx, get_translation("Nothing's done!"), True)
             return
     elif subcommand == "all":
-        if delete_limit == 0 or len(await ctx.channel.history(limit=delete_limit + 1).flatten()) <= delete_limit:
+        if delete_limit == 0 or len([m async for m in ctx.channel.history(limit=delete_limit + 1)]) <= delete_limit:
             await ctx.message.delete()
             await clear_with_none_limit(ctx, check_condition=check_condition)
             return
     elif subcommand == "reply":
         message_created = ctx.message.reference.resolved
-        if delete_limit == 0 or len(await ctx.channel.history(limit=delete_limit + 1, after=message_created,
-                                                              oldest_first=True).flatten()) <= delete_limit:
+        if delete_limit == 0 or len([m async for m in ctx.channel.history(limit=delete_limit + 1,
+                                                                          after=message_created,
+                                                                          oldest_first=True)]) <= delete_limit:
             await ctx.message.delete()
             await clear_with_none_limit(ctx, check_condition=check_condition, after_message=message_created)
             return
@@ -1214,9 +1254,9 @@ async def bot_clear(
                            delete_after=Config.get_timeouts_settings().await_seconds_before_message_deletion)
             return
         if await poll.run(channel=ctx.channel,
-                          message=get_translation("this man {0} trying to delete some history"
-                                                  " of this channel. Will you let that happen?")
-                                  .format(ctx.author.mention),
+                          message=get_translation(
+                              "this man {0} trying to delete some history of this channel. Will you let that happen?"
+                          ).format(ctx.author.mention),
                           command="clear",
                           remove_logs_after=5):
             if subcommand == "all" or subcommand == "reply" or count < 0:
@@ -1229,23 +1269,33 @@ async def bot_clear(
         await delete_after_by_msg(ctx.message)
 
 
+async def get_last_element_of_async_iterator(async_iterator: AsyncIterator):
+    last_element = None
+    while True:
+        try:
+            last_element = await async_iterator.__anext__()
+        except StopAsyncIteration:
+            return last_element
+
+
 async def clear_with_big_limit(ctx: commands.Context, count: int, check_condition):
     last_undeleted_message = None
     ranges_to_delete = [100 for _ in range(count // 100)] + [count % 100]
     ranges_to_delete_length = len(ranges_to_delete)
     for i in range(ranges_to_delete_length):
         if ranges_to_delete_length > i + 1:
-            last_undeleted_message = (await ctx.channel.history(limit=ranges_to_delete[i],
-                                                                before=last_undeleted_message).flatten())[-1]
+            last_undeleted_message = await get_last_element_of_async_iterator(
+                ctx.channel.history(limit=ranges_to_delete[i], before=last_undeleted_message)
+            )
         await ctx.channel.purge(limit=ranges_to_delete[i], check=check_condition, before=last_undeleted_message)
 
 
 async def clear_with_none_limit(ctx: commands.Context, check_condition, after_message: Message = None):
     last_undeleted_message = None
     while True:
-        limited_messages = await ctx.channel.history(before=last_undeleted_message).flatten()
+        limited_messages = [m async for m in ctx.channel.history(before=last_undeleted_message)]
         await ctx.channel.purge(check=check_condition, before=last_undeleted_message, after=after_message)
-        if after_message in limited_messages:
+        if (after_message is not None and after_message in limited_messages) or len(limited_messages) == 0:
             return
         last_undeleted_message = limited_messages[-1]
 
@@ -1256,7 +1306,9 @@ async def bot_dm_clear(ctx: commands.Context, bot: commands.Bot, subcommand: str
         count += 1
     if subcommand is None:
         if count < 0:
-            message_created = (await ctx.channel.history(limit=-count, oldest_first=True).flatten())[-1]
+            message_created = await get_last_element_of_async_iterator(
+                ctx.channel.history(limit=-count, oldest_first=True)
+            )
         elif count == 0:
             await send_msg(ctx, get_translation("Nothing's done!"), True)
             return
@@ -1268,7 +1320,11 @@ async def bot_dm_clear(ctx: commands.Context, bot: commands.Bot, subcommand: str
             await msg.delete()
 
 
-async def bot_backup(ctx: commands.Context, bot: commands.Bot, is_reaction=False):
+async def bot_backup(
+        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel],
+        bot: commands.Bot,
+        is_reaction=False
+):
     bot_message = (get_translation("Automatic backups enabled") if Config.get_backups_settings()
                    .automatic_backup else get_translation("Automatic backups disabled")) + "\n"
     bot_message += get_translation("Automatic backups period set to {0} min").format(Config.get_backups_settings()
@@ -1720,7 +1776,12 @@ class IPv4Address(commands.Converter):
 
 
 # Handling errors
-async def send_error(ctx: commands.Context, bot: commands.Bot, error: commands.CommandError, is_reaction=False):
+async def send_error(
+        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel],
+        bot: commands.Bot,
+        error: Union[commands.CommandError, commands.CommandInvokeError],
+        is_reaction=False
+):
     author, author_mention = get_author_and_mention(ctx, bot, is_reaction)
     parsed_input = None
     if hasattr(error, "param"):
@@ -1771,6 +1832,10 @@ async def send_error(ctx: commands.Context, bot: commands.Bot, error: commands.C
         print(get_translation("{0} passed channel mention '{1}' that can't be found").format(author, parsed_input))
         await send_msg(ctx, f"{author_mention}\n" +
                        add_quotes(get_translation("Channel '{0}' not found!").format(parsed_input)), is_reaction)
+    elif isinstance(error, commands.ThreadNotFound):
+        print(get_translation("{0} passed thread mention '{1}' that can't be found").format(author, parsed_input))
+        await send_msg(ctx, f"{author_mention}\n" +
+                       add_quotes(get_translation("Thread '{0}' not found!").format(parsed_input)), is_reaction)
     elif isinstance(error, commands.BadBoolArgument):
         print(get_translation("{0} passed bad bool argument '{1}'").format(author, parsed_input))
         await send_msg(ctx, f"{author_mention}\n" +
@@ -1807,14 +1872,14 @@ async def send_error(ctx: commands.Context, bot: commands.Bot, error: commands.C
     elif isinstance(error, commands.MissingPermissions):
         print(get_translation("{0} don't have some permissions to run command").format(author))
         missing_perms = [get_translation(perm.replace("_", " ").replace("guild", "server").title())
-                         for perm in error.missing_perms]
+                         for perm in error.missing_permissions]
         await send_msg(ctx, f"{author_mention}\n" +
                        add_quotes(get_translation("You don't have these permissions to run this command:")
                                   .capitalize() + "\n- " + "\n- ".join(missing_perms)), is_reaction)
     elif isinstance(error, commands.BotMissingPermissions):
         print(get_translation("Bot doesn't have some permissions"))
         missing_perms = [get_translation(perm.replace("_", " ").replace("guild", "server").title())
-                         for perm in error.missing_perms]
+                         for perm in error.missing_permissions]
         await send_msg(ctx, f"{author_mention}\n" +
                        add_quotes(get_translation("Bot don't have these permissions to run this command:")
                                   .capitalize() + "\n- " + "\n- ".join(missing_perms)), is_reaction)
@@ -1913,7 +1978,7 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
     if message.author.id == bot.user.id or \
             (message.content.startswith(Config.get_settings().bot_settings.prefix) and not edit_command) or \
             str(message.author.discriminator) == "0000" or \
-            (len(message.content) == 0 and len(message.attachments) == 0 and len(await get_stickers(message)) == 0):
+            (len(message.content) == 0 and len(message.attachments) == 0 and len(message.stickers) == 0):
         return
 
     author_mention = get_author_and_mention(message, bot, False)[1]
@@ -1958,7 +2023,6 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
                 message,
                 bot,
                 only_replace_links=True,
-                edit_command=edit_command,
                 version_lower_1_7_2=True
             )
             msg = ""
@@ -2018,7 +2082,7 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
             result_msg = _clean_message(message, edit_command)
             if not edit_command:
                 result_msg, reply_from_minecraft_user = await _handle_reply_in_message(message, result_msg)
-            result_msg = await _handle_components_in_message(result_msg, message, bot, edit_command=edit_command)
+            result_msg = await _handle_components_in_message(result_msg, message, bot)
             # Building object for tellraw
             res_obj = [""]
             if result_msg.get("reply", None) is not None:
@@ -2227,10 +2291,14 @@ async def _handle_reply_in_message(message: Message, result_msg: dict) -> Tuple[
     return result_msg, reply_from_minecraft_user
 
 
-async def _handle_components_in_message(result_msg: dict, message: Message, bot: commands.Bot,
-                                        only_replace_links=False, edit_command=False, version_lower_1_7_2=False):
-    # TODO: For now 'webhook.edit_message' doesn't support attachments and stickers, wait for discord.py 2.0
-    attachments = await _handle_attachments_in_message(message) if not edit_command else {}
+async def _handle_components_in_message(
+        result_msg: dict,
+        message: Message,
+        bot: commands.Bot,
+        only_replace_links=False,
+        version_lower_1_7_2=False
+):
+    attachments = _handle_attachments_in_message(message)
     emoji_regex = r"<a?:\w+:\d+>"
     url_regex = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|%[0-9a-fA-F][0-9a-fA-F])+"
 
@@ -2325,39 +2393,13 @@ async def _handle_components_in_message(result_msg: dict, message: Message, bot:
     return result_msg
 
 
-class CustomSticker:
-    def __init__(self, *, data):
-        from discord.asset import Asset
-        from discord.enums import StickerType
-
-        self.name: str = data['name']
-        self.id: int = int(data['id'])
-
-        def try_enum(s: StickerType):
-            lookup = {
-                StickerType.png: 'png',
-                StickerType.apng: 'png',
-                StickerType.lottie: 'json',
-            }
-            return lookup[s]
-
-        self.format: str = try_enum(StickerType(data['format_type']))
-        self.image_url: str = f'{Asset.BASE}/stickers/{self.id}.{self.format}'
-
-
-async def get_stickers(message: Message):
-    # TODO: Workaround to get stickers before discord.py 2.0 will come out
-    data = await message._state.http.get_message(message.channel.id, message.id)
-    return [CustomSticker(data=data) for data in data.get('sticker_items', [])]
-
-
-async def _handle_attachments_in_message(message: Message):
+def _handle_attachments_in_message(message: Message):
     attachments = {}
     messages = [message]
     if message.reference is not None:
         messages.append(message.reference.resolved)
     for i in range(len(messages)):
-        stickers = await get_stickers(messages[i])
+        stickers = messages[i].stickers
         if len(stickers) != 0 or len(messages[i].attachments) != 0:
             if i == 0:
                 attachments["content"] = []
@@ -2365,28 +2407,30 @@ async def _handle_attachments_in_message(message: Message):
             else:
                 attachments["reply"] = []
                 iattach = attachments["reply"]
-        if len(stickers) != 0:
-            for sticker in stickers:
-                iattach.append({"text": sticker.name})
-                if sticker.image_url is not None:
-                    iattach[-1].update({"hyperlink": sticker.image_url if len(sticker.image_url) < 257
-                    else get_shortened_url(sticker.image_url)})
-        if len(messages[i].attachments) != 0:
-            for attachment in messages[i].attachments:
-                need_hover = True
-                if "." in attachment.filename:
-                    a_type = f"[{attachment.filename.split('.')[-1]}]"
-                elif attachment.content_type is not None and \
-                        any(i in attachment.content_type for i in ["image", "video", "audio"]):
-                    a_type = f"[{attachment.content_type.split('/')[-1]}]"
-                else:
-                    need_hover = False
-                    a_type = f"[{shorten_string(attachment.filename, max_length=20)}]"
-                iattach.append({"text": a_type,
-                                "hyperlink": attachment.url if len(attachment.url) < 257
-                                else get_shortened_url(attachment.url)})
-                if need_hover:
-                    iattach[-1].update({"hover": attachment.filename})
+            if len(stickers) != 0:
+                for sticker in stickers:
+                    iattach.append({"text": sticker.name})
+                    if sticker.url is not None:
+                        iattach[-1].update({
+                            "hyperlink": sticker.url if len(sticker.url) < 257 else get_shortened_url(sticker.url)
+                        })
+            if len(messages[i].attachments) != 0:
+                for attachment in messages[i].attachments:
+                    need_hover = True
+                    if "." in attachment.filename:
+                        a_type = f"[{attachment.filename.split('.')[-1]}]"
+                    elif attachment.content_type is not None and \
+                            any(i in attachment.content_type for i in ["image", "video", "audio"]):
+                        a_type = f"[{attachment.content_type.split('/')[-1]}]"
+                    else:
+                        need_hover = False
+                        a_type = f"[{shorten_string(attachment.filename, max_length=20)}]"
+                    iattach.append({
+                        "text": a_type,
+                        "hyperlink": attachment.url if len(attachment.url) < 257 else get_shortened_url(attachment.url)
+                    })
+                    if need_hover:
+                        iattach[-1].update({"hover": attachment.filename})
     return attachments
 
 
@@ -2653,9 +2697,9 @@ class Output_file_handler:
     def write(self, data, **kwargs):
         if data != "\n":
             if self.file is not None:
-                self.file.write(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] "
+                self.file.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] "
                                 f"{ANSI_ESCAPE.sub('', data)}")
-            self.stdout.write(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] {data}")
+            self.stdout.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {data}")
         else:
             if self.file is not None:
                 self.file.write(data)

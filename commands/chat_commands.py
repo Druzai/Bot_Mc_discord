@@ -200,11 +200,18 @@ class ChatCommands(commands.Cog):
 
             if last_message is not None:
                 try:
-                    # TODO: In discord.py 2.0 will be added 'message.attachments' to 'webhook.edit_message'
-                    BotVars.webhook_chat.edit_message(message_id=last_message.id,
-                                                      content=edited_message)
-                    await handle_message_for_chat(ctx.message, self._bot, on_edit=True,
-                                                  before_message=last_message, edit_command=True)
+                    BotVars.webhook_chat.edit_message(
+                        message_id=last_message.id,
+                        content=edited_message,
+                        attachments=[await f.to_file(spoiler=f.is_spoiler()) for f in ctx.message.attachments]
+                    )
+                    await handle_message_for_chat(
+                        ctx.message,
+                        self._bot,
+                        on_edit=True,
+                        before_message=last_message,
+                        edit_command=True
+                    )
                 except Forbidden:
                     error_msg = get_translation("Can't edit this message, it's not owned "
                                                 "by cross-platform chat webhook!")
@@ -250,8 +257,12 @@ class ChatCommands(commands.Cog):
                 if payload.cached_message is not None and after_message.content == payload.cached_message.content and \
                         after_message.attachments == payload.cached_message.attachments:
                     return
-                await handle_message_for_chat(after_message, self._bot,
-                                              on_edit=True, before_message=payload.cached_message)
+                await handle_message_for_chat(
+                    after_message,
+                    self._bot,
+                    on_edit=True,
+                    before_message=payload.cached_message
+                )
 
     @commands.command(pass_context=True, aliases=["lang"], ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
