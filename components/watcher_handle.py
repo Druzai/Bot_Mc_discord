@@ -206,9 +206,10 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                                             if cut_right_string is not None:
                                                 mentions[i_mention].append(cut_right_string)
                                         if isinstance(mentions[i_mention][1], list):
-                                            mentions[i_mention][1] += [utils_get(BotVars.bot_for_webhooks
-                                                                                 .guilds[0].members,
-                                                                                 id=user.user_discord_id)]
+                                            mentions[i_mention][1] += [utils_get(
+                                                BotVars.bot_for_webhooks.guilds[0].members,
+                                                id=user.user_discord_id
+                                            )]
                                             found = True
                                 if found:
                                     break
@@ -243,9 +244,10 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                             if Config.get_settings().bot_settings.managing_commands_role_id is None:
                                 possible_role = None
                             else:
-                                possible_role = utils_get(BotVars.bot_for_webhooks.guilds[0].roles,
-                                                          id=Config.get_settings()
-                                                          .bot_settings.managing_commands_role_id)
+                                possible_role = utils_get(
+                                    BotVars.bot_for_webhooks.guilds[0].roles,
+                                    id=Config.get_settings().bot_settings.managing_commands_role_id
+                                )
                             if possible_role is not None:
                                 split_arr.insert(insert_numb, possible_role.mention)
                                 if "@a" not in mention_nicks:
@@ -273,15 +275,15 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                                 if len(mention) == 3:
                                     split_arr[insert_numb] = f"{mention[2]}{split_arr[insert_numb]}"
                                 split_arr.insert(insert_numb,
-                                                 mention[1].mention if len(mention) > 1 and
-                                                                       mention[1] is not None else f"@{mention[0]}")
+                                                 mention[1].mention if len(mention) > 1 and mention[1] is not None
+                                                 else f"@{mention[0]}")
                             else:
                                 split_arr[insert_numb] = split_arr[insert_numb][1:].lstrip(mention[0][1])
                                 if len(mention) == 3:
                                     split_arr[insert_numb] = f"{mention[2]}{split_arr[insert_numb]}"
                                 split_arr.insert(insert_numb,
-                                                 mention[1].mention if len(mention) > 1 and
-                                                                       mention[1] is not None else f"@{mention[0][0]}")
+                                                 mention[1].mention if len(mention) > 1 and mention[1] is not None
+                                                 else f"@{mention[0][0]}")
                             if "@a" not in mention_nicks and len(mention) > 1 and isinstance(mention[1], Role):
                                 mention_nicks = _get_members_nicks_of_the_role(mention[1], mention_nicks)
                         insert_numb += 2
@@ -386,10 +388,8 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                 nick_numb = [i for i in range(len(Config.get_auth_users()))
                              if Config.get_auth_users()[i].nick == nick][0]
                 nick_logged = BotVars.player_logged(Config.get_auth_users()[nick_numb].nick) is not None
-                is_invasion_to_ban = nick_logged and \
-                                     ip_address not in Config.get_known_user_ips()
-                is_invasion_to_kick = nick_logged and \
-                                      ip_address not in Config.get_known_user_ips(nick)
+                is_invasion_to_ban = nick_logged and ip_address not in Config.get_known_user_ips()
+                is_invasion_to_kick = nick_logged and ip_address not in Config.get_known_user_ips(nick)
 
                 if not is_invasion_to_ban and not is_invasion_to_kick:
                     if ip_address in [ip.ip_address for ip in Config.get_auth_users()[nick_numb].ip_addresses]:
@@ -531,8 +531,9 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                         if death_message != msg:
                             avatar_url = Config.get_cross_platform_chat_settings().avatar_url_for_death_messages
                             if avatar_url is None:
-                                avatar_url = BotVars.bot_for_webhooks.user.avatar_url
-                            BotVars.webhook_chat.send(msg, username=get_translation("☠ Obituary ☠"),
+                                avatar_url = BotVars.bot_for_webhooks.user.avatar.url
+                            BotVars.webhook_chat.send(msg,
+                                                      username=get_translation("☠ Obituary ☠"),
                                                       avatar_url=avatar_url)
                             death_message = msg
                         break
@@ -566,7 +567,8 @@ def check_if_player_logged_out(line: str, INFO_line: str):
         nick = match.group("nick").strip()
         reason = split(r"lost connection:", line, maxsplit=1)[-1].strip()
     else:
-        nick, reason = None, None
+        nick = None
+        reason = None
     return nick, reason
 
 

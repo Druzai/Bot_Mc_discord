@@ -401,10 +401,11 @@ class MinecraftCommands(commands.Cog):
                 return
             if bound_user is None:
                 if not await self._IndPoll.run(channel=ctx.channel,
-                                               message=get_translation("this man {0} trying to login as `{1}`. "
-                                                                       "Bot requesting create link {0} -> {1}. "
-                                                                       "Will you let that happen?")
-                                                       .format(ctx.author.mention, nick),
+                                               message=get_translation(
+                                                   "this man {0} trying to login as `{1}`. "
+                                                   "Bot requesting create link {0} -> {1}. "
+                                                   "Will you let that happen?"
+                                               ).format(ctx.author.mention, nick),
                                                command=f"auth login {nick}",
                                                needed_role=Config.get_settings().bot_settings.admin_role_id,
                                                need_for_voting=1,
@@ -1019,20 +1020,23 @@ class MinecraftCommands(commands.Cog):
                 if await self._IndPoll.timer(ctx, 5, "backup_del"):
                     member = await get_member_name(self._bot,
                                                    Config.get_server_config().backups[backup_number - 1].initiator)
-                    if not await self._IndPoll. \
-                            run(channel=ctx.channel,
-                                message=get_translation(
-                                    "this man {0} trying to delete {1} backup by {2} of '{3}' "
-                                    "server. Will you let that happen?")
-                                        .format(ctx.author.mention,
-                                                Config.get_server_config().backups[backup_number - 1].file_name +
-                                                ".zip", member, Config.get_selected_server_from_list().server_name),
-                                command="backup_del",
-                                needed_role=Config.get_settings().bot_settings.managing_commands_role_id,
-                                need_for_voting=get_half_members_count_with_role(ctx.channel,
-                                                                                 Config.get_settings().bot_settings
-                                                                                         .managing_commands_role_id),
-                                remove_logs_after=5):
+                    if not await self._IndPoll.run(
+                            channel=ctx.channel,
+                            message=get_translation(
+                                "this man {0} trying to delete {1} backup by {2} of '{3}' "
+                                "server. Will you let that happen?"
+                            ).format(ctx.author.mention,
+                                     Config.get_server_config().backups[backup_number - 1].file_name + ".zip",
+                                     member,
+                                     Config.get_selected_server_from_list().server_name),
+                            command="backup_del",
+                            needed_role=Config.get_settings().bot_settings.managing_commands_role_id,
+                            need_for_voting=get_half_members_count_with_role(
+                                ctx.channel,
+                                Config.get_settings().bot_settings.managing_commands_role_id
+                            ),
+                            remove_logs_after=5
+                    ):
                         return
                 else:
                     await delete_after_by_msg(ctx.message)
@@ -1068,19 +1072,21 @@ class MinecraftCommands(commands.Cog):
             return
 
         if await self._IndPoll.timer(ctx, 5, "backup_del_all"):
-            if not await self._IndPoll. \
-                    run(channel=ctx.channel,
-                        message=get_translation(
-                            "this man {0} trying to delete all backups of '{1}' server. "
-                            "Will you let that happen?")
-                                .format(ctx.author.mention,
-                                        Config.get_selected_server_from_list().server_name),
-                        command="backup_del_all",
-                        needed_role=Config.get_settings().bot_settings.managing_commands_role_id,
-                        need_for_voting=get_half_members_count_with_role(ctx.channel,
-                                                                         Config.get_settings().bot_settings
-                                                                                 .managing_commands_role_id),
-                        remove_logs_after=5):
+            if not await self._IndPoll.run(
+                    channel=ctx.channel,
+                    message=get_translation(
+                        "this man {0} trying to delete all backups of '{1}' server. "
+                        "Will you let that happen?"
+                    ).format(ctx.author.mention,
+                             Config.get_selected_server_from_list().server_name),
+                    command="backup_del_all",
+                    needed_role=Config.get_settings().bot_settings.managing_commands_role_id,
+                    need_for_voting=get_half_members_count_with_role(
+                        ctx.channel,
+                        Config.get_settings().bot_settings.managing_commands_role_id
+                    ),
+                    remove_logs_after=5
+            ):
                 return
         else:
             await delete_after_by_msg(ctx.message)
@@ -1161,7 +1167,7 @@ class MinecraftCommands(commands.Cog):
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
         with handle_unhandled_error_in_events():
-            if payload.message_id == Config.get_settings().bot_settings.menu_id and\
+            if payload.message_id == Config.get_settings().bot_settings.menu_id and \
                     payload.member.id != self._bot.user.id:
                 channel = self._bot.get_channel(payload.channel_id)
                 message = await channel.fetch_message(payload.message_id)
@@ -1187,10 +1193,18 @@ class MinecraftCommands(commands.Cog):
                             elif payload.emoji.name == self._emoji_symbols.get("stop 10"):
                                 await bot_stop(channel, command=10, bot=self._bot, poll=self._IndPoll, is_reaction=True)
                             elif payload.emoji.name == self._emoji_symbols.get("restart 10"):
-                                await bot_restart(channel, command=10, bot=self._bot, poll=self._IndPoll,
-                                                  backups_thread=self._backups_thread, is_reaction=True)
+                                await bot_restart(
+                                    channel,
+                                    command=10,
+                                    bot=self._bot,
+                                    poll=self._IndPoll,
+                                    backups_thread=self._backups_thread,
+                                    is_reaction=True
+                                )
                         else:
-                            await send_error(channel, self._bot,
-                                             commands.MissingRole(Config.get_settings().bot_settings
-                                                                  .managing_commands_role_id),
-                                             is_reaction=True)
+                            await send_error(
+                                channel,
+                                self._bot,
+                                commands.MissingRole(Config.get_settings().bot_settings.managing_commands_role_id),
+                                is_reaction=True
+                            )
