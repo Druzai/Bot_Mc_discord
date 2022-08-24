@@ -1,4 +1,5 @@
 from asyncio import run
+from logging import ERROR
 from sys import platform, exit, argv
 from threading import enumerate as threads
 from traceback import format_exc
@@ -85,7 +86,7 @@ def main():
         BotVars.bot_for_webhooks = bot
         Config.read_server_info()
         print(get_translation("Server info read!"))
-        bot.run(Config.get_settings().bot_settings.token)
+        bot.run(Config.get_settings().bot_settings.token, log_level=ERROR)
     except LoginFailure:
         print(get_translation("Bot/Discord Error: Your token is wrong"))
     except (RuntimeError, FileNotFoundError) as e:
