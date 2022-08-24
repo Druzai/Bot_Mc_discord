@@ -153,18 +153,21 @@ class MinecraftCommands(commands.Cog):
                 await ctx.send(get_translation("{0}, server isn't working (at least I've tried), try again later...")
                                .format(ctx.author.mention))
                 return
-            await ctx.send(add_quotes(get_translation("Now {0} is an operator!")
-                                      .format(f"{ctx.author.display_name}#{ctx.author.discriminator}")))
+            is_special_bot_speech = randint(0, 3) == 1
+            if is_special_bot_speech and await_time_op > 0:
+                line_to_op = get_translation(
+                    "So {0}, I gave you an operator, but I'm not going to pretend like "
+                    "I did it to win favors upstairs. "
+                    "I'll come in {1}, take away operator from everyone and we're even. "
+                    "I don't give a shit why you want this operator and mind my own business. "
+                    "If you want it, well, you must have your reasons..."
+                ).format(ctx.author.mention, get_time_string(await_time_op))
+            else:
+                line_to_op = add_quotes(get_translation(
+                    "Now {0} is an operator!"
+                ).format(f"{ctx.author.display_name}#{ctx.author.discriminator}"))
+            await ctx.send(line_to_op)
             if await_time_op > 0:
-                if randint(0, 2) == 1:
-                    await ctx.send(
-                        get_translation(
-                            "So {0}, I gave you an operator, but I'm not going to pretend like "
-                            "I did it to win favors upstairs. "
-                            "I'll come in {1}, take away operator from everyone and we're even. "
-                            "I don't give a shit why you want this operator and mind my own business. "
-                            "If you want it, well, you must have your reasons..."
-                        ).format(ctx.author.mention, get_time_string(await_time_op)))
                 await asleep(await_time_op)
                 if minecraft_nick != BotVars.op_deop_list[-1]:
                     return
@@ -177,8 +180,13 @@ class MinecraftCommands(commands.Cog):
                         else:
                             gamemode = "survival"
                         with connect_rcon() as cl_r:
-                            bot_message = f"{minecraft_nick}, " + get_translation("an operator will be taken away "
-                                                                                  "from you all will now.")
+                            bot_message = f"{minecraft_nick}, "
+                            if len(to_delete_ops) > 1:
+                                bot_message += get_translation(
+                                    "the operator will be taken away from {0} players now."
+                                ).format(len(to_delete_ops))
+                            else:
+                                bot_message += get_translation("the operator will be taken away from you.")
                             if server_version.minor < 7:
                                 cl_r.say(bot_message)
                             else:
@@ -202,8 +210,20 @@ class MinecraftCommands(commands.Cog):
                     (str(get_translation("|| Note: ") +
                          get_translation("from {0} people in belated list operator was taken away")
                          .format(len(BotVars.op_deop_list))) if len(BotVars.op_deop_list) > 1 else ""))
-                await ctx.send(get_translation("Well, {0}, your time is over... and not only yours...\n"
-                                               "As they say \"Cheeki breeki i v damké!\"").format(ctx.author.mention))
+                if is_special_bot_speech:
+                    line_to_deop = get_translation(
+                        "Well, {0}, your time is over..."
+                    ).format(ctx.author.mention) + \
+                                   (" " + get_translation("and not only yours...") if len(to_delete_ops) > 1 else "") \
+                                   + "\n" + get_translation("As they say \"Cheeki breeki i v damké!\"")
+                else:
+                    line_to_deop = add_quotes(get_translation(
+                        "The operator was taken away from {0}"
+                    ).format(f"{ctx.author.display_name}#{ctx.author.discriminator}") +
+                                              (" " + get_translation(
+                                                  "and {0} player(s)"
+                                              ).format(len(to_delete_ops)) if len(to_delete_ops) > 1 else "") + ".")
+                await ctx.send(line_to_deop)
                 BotVars.op_deop_list.clear()
             else:
                 await ctx.send(get_translation("{0}, you have no time limit, but you are all doomed...")

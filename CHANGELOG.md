@@ -14,7 +14,7 @@ All important changes to this project will be documented in this file.
 
 #### Fixed:
 
-* --
+* Fixed and improved translations and bot responses
 
 #### Breaking changes:
 
