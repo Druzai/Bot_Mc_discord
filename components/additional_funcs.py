@@ -19,7 +19,7 @@ from textwrap import wrap
 from threading import Thread, Event
 from time import sleep
 from traceback import format_exception
-from typing import Tuple, List, Optional, Union, TYPE_CHECKING, AsyncIterator
+from typing import Tuple, List, Dict, Optional, Union, TYPE_CHECKING, AsyncIterator
 from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 
 from colorama import Style, Fore
@@ -403,8 +403,7 @@ async def stop_server(
                     if server_version.minor < 7:
                         cl_r.say(bot_message)
                     else:
-                        tellraw_init = ["", {"text": "<"}, {"text": get_bot_display_name(bot), "color": "dark_gray"},
-                                        {"text": "> "}]
+                        tellraw_init = build_nickname_tellraw_for_bot(server_version, get_bot_display_name(bot))
                         cl_r.tellraw("@a", tellraw_init + [{"text": bot_message}])
                     for i in range(how_many_sec, 0, -w):
                         if server_version.minor < 7:
@@ -631,8 +630,7 @@ def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path
 
     if use_rcon:
         if server_version.minor > 6:
-            tellraw_init = ["", {"text": "<"}, {"text": get_bot_display_name(bot), "color": "dark_gray"},
-                            {"text": "> "}]
+            tellraw_init = build_nickname_tellraw_for_bot(server_version, get_bot_display_name(bot))
             tellraw_msg = tellraw_init.copy()
             if forced:
                 tellraw_msg.append({"text": get_translation("Starting backup triggered by {0} in 3 seconds...")
@@ -802,8 +800,9 @@ def send_message_of_deleted_backup(bot: commands.Bot, reason: str, backup=None, 
             if server_version.minor < 7:
                 cl_r.say(msg)
             else:
-                cl_r.tellraw("@a", ["", {"text": "<"}, {"text": get_bot_display_name(bot), "color": "dark_gray"},
-                                    {"text": "> "}, {"text": msg, "color": "red"}])
+                cl_r.tellraw("@a",
+                             build_nickname_tellraw_for_bot(server_version, get_bot_display_name(bot)) +
+                             [{"text": msg, "color": "red"}])
     print(msg)
 
 
@@ -2088,7 +2087,7 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
             if result_msg.get("reply", None) is not None:
                 if not reply_from_minecraft_user:
                     res_obj += _build_nickname_tellraw_for_discord_member(
-                        server_version.minor,
+                        server_version,
                         result_msg["reply"][1],
                         content_name,
                         brackets_color="gray",
@@ -2097,7 +2096,7 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
                     )
                 else:
                     res_obj += _build_nickname_tellraw_for_minecraft_player(
-                        server_version.minor,
+                        server_version,
                         result_msg["reply"][1],
                         content_name,
                         default_text_color="gray",
@@ -2106,10 +2105,9 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
                     )
                 _build_components_in_message(res_obj, content_name, result_msg["reply"][-1], "gray")
             if not edit_command:
-                res_obj += _build_nickname_tellraw_for_discord_member(server_version.minor, message.author,
-                                                                      content_name)
+                res_obj += _build_nickname_tellraw_for_discord_member(server_version, message.author, content_name)
             else:
-                res_obj += _build_nickname_tellraw_for_minecraft_player(server_version.minor,
+                res_obj += _build_nickname_tellraw_for_minecraft_player(server_version,
                                                                         before_message.author.name, content_name)
             if on_edit:
                 if before_message is not None:
@@ -2506,7 +2504,7 @@ def _search_mentions_in_message(message: Message, edit_command=False) -> set:
 
 
 def _build_nickname_tellraw_for_minecraft_player(
-        server_version: int,
+        server_version: 'ServerVersion',
         nick: str,
         content_name: str,
         default_text_color: str = None,
@@ -2514,23 +2512,26 @@ def _build_nickname_tellraw_for_minecraft_player(
         right_bracket: str = "> "
 ):
     tellraw_obj = [{"text": left_bracket}]
-    if server_version > 7 and len(nick.split()) == 1 and nick in get_server_players().get("players"):
+    if server_version.minor > 7 and len(nick.split()) == 1 and nick in get_server_players().get("players"):
         tellraw_obj += [{"selector": f"@p[name={nick}]"}]
-    elif server_version > 7:
+    elif server_version.minor > 7:
         if "☠ " in nick and \
                 check_if_string_in_all_translations(translate_text="☠ Obituary ☠", match_text=nick):
             entity = get_translation("Entity")
         else:
             entity = get_translation("Player")
         hover_string = f"{nick}\n" + get_translation("Type: {0}").format(entity) + f"\n{get_offline_uuid(nick)}"
-        tellraw_obj += [{"text": nick,
-                         "clickEvent": {"action": "suggest_command", "value": f"/tell {nick} "},
-                         "hoverEvent": {"action": "show_text", content_name: hover_string}}]
+        tellraw_obj += [{
+            "text": nick,
+            "clickEvent": {"action": "suggest_command", "value": f"/tell {nick} "},
+            "hoverEvent": {"action": "show_text", content_name: hover_string}
+        }]
     else:
-        tellraw_obj += [{"text": nick,
-                         "clickEvent": {"action": "suggest_command", "value": f"/tell {nick} "},
-                         "hoverEvent": {"action": "show_text",
-                                        content_name: f"{nick}\n{get_offline_uuid(nick)}"}}]
+        tellraw_obj += [{
+            "text": nick,
+            "clickEvent": {"action": "suggest_command", "value": f"/tell {nick} "},
+            "hoverEvent": {"action": "show_text", content_name: f"{nick}\n{get_offline_uuid(nick)}"}
+        }]
     tellraw_obj += [{"text": right_bracket}]
     if default_text_color is not None:
         for i in range(len(tellraw_obj)):
@@ -2539,7 +2540,7 @@ def _build_nickname_tellraw_for_minecraft_player(
 
 
 def _build_nickname_tellraw_for_discord_member(
-        server_version: int,
+        server_version: 'ServerVersion',
         author: Member,
         content_name: str,
         brackets_color: str = None,
@@ -2548,18 +2549,47 @@ def _build_nickname_tellraw_for_discord_member(
 ):
     hover_string = ["", {"text": f"{author.display_name}\n"
                                  f"{author.name}#{author.discriminator}"}]
-    if server_version > 11:
+    if server_version.minor > 11:
         hover_string += [{"text": "\nShift + "}, {"keybind": "key.attack"}]
-    tellraw_obj = [{"text": left_bracket},
-                   {"text": author.display_name, "color": "dark_gray",
-                    "hoverEvent": {"action": "show_text", content_name: hover_string}},
-                   {"text": right_bracket}]
-    if server_version > 7:
+    tellraw_obj = [
+        {"text": left_bracket},
+        {"text": author.display_name,
+         "color": "dark_gray",
+         "hoverEvent": {"action": "show_text", content_name: hover_string}},
+        {"text": right_bracket}
+    ]
+    if server_version.minor > 7:
         tellraw_obj[-2].update({"insertion": f"@{author.display_name}"})
     if brackets_color is not None:
         for i in range(len(tellraw_obj)):
             if len(tellraw_obj[i].keys()) == 1:
                 tellraw_obj[i]["color"] = brackets_color
+    return tellraw_obj
+
+
+def build_nickname_tellraw_for_bot(
+        server_version: 'ServerVersion',
+        nick: str,
+        left_bracket: str = "<",
+        right_bracket: str = "> "
+) -> List[Dict[str, str]]:
+    content_name = "contents" if server_version.minor >= 16 else "value"
+    tellraw_obj = [{"text": left_bracket}]
+    if server_version.minor > 7:
+        hover_string = f"{nick}\n" + get_translation("Type: {0}").format(get_translation("Entity")) + \
+                       f"\n{get_offline_uuid(nick)}"
+        tellraw_obj += [{
+            "text": nick,
+            "color": "dark_gray",
+            "hoverEvent": {"action": "show_text", content_name: hover_string}
+        }]
+    else:
+        tellraw_obj += [{
+            "text": nick,
+            "color": "dark_gray",
+            "hoverEvent": {"action": "show_text", content_name: f"{nick}\n{get_offline_uuid(nick)}"}
+        }]
+    tellraw_obj += [{"text": right_bracket}]
     return tellraw_obj
 
 

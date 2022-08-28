@@ -23,7 +23,7 @@ from components.additional_funcs import (
     get_server_version, DISCORD_SYMBOLS_IN_MESSAGE_LIMIT, get_number_of_digits, bot_associate, bot_associate_info,
     get_time_string, bot_shutdown_info, bot_forceload_info, get_member_name, handle_rcon_error, IPv4Address,
     check_and_delete_from_whitelist_json, handle_unhandled_error_in_task, check_if_string_in_all_translations,
-    handle_unhandled_error_in_events
+    handle_unhandled_error_in_events, build_nickname_tellraw_for_bot
 )
 from components.localization import get_translation
 from config.init_config import BotVars, Config, ServerProperties
@@ -144,8 +144,9 @@ class MinecraftCommands(commands.Cog):
                     if server_version.minor < 7:
                         cl_r.say(bot_message)
                     else:
-                        cl_r.tellraw("@a", ["", {"text": "<"}, {"text": bot_display_name, "color": "dark_gray"},
-                                            {"text": "> " + bot_message}])
+                        bot_tellraw = build_nickname_tellraw_for_bot(server_version, bot_display_name)
+                        bot_tellraw[-1]["text"] += bot_message
+                        cl_r.tellraw("@a", bot_tellraw)
                     cl_r.mkop(minecraft_nick)
                 Config.decrease_number_to_op_for_player(minecraft_nick)
                 Config.save_server_config()
@@ -190,8 +191,9 @@ class MinecraftCommands(commands.Cog):
                             if server_version.minor < 7:
                                 cl_r.say(bot_message)
                             else:
-                                cl_r.tellraw("@a", ["", {"text": "<"}, {"text": bot_display_name, "color": "dark_gray"},
-                                                    {"text": "> " + bot_message}])
+                                bot_tellraw = build_nickname_tellraw_for_bot(server_version, bot_display_name)
+                                bot_tellraw[-1]["text"] += bot_message
+                                cl_r.tellraw("@a", bot_tellraw)
                             for player in to_delete_ops:
                                 cl_r.deop(player)
                             if server_version.minor < 4:
