@@ -1558,7 +1558,8 @@ def parse_params_for_help(command_params: dict, string_to_add: str, create_param
                       and type(None) in arg_data.annotation.__args__
         if arg_data.default != inspect._empty or arg_data.kind == arg_data.VAR_POSITIONAL or is_optional:
             add_data = ""
-            if bool(arg_data.default) and arg_data.kind != arg_data.VAR_POSITIONAL and not is_optional:
+            if arg_data.default != inspect._empty and bool(arg_data.default) \
+                    and arg_data.kind != arg_data.VAR_POSITIONAL:
                 add_data = f"'{arg_data.default}'" if isinstance(arg_data.default, str) else str(arg_data.default)
             string_to_add += f" [{arg_name}" + (f" = {add_data}" if add_data else "") + \
                              ("..." if arg_data.kind == arg_data.VAR_POSITIONAL or converter else "") + "]"
