@@ -7,7 +7,7 @@ from pathlib import Path
 from random import randint
 from re import search
 from sys import argv
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from discord import Embed, Color as d_Color, DMChannel, Member, RawReactionActionEvent
 from discord.ext import commands, tasks
@@ -278,17 +278,8 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def o_info(self, ctx: commands.Context, for_who: str, show: str):
-        """
-        Get info about ops
-        :param for_who: "me" or "everyone"
-        :param show: "seen" or "all"
-        """
-        if for_who not in ["me", "everyone"] or show not in ["seen", "all"]:
-            await ctx.send(get_translation("Syntax:") +
-                           f" `{Config.get_settings().bot_settings.prefix}op info <'me', 'everyone'> <'seen', 'all'>`")
-            raise commands.UserInputError()
-
+    async def o_info(self, ctx: commands.Context, for_who: Literal['me', 'everyone'], show: Literal['seen', 'all']):
+        """Get info about ops"""
         message = await bot_associate_info(ctx, for_me=for_who == "me", show=show)
         await ctx.send(message)
 
@@ -323,12 +314,8 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
-    async def associate(self, ctx: commands.Context, for_who: str):
+    async def associate(self, ctx: commands.Context, for_who: Literal['me', 'everyone']):
         """Associates discord user with nick in Minecraft"""
-        if for_who not in ["me", "everyone"]:
-            await ctx.send(get_translation("Syntax:") +
-                           f" `{Config.get_settings().bot_settings.prefix}associate <'me', 'everyone'>`")
-            raise commands.UserInputError()
         message = await bot_associate_info(ctx, for_me=for_who == "me")
         await ctx.send(message)
 

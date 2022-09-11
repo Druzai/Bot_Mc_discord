@@ -15,6 +15,7 @@ All important changes to this project will be documented in this file.
 #### Fixed:
 
 * Fixed and improved translations and bot responses
+* Improved parsing such types as `Union` and `Literal` in `help` command
 
 #### Breaking changes:
 

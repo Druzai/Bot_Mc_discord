@@ -1525,13 +1525,11 @@ def bot_forceload_info():
 
 def get_param_type(arg_data):
     if arg_data.annotation != inspect._empty:
-        is_union = hasattr(arg_data.annotation, '__origin__') and arg_data.annotation.__origin__._name == "Union"
-        if is_union and len(arg_data.annotation.__args__) == 2 and type(None) in arg_data.annotation.__args__:
-            if arg_data.default != inspect._empty:
-                param_type = type(arg_data.default).__name__
-            else:
-                param_type = [a for a in arg_data.annotation.__args__ if a != type(None)][0].__name__
-        elif not is_union and getattr(arg_data.annotation, '__name__', None) is not None:
+        if hasattr(arg_data.annotation, '__origin__') and arg_data.annotation.__origin__._name == "Union":
+            param_type = " | ".join([a.__name__ for a in arg_data.annotation.__args__ if a != type(None)])
+        elif hasattr(arg_data.annotation, '__origin__') and arg_data.annotation.__origin__._name == "Literal":
+            param_type = " | ".join([str(a) for a in arg_data.annotation.__args__])
+        elif getattr(arg_data.annotation, '__name__', None) is not None:
             param_type = getattr(arg_data.annotation, '__name__', None)
         elif hasattr(arg_data.annotation, 'converter'):
             param_type = sub(r"\w*?\.", "", str(arg_data.annotation.converter))
@@ -1555,11 +1553,13 @@ def parse_params_for_help(command_params: dict, string_to_add: str, create_param
             converter = True
         if create_params_dict:
             params[arg_name] = get_param_type(arg_data)
-        if arg_data.default != inspect._empty or arg_data.kind == arg_data.VAR_POSITIONAL:
+        is_optional = hasattr(arg_data.annotation, '__origin__') \
+                      and arg_data.annotation.__origin__._name == "Union" \
+                      and type(None) in arg_data.annotation.__args__
+        if arg_data.default != inspect._empty or arg_data.kind == arg_data.VAR_POSITIONAL or is_optional:
             add_data = ""
-            if bool(arg_data.default) and arg_data.kind != arg_data.VAR_POSITIONAL:
-                add_data = f"'{arg_data.default}'" if isinstance(arg_data.default, str) else str(
-                    arg_data.default)
+            if bool(arg_data.default) and arg_data.kind != arg_data.VAR_POSITIONAL and not is_optional:
+                add_data = f"'{arg_data.default}'" if isinstance(arg_data.default, str) else str(arg_data.default)
             string_to_add += f" [{arg_name}" + (f" = {add_data}" if add_data else "") + \
                              ("..." if arg_data.kind == arg_data.VAR_POSITIONAL or converter else "") + "]"
         else:
