@@ -6,8 +6,8 @@ All important changes to this project will be documented in this file.
 
 #### Improvements:
 
-* Updated discord.py from `1.7.3` to `2.0.0`
-* Updated cryptography and requests
+* Updated discord.py from `1.7.3` to `2.0.1`
+* Updated other dependencies
 * Added `tinyURL` as another link shortening service
 * Added support for attachments in webhooks
 * Bot can write and reply in threads

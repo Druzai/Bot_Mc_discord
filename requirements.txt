@@ -1,10 +1,10 @@
-cryptography==37.0.4
-discord.py==2.0.0
+cryptography==38.0.1
+discord.py==2.0.1
 mcipc==1.5.4
-psutil==5.9.1
+psutil==5.9.2
 feedparser==6.0.10
 jsons==1.6.3
-omegaconf==2.2.2
+omegaconf==2.2.3
 colorama==0.4.5
 requests==2.28.1
 sshkeyboard==2.3.1
