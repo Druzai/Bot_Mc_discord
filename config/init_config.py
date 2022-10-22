@@ -17,6 +17,7 @@ from string import ascii_letters, digits
 from struct import unpack
 from typing import List, Optional, TYPE_CHECKING, Set, Union, Dict
 
+from colorama import Style
 from cryptography.fernet import InvalidToken
 from discord import SyncWebhook, Member
 from discord.ext.commands import Bot
@@ -28,8 +29,8 @@ from components.localization import get_translation, get_locales, set_locale
 from config.crypt_wrapper import encrypt_string, decrypt_string
 
 if TYPE_CHECKING:
-    from components.watcher_handle import Watcher
     from components.additional_funcs import ServerVersion, IPv4Address
+    from components.watcher_handle import Watcher
 
 
 class BotVars:
@@ -44,12 +45,12 @@ class BotVars:
     is_restoring: bool = False
     is_auto_backup_disable: bool = False
     op_deop_list: List = []  # List of nicks of players to op and then to deop
-    auto_shutdown_start_date: datetime = None
+    auto_shutdown_start_date: Optional[datetime] = None
     players_login_dict: dict = {}  # Dict of logged nicks and datetime of their login
     java_processes: List[Process] = []
-    watcher_of_log_file: 'Watcher' = None
-    webhook_chat: SyncWebhook = None
-    webhook_rss: SyncWebhook = None
+    watcher_of_log_file: Optional['Watcher'] = None
+    webhook_chat: Optional[SyncWebhook] = None
+    webhook_rss: Optional[SyncWebhook] = None
     bot_for_webhooks: Bot = None
 
     @classmethod
@@ -68,14 +69,11 @@ class BotVars:
 
 
 CODE_LETTERS = "WERTYUPASFGHKZXCVBNM23456789$%&+="
-BOLD = "\033[1m"
-END = "\033[0m"
 
 
 @dataclass
 class Cross_platform_chat:
     enable_cross_platform_chat: Optional[bool] = None
-    channel_id: Optional[int] = None
     webhook_url: Optional[str] = None
     avatar_url_for_death_messages: Optional[str] = None
     max_words_in_mention: Optional[int] = None
@@ -862,7 +860,7 @@ class Config:
         cls.get_server_config().rcon_password = server_properties.rcon_password
 
     @classmethod
-    def get_list_of_ops(cls, version: 'ServerVersion'):
+    def get_list_of_ops(cls, version: 'ServerVersion') -> List[str]:
         ops_list = []
         if version.minor < 7 or (version.minor == 7 and version.patch < 6):
             filepath = Path(cls.get_selected_server_from_list().working_directory + "/ops.txt")
@@ -951,8 +949,11 @@ class Config:
         while True:
             answer = str(input(message)).strip()
             if answer != "":
-                if match_str is not None and answer.lower() != match_str:
-                    return False
+                if match_str is not None:
+                    if match_str.lower() == "y" and answer.lower() not in ["y", "n"]:
+                        continue
+                    elif answer.lower() != match_str:
+                        return False
                 if try_link:
                     if search(r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|%[0-9a-fA-F][0-9a-fA-F])+", answer):
                         return answer
@@ -1369,23 +1370,31 @@ class Config:
         existing_files = []
         if sys.platform == "linux" or sys.platform == "linux2":
             file_extensions.append(".sh")
-            print(get_translation("Bot detected your operating system is Linux.\n"
-                                  "Bot will search for '*.sh' file.\n"
-                                  "You need to enter file name {0}without{1} file extension!").format(BOLD, END))
+            print(get_translation(
+                "Bot detected your operating system is Linux.\n"
+                "Bot will search for '*.sh' file.\n"
+                "You need to enter file name {0}without{1} file extension!"
+            ).format(Style.BRIGHT, Style.RESET_ALL))
         elif sys.platform == "win32":
             file_extensions.extend([".bat", ".cmd", ".lnk", ".bat.lnk", ".cmd.lnk"])
-            print(get_translation("Bot detected your operating system is Windows.\n"
-                                  "Bot will search for '*.bat' file, '*.cmd' file or shortcut.\n"
-                                  "You need to enter file name {0}without{1} file extension!").format(BOLD, END))
+            print(get_translation(
+                "Bot detected your operating system is Windows.\n"
+                "Bot will search for '*.bat' file, '*.cmd' file or shortcut.\n"
+                "You need to enter file name {0}without{1} file extension!"
+            ).format(Style.BRIGHT, Style.RESET_ALL))
         elif sys.platform == "darwin":
             file_extensions.extend([".command", ".sh"])
-            print(get_translation("Bot detected your operating system is macOS.\n"
-                                  "Bot will search for '*.command' or '*.sh' file.\n"
-                                  "You need to enter file name {0}without{1} file extension!").format(BOLD, END))
+            print(get_translation(
+                "Bot detected your operating system is macOS.\n"
+                "Bot will search for '*.command' or '*.sh' file.\n"
+                "You need to enter file name {0}without{1} file extension!"
+            ).format(Style.BRIGHT, Style.RESET_ALL))
         else:
             file_extensions.append(None)
-            print(get_translation("Bot couldn't detect your operating system.\n"
-                                  "You need to enter file name {0}with{1} file extension!").format(BOLD, END))
+            print(get_translation(
+                "Bot couldn't detect your operating system.\n"
+                "You need to enter file name {0}with{1} file extension!"
+            ).format(Style.BRIGHT, Style.RESET_ALL))
         while True:
             start_file_name = cls._ask_for_data(get_translation("Enter server start file name") + "\n> ")
             is_link_file = False
@@ -1474,37 +1483,35 @@ class Config:
             cls._need_to_rewrite = True
             if cls._ask_for_data(get_translation("Would you like to enable cross-platform chat?") + " Y/n\n> ", "y"):
                 cls.get_cross_platform_chat_settings().enable_cross_platform_chat = True
-
-                if cls.get_cross_platform_chat_settings().channel_id is None:
-                    if cls._ask_for_data(
-                            get_translation("Channel id not found. Would you like to enter it?") + " Y/n\n> ",
-                            "y"):
-                        cls.get_cross_platform_chat_settings().channel_id = \
-                            cls._ask_for_data(get_translation("Enter channel id") + "\n> ",
-                                              try_int=True, int_high_or_equal_than=1)
-                    else:
-                        print(get_translation("Cross-platform chat wouldn't work. "
-                                              "To make it work type '{0}chat <id>' to create link.")
-                              .format(cls._settings_instance.bot_settings.prefix))
+                print(get_translation("Cross-platform chat enabled") + ".")
 
                 if cls.get_cross_platform_chat_settings().webhook_url is None:
-                    if cls._ask_for_data(get_translation("Webhook url for cross-platform chat not found. "
+                    if cls._ask_for_data(get_translation("Webhook URL for cross-platform chat not found. "
                                                          "Would you like to enter it?") + " Y/n\n> ", "y"):
                         cls.get_cross_platform_chat_settings().webhook_url = \
-                            cls._ask_for_data(get_translation("Enter webhook url") + "\n> ", try_link=True)
+                            cls._ask_for_data(get_translation("Enter webhook URL for cross-platform chat") + "\n> ",
+                                              try_link=True)
                     else:
                         print(get_translation(
-                            "Cross-platform chat wouldn't work. Create webhook and enter it to bot config!"))
+                            "Bot will fetch disowned webhook or create a new one! "
+                            "You can change it via '{0}{1} webhook'."
+                        ).format(Config.get_settings().bot_settings.prefix, "chat"))
                 if cls.get_cross_platform_chat_settings().avatar_url_for_death_messages is None:
-                    if cls._ask_for_data(get_translation("Avatar url for death messages chat not found. "
+                    if cls._ask_for_data(get_translation("Avatar URL for death messages chat not found. "
                                                          "Would you like to enter it?") + " Y/n\n> ", "y"):
                         cls.get_cross_platform_chat_settings().avatar_url_for_death_messages = \
-                            cls._ask_for_data(get_translation("Enter url for avatar image") + "\n> ", try_link=True)
+                            cls._ask_for_data(get_translation("Enter URL for avatar image") + "\n> ", try_link=True)
                     else:
-                        print(get_translation("Avatar url for death messages would be taken from bot's avatar."))
+                        print(get_translation("Avatar URL for death messages would be taken from bot's avatar."))
             else:
                 cls.get_cross_platform_chat_settings().enable_cross_platform_chat = False
-                print(get_translation("Cross-platform chat wouldn't work."))
+                print(get_translation("Cross-platform chat disabled") + ".")
+        else:
+            if cls.get_cross_platform_chat_settings().enable_cross_platform_chat:
+                print(get_translation("Cross-platform chat enabled") + ".")
+            else:
+                print(get_translation("Cross-platform chat disabled") + ".")
+
         if cls.get_cross_platform_chat_settings().max_words_in_mention is None or \
                 cls.get_cross_platform_chat_settings().max_words_in_mention < 1 or \
                 cls.get_cross_platform_chat_settings().max_words_in_mention > 20:
@@ -1524,11 +1531,6 @@ class Config:
                                     "bot can remove to find similar mention in Discord"
                                     " (0 - don't try to find similar ones) (default - 5, int)") + "\n> ",
                     try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=20)
-
-        if cls.get_cross_platform_chat_settings().enable_cross_platform_chat:
-            print(get_translation("Cross-platform chat enabled."))
-        else:
-            print(get_translation("Cross-platform chat disabled."))
 
         if cls.get_secure_auth().enable_secure_auth is None:
             cls._need_to_rewrite = True
@@ -1582,42 +1584,47 @@ class Config:
     def _setup_rss_feed(cls):
         if cls.get_rss_feed_settings().enable_rss_feed is None:
             cls._need_to_rewrite = True
-            if cls._ask_for_data(get_translation("Would you like to enable RSS feed?") + " Y/n\n> ", "y"):
+            if cls._ask_for_data(get_translation("Would you like to enable RSS?") + " Y/n\n> ", "y"):
                 cls.get_rss_feed_settings().enable_rss_feed = True
+                print(get_translation("RSS enabled") + ".")
 
                 if cls.get_rss_feed_settings().webhook_url is None:
-                    if cls._ask_for_data(get_translation("Webhook RSS url not found. Would you like to enter it?") +
+                    if cls._ask_for_data(get_translation("Webhook URL for RSS not found. Would you like to enter it?") +
                                          " Y/n\n> ", "y"):
                         cls.get_rss_feed_settings().webhook_url = \
-                            cls._ask_for_data(get_translation("Enter webhook RSS url") + "\n> ", try_link=True)
+                            cls._ask_for_data(get_translation("Enter webhook URL for RSS") + "\n> ", try_link=True)
                     else:
-                        print(get_translation("RSS wouldn't work. Create webhook and enter it to bot config!"))
+                        print(get_translation(
+                            "Bot will fetch disowned webhook or create a new one! "
+                            "You can change it via '{0}{1} webhook'."
+                        ).format(Config.get_settings().bot_settings.prefix, "rss"))
 
                 if cls.get_rss_feed_settings().rss_url is None:
                     if cls._ask_for_data(
-                            get_translation("RSS url not found. Would you like to enter it?") + " Y/n\n> ", "y"):
+                            get_translation("URL of RSS feed not found. Would you like to enter it?") + " Y/n\n> ",
+                            "y"):
                         cls.get_rss_feed_settings().rss_url = \
-                            cls._ask_for_data(get_translation("Enter RSS url") + "\n> ", try_link=True)
+                            cls._ask_for_data(get_translation("Enter URL of RSS feed") + "\n> ", try_link=True)
                     else:
-                        print(get_translation("RSS wouldn't work. Enter url of RSS feed to bot config!"))
+                        print(get_translation("RSS wouldn't work. Enter URL of RSS feed to bot config!"))
 
                 if cls.get_rss_feed_settings().rss_download_delay < 1 or \
                         cls.get_rss_feed_settings().rss_download_delay > 1440:
-                    print(get_translation("RSS download delay doesn't set."))
+                    print(get_translation("Scan interval for RSS feed not set") + ".")
                     cls.get_rss_feed_settings().rss_download_delay = \
-                        cls._ask_for_data(get_translation("Enter RSS download delay (in seconds, int)") + "\n> ",
-                                          try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=1440)
+                        cls._ask_for_data(get_translation("Enter scan interval for RSS feed (in seconds, int)") +
+                                          "\n> ", try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=1440)
 
                 cls.get_rss_feed_settings().rss_last_date = \
                     datetime.now().replace(microsecond=0).isoformat()
             else:
                 cls.get_rss_feed_settings().enable_rss_feed = False
-                print(get_translation("RSS feed wouldn't work."))
+                print(get_translation("RSS disabled") + ".")
         else:
             if cls.get_rss_feed_settings().enable_rss_feed:
-                print(get_translation("RSS feed enabled."))
+                print(get_translation("RSS enabled") + ".")
             else:
-                print(get_translation("RSS feed disabled."))
+                print(get_translation("RSS disabled") + ".")
 
     @classmethod
     def _setup_backups(cls):

@@ -7,7 +7,7 @@ from pathlib import Path
 from random import randint
 from re import search
 from sys import argv
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, Optional
 
 from discord import Embed, Color as d_Color, DMChannel, Member, RawReactionActionEvent
 from discord.ext import commands, tasks
@@ -21,11 +21,12 @@ from components.additional_funcs import (
     get_folder_size, send_message_of_deleted_backup, handle_backups_limit_and_size, bot_backup, delete_after_by_msg,
     get_half_members_count_with_role, warn_about_auto_backups, get_archive_uncompressed_size, get_bot_display_name,
     get_server_version, DISCORD_SYMBOLS_IN_MESSAGE_LIMIT, get_number_of_digits, bot_associate, bot_associate_info,
-    get_time_string, bot_shutdown_info, bot_forceload_info, get_member_name, handle_rcon_error, IPv4Address,
+    get_time_string, bot_shutdown_info, bot_forceload_info, get_member_string, handle_rcon_error, IPv4Address,
     check_and_delete_from_whitelist_json, handle_unhandled_error_in_task, check_if_string_in_all_translations,
     handle_unhandled_error_in_events, build_nickname_tellraw_for_bot
 )
 from components.localization import get_translation
+from components.watcher_handle import create_watcher
 from config.init_config import BotVars, Config, ServerProperties
 
 if TYPE_CHECKING:
@@ -38,7 +39,9 @@ class MinecraftCommands(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self._bot: commands.Bot = bot
-        self._IndPoll: 'Poll' = bot.get_cog("Poll")
+        self._IndPoll: Optional['Poll'] = bot.get_cog("Poll")
+        if self._IndPoll is None:
+            raise RuntimeError("Cog 'Poll' not found!")
         self._backups_thread = BackupsThread(self._bot)
         if len(argv) == 1:
             self._backups_thread.start()
@@ -65,8 +68,10 @@ class MinecraftCommands(commands.Cog):
         await bot_start(ctx, self._bot, self._backups_thread)
 
     @commands.command(pass_context=True, ignore_extra=False)
-    @commands.bot_has_permissions(manage_messages=True, send_messages=True, mention_everyone=True, add_reactions=True,
-                                  embed_links=True, view_channel=True)
+    @commands.bot_has_permissions(
+        manage_messages=True, send_messages=True, mention_everyone=True, add_reactions=True, embed_links=True,
+        view_channel=True
+    )
     @commands.guild_only()
     @decorators.has_role_or_default()
     async def stop(self, ctx: commands.Context, timeout: int = 0):
@@ -74,8 +79,10 @@ class MinecraftCommands(commands.Cog):
         await bot_stop(ctx, timeout, self._bot, self._IndPoll)
 
     @commands.command(pass_context=True, ignore_extra=False)
-    @commands.bot_has_permissions(manage_messages=True, send_messages=True, mention_everyone=True, add_reactions=True,
-                                  embed_links=True, view_channel=True)
+    @commands.bot_has_permissions(
+        manage_messages=True, send_messages=True, mention_everyone=True, add_reactions=True, embed_links=True,
+        view_channel=True
+    )
     @commands.guild_only()
     @decorators.has_role_or_default()
     async def restart(self, ctx: commands.Context, timeout: int = 0):
@@ -253,7 +260,7 @@ class MinecraftCommands(commands.Cog):
                                                                            match_text=lg.split("||")[1].strip())]
         for line in range(len(log)):
             arr = log[line].split("||")
-            for format_line in ["%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M:%S"]:
+            for format_line in ["%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M:%S"]:  # Date compatibility
                 with suppress(ValueError):
                     date = datetime.strptime(arr[0].strip(), format_line).strftime(get_translation("%H:%M %d/%m/%Y"))
                     break
@@ -319,7 +326,7 @@ class MinecraftCommands(commands.Cog):
         message = await bot_associate_info(ctx, for_me=for_who == "me")
         await ctx.send(message)
 
-    @associate.command(pass_context=True, name="add", ignore_extra=False)
+    @associate.command(pass_context=True, name="add")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_admin_role()
@@ -359,20 +366,25 @@ class MinecraftCommands(commands.Cog):
 
     @authorize.command(pass_context=True, name="on")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @commands.guild_only()
     @decorators.has_admin_role()
+    @commands.guild_only()
     async def a_on(self, ctx: commands.Context):
         Config.get_secure_auth().enable_secure_auth = True
         Config.save_config()
+        if BotVars.watcher_of_log_file is None:
+            BotVars.watcher_of_log_file = create_watcher(BotVars.watcher_of_log_file, get_server_version())
+        BotVars.watcher_of_log_file.start()
         await ctx.send(add_quotes(get_translation("Secure authorization on")))
 
     @authorize.command(pass_context=True, name="off")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @commands.guild_only()
     @decorators.has_admin_role()
+    @commands.guild_only()
     async def a_off(self, ctx: commands.Context):
         Config.get_secure_auth().enable_secure_auth = False
         Config.save_config()
+        if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
+            BotVars.watcher_of_log_file.stop()
         await ctx.send(add_quotes(get_translation("Secure authorization off")))
 
     @authorize.command(pass_context=True, name="login", ignore_extra=False)
@@ -1027,8 +1039,8 @@ class MinecraftCommands(commands.Cog):
                     return
 
                 if await self._IndPoll.timer(ctx, 5, "backup_del"):
-                    member = await get_member_name(self._bot,
-                                                   Config.get_server_config().backups[backup_number - 1].initiator)
+                    member = await get_member_string(self._bot,
+                                                     Config.get_server_config().backups[backup_number - 1].initiator)
                     if not await self._IndPoll.run(
                             channel=ctx.channel,
                             message=get_translation(
@@ -1054,7 +1066,7 @@ class MinecraftCommands(commands.Cog):
             remove(Path(Config.get_selected_server_from_list().working_directory,
                         Config.get_backups_settings().name_of_the_backups_folder, f"{backup.file_name}.zip"))
             send_message_of_deleted_backup(self._bot, f"{ctx.author.display_name}#{ctx.author.discriminator}", backup,
-                                           member_name=await get_member_name(self._bot, backup.initiator))
+                                           member_name=await get_member_string(self._bot, backup.initiator))
             Config.get_server_config().backups.remove(backup)
             Config.save_server_config()
             await ctx.send(add_quotes(get_translation("Deleted backup {0}.zip of '{1}' server")
@@ -1135,7 +1147,7 @@ class MinecraftCommands(commands.Cog):
                     message += f"\n\t{additional_space}" + get_translation("Reason: ") + \
                                (backup.reason if backup.reason else get_translation("Not stated"))
                     message += f"\n\t{additional_space}" + get_translation("Initiator: ") + \
-                               await get_member_name(self._bot, backup.initiator)
+                               await get_member_string(self._bot, backup.initiator)
                 message += "\n"
                 if backup.restored_from:
                     message += "\t" + \
@@ -1147,14 +1159,14 @@ class MinecraftCommands(commands.Cog):
                                       .format(Config.get_selected_server_from_list().server_name)))
 
     @commands.command(pass_context=True)
-    @commands.bot_has_permissions(manage_messages=True, send_messages=True,
-                                  embed_links=True, add_reactions=True, view_channel=True)
+    @commands.bot_has_permissions(
+        manage_messages=True, send_messages=True, embed_links=True, add_reactions=True, view_channel=True
+    )
     @commands.guild_only()
     @decorators.has_role_or_default()
     async def menu(self, ctx: commands.Context):
         await delete_after_by_msg(ctx.message, without_delay=True)
-        emb = Embed(title=get_translation("List of commands via reactions"),
-                    color=d_Color.teal())
+        emb = Embed(title=get_translation("List of commands via reactions"), color=d_Color.teal())
         for key, value in self._emoji_symbols.items():
             emb.add_field(name=key, value=value)
         add_reactions_to = await ctx.send(embed=emb)

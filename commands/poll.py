@@ -177,8 +177,15 @@ class States(Enum):
 
 
 class PollContent:
-    def __init__(self, channel: Messageable, command: str, need_for_voting=2, needed_role: Role = None,
-                 remove_logs_after=0, admin_needed=False):
+    def __init__(
+            self,
+            channel: Messageable,
+            command: str,
+            need_for_voting=2,
+            needed_role: Role = None,
+            remove_logs_after=0,
+            admin_needed=False
+    ):
         self.poll_yes = 0
         self.poll_no = 0
         self.poll_voted_uniq = {}

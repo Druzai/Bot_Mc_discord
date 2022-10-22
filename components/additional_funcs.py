@@ -22,14 +22,15 @@ from traceback import format_exception
 from typing import Tuple, List, Dict, Optional, Union, TYPE_CHECKING, AsyncIterator
 from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 
+from aiohttp import ClientSession
 from colorama import Style, Fore
 from discord import (
     Activity, ActivityType, Message, Status, Member, Role, MessageType, NotFound, HTTPException, Forbidden, Emoji,
-    ChannelType, TextChannel, VoiceChannel, Thread as ChannelThread, GroupChannel
+    ChannelType, TextChannel, VoiceChannel, Thread as ChannelThread, GroupChannel, Webhook, InvalidData
 )
 from discord.abc import Messageable
 from discord.ext import commands
-from discord.utils import get as utils_get
+from discord.utils import get as utils_get, _get_mime_type_for_image
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r, WrongPassword
 from psutil import process_iter, NoSuchProcess, disk_usage, Process, AccessDenied
@@ -37,8 +38,8 @@ from requests import post as req_post, get as req_get
 
 from components.decorators import MissingAdminPermissions
 from components.localization import get_translation, get_locales, get_current_locale, set_locale
-from components.rss_feed_handle import create_feed_webhook
-from components.watcher_handle import create_watcher, create_chat_webhook
+from components.rss_feed_handle import get_feed_webhook
+from components.watcher_handle import create_watcher, get_chat_webhook
 from config.init_config import Config, BotVars, ServerProperties
 
 if TYPE_CHECKING:
@@ -279,9 +280,8 @@ async def start_server(
             with connect_query() as cl_q:
                 _ = cl_q.basic_stats
             break
-    if (Config.get_cross_platform_chat_settings().enable_cross_platform_chat and
-        Config.get_cross_platform_chat_settings().channel_id and
-        Config.get_cross_platform_chat_settings().webhook_url) or Config.get_secure_auth().enable_secure_auth:
+    if Config.get_cross_platform_chat_settings().enable_cross_platform_chat or \
+            Config.get_secure_auth().enable_secure_auth:
         BotVars.watcher_of_log_file = create_watcher(BotVars.watcher_of_log_file, get_server_version())
         BotVars.watcher_of_log_file.start()
     if Config.get_selected_server_from_list().server_loading_time:
@@ -485,21 +485,55 @@ def get_bot_display_name(bot: commands.Bot):
     return bot.user.display_name
 
 
-async def get_member_name(bot: commands.Bot, id: int):
-    member = bot.guilds[0].get_member(id)
-    if member is not None:
-        member = f"{member.display_name}#{member.discriminator}"
-    else:
-        try:
+async def get_member_string(bot: commands.Bot, id: int, mention: bool = False):
+    try:
+        member = bot.guilds[0].get_member(id)
+        if member is None:
             member = await bot.guilds[0].fetch_member(id)
+        if not mention:
             member = f"{member.display_name}#{member.discriminator}"
-        except (HTTPException, Forbidden):
-            try:
-                user = await bot.fetch_user(id)
+        else:
+            member = member.mention
+    except (HTTPException, Forbidden, NotFound):
+        try:
+            user = await bot.fetch_user(id)
+            if not mention:
                 member = f"{user.name}#{user.discriminator}"
-            except (HTTPException, NotFound):
-                member = "invalid-user"
+            else:
+                member = user.mention
+        except (HTTPException, NotFound):
+            member = f"{'@' if mention else ''}invalid-user"
     return member
+
+
+async def get_channel_string(bot: commands.Bot, id: int, mention: bool = False):
+    try:
+        channel = bot.get_channel(id)
+        if channel is None:
+            channel = await bot.fetch_channel(id)
+        if not mention:
+            channel = channel.name
+        else:
+            channel = channel.mention
+    except (InvalidData, HTTPException, NotFound, Forbidden):
+        channel = f"{'#' if mention else ''}deleted-channel"
+    return channel
+
+
+async def get_role_string(bot: commands.Bot, id: int, mention: bool = False):
+    try:
+        role = bot.guilds[0].get_role(id)
+        if role is None:
+            role = utils_get(await bot.guilds[0].fetch_roles(), id=id)
+            if role is None:
+                raise ValueError()
+        if not mention:
+            role = role.name
+        else:
+            role = role.mention
+    except (HTTPException, ValueError):
+        role = f"{'@' if mention else ''}deleted-role"
+    return role
 
 
 class BackupsThread(Thread):
@@ -589,11 +623,16 @@ class BackupsThread(Thread):
         sleep(max(timeout, 0.5))
 
 
-def create_zip_archive(bot: commands.Bot, zip_name: str, zip_path: str, dir_path: str, compression: str,
-                       forced=False, user: Member = None):
-    """
-    recursively .zip a directory
-    """
+def create_zip_archive(
+        bot: commands.Bot,
+        zip_name: str,
+        zip_path: str,
+        dir_path: str,
+        compression: str,
+        forced=False,
+        user: Member = None
+):
+    """recursively .zip a directory"""
     BotVars.is_backing_up = True
     if compression == "STORED":
         comp = ZIP_STORED
@@ -941,19 +980,17 @@ async def server_checkups(bot: commands.Bot, backups_thread: BackupsThread, poll
                 BotVars.is_auto_backup_disable = False
         if not BotVars.is_server_on:
             BotVars.is_server_on = True
-        if (BotVars.watcher_of_log_file is None or not BotVars.watcher_of_log_file.is_running()) and \
-                ((Config.get_cross_platform_chat_settings().enable_cross_platform_chat and
-                  Config.get_cross_platform_chat_settings().channel_id and
-                  Config.get_cross_platform_chat_settings().webhook_url) or
-                 Config.get_secure_auth().enable_secure_auth):
+        if Config.get_cross_platform_chat_settings().enable_cross_platform_chat or \
+                Config.get_secure_auth().enable_secure_auth:
             if BotVars.watcher_of_log_file is None:
                 BotVars.watcher_of_log_file = create_watcher(BotVars.watcher_of_log_file, get_server_version())
             BotVars.watcher_of_log_file.start()
         if not BotVars.is_loading and not BotVars.is_stopping and not BotVars.is_restarting:
             task = bot.loop.create_task(bot.change_presence(
                 activity=Activity(type=ActivityType.playing,
-                                  name=Config.get_settings().bot_settings.gaming_status
-                                       + ", " + str(info.get("current")) + get_translation(" player(s) online"))))
+                                  name=Config.get_settings().bot_settings.gaming_status +
+                                       ", " + str(info.get("current")) + get_translation(" player(s) online"))
+            ))
             task.add_done_callback(_ignore_some_tasks_errors)
             if Config.get_settings().bot_settings.auto_shutdown:
                 if info.get("current") == 0 and BotVars.auto_shutdown_start_date is None:
@@ -969,14 +1006,13 @@ async def server_checkups(bot: commands.Bot, backups_thread: BackupsThread, poll
                                           "without players! Stopping server now!")
                           .format(get_time_string(Config.get_timeouts_settings().calc_before_shutdown)))
                     await send_msg(ctx=channel,
-                                   msg=add_quotes(get_translation("Bot detected: Server is idle for "
-                                                                  "{0} without players!\n"
-                                                                  "Time: {1}\n"
-                                                                  "Shutting down server now!")
-                                                  .format(get_time_string(Config.get_timeouts_settings()
-                                                                          .calc_before_shutdown),
-                                                          datetime.now()
-                                                          .strftime(get_translation("%H:%M:%S %d/%m/%Y")))),
+                                   msg=add_quotes(get_translation(
+                                       "Bot detected: Server is idle for "
+                                       "{0} without players!\n"
+                                       "Time: {1}\n"
+                                       "Shutting down server now!"
+                                   ).format(get_time_string(Config.get_timeouts_settings().calc_before_shutdown),
+                                            datetime.now().strftime(get_translation("%H:%M:%S %d/%m/%Y")))),
                                    is_reaction=True)
                     await stop_server(ctx=channel, bot=bot, poll=poll, shut_up=True)
     except (ConnectionError, socket.error):
@@ -1002,10 +1038,11 @@ async def server_checkups(bot: commands.Bot, backups_thread: BackupsThread, poll
                 channel = utils_get(bot.guilds[0].channels, type=ChannelType.text)
             print(get_translation("Bot detected: Server's offline! Starting up server again!"))
             await send_msg(ctx=channel,
-                           msg=add_quotes(get_translation("Bot detected: Server's offline!\n"
-                                                          "Time: {0}\n"
-                                                          "Starting up server again!")
-                                          .format(datetime.now().strftime(get_translation("%H:%M:%S %d/%m/%Y")))),
+                           msg=add_quotes(get_translation(
+                               "Bot detected: Server's offline!\n"
+                               "Time: {0}\n"
+                               "Starting up server again!"
+                           ).format(datetime.now().strftime(get_translation("%H:%M:%S %d/%m/%Y")))),
                            is_reaction=True)
             await start_server(ctx=channel, bot=bot, backups_thread=backups_thread, shut_up=True)
     if Config.get_secure_auth().enable_secure_auth:
@@ -1024,7 +1061,7 @@ async def bot_status(
         if not states_info.started_info.bot:
             states += get_translation("Server has been started at {0} by member {1}") \
                           .format(states_info.started_info.date.strftime(get_translation("%H:%M:%S %d/%m/%Y")),
-                                  await get_member_name(bot, states_info.started_info.user)) + "\n"
+                                  await get_member_string(bot, states_info.started_info.user)) + "\n"
         else:
             states += get_translation("Server has started at {0}") \
                           .format(states_info.started_info.date.strftime(get_translation("%H:%M:%S %d/%m/%Y"))) + "\n"
@@ -1032,7 +1069,7 @@ async def bot_status(
         if not states_info.stopped_info.bot:
             states += get_translation("Server has been stopped at {0} by member {1}") \
                           .format(states_info.stopped_info.date.strftime(get_translation("%H:%M:%S %d/%m/%Y")),
-                                  await get_member_name(bot, states_info.stopped_info.user)) + "\n"
+                                  await get_member_string(bot, states_info.stopped_info.user)) + "\n"
         else:
             states += get_translation("Server has stopped at {0}") \
                           .format(states_info.stopped_info.date.strftime(get_translation("%H:%M:%S %d/%m/%Y"))) + "\n"
@@ -1060,14 +1097,14 @@ async def bot_status(
                     time_ticks = int(cl_r.run("time query daytime").split(" ")[-1])
                 message = get_translation("Time in Minecraft: ")
                 if 450 <= time_ticks <= 11616:
-                    message += get_translation("Day, ")
+                    message += get_translation("Day")
                 elif 11617 <= time_ticks <= 13800:
-                    message += get_translation("Sunset, ")
+                    message += get_translation("Sunset")
                 elif 13801 <= time_ticks <= 22550:
-                    message += get_translation("Night, ")
+                    message += get_translation("Night")
                 else:
-                    message += get_translation("Sunrise, ")
-                message += f"{(6 + time_ticks // 1000) % 24}:{((time_ticks % 1000) * 60 // 1000):02d}\n"
+                    message += get_translation("Sunrise")
+                message += f", {(6 + time_ticks // 1000) % 24}:{((time_ticks % 1000) * 60 // 1000):02d}\n"
                 bot_message += message
             server_info_splits = server_info.split("\n", maxsplit=1)
             server_version_str = get_translation("Server version: {0}").format(server_version.version_string)
@@ -1368,7 +1405,7 @@ async def bot_backup(
         else:
             bot_message += "\n" + get_translation("Reason: ") + \
                            (backup.reason if backup.reason else get_translation("Not stated"))
-            bot_message += "\n" + get_translation("Initiator: ") + await get_member_name(bot, backup.initiator)
+            bot_message += "\n" + get_translation("Initiator: ") + await get_member_string(bot, backup.initiator)
         if backup.restored_from:
             bot_message += "\n\t" + get_translation("The world of the server was restored from this backup")
     await send_msg(ctx, add_quotes(bot_message), is_reaction)
@@ -1568,15 +1605,66 @@ def parse_params_for_help(command_params: dict, string_to_add: str, create_param
     return string_to_add, params
 
 
-def create_webhooks():
-    if Config.get_rss_feed_settings().enable_rss_feed:
-        create_feed_webhook()
-    if Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
-        create_chat_webhook()
+def remove_owned_webhooks(webhooks: List[Webhook]):
+    bot_webhooks = [
+        int(search(r"https?://discord\.com/api/webhooks/(?P<id>\d+)?/.*", bot_w).group("id"))
+        for bot_w in [
+            Config.get_rss_feed_settings().webhook_url,
+            Config.get_cross_platform_chat_settings().webhook_url
+        ] if bot_w
+    ]
+    return sorted([w for w in webhooks if w.id not in bot_webhooks], key=lambda w: w.created_at)
+
+
+async def create_webhooks(bot: commands.Bot):
+    channel = bot.guilds[0].get_channel(Config.get_settings().bot_settings.commands_channel_id)
+    if channel is None:
+        channel = utils_get(bot.guilds[0].channels, type=ChannelType.text)
+    webhooks = [w for w in await bot.guilds[0].webhooks() if w.user.id == bot.user.id]
+
+    if Config.get_rss_feed_settings().enable_rss_feed and BotVars.webhook_rss is None:
+        free_webhooks = remove_owned_webhooks(webhooks)
+        try:
+            await get_feed_webhook(channel, free_webhooks)
+        except NotFound:
+            Config.get_rss_feed_settings().webhook_url = None
+            await get_feed_webhook(channel, free_webhooks)
+    if Config.get_cross_platform_chat_settings().enable_cross_platform_chat and BotVars.webhook_chat is None:
+        free_webhooks = remove_owned_webhooks(webhooks)
+        try:
+            await get_chat_webhook(channel, free_webhooks)
+        except NotFound:
+            Config.get_cross_platform_chat_settings().webhook_url = None
+            await get_chat_webhook(channel, free_webhooks)
+
+
+async def get_avatar_info(ctx: commands.Context, url: Optional[str]):
+    avatar_blob = None
+    avatar_url = None
+    if url is not None:
+        avatar_url = url
+        async with ClientSession() as session:
+            async with session.get(url=url) as response:
+                avatar_blob = await response.read()
+                try:
+                    _get_mime_type_for_image(avatar_blob)
+                except ValueError:
+                    avatar_blob = None
+    if avatar_blob is None:
+        for attachment in ctx.message.attachments:
+            avatar_file = await attachment.to_file()
+            avatar_url = attachment.url
+            avatar_blob = avatar_file.fp.read()
+            try:
+                _get_mime_type_for_image(avatar_blob)
+                break
+            except ValueError:
+                avatar_blob = None
+    return avatar_blob, avatar_url
 
 
 def check_if_ips_expired():
-    removed = True
+    removed = False
     remove_empty_nicks = []
     remove_old_ips = {}
     for user in Config.get_auth_users():
@@ -1640,8 +1728,9 @@ async def send_help_of_command(ctx: commands.Context, command: Union[commands.Co
         str_help += " |" + str_params if len(subcommands_names) else str_params
 
     str_help += "\n\n" + get_translation("Description") + ":\n"
-    str_help += get_translation(f'help_{str(command).replace(" ", "_")}') \
-                    .format(prefix=Config.get_settings().bot_settings.prefix) + "\n\n"
+    str_help += get_translation(f'help_{str(command).replace(" ", "_")}').format(
+        prefix=Config.get_settings().bot_settings.prefix
+    ) + "\n\n"
     if len(command.aliases):
         str_help += get_translation("Aliases") + ": " + ", ".join(command.aliases) + "\n\n"
 
@@ -1652,9 +1741,10 @@ async def send_help_of_command(ctx: commands.Context, command: Union[commands.Co
         str_help += get_translation("Parameters") + ":\n"
         for arg_name, arg_type in params.items():
             str_help += f"{arg_name}: {arg_type}\n" + \
-                        get_translation(f'help_{str(command).replace(" ", "_")}_{arg_name}') \
-                            .format(prefix=Config.get_settings().bot_settings.prefix,
-                                    code_length=Config.get_secure_auth().code_length) + "\n\n"
+                        get_translation(f'help_{str(command).replace(" ", "_")}_{arg_name}').format(
+                            prefix=Config.get_settings().bot_settings.prefix,
+                            code_length=Config.get_secure_auth().code_length
+                        ) + "\n\n"
     await ctx.send(add_quotes(f"\n{str_help}"))
 
 
@@ -1775,6 +1865,19 @@ class IPv4Address(commands.Converter):
         raise BadIPv4Address(argument)
 
 
+class BadURLAddress(commands.BadArgument):
+    def __init__(self, url: str):
+        self.argument = url
+        super().__init__(f"\"{url}\" is not a recognised URL address.")
+
+
+class URLAddress(commands.Converter):
+    async def convert(self, ctx: commands.Context, argument: str):
+        if search(r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|%[0-9a-fA-F][0-9a-fA-F])+", argument):
+            return argument
+        raise BadURLAddress(argument)
+
+
 # Handling errors
 async def send_error(
         ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel],
@@ -1841,11 +1944,24 @@ async def send_error(
         await send_msg(ctx, f"{author_mention}\n" +
                        add_quotes(get_translation("Bot couldn't convert bool argument '{0}'!").format(parsed_input)),
                        is_reaction)
+    elif isinstance(error, commands.BadLiteralArgument):
+        print(get_translation("{0} passed bad literal '{1}'").format(author, parsed_input))
+        await send_msg(ctx, f"{author_mention}\n" +
+                       add_quotes(get_translation(
+                           "Bot couldn't find argument '{0}' in any of these values: {1}!"
+                       ).format(parsed_input, str(error.literals).strip("()"))),
+                       is_reaction)
     elif isinstance(error, BadIPv4Address):
         print(get_translation("{0} passed an invalid IPv4 address as argument '{1}'").format(author, parsed_input))
         await send_msg(ctx, f"{author_mention}\n" +
                        add_quotes(get_translation("Bot couldn't convert argument '{0}' "
                                                   "to an IPv4 address!").format(parsed_input)),
+                       is_reaction)
+    elif isinstance(error, BadURLAddress):
+        print(get_translation("{0} passed an invalid URL as argument '{1}'").format(author, parsed_input))
+        await send_msg(ctx, f"{author_mention}\n" +
+                       add_quotes(get_translation("Bot couldn't convert argument '{0}' "
+                                                  "to a URL!").format(parsed_input)),
                        is_reaction)
     elif isinstance(error, (commands.BadArgument, commands.ArgumentParsingError)):
         conv_args = findall(r"Converting to \".+\" failed for parameter \".+\"\.", "".join(error.args))
@@ -1885,11 +2001,7 @@ async def send_error(
                                   .capitalize() + "\n- " + "\n- ".join(missing_perms)), is_reaction)
     elif isinstance(error, commands.MissingRole):
         if isinstance(error.missing_role, int):
-            role = bot.guilds[0].get_role(error.missing_role)
-            if role is None:
-                role = "@deleted-role"
-            else:
-                role = role.name
+            role = await get_role_string(bot, error.missing_role)
         else:
             role = error.missing_role
         print(get_translation("{0} don't have role '{1}' to run command").format(author, role))
@@ -1973,8 +2085,14 @@ def handle_unhandled_error_in_events(func_number: int = 2):
                               .format(func_name(func_number=func_number + 1)))
 
 
-async def handle_message_for_chat(message: Message, bot: commands.Bot,
-                                  on_edit=False, before_message: Message = None, edit_command: bool = False):
+async def handle_message_for_chat(
+        message: Message,
+        bot: commands.Bot,
+        on_edit=False,
+        before_message: Message = None,
+        edit_command_content: str = ""
+):
+    edit_command = len(edit_command_content) != 0
     if message.author.id == bot.user.id or \
             (message.content.startswith(Config.get_settings().bot_settings.prefix) and not edit_command) or \
             str(message.author.discriminator) == "0000" or \
@@ -1983,8 +2101,7 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
 
     author_mention = get_author_and_mention(message, bot, False)[1]
 
-    if not Config.get_cross_platform_chat_settings().channel_id or \
-            not Config.get_cross_platform_chat_settings().webhook_url:
+    if not Config.get_cross_platform_chat_settings().webhook_url or not BotVars.webhook_chat:
         await send_msg(message.channel, f"{author_mention}, " +
                        get_translation("this chat can't work! Cross-platform chat disabled!"), True)
     elif not BotVars.is_server_on:
@@ -2015,7 +2132,7 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
             else:
                 message_length = 1442
             space = u"\U000e0020"
-            result_msg = _clean_message(message, edit_command)
+            result_msg = _clean_message(message, edit_command_content)
             if not edit_command:
                 result_msg, reply_from_minecraft_user = await _handle_reply_in_message(message, result_msg)
             result_msg = await _handle_components_in_message(
@@ -2079,7 +2196,7 @@ async def handle_message_for_chat(message: Message, bot: commands.Bot,
                     cl_r.say(m if m != "" else space)
         else:
             content_name = "contents" if server_version.minor >= 16 else "value"
-            result_msg = _clean_message(message, edit_command)
+            result_msg = _clean_message(message, edit_command_content)
             if not edit_command:
                 result_msg, reply_from_minecraft_user = await _handle_reply_in_message(message, result_msg)
             result_msg = await _handle_components_in_message(result_msg, message, bot)
@@ -2264,11 +2381,12 @@ def _split_tellraw_object(tellraw_obj: Union[list, dict]):
     return res
 
 
-def _clean_message(message: Message, edit_command=False):
+def _clean_message(message: Message, edit_command_content: str = ""):
     result_msg = {}
-    content = message.clean_content.replace("\u200b", "").strip()
-    if edit_command:
-        content = compile(rf"^{Config.get_settings().bot_settings.prefix}edit\s").sub("", content, count=1)
+    if len(edit_command_content) == 0:
+        content = message.clean_content.replace("\u200b", "").strip()
+    else:
+        content = edit_command_content.replace("\u200b", "").strip()
     result_msg["content"] = content
     return result_msg
 
@@ -2300,6 +2418,7 @@ async def _handle_components_in_message(
     attachments = _handle_attachments_in_message(message)
     emoji_regex = r"<a?:\w+:\d+>"
     url_regex = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|%[0-9a-fA-F][0-9a-fA-F])+"
+    tenor_regex = r"https?://tenor\.com/view"
 
     async def repl_emoji(match: str):
         obj = search(r"<a?:(\w+):(\d+)>", match)
@@ -2322,17 +2441,19 @@ async def _handle_components_in_message(
     def repl_url(link: str):
         if only_replace_links:
             if version_lower_1_7_2:
-                if "tenor" in link and "view" in link:
+                if search(tenor_regex, link):
                     return "[gif]"
                 elif len(link) > 30:
                     return get_shortened_url(link)
                 else:
                     return link
             else:
-                return "[gif]" if "tenor" in link and "view" in link else shorten_string(link, 30)
+                return "[gif]" if search(tenor_regex, link) else shorten_string(link, 30)
         else:
-            return {"text": "[gif]" if "tenor" in link and "view" in link else shorten_string(link, 30),
-                    "hyperlink": link if len(link) < 257 else get_shortened_url(link)}
+            return {
+                "text": "[gif]" if search(tenor_regex, link) else shorten_string(link, 30),
+                "hyperlink": link if len(link) < 257 else get_shortened_url(link)
+            }
 
     transformations = {
         emoji_regex: repl_emoji,

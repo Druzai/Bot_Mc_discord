@@ -9,16 +9,17 @@ from sys import exc_info
 from threading import Thread
 from time import sleep
 from traceback import format_exc
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, List
 
 from colorama import Fore, Style
-from discord import SyncWebhook, TextChannel, Role, ChannelType
+from discord import SyncWebhook, Webhook, TextChannel, Role, ChannelType
 from discord.utils import get as utils_get, escape_markdown, find as utils_find
 
 from components.localization import get_translation
 from config.init_config import Config, BotVars
 
 if TYPE_CHECKING:
+    from commands.poll import Poll
     from components.additional_funcs import ServerVersion
 
 
@@ -31,6 +32,9 @@ class Watcher:
         self._kwargs = kwargs
 
     def start(self):
+        if self._running:
+            return
+
         self._running = True
         self._thread = WatchThread(self._filename, self._call_func_on_change, **self._kwargs)
         self._thread.start()
@@ -64,8 +68,11 @@ class WatchThread(Thread):
         if stamp != self._cached_stamp:
             self._cached_stamp = stamp
             if self._call_func_on_change is not None:
-                self._last_line = self._call_func_on_change(file=self._filename,
-                                                            last_line=self._last_line, **self._kwargs)
+                self._last_line = self._call_func_on_change(
+                    file=self._filename,
+                    last_line=self._last_line,
+                    **self._kwargs
+                )
 
     # Keep watching in a loop
     def run(self):
@@ -107,13 +114,33 @@ def create_watcher(watcher: Optional[Watcher], server_version: 'ServerVersion'):
     )
 
 
-def create_chat_webhook():
+async def get_chat_webhook(channel: Optional[TextChannel], webhooks: Optional[List[Webhook]]):
+    need_to_save = False
     if Config.get_cross_platform_chat_settings().webhook_url:
-        BotVars.webhook_chat = SyncWebhook.from_url(url=Config.get_cross_platform_chat_settings().webhook_url)
+        BotVars.webhook_chat = SyncWebhook.from_url(
+            url=Config.get_cross_platform_chat_settings().webhook_url,
+            bot_token=Config.get_settings().bot_settings.token
+        ).fetch()
+    elif (webhooks is not None and len(webhooks) > 0) or channel is not None:
+        if webhooks is not None and len(webhooks) > 0:
+            webhook = webhooks[0]
+        else:
+            webhook = await channel.create_webhook(name=get_translation("Cross-platform chat webhook"))
+        BotVars.webhook_chat = SyncWebhook.from_url(
+            url=webhook.url,
+            bot_token=Config.get_settings().bot_settings.token
+        ).fetch()
+        Config.get_cross_platform_chat_settings().webhook_url = webhook.url
+        need_to_save = True
+    else:
+        raise ValueError("'channel' and 'webhooks' are not declared!")
+
+    if need_to_save:
+        Config.save_config()
 
 
-def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str = None, poll=None):
-    if Config.get_cross_platform_chat_settings().channel_id is None and \
+def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str = None, poll: Optional['Poll'] = None):
+    if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
             not Config.get_secure_auth().enable_secure_auth:
         return
 
@@ -134,7 +161,7 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
         if not search(rf"{date_line} {INFO_line}", line) or search(rf"{date_line} {INFO_line} \* ", line):
             continue
 
-        if Config.get_cross_platform_chat_settings().channel_id is not None:
+        if BotVars.webhook_chat is not None:
             match = search(rf"{date_line} {INFO_line}( \[Not Secure])? <(?P<nick>[^>]*)> (?P<message>.*)", line)
             if match is not None:
                 player_nick = match.group("nick")
@@ -295,17 +322,19 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                         for u in Config.get_known_users_list():
                             if u.user_minecraft_nick == player_nick:
                                 nick_owner_id = u.user_discord_id
-                        for nick in [u.user_minecraft_nick for u in Config.get_known_users_list()
-                                     if u.user_discord_id == nick_owner_id]:
+                        for logged_in_nick in [u.user_minecraft_nick for u in Config.get_known_users_list()
+                                               if u.user_discord_id == nick_owner_id]:
                             with suppress(KeyError):
-                                mention_nicks.remove(nick)
+                                mention_nicks.remove(logged_in_nick)
                         from components.additional_funcs import announce, connect_rcon, times
 
                         with suppress(ConnectionError, socket.error):
                             with connect_rcon() as cl_r:
                                 with times(0, 60, 20, cl_r):
-                                    for nick in mention_nicks:
-                                        announce(nick, f"@{player_nick} -> @{nick if nick != '@a' else 'everyone'}",
+                                    for logged_in_nick in mention_nicks:
+                                        announce(logged_in_nick,
+                                                 f"@{player_nick} "
+                                                 f"-> @{logged_in_nick if logged_in_nick != '@a' else 'everyone'}",
                                                  cl_r)
 
                 if search(r":\w+:", player_message):
@@ -327,7 +356,7 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
 
                 edited_message = False
                 if search(r"^\*[^*].*", player_message):
-                    chn = BotVars.bot_for_webhooks.get_channel(Config.get_cross_platform_chat_settings().channel_id)
+                    chn = BotVars.bot_for_webhooks.get_channel(BotVars.webhook_chat.channel_id)
                     if chn is None:
                         print(get_translation("Bot Error: Couldn't find channel for cross-platform chat!"))
                     else:
@@ -365,37 +394,34 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                     BotVars.webhook_chat.send(player_message, username=player_nick, avatar_url=player_url_pic)
                 continue
 
-        if Config.get_secure_auth().enable_secure_auth or \
-                Config.get_cross_platform_chat_settings().channel_id is not None:
-            player_logout = check_if_player_logged_out(line, INFO_line)
+        if Config.get_secure_auth().enable_secure_auth or BotVars.webhook_chat is not None:
+            logged_out_nick, reason = check_if_player_logged_out(line, INFO_line)
 
-            if player_logout[0] is not None and player_logout[1] is not None:
-                BotVars.remove_player_login(player_logout[0])
+            if logged_out_nick is not None and reason is not None:
+                BotVars.remove_player_login(logged_out_nick)
                 continue
 
-            player_login = check_if_player_logged_in(line, INFO_line)
+            logged_in_nick, ip_address = check_if_player_logged_in(line, INFO_line)
 
-            if player_login[0] is not None and player_login[1] is not None and \
+            if logged_in_nick is not None and ip_address is not None and \
                     Config.get_secure_auth().enable_secure_auth:
                 from components.additional_funcs import connect_rcon, add_quotes
 
-                nick = player_login[0]
-                ip_address = player_login[1]
                 save_auth_users = False
-                if nick not in [u.nick for u in Config.get_auth_users()]:
-                    Config.add_auth_user(nick)
+                if logged_in_nick not in [u.nick for u in Config.get_auth_users()]:
+                    Config.add_auth_user(logged_in_nick)
                     save_auth_users = True
                 nick_numb = [i for i in range(len(Config.get_auth_users()))
-                             if Config.get_auth_users()[i].nick == nick][0]
+                             if Config.get_auth_users()[i].nick == logged_in_nick][0]
                 nick_logged = BotVars.player_logged(Config.get_auth_users()[nick_numb].nick) is not None
                 is_invasion_to_ban = nick_logged and ip_address not in Config.get_known_user_ips()
-                is_invasion_to_kick = nick_logged and ip_address not in Config.get_known_user_ips(nick)
+                is_invasion_to_kick = nick_logged and ip_address not in Config.get_known_user_ips(logged_in_nick)
 
                 if not is_invasion_to_ban and not is_invasion_to_kick:
                     if ip_address in [ip.ip_address for ip in Config.get_auth_users()[nick_numb].ip_addresses]:
-                        user_attempts, code = Config.update_ip_address(nick, ip_address)
+                        user_attempts, code = Config.update_ip_address(logged_in_nick, ip_address)
                     else:
-                        user_attempts, code = Config.add_ip_address(nick, ip_address, is_login_attempt=True)
+                        user_attempts, code = Config.add_ip_address(logged_in_nick, ip_address, is_login_attempt=True)
                     save_auth_users = True
                 else:
                     user_attempts, code = 0, 0
@@ -418,11 +444,14 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                             if is_invasion_to_ban:
                                 ban_reason = get_translation("Intrusion prevented: User was banned!")
                             else:
-                                Config.remove_ip_address(ip_address, [nick])
+                                Config.remove_ip_address(ip_address, [logged_in_nick])
                                 save_auth_users = True
                                 ban_reason = get_translation("Too many login attempts: User was banned!")
-                            msg = f"{ban_reason}\n" + get_translation("Nick: {0}\nIP: {1}\nTime: {2}") \
-                                .format(nick, ip_address, datetime.now().strftime(get_translation("%H:%M:%S %d/%m/%Y")))
+                            msg = f"{ban_reason}\n" + get_translation("Nick: {0}\nIP: {1}\nTime: {2}").format(
+                                logged_in_nick,
+                                ip_address,
+                                datetime.now().strftime(get_translation("%H:%M:%S %d/%m/%Y"))
+                            )
                             channel = _get_commands_channel()
                             run_coroutine_threadsafe(channel.send(add_quotes(msg)), BotVars.bot_for_webhooks.loop)
                     else:
@@ -433,32 +462,33 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                                                                                                             code)
                         with suppress(ConnectionError, socket.error):
                             with connect_rcon() as cl_r:
-                                cl_r.kick(nick, kick_reason)
+                                cl_r.kick(logged_in_nick, kick_reason)
                         if is_invasion_to_kick:
                             continue
                         member = None
                         for user in Config.get_known_users_list():
-                            if user.user_minecraft_nick == nick:
+                            if user.user_minecraft_nick == logged_in_nick:
                                 member = BotVars.bot_for_webhooks.guilds[0].get_member(user.user_discord_id)
 
-                        user_nicks = Config.get_user_nicks(ip_address=ip_address, nick=nick, authorized=True)
-                        status = get_translation("Status:") + f" {user_nicks[nick][0][1]}\n"
+                        user_nicks = Config.get_user_nicks(ip_address=ip_address, nick=logged_in_nick, authorized=True)
+                        status = get_translation("Status:") + f" {user_nicks[logged_in_nick][0][1]}\n"
                         used_nicks = None
-                        if (len(user_nicks) != 1 and user_nicks.get(nick, None) is not None) or len(user_nicks) > 1:
+                        if (len(user_nicks) != 1 and user_nicks.get(logged_in_nick, None) is not None) or \
+                                len(user_nicks) > 1:
                             used_nicks = get_translation("Previously used nicknames:") + "\n"
                             for k, v in user_nicks.items():
-                                if k != nick:
+                                if k != logged_in_nick:
                                     used_nicks += f"- {k}: {v[0][1]}\n"
                         if used_nicks is not None:
                             status += used_nicks
 
                         msg = get_translation("Connection attempt detected!\nNick: {0}\n"
                                               "IP: {1}\n{2}Connection attempts: {3}\nTime: {4}") \
-                            .format(nick, ip_address, status,
+                            .format(logged_in_nick, ip_address, status,
                                     f"{user_attempts}/{Config.get_secure_auth().max_login_attempts}",
                                     datetime.now().strftime(get_translation("%H:%M:%S %d/%m/%Y")))
                         msg = add_quotes(msg) + "\n"
-                        nick_for_command = nick if " " not in nick else f"\"{nick}\""
+                        nick_for_command = logged_in_nick if " " not in logged_in_nick else f"\"{logged_in_nick}\""
                         msg += get_translation("To proceed enter command `{0}` within {1} min") \
                                    .format(f"{Config.get_settings().bot_settings.prefix}auth login "
                                            f"{nick_for_command} <code>",
@@ -467,7 +497,7 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                             .format(f"{Config.get_settings().bot_settings.prefix}auth ban {ip_address} [reason]")
                         if member is not None:
                             for p in poll.get_polls().values():
-                                if p.command == f"auth login {nick} {ip_address}":
+                                if p.command == f"auth login {logged_in_nick} {ip_address}":
                                     p.cancel()
 
                             async def send_message_and_poll(member, msg, poll, nick, ip_address):
@@ -486,23 +516,30 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                                                                       "`{1}` with IP-address `{2}`!")
                                                       .format(member.mention, nick, ip_address))
 
-                            run_coroutine_threadsafe(send_message_and_poll(member, msg, poll, nick, ip_address),
-                                                     BotVars.bot_for_webhooks.loop)
+                            run_coroutine_threadsafe(
+                                send_message_and_poll(member, msg, poll, logged_in_nick, ip_address),
+                                BotVars.bot_for_webhooks.loop)
                         else:
                             channel = _get_commands_channel()
                             run_coroutine_threadsafe(channel.send(msg), BotVars.bot_for_webhooks.loop)
                 else:
-                    BotVars.add_player_login(nick)
+                    if logged_in_nick not in [i.player_minecraft_nick for i in Config.get_server_config().seen_players]:
+                        Config.add_to_seen_players_list(logged_in_nick)
+                        Config.save_server_config()
+                    BotVars.add_player_login(logged_in_nick)
                 if save_auth_users:
                     Config.save_auth_users()
                 continue
-            elif player_login[0] is not None and player_login[1] is not None and \
+            elif logged_in_nick is not None and ip_address is not None and \
                     not Config.get_secure_auth().enable_secure_auth and \
-                    Config.get_cross_platform_chat_settings().channel_id is not None:
-                BotVars.add_player_login(player_login[0])
+                    BotVars.webhook_chat is not None:
+                if logged_in_nick not in [i.player_minecraft_nick for i in Config.get_server_config().seen_players]:
+                    Config.add_to_seen_players_list(logged_in_nick)
+                    Config.save_server_config()
+                BotVars.add_player_login(logged_in_nick)
                 continue
 
-        if Config.get_cross_platform_chat_settings().channel_id is not None:
+        if BotVars.webhook_chat is not None:
             from components.additional_funcs import DEATH_MESSAGES, REGEX_DEATH_MESSAGES, MASS_REGEX_DEATH_MESSAGES
 
             if search(f"{INFO_line} {MASS_REGEX_DEATH_MESSAGES}", line):
@@ -532,9 +569,11 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                             avatar_url = Config.get_cross_platform_chat_settings().avatar_url_for_death_messages
                             if avatar_url is None:
                                 avatar_url = BotVars.bot_for_webhooks.user.avatar.url
-                            BotVars.webhook_chat.send(msg,
-                                                      username=get_translation("☠ Obituary ☠"),
-                                                      avatar_url=avatar_url)
+                            BotVars.webhook_chat.send(
+                                msg,
+                                username=get_translation("☠ Obituary ☠"),
+                                avatar_url=avatar_url
+                            )
                             death_message = msg
                         break
                 continue

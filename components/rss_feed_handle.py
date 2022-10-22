@@ -1,8 +1,9 @@
 from contextlib import suppress
 from datetime import datetime
 from time import mktime
+from typing import List, Optional
 
-from discord import SyncWebhook
+from discord import SyncWebhook, Webhook, TextChannel
 from feedparser import parse
 
 from components.localization import get_translation
@@ -13,10 +14,14 @@ async def check_on_rss_feed():
     try:
         datetime_from = datetime.fromisoformat(Config.get_rss_feed_settings().rss_last_date)
     except (ValueError, TypeError):
-        print(get_translation("Date from bot config is invalid. Bot will use current date for checking..."))
+        print(get_translation("RSS Warning: Date from bot config is invalid. Bot will use current date for checking..."))
         datetime_from = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     if datetime_from.tzinfo is not None:
         datetime_from = datetime.fromtimestamp(datetime_from.timestamp())
+    if Config.get_rss_feed_settings().rss_url is None:
+        print(get_translation("RSS Warning: URL of RSS feed doesn't set!"))
+        return
+
     send = False
     parsed = parse(Config.get_rss_feed_settings().rss_url)
     with suppress(KeyError, AttributeError):
@@ -35,6 +40,22 @@ async def check_on_rss_feed():
             Config.save_config()
 
 
-def create_feed_webhook():
-    if Config.get_rss_feed_settings().rss_url and Config.get_rss_feed_settings().webhook_url:
-        BotVars.webhook_rss = SyncWebhook.from_url(url=Config.get_rss_feed_settings().webhook_url)
+async def get_feed_webhook(channel: Optional[TextChannel], webhooks: Optional[List[Webhook]]):
+    if Config.get_rss_feed_settings().webhook_url:
+        BotVars.webhook_rss = SyncWebhook.from_url(
+            url=Config.get_rss_feed_settings().webhook_url,
+            bot_token=Config.get_settings().bot_settings.token
+        ).fetch()
+    elif (webhooks is not None and len(webhooks) > 0) or channel is not None:
+        if webhooks is not None and len(webhooks) > 0:
+            webhook = webhooks[0]
+        else:
+            webhook = await channel.create_webhook(name=get_translation("RSS webhook"))
+        BotVars.webhook_rss = SyncWebhook.from_url(
+            url=webhook.url,
+            bot_token=Config.get_settings().bot_settings.token
+        ).fetch()
+        Config.get_rss_feed_settings().webhook_url = webhook.url
+        Config.save_config()
+    else:
+        raise ValueError("'channel' and 'webhooks' are not declared!")

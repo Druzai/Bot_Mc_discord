@@ -11,21 +11,26 @@ from discord.ext import commands, tasks
 from components import decorators
 from components.additional_funcs import (
     handle_message_for_chat, send_error, bot_clear, add_quotes, parse_params_for_help, send_help_of_command,
-    parse_subcommands_for_help, find_subcommand, make_underscored_line, create_webhooks, bot_dm_clear,
-    delete_after_by_msg, send_msg, HelpCommandArgument, handle_unhandled_error_in_task, handle_unhandled_error_in_events
+    parse_subcommands_for_help, find_subcommand, make_underscored_line, create_webhooks, bot_dm_clear, send_msg,
+    delete_after_by_msg, HelpCommandArgument, handle_unhandled_error_in_task, handle_unhandled_error_in_events,
+    get_avatar_info, URLAddress, get_server_version, get_time_string, get_channel_string
 )
 from components.localization import get_translation, get_locales, set_locale, get_current_locale
 from components.rss_feed_handle import check_on_rss_feed
+from components.watcher_handle import create_watcher
 from config.init_config import Config, BotVars
 
 if TYPE_CHECKING:
     from commands.poll import Poll
+    from commands.minecraft_commands import MinecraftCommands
 
 
 class ChatCommands(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self._bot: commands.Bot = bot
-        self._IndPoll: 'Poll' = bot.get_cog("Poll")
+        self._IndPoll: Optional['Poll'] = bot.get_cog("Poll")
+        if self._IndPoll is None:
+            raise RuntimeError("Cog 'Poll' not found!")
         if len(argv) == 1 and Config.get_rss_feed_settings().enable_rss_feed:
             self.rss_feed_task.change_interval(seconds=Config.get_rss_feed_settings().rss_download_delay)
 
@@ -35,17 +40,20 @@ class ChatCommands(commands.Cog):
             print("------")
             print(get_translation("Logged in Discord as"))
             print(f"{self._bot.user.name}#{self._bot.user.discriminator}")
-            print(get_translation('Version of discord.py') + " - " + discord.__version__)
+            print(get_translation("Version of discord.py") + " - " + discord.__version__)
             print("------")
-            create_webhooks()
+            await create_webhooks(self._bot)
             if Config.get_rss_feed_settings().enable_rss_feed and not self.rss_feed_task.is_running():
                 self.rss_feed_task.start()
             elif self.rss_feed_task.is_running():
                 self.rss_feed_task.restart()
-            if not self._bot.get_cog("MinecraftCommands").checkups_task.is_running():
-                self._bot.get_cog("MinecraftCommands").checkups_task.start()
+            commands_cog: Optional['MinecraftCommands'] = self._bot.get_cog("MinecraftCommands")
+            if commands_cog is None:
+                raise RuntimeError("Cog 'MinecraftCommands' not found!")
+            if not commands_cog.checkups_task.is_running():
+                commands_cog.checkups_task.start()
             else:
-                self._bot.get_cog("MinecraftCommands").checkups_task.restart()
+                commands_cog.checkups_task.restart()
             print(get_translation("Bot is ready!"))
             print(get_translation("To stop the bot press Ctrl + C"))
 
@@ -54,37 +62,13 @@ class ChatCommands(commands.Cog):
     @commands.guild_only()
     async def channel(self, ctx: commands.Context):
         try:
-            channel = self._bot.get_channel(Config.get_cross_platform_chat_settings().channel_id)
-            if channel is None:
-                channel = await self._bot.fetch_channel(Config.get_cross_platform_chat_settings().channel_id)
-            msg = get_translation("Channel {0} set to Minecraft cross-platform chat").format(channel.mention)
-        except (InvalidData, HTTPException, NotFound, Forbidden):
-            msg = get_translation("Channel for Minecraft cross-platform chat is not found or unreachable!")
-        msg += "\n"
-        try:
             channel = self._bot.get_channel(Config.get_settings().bot_settings.commands_channel_id)
             if channel is None:
                 channel = await self._bot.fetch_channel(Config.get_settings().bot_settings.commands_channel_id)
-            msg += get_translation("Channel {0} set as commands' channel for bot").format(channel.mention)
+            msg = get_translation("Channel {0} set as commands' channel for bot").format(channel.mention)
         except (InvalidData, HTTPException, NotFound, Forbidden):
-            msg += get_translation("Channel for bot commands is not found or unreachable!")
-        await ctx.channel.send(msg)
-
-    @channel.command(pass_context=True, name="chat", ignore_extra=False)
-    @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @commands.guild_only()
-    @decorators.has_role_or_default()
-    async def c_chat(self, ctx: commands.Context, channel: TextChannel = None):
-        if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
-            await ctx.channel.send(get_translation("Cross-platform chat is disabled in bot config!"))
-            return
-
-        if channel is None:
-            channel = ctx.channel
-        Config.get_cross_platform_chat_settings().channel_id = channel.id
-        Config.save_config()
-        await ctx.channel.send(get_translation("Channel {0} set to Minecraft cross-platform chat")
-                               .format(channel.mention))
+            msg = get_translation("Channel for bot commands is not found or unreachable!")
+        await ctx.send(msg)
 
     @channel.command(pass_context=True, name="commands", ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -95,7 +79,7 @@ class ChatCommands(commands.Cog):
             channel = ctx.channel
         Config.get_settings().bot_settings.commands_channel_id = channel.id
         Config.save_config()
-        await ctx.channel.send(get_translation("Channel {0} set as commands' channel for bot").format(channel.mention))
+        await ctx.send(get_translation("Channel {0} set as commands' channel for bot").format(channel.mention))
 
     @commands.group(pass_context=True, invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -128,8 +112,9 @@ class ChatCommands(commands.Cog):
     async def r_command(self, ctx: commands.Context, role: Role):
         Config.get_settings().bot_settings.managing_commands_role_id = role.id
         Config.save_config()
-        await ctx.channel.send(
-            get_translation("Role {0} set as role for commands that manage Minecraft server").format(role.mention))
+        await ctx.channel.send(get_translation(
+            "Role {0} set as role for commands that manage Minecraft server"
+        ).format(role.mention))
 
     @r_command.command(pass_context=True, name="clear")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -159,19 +144,94 @@ class ChatCommands(commands.Cog):
         Config.save_config()
         await ctx.channel.send(add_quotes(get_translation("Admin role has been cleared")))
 
-    @commands.group(pass_context=True)
+    @commands.group(pass_context=True, invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
-    async def edit(self, ctx: commands.Context, *, edited_message: str):
+    async def chat(self, ctx: commands.Context):
+        msg = ""
+        if Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
+            msg += get_translation("Cross-platform chat enabled") + "\n"
+            if BotVars.webhook_chat:
+                msg += get_translation("Webhook for cross-platform chat set to "
+                                       "`{0}` owned by {1} and to channel {2}").format(
+                    BotVars.webhook_chat.name,
+                    BotVars.webhook_chat.user.mention,
+                    await get_channel_string(self._bot, BotVars.webhook_chat.channel_id, mention=True)
+                ) + ".\n"
+                try:
+                    channel = self._bot.get_channel(BotVars.webhook_chat.channel_id)
+                    if channel is None:
+                        channel = await self._bot.fetch_channel(BotVars.webhook_chat.channel_id)
+                    msg += get_translation("Channel {0} set to Minecraft cross-platform chat").format(channel.mention)
+                except (InvalidData, HTTPException, NotFound, Forbidden):
+                    msg += get_translation("Channel for Minecraft cross-platform chat is not found or unreachable!")
+            else:
+                msg += get_translation("Webhook for cross-platform chat not set!")
+            msg += "\n"
+            if Config.get_cross_platform_chat_settings().avatar_url_for_death_messages is not None:
+                msg += get_translation("Avatar URL for death messages set to {0}").format(
+                    f"<{Config.get_cross_platform_chat_settings().avatar_url_for_death_messages}>"
+                )
+            else:
+                msg += get_translation("Avatar URL for death messages not set!")
+        else:
+            msg += get_translation("Cross-platform chat disabled")
+        await ctx.send(msg)
+
+    @chat.command(pass_context=True, name="on")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @decorators.has_admin_role()
+    @commands.guild_only()
+    async def c_on(self, ctx: commands.Context):
+        Config.get_cross_platform_chat_settings().enable_cross_platform_chat = True
+        Config.save_config()
+        BotVars.webhook_chat = None
+        await create_webhooks(self._bot)
+        if BotVars.watcher_of_log_file is None:
+            BotVars.watcher_of_log_file = create_watcher(BotVars.watcher_of_log_file, get_server_version())
+        BotVars.watcher_of_log_file.start()
+        await ctx.send(get_translation("Cross-platform chat enabled") + "!")
+
+    @chat.command(pass_context=True, name="off")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @decorators.has_admin_role()
+    @commands.guild_only()
+    async def c_off(self, ctx: commands.Context):
+        Config.get_cross_platform_chat_settings().enable_cross_platform_chat = False
+        Config.save_config()
+        if not Config.get_secure_auth().enable_secure_auth:
+            BotVars.watcher_of_log_file.stop()
+        await ctx.send(get_translation("Cross-platform chat disabled") + "!")
+
+    @chat.command(pass_context=True, name="obituary", ignore_extra=False)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.has_permissions(manage_webhooks=True)
+    @commands.guild_only()
+    async def c_obituary(self, ctx: commands.Context, avatar_url: URLAddress = None):
         if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
-            await send_msg(ctx, add_quotes(get_translation("Cross-platform chat is disabled in bot config!")), True)
-        elif Config.get_cross_platform_chat_settings().channel_id is None:
-            await send_msg(ctx, add_quotes(
-                get_translation("Channel for Minecraft cross-platform chat is not found or unreachable!")), True)
+            await ctx.send(get_translation("Cross-platform chat disabled") + "!")
+            return
+
+        avatar_blob, url = await get_avatar_info(ctx, avatar_url)
+        if avatar_blob is None:
+            await ctx.send(get_translation("Unsupported image type was given!"))
+            return
+        Config.get_cross_platform_chat_settings().avatar_url_for_death_messages = url
+        Config.save_config()
+        if avatar_url is None:
+            await ctx.message.reply(get_translation("Do not delete this message or attachment(s)!"))
+        await ctx.send(get_translation("Avatar URL for death messages set to {0}").format(f"<{url}>")) + "~"
+
+    @chat.command(pass_context=True, name="edit")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    async def c_edit(self, ctx: commands.Context, *, edited_message: str):
+        if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
+            await send_msg(ctx, add_quotes(get_translation("Cross-platform chat disabled") + "!"), True)
         elif ctx.message.reference is not None and ctx.message.reference.resolved.author.discriminator != "0000":
             await send_msg(ctx, add_quotes(get_translation("You can't edit messages from "
                                                            "other members with this command!")), True)
-        elif ctx.channel.id == Config.get_cross_platform_chat_settings().channel_id:
+        elif BotVars.webhook_chat is not None and ctx.channel.id == BotVars.webhook_chat.channel_id:
             last_message = None
             if ctx.message.reference is not None:
                 associated_member_id = [u.user_discord_id for u in Config.get_known_users_list()
@@ -210,38 +270,259 @@ class ChatCommands(commands.Cog):
                         self._bot,
                         on_edit=True,
                         before_message=last_message,
-                        edit_command=True
+                        edit_command_content=(
+                            await commands.clean_content(fix_channel_mentions=True).convert(ctx, edited_message)
+                        )
                     )
                 except Forbidden:
                     error_msg = get_translation("Can't edit this message, it's not owned "
                                                 "by cross-platform chat webhook!")
                     webhook_found = False
-                    for i in (await self._bot.guilds[0].webhooks()):
-                        if i.id == last_message.author.id:
+                    for webhook in await self._bot.guilds[0].webhooks():
+                        if webhook.id == last_message.author.id:
                             webhook_found = True
-                            error_msg += "\n" + get_translation("Owner: ") + f"<@{i.id}>"
+                            error_msg += "\n" + get_translation("Owner: ") + \
+                                         get_translation("webhook {0} owned by {1}").format(
+                                             webhook.name,
+                                             webhook.user.mention
+                                         )
                             break
                     if not webhook_found:
-                        error_msg += "\n" + get_translation("Owner: ") + last_message.author.name
+                        error_msg += "\n" + get_translation("Owner: ") + last_message.author.mention
 
                     await send_msg(ctx, error_msg, True)
         else:
-            await send_msg(ctx, add_quotes(get_translation("You're not in channel for Minecraft cross-platform chat!")),
-                           True)
+            await send_msg(
+                ctx,
+                add_quotes(get_translation("You're not in channel for Minecraft cross-platform chat!")),
+                True
+            )
         await delete_after_by_msg(ctx.message)
+
+    @chat.group(pass_context=True, name="webhook", aliases=["wh"], invoke_without_command=True)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    async def c_webhook(self, ctx: commands.Context):
+        if BotVars.webhook_chat:
+            msg = get_translation("Webhook for cross-platform chat set to "
+                                  "`{0}` owned by {1} and to channel {2}").format(
+                BotVars.webhook_chat.name,
+                BotVars.webhook_chat.user.mention,
+                await get_channel_string(self._bot, BotVars.webhook_chat.channel_id, mention=True)
+            ) + "."
+        else:
+            msg = get_translation("Webhook for cross-platform chat not set!")
+        await ctx.send(msg)
+
+    @c_webhook.command(pass_context=True, name="reload")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True, manage_webhooks=True)
+    @commands.has_permissions(manage_webhooks=True)
+    @commands.guild_only()
+    async def c_w_reload(self, ctx: commands.Context):
+        BotVars.webhook_chat = None
+        await create_webhooks(self._bot)
+        await ctx.send(get_translation("Reloaded webhook for cross-platform chat!"))
+
+    @c_webhook.command(pass_context=True, name="name", ignore_extra=False)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True, manage_webhooks=True)
+    @commands.has_permissions(manage_webhooks=True)
+    @commands.guild_only()
+    async def c_w_name(self, ctx: commands.Context, name: str):
+        if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
+            await ctx.send(get_translation("Cross-platform chat disabled") + "!")
+            return
+
+        BotVars.webhook_chat = BotVars.webhook_chat.edit(name=name)
+        await ctx.send(get_translation("Updated webhook name to `{0}`!").format(name))
+
+    @c_webhook.command(pass_context=True, name="avatar", ignore_extra=False)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True, manage_webhooks=True)
+    @commands.has_permissions(manage_webhooks=True)
+    @commands.guild_only()
+    async def c_w_avatar(self, ctx: commands.Context, avatar_url: URLAddress = None):
+        if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
+            await ctx.send(get_translation("Cross-platform chat disabled") + "!")
+            return
+
+        avatar_blob, _ = await get_avatar_info(ctx, avatar_url)
+        if avatar_blob is not None:
+            BotVars.webhook_chat = BotVars.webhook_chat.edit(avatar=avatar_blob)
+            await ctx.send(get_translation("Updated webhook avatar!"))
+        else:
+            await ctx.send(get_translation("Unsupported image type was given!"))
+
+    @c_webhook.command(pass_context=True, name="channel", aliases=["chn"], ignore_extra=False)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True, manage_webhooks=True)
+    @commands.has_permissions(manage_webhooks=True)
+    @commands.guild_only()
+    async def c_w_channel(self, ctx: commands.Context, channel: TextChannel = None):
+        if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
+            await ctx.send(get_translation("Cross-platform chat disabled") + "!")
+            return
+
+        if channel is None:
+            channel = ctx.channel
+        BotVars.webhook_chat = BotVars.webhook_chat.edit(channel=channel)
+        Config.save_config()
+        await ctx.send(get_translation("Channel {0} set to Minecraft cross-platform chat "
+                                       "and as default channel for its webhook").format(channel.mention))
+
+    @commands.group(pass_context=True, name="rss", invoke_without_command=True)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    async def rss(self, ctx: commands.Context):
+        msg = ""
+        if Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
+            msg += get_translation("RSS enabled") + "\n"
+            if BotVars.webhook_chat:
+                msg += get_translation("Webhook for RSS set to `{0}` owned by {1} and to channel {2}").format(
+                    BotVars.webhook_rss.name,
+                    BotVars.webhook_rss.user.mention,
+                    await get_channel_string(self._bot, BotVars.webhook_rss.channel_id, mention=True)
+                ) + "."
+            else:
+                msg += get_translation("Webhook for RSS not set!")
+            msg += "\n"
+            if Config.get_rss_feed_settings().rss_url is not None:
+                msg += get_translation("URL for RSS set to {0}").format(f"<{Config.get_rss_feed_settings().rss_url}>")
+            else:
+                msg += get_translation("URL for RSS not set!")
+            msg += "\n"
+            if Config.get_rss_feed_settings().rss_download_delay is not None:
+                msg += get_translation("Scan interval for RSS feed set to `{0}`").format(
+                    get_time_string(Config.get_rss_feed_settings().rss_download_delay)
+                )
+            else:
+                msg += get_translation("Scan interval for RSS feed not set")
+        else:
+            msg += get_translation("RSS disabled")
+        await ctx.send(msg)
+
+    @rss.command(pass_context=True, name="on")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @decorators.has_admin_role()
+    @commands.guild_only()
+    async def r_on(self, ctx: commands.Context):
+        Config.get_rss_feed_settings().enable_rss_feed = True
+        Config.save_config()
+        BotVars.webhook_rss = None
+        await create_webhooks(self._bot)
+        if self.rss_feed_task.is_running():
+            self.rss_feed_task.restart()
+        else:
+            self.rss_feed_task.start()
+        await ctx.send(get_translation("RSS enabled") + "!")
+
+    @rss.command(pass_context=True, name="off")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @decorators.has_admin_role()
+    @commands.guild_only()
+    async def r_off(self, ctx: commands.Context):
+        Config.get_rss_feed_settings().enable_rss_feed = False
+        Config.save_config()
+        if self.rss_feed_task.is_running():
+            self.rss_feed_task.stop()
+        await ctx.send(get_translation("RSS disabled") + "!")
+
+    @rss.command(pass_context=True, name="url", ignore_extra=False)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.has_permissions(manage_webhooks=True)
+    @commands.guild_only()
+    async def r_url(self, ctx: commands.Context, url: URLAddress):
+        Config.get_rss_feed_settings().rss_url = url
+        Config.save_config()
+        await ctx.send(get_translation("URL for RSS set to {0}").format(f"<{url}>") + "!")
+
+    @rss.command(pass_context=True, name="interval", ignore_extra=False)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.has_permissions(manage_webhooks=True)
+    @commands.guild_only()
+    async def r_interval(self, ctx: commands.Context, seconds: int):
+        self.rss_feed_task.change_interval(seconds=seconds)
+        Config.get_rss_feed_settings().rss_download_delay = seconds
+        Config.save_config()
+        await ctx.send(get_translation("Scan interval for RSS feed set to `{0}`")
+                       .format(get_time_string(seconds)) + "!")
+
+    @rss.group(pass_context=True, name="webhook", aliases=["wh"], invoke_without_command=True)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    async def r_webhook(self, ctx: commands.Context):
+        if BotVars.webhook_rss:
+            msg = get_translation("Webhook for RSS set to `{0}` owned by {1} and to channel {2}").format(
+                BotVars.webhook_rss.name,
+                BotVars.webhook_rss.user.mention,
+                await get_channel_string(self._bot, BotVars.webhook_rss.channel_id, mention=True)
+            )
+        else:
+            msg = get_translation("Webhook for RSS not set!")
+        await ctx.send(msg)
+
+    @r_webhook.command(pass_context=True, name="reload")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True, manage_webhooks=True)
+    @commands.has_permissions(manage_webhooks=True)
+    @commands.guild_only()
+    async def r_w_reload(self, ctx: commands.Context):
+        BotVars.webhook_rss = None
+        await create_webhooks(self._bot)
+        await ctx.send(get_translation("Reloaded webhook for RSS!"))
+
+    @r_webhook.command(pass_context=True, name="name", ignore_extra=False)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True, manage_webhooks=True)
+    @commands.has_permissions(manage_webhooks=True)
+    @commands.guild_only()
+    async def r_w_name(self, ctx: commands.Context, name: str):
+        if not Config.get_rss_feed_settings().enable_rss_feed:
+            await ctx.send(get_translation("RSS disabled") + "!")
+            return
+
+        BotVars.webhook_rss = BotVars.webhook_rss.edit(name=name)
+        await ctx.send(get_translation("Updated webhook name to `{0}`!").format(name))
+
+    @r_webhook.command(pass_context=True, name="avatar", ignore_extra=False)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True, manage_webhooks=True)
+    @commands.has_permissions(manage_webhooks=True)
+    @commands.guild_only()
+    async def r_w_avatar(self, ctx: commands.Context, avatar_url: URLAddress = None):
+        if not Config.get_rss_feed_settings().enable_rss_feed:
+            await ctx.send(get_translation("RSS disabled") + "!")
+            return
+
+        avatar_blob, _ = await get_avatar_info(ctx, avatar_url)
+        if avatar_blob is not None:
+            BotVars.webhook_rss = BotVars.webhook_rss.edit(avatar=avatar_blob)
+            await ctx.send(get_translation("Updated webhook avatar!"))
+        else:
+            await ctx.send(get_translation("Unsupported image type was given!"))
+
+    @r_webhook.command(pass_context=True, name="channel", aliases=["chn"], ignore_extra=False)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True, manage_webhooks=True)
+    @commands.has_permissions(manage_webhooks=True)
+    @commands.guild_only()
+    async def r_w_channel(self, ctx: commands.Context, channel: TextChannel = None):
+        if not Config.get_rss_feed_settings().enable_rss_feed:
+            await ctx.send(get_translation("RSS disabled") + "!")
+            return
+
+        if channel is None:
+            channel = ctx.channel
+        BotVars.webhook_rss = BotVars.webhook_rss.edit(channel=channel)
+        await ctx.send(get_translation("Channel {0} set to RSS webhook as default channel").format(channel.mention))
 
     @commands.Cog.listener()
     async def on_message(self, message: Message):
         with handle_unhandled_error_in_events():
-            if Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
-                    message.channel.id == Config.get_cross_platform_chat_settings().channel_id:
+            if Config.get_cross_platform_chat_settings().enable_cross_platform_chat \
+                    and BotVars.webhook_chat is not None \
+                    and message.channel.id == BotVars.webhook_chat.channel_id:
                 await handle_message_for_chat(message, self._bot)
 
     @commands.Cog.listener()
     async def on_raw_message_edit(self, payload: RawMessageUpdateEvent):
         with handle_unhandled_error_in_events():
-            if Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
-                    payload.channel_id == Config.get_cross_platform_chat_settings().channel_id:
+            if Config.get_cross_platform_chat_settings().enable_cross_platform_chat \
+                    and BotVars.webhook_chat is not None \
+                    and payload.channel_id == BotVars.webhook_chat.channel_id:
                 after_channel = self._bot.get_channel(payload.channel_id)
                 if after_channel is None:
                     after_channel = await self._bot.fetch_channel(payload.channel_id)
@@ -356,29 +637,39 @@ class ChatCommands(commands.Cog):
             await send_help_of_command(ctx, command)
         else:
             await delete_after_by_msg(ctx.message, without_delay=True)
-            emb = discord.Embed(title=get_translation("List of all commands, prefix - {0}")
-                                .format(Config.get_settings().bot_settings.prefix),
-                                color=discord.Color.gold())
+            emb = discord.Embed(
+                title=get_translation("List of all commands, prefix - {0}").format(
+                    Config.get_settings().bot_settings.prefix
+                ),
+                color=discord.Color.gold()
+            )
             for c in sorted(self._bot.commands, key=lambda i: i.name):
                 params, _ = parse_params_for_help(c.clean_params, "")
                 subcommands = parse_subcommands_for_help(c)[0]
-                emb.add_field(name=f"__`{c.name}" + ("/" + "/".join(c.aliases) if len(c.aliases) > 0 else "") + "`__" +
-                                   (" " + " | ".join(subcommands) if len(subcommands) else "") +
-                                   (" |" if len(subcommands) and len(params) else "") + params,
-                              value=add_quotes("\n" + get_translation(f"help_brief_{c.name}")), inline=False)
-            emb.set_footer(text=get_translation("Values in [square brackets] are optional.\n"
-                                                "Values in <angle brackets> have to be provided by you.\n"
-                                                "The | sign means one or the other.\n"
-                                                "Use '{prefix}help' command for more info.\n"
-                                                "Or '{prefix}command {arg_list}' for short.")
-                           .format(prefix=Config.get_settings().bot_settings.prefix,
-                                   arg_list=" | ".join(Config.get_settings().bot_settings.help_arguments)))
+                emb.add_field(
+                    name=f"__`{c.name}" + ("/" + "/".join(c.aliases) if len(c.aliases) > 0 else "") + "`__" +
+                         (" " + " | ".join(subcommands) if len(subcommands) else "") +
+                         (" |" if len(subcommands) and len(params) else "") + params,
+                    value=add_quotes("\n" + get_translation(f"help_brief_{c.name}")),
+                    inline=False
+                )
+            emb.set_footer(text=get_translation(
+                "Values in [square brackets] are optional.\n"
+                "Values in <angle brackets> have to be provided by you.\n"
+                "The | sign means one or the other.\n"
+                "Use '{prefix}help' command for more info.\n"
+                "Or '{prefix}command {arg_list}' for short."
+            ).format(
+                prefix=Config.get_settings().bot_settings.prefix,
+                arg_list=" | ".join(Config.get_settings().bot_settings.help_arguments))
+            )
             await ctx.send(embed=emb)
 
     @commands.group(pass_context=True, aliases=["cls"], invoke_without_command=True)
-    @decorators.bot_has_permissions_with_dm(manage_messages=True, send_messages=True, mention_everyone=True,
-                                            add_reactions=True, embed_links=True, read_message_history=True,
-                                            view_channel=True)
+    @decorators.bot_has_permissions_with_dm(
+        manage_messages=True, send_messages=True, mention_everyone=True, add_reactions=True, embed_links=True,
+        read_message_history=True, view_channel=True
+    )
     @decorators.has_permissions_with_dm(manage_messages=True)
     async def clear(
             self,
@@ -392,9 +683,10 @@ class ChatCommands(commands.Cog):
             await bot_dm_clear(ctx, self._bot, count=count)
 
     @clear.command(pass_context=True, name="all")
-    @decorators.bot_has_permissions_with_dm(manage_messages=True, send_messages=True, mention_everyone=True,
-                                            add_reactions=True, embed_links=True, read_message_history=True,
-                                            view_channel=True)
+    @decorators.bot_has_permissions_with_dm(
+        manage_messages=True, send_messages=True, mention_everyone=True, add_reactions=True, embed_links=True,
+        read_message_history=True, view_channel=True
+    )
     @decorators.has_permissions_with_dm(manage_messages=True)
     async def c_all(self, ctx: commands.Context, mentions: commands.Greedy[Union[Member, Role]] = None):
         if not isinstance(ctx.channel, DMChannel):
@@ -403,9 +695,10 @@ class ChatCommands(commands.Cog):
             await bot_dm_clear(ctx, self._bot, subcommand="all")
 
     @clear.command(pass_context=True, name="reply", aliases=["to"])
-    @decorators.bot_has_permissions_with_dm(manage_messages=True, send_messages=True, mention_everyone=True,
-                                            add_reactions=True, embed_links=True, read_message_history=True,
-                                            view_channel=True)
+    @decorators.bot_has_permissions_with_dm(
+        manage_messages=True, send_messages=True, mention_everyone=True, add_reactions=True, embed_links=True,
+        read_message_history=True, view_channel=True
+    )
     @decorators.has_permissions_with_dm(manage_messages=True)
     async def c_reply(self, ctx: commands.Context, mentions: commands.Greedy[Union[Member, Role]] = None):
         if ctx.message.reference is not None:
