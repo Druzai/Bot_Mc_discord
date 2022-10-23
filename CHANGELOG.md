@@ -19,6 +19,8 @@ All important changes to this project will be documented in this file.
 
 * Fixed and improved translations and bot responses
 * Improved parsing such types as `Union` and `Literal` in `help` command
+* Improved kicking players with illegal characters such as space from server
+* Improved execution of commands `whitelist add` and `whitelist del` for Minecraft server version lower than `1.7.6`
 
 #### Breaking changes:
 

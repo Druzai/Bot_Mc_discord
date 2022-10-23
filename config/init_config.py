@@ -5,7 +5,8 @@ from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import datetime
 from glob import glob
-from json import load, JSONDecodeError
+from hashlib import md5
+from json import load, JSONDecodeError, dump
 from locale import getdefaultlocale
 from os import mkdir, listdir, remove, getcwd
 from os.path import isfile, isdir
@@ -858,6 +859,67 @@ class Config:
         cls.get_server_config().query_port = server_properties.query_port
         cls.get_server_config().rcon_port = server_properties.rcon_port
         cls.get_server_config().rcon_password = server_properties.rcon_password
+
+    @staticmethod
+    def get_offline_uuid(username: str):
+        data = bytearray(md5(("OfflinePlayer:" + username).encode()).digest())
+        data[6] &= 0x0f  # clear version
+        data[6] |= 0x30  # set to version 3
+        data[8] &= 0x3f  # clear variant
+        data[8] |= 0x80  # set to IETF variant
+        uuid = data.hex()
+        return "-".join((uuid[:8], uuid[8:12], uuid[12:16], uuid[16:20], uuid[20:]))
+
+    @classmethod
+    def save_to_whitelist(cls, version: 'ServerVersion', username: str):
+        if version.minor < 7 or (version.minor == 7 and version.patch < 6):
+            filepath = Path(Config.get_selected_server_from_list().working_directory + "/white-list.txt")
+            if filepath.exists():
+                with open(filepath, "a", encoding="utf8") as f:
+                    f.write(username + "\n")
+            else:
+                with open(filepath, "w", encoding="utf8") as f:
+                    f.write(username + "\n")
+        else:
+            entry = dict(uuid=Config.get_offline_uuid(username), name=username)
+            whitelist = [entry]
+            filepath = Path(Config.get_selected_server_from_list().working_directory + "/whitelist.json")
+            if filepath.exists():
+                with suppress(JSONDecodeError):
+                    with open(filepath, "r", encoding="utf8") as f:
+                        whitelist = load(f)
+                    whitelist.append(entry)
+            with open(filepath, "w", encoding="utf8") as f:
+                dump(whitelist, f, indent=2)
+
+    @classmethod
+    def check_and_delete_from_whitelist(cls, version: 'ServerVersion', username: str) -> bool:
+        is_entry_deleted = False
+        if version.minor < 7 or (version.minor == 7 and version.patch < 6):
+            filepath = Path(Config.get_selected_server_from_list().working_directory + "/white-list.txt")
+            if filepath.exists():
+                with open(filepath, "r", encoding="utf8") as f:
+                    whitelist = [ln.strip() for ln in f.readlines()]
+                with suppress(ValueError):
+                    whitelist.remove(username)
+                    is_entry_deleted = True
+                if is_entry_deleted:
+                    with open(filepath, "w", encoding="utf8") as f:
+                        f.writelines(whitelist)
+        else:
+            filepath = Path(Config.get_selected_server_from_list().working_directory + "/whitelist.json")
+            if filepath.exists():
+                with suppress(JSONDecodeError):
+                    with open(filepath, "r", encoding="utf8") as f:
+                        whitelist = load(f)
+                for entry in range(len(whitelist)):
+                    if whitelist[entry]["name"] == username:
+                        whitelist.remove(whitelist[entry])
+                        is_entry_deleted = True
+                if is_entry_deleted:
+                    with open(filepath, "w", encoding="utf8") as f:
+                        dump(whitelist, f, indent=2)
+        return is_entry_deleted
 
     @classmethod
     def get_list_of_ops(cls, version: 'ServerVersion') -> List[str]:

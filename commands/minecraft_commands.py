@@ -15,15 +15,15 @@ from psutil import disk_usage
 
 from components import decorators
 from components.additional_funcs import (
-    server_checkups, send_error, send_status, save_to_whitelist_json, get_whitelist_entry, get_server_players,
-    add_quotes, bot_status, bot_list, bot_start, bot_stop, bot_restart, connect_rcon, make_underscored_line,
-    get_human_readable_size, create_zip_archive, restore_from_zip_archive, get_file_size, BackupsThread,
-    get_folder_size, send_message_of_deleted_backup, handle_backups_limit_and_size, bot_backup, delete_after_by_msg,
-    get_half_members_count_with_role, warn_about_auto_backups, get_archive_uncompressed_size, get_bot_display_name,
-    get_server_version, DISCORD_SYMBOLS_IN_MESSAGE_LIMIT, get_number_of_digits, bot_associate, bot_associate_info,
-    get_time_string, bot_shutdown_info, bot_forceload_info, get_member_string, handle_rcon_error, IPv4Address,
-    check_and_delete_from_whitelist_json, handle_unhandled_error_in_task, check_if_string_in_all_translations,
-    handle_unhandled_error_in_events, build_nickname_tellraw_for_bot
+    server_checkups, send_error, send_status, get_server_players, add_quotes, bot_status, bot_list, bot_start, bot_stop,
+    bot_restart, connect_rcon, make_underscored_line, get_human_readable_size, create_zip_archive,
+    restore_from_zip_archive, get_file_size, BackupsThread, get_folder_size, send_message_of_deleted_backup,
+    handle_backups_limit_and_size, bot_backup, delete_after_by_msg, get_half_members_count_with_role,
+    warn_about_auto_backups, get_archive_uncompressed_size, get_bot_display_name, get_server_version,
+    DISCORD_SYMBOLS_IN_MESSAGE_LIMIT, get_number_of_digits, bot_associate, bot_associate_info, get_time_string,
+    bot_shutdown_info, bot_forceload_info, get_member_string, handle_rcon_error, IPv4Address,
+    handle_unhandled_error_in_task, check_if_string_in_all_translations, handle_unhandled_error_in_events,
+    build_nickname_tellraw_for_bot
 )
 from components.localization import get_translation
 from components.watcher_handle import create_watcher
@@ -441,6 +441,12 @@ class MinecraftCommands(commands.Cog):
             Config.save_auth_users()
             await ctx.send(get_translation("{0}, bot gave access to the nick `{1}` with IP-address `{2}`!")
                            .format(ctx.author.mention, nick, ip_info.ip_address))
+            banned_ips = Config.get_list_of_banned_ips_and_reasons(get_server_version())
+            if ip_info.ip_address in [e["ip"] for e in banned_ips]:
+                async with handle_rcon_error(ctx):
+                    with connect_rcon() as cl_r:
+                        cl_r.run(f"pardon-ip {ip_info.ip_address}")
+                    await ctx.send(add_quotes(get_translation("Unbanned IP-address {0}!").format(ip_info.ip_address)))
         else:
             await ctx.send(add_quotes(get_translation("Your code for this nick is wrong. Try again.")))
 
@@ -588,13 +594,20 @@ class MinecraftCommands(commands.Cog):
                        add_quotes(get_translation("These nicks were revoked with this IP-address:") +
                                   "\n- " + "\n- ".join(possible_matches)))
         if len(available_players_to_kick) > 0:
+            kicked_nicks = []
             with suppress(ConnectionError, socket.error):
                 with connect_rcon() as cl_r:
-                    for p in available_players_to_kick:
-                        cl_r.kick(p, get_translation("One of the sessions for this nick has been ended"))
+                    for player in available_players_to_kick:
+                        reason = get_translation("One of the sessions for this nick has been ended")
+                        response = cl_r.kick(
+                            player if get_server_version().minor < 14 else f"'{player}'",
+                            reason
+                        )
+                        if search(reason, response):
+                            kicked_nicks.append(player)
             await ctx.send(f"{ctx.author.mention}\n" + add_quotes(get_translation("These nicks bound this IP-address "
                                                                                   "were kicked from Minecraft server:")
-                                                                  + "\n- " + "\n- ".join(available_players_to_kick)))
+                                                                  + "\n- " + "\n- ".join(kicked_nicks)))
 
     @a_revoke.command(pass_context=True, name="all")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -622,13 +635,20 @@ class MinecraftCommands(commands.Cog):
         await ctx.send(f"{ctx.author.mention}\n" + add_quotes(get_translation("All these nicks were revoked:") +
                                                               "\n- " + "\n- ".join(nicks_to_revoke)))
         if len(available_players_to_kick) > 0:
+            kicked_nicks = []
             with suppress(ConnectionError, socket.error):
                 with connect_rcon() as cl_r:
-                    for p in available_players_to_kick:
-                        cl_r.kick(p, get_translation("All sessions for this nick have been ended"))
+                    for player in available_players_to_kick:
+                        reason = get_translation("All sessions for this nick have been ended")
+                        response = cl_r.kick(
+                            player if get_server_version().minor < 14 else f"'{player}'",
+                            reason
+                        )
+                        if search(reason, response):
+                            kicked_nicks.append(player)
             await ctx.send(f"{ctx.author.mention}\n" +
                            add_quotes(get_translation("These nicks were kicked from Minecraft server:")
-                                      + "\n- " + "\n- ".join(available_players_to_kick)))
+                                      + "\n- " + "\n- ".join(kicked_nicks)))
 
     @commands.group(pass_context=True, aliases=["sch"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -718,37 +738,58 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def w_add(self, ctx: commands.Context, minecraft_nick: str):
+    async def w_add(self, ctx: commands.Context, *, minecraft_nick: str):
         async with handle_rcon_error(ctx):
             version = get_server_version()
             with connect_rcon() as cl_r:
-                if ServerProperties().online_mode or version.minor < 7 or (version.minor == 7 and version.patch < 6):
-                    cl_r.run("whitelist add", minecraft_nick)
-                else:
-                    save_to_whitelist_json(get_whitelist_entry(minecraft_nick))
+                added = False
+                if " " not in minecraft_nick and not any(map(str.isupper, minecraft_nick)):
+                    response = cl_r.run("whitelist add", minecraft_nick).strip()
+                    match = search(r"^Added\s(?P<nick>\S+)", response)
+                    if match is not None:
+                        if match.group("nick") == minecraft_nick:
+                            added = True
+                        else:
+                            if Config.check_and_delete_from_whitelist(version, match.group("nick")):
+                                cl_r.run("whitelist reload")
+
+                if not ServerProperties().online_mode and not added:
+                    Config.save_to_whitelist(version, minecraft_nick)
                     cl_r.run("whitelist reload")
-                await ctx.send(add_quotes(get_translation("Added {0} to the list of allowed nicks")
-                                          .format(minecraft_nick)))
+                    added = True
+
+                if added:
+                    await ctx.send(add_quotes(get_translation("Added {0} to the list of allowed nicks")
+                                              .format(minecraft_nick)))
+                else:
+                    await ctx.send(add_quotes(get_translation("Nick wasn't added to the list of allowed nicks")))
 
     @whitelist.command(pass_context=True, name="del", ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     @decorators.has_role_or_default()
-    async def w_del(self, ctx: commands.Context, minecraft_nick: str):
+    async def w_del(self, ctx: commands.Context, *, minecraft_nick: str):
         async with handle_rcon_error(ctx):
             version = get_server_version()
             with connect_rcon() as cl_r:
-                msg = cl_r.run("whitelist remove", minecraft_nick)
-                entry_deleted = False
-                if version.minor > 7 or (version.minor == 7 and version.patch > 5):
-                    entry_deleted = check_and_delete_from_whitelist_json(minecraft_nick)
-                    if entry_deleted:
+                removed = False
+                if " " not in minecraft_nick:
+                    response = cl_r.run("whitelist remove", minecraft_nick).strip()
+                    match = search(r"^Removed\s(?P<nick>\S+)", response)
+                    if match is not None:
+                        if match.group("nick") == minecraft_nick:
+                            removed = True
+
+                if not removed:
+                    if Config.check_and_delete_from_whitelist(version, minecraft_nick):
                         cl_r.run("whitelist reload")
-                if search(r"Removed [\w ]+ from the whitelist", msg) or entry_deleted:
+                        removed = True
+
+                if removed:
                     await ctx.send(add_quotes(get_translation("Removed {0} from the list of allowed nicks")
                                               .format(minecraft_nick)))
                 else:
-                    await ctx.send(add_quotes(get_translation("Nick not found in the list of allowed nicks")))
+                    await ctx.send(add_quotes(get_translation("Nick wasn't found in the list of allowed nicks")))
 
     @whitelist.command(pass_context=True, name="list", aliases=["ls"])
     @commands.bot_has_permissions(send_messages=True, view_channel=True)

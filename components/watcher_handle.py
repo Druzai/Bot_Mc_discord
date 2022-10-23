@@ -1,5 +1,5 @@
 import socket
-from asyncio import run_coroutine_threadsafe
+from asyncio import run_coroutine_threadsafe, sleep as asleep
 from contextlib import suppress
 from datetime import datetime
 from os import SEEK_END, stat
@@ -405,7 +405,7 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
 
             if logged_in_nick is not None and ip_address is not None and \
                     Config.get_secure_auth().enable_secure_auth:
-                from components.additional_funcs import connect_rcon, add_quotes
+                from components.additional_funcs import connect_rcon, add_quotes, handle_rcon_error
 
                 save_auth_users = False
                 if logged_in_nick not in [u.nick for u in Config.get_auth_users()]:
@@ -462,7 +462,35 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                                                                                                             code)
                         with suppress(ConnectionError, socket.error):
                             with connect_rcon() as cl_r:
-                                cl_r.kick(logged_in_nick, kick_reason)
+                                response = cl_r.kick(
+                                    logged_in_nick if server_version.minor < 14 else f"'{logged_in_nick}'",
+                                    kick_reason
+                                )
+                                if not search(kick_reason, response):
+                                    secs = Config.get_secure_auth().mins_before_code_expires * 60
+                                    if server_version.minor > 2:
+                                        if server_version.minor < 7 or \
+                                                (server_version.minor == 7 and server_version.patch < 6):
+                                            kick_reason = kick_reason.replace("\n", " ")
+                                        else:
+                                            kick_reason += "\n"
+                                        kick_reason += get_translation(
+                                            "You will be unbanned in {0} sec or after authorization!"
+                                        ).format(secs)
+                                        cl_r.run(f"ban-ip {ip_address} {kick_reason}")
+                                    else:
+                                        cl_r.run(f"ban-ip {ip_address}")
+
+                                    async def run_delayed_command(ip_address, seconds):
+                                        await asleep(seconds)
+                                        with suppress(ConnectionError, socket.error):
+                                            with connect_rcon() as cl_r:
+                                                cl_r.run(f"pardon-ip {ip_address}")
+
+                                    run_coroutine_threadsafe(
+                                        run_delayed_command(ip_address, secs),
+                                        BotVars.bot_for_webhooks.loop
+                                    )
                         if is_invasion_to_kick:
                             continue
                         member = None
@@ -500,7 +528,7 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                                 if p.command == f"auth login {logged_in_nick} {ip_address}":
                                     p.cancel()
 
-                            async def send_message_and_poll(member, msg, poll, nick, ip_address):
+                            async def send_message_and_poll(member, msg, poll, nick, ip_address, server_version):
                                 await member.send(msg)
                                 if await poll.run(channel=member,
                                                   embed_message=get_translation("Login without code?\n(Less safe)"),
@@ -515,10 +543,19 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                                     await member.send(get_translation("{0}, bot gave access to the nick "
                                                                       "`{1}` with IP-address `{2}`!")
                                                       .format(member.mention, nick, ip_address))
+                                    banned_ips = Config.get_list_of_banned_ips_and_reasons(server_version)
+                                    if ip_address in [e["ip"] for e in banned_ips]:
+                                        async with handle_rcon_error(member):
+                                            with connect_rcon() as cl_r:
+                                                cl_r.run(f"pardon-ip {ip_address}")
+                                            await member.send(add_quotes(
+                                                get_translation("Unbanned IP-address {0}!").format(ip_address)
+                                            ))
 
                             run_coroutine_threadsafe(
-                                send_message_and_poll(member, msg, poll, logged_in_nick, ip_address),
-                                BotVars.bot_for_webhooks.loop)
+                                send_message_and_poll(member, msg, poll, logged_in_nick, ip_address, server_version),
+                                BotVars.bot_for_webhooks.loop
+                            )
                         else:
                             channel = _get_commands_channel()
                             run_coroutine_threadsafe(channel.send(msg), BotVars.bot_for_webhooks.loop)

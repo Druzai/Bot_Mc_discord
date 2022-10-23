@@ -5,9 +5,8 @@ import typing
 from asyncio import sleep as asleep, Task, CancelledError
 from contextlib import contextmanager, suppress, asynccontextmanager
 from datetime import datetime, timedelta
-from hashlib import md5
 from itertools import chain
-from json import load, dump, dumps, JSONDecodeError
+from json import dumps
 from os import chdir, system, walk, mkdir, remove
 from os.path import join as p_join, getsize, isfile
 from pathlib import Path
@@ -1805,49 +1804,6 @@ async def handle_rcon_error(ctx: commands.Context):
             await ctx.send(add_quotes(get_translation("server offline").capitalize()))
 
 
-def get_offline_uuid(username: str):
-    data = bytearray(md5(("OfflinePlayer:" + username).encode()).digest())
-    data[6] &= 0x0f  # clear version
-    data[6] |= 0x30  # set to version 3
-    data[8] &= 0x3f  # clear variant
-    data[8] |= 0x80  # set to IETF variant
-    uuid = data.hex()
-    return "-".join((uuid[:8], uuid[8:12], uuid[12:16], uuid[16:20], uuid[20:]))
-
-
-def get_whitelist_entry(username: str):
-    return dict(uuid=get_offline_uuid(username), name=username)
-
-
-def save_to_whitelist_json(entry: dict):
-    whitelist = [entry]
-    filepath = Path(Config.get_selected_server_from_list().working_directory + "/whitelist.json")
-    if filepath.exists():
-        with suppress(JSONDecodeError):
-            with open(filepath, "r", encoding="utf8") as file:
-                whitelist = load(file)
-            whitelist.append(entry)
-    with open(filepath, "w", encoding="utf8") as file:
-        dump(whitelist, file, indent=2)
-
-
-def check_and_delete_from_whitelist_json(username: str):
-    filepath = Path(Config.get_selected_server_from_list().working_directory + "/whitelist.json")
-    is_entry_deleted = False
-    if filepath.exists():
-        with suppress(JSONDecodeError):
-            with open(filepath, "r", encoding="utf8") as file:
-                whitelist = load(file)
-        for entry in range(len(whitelist)):
-            if whitelist[entry]["name"] == username:
-                whitelist.remove(whitelist[entry])
-                is_entry_deleted = True
-        if is_entry_deleted:
-            with open(filepath, "w", encoding="utf8") as file:
-                dump(whitelist, file, indent=2)
-    return is_entry_deleted
-
-
 class HelpCommandArgument(commands.CheckFailure):
     pass
 
@@ -2642,7 +2598,7 @@ def _build_nickname_tellraw_for_minecraft_player(
             entity = get_translation("Entity")
         else:
             entity = get_translation("Player")
-        hover_string = f"{nick}\n" + get_translation("Type: {0}").format(entity) + f"\n{get_offline_uuid(nick)}"
+        hover_string = f"{nick}\n" + get_translation("Type: {0}").format(entity) + f"\n{Config.get_offline_uuid(nick)}"
         tellraw_obj += [{
             "text": nick,
             "clickEvent": {"action": "suggest_command", "value": f"/tell {nick} "},
@@ -2652,7 +2608,7 @@ def _build_nickname_tellraw_for_minecraft_player(
         tellraw_obj += [{
             "text": nick,
             "clickEvent": {"action": "suggest_command", "value": f"/tell {nick} "},
-            "hoverEvent": {"action": "show_text", content_name: f"{nick}\n{get_offline_uuid(nick)}"}
+            "hoverEvent": {"action": "show_text", content_name: f"{nick}\n{Config.get_offline_uuid(nick)}"}
         }]
     tellraw_obj += [{"text": right_bracket}]
     if default_text_color is not None:
@@ -2699,7 +2655,7 @@ def build_nickname_tellraw_for_bot(
     tellraw_obj = [{"text": left_bracket}]
     if server_version.minor > 7:
         hover_string = f"{nick}\n" + get_translation("Type: {0}").format(get_translation("Entity")) + \
-                       f"\n{get_offline_uuid(nick)}"
+                       f"\n{Config.get_offline_uuid(nick)}"
         tellraw_obj += [{
             "text": nick,
             "color": "dark_gray",
@@ -2709,7 +2665,7 @@ def build_nickname_tellraw_for_bot(
         tellraw_obj += [{
             "text": nick,
             "color": "dark_gray",
-            "hoverEvent": {"action": "show_text", content_name: f"{nick}\n{get_offline_uuid(nick)}"}
+            "hoverEvent": {"action": "show_text", content_name: f"{nick}\n{Config.get_offline_uuid(nick)}"}
         }]
     tellraw_obj += [{"text": right_bracket}]
     return tellraw_obj
@@ -2719,15 +2675,17 @@ class ServerVersion:
     def __init__(self, version_string: str):
         parsed_version = version_string
         snapshot_version = False
-        if any(i in parsed_version.lower() for i in ["snapshot", "release"]) or search(r"\d+w\d+a", parsed_version):
+        snapshot_regex = r"(?P<version>\d+w\d+[a-e~])"
+        snapshot_match = search(snapshot_regex, parsed_version)
+        if any(i in parsed_version.lower() for i in ["snapshot", "release"]) or snapshot_match is not None:
             print(get_translation("Minecraft server is not in release state! Proceed with caution!"))
             if "snapshot" in parsed_version.lower():
                 parsed_version = parsed_version.lower().split("snapshot")[0]
                 snapshot_version = True
             elif "release" in parsed_version.lower():
                 parsed_version = parsed_version.lower().split("release")[0]
-            elif search(r"\d+w\d+a", parsed_version):
-                parsed_version = parse_snapshot(parsed_version)
+            elif snapshot_match is not None:
+                parsed_version = parse_snapshot(snapshot_match.group("version"))
                 if parsed_version is None:
                     parsed_version = ""
                 snapshot_version = True
@@ -2798,6 +2756,7 @@ def times(fade_in: Union[int, float], duration: Union[int, float], fade_out: Uni
 
 def announce(player: str, message: str, rcon_client, subtitle=False):
     if get_server_version().minor >= 11 and not subtitle:
+        player = player if get_server_version().minor < 14 else f"'{player}'"
         rcon_client.run(f'title {player} actionbar ' + '{' + f'"text":"{message}"' + ',"bold":true,"color":"gold"}')
     else:
         rcon_client.run(f'title {player} subtitle ' + '{' + f'"text":"{message}"' + ',"color":"gold"}')
@@ -2806,7 +2765,7 @@ def announce(player: str, message: str, rcon_client, subtitle=False):
 
 
 def play_sound(name: str, sound: str, category="master", volume=1, pitch=1.0):
-    return f"/execute as {name} at @s run playsound {sound} {category} @s ~ ~ ~ {volume} {pitch} 1"
+    return f"execute as {name} at @s run playsound {sound} {category} @s ~ ~ ~ {volume} {pitch} 1"
 
 
 def play_music(name: str, sound: str):
@@ -2814,7 +2773,7 @@ def play_music(name: str, sound: str):
 
 
 def stop_music(sound: str, name="@a"):
-    return f"/stopsound {name} music {sound}"
+    return f"stopsound {name} music {sound}"
 
 
 def get_number_of_digits(number: int):
