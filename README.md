@@ -10,7 +10,8 @@
 
 ## Main features
 
-**Attention! This bot designed to work only on 1 Discord server!**
+> **Warning**
+> **This bot designed to work only on 1 Discord server!**
 
 * Managing Minecraft server via Discord bot:
     * Start the server
@@ -28,6 +29,7 @@
         * Auto deleting backup(s) if backup's limit or space exceeded
     * Make yourself an operator for limited amount of time if your Discord account has association with Minecraft nick
         * **Bot can't do it when nick has spaces!**
+          * This applies to servers from `1.0.0` to `1.19.0`!
 * Changing Minecraft servers on the go while server is down
 * Setting an optional role in Discord. If set then the bot commands for managing the Minecraft server will require this
   role from the member
@@ -35,7 +37,7 @@
   execute if member has admin role. Otherwise, member must have `Administrator` permission.
 * Creating optional cross-platform chat between Discord text channel and Minecraft server via bot and webhook
     * Supported mentions in Discord and Minecraft
-        * Also for better recognition you can create list of associations between Discord member and Minecraft nick
+        * Also, for better recognition you can create list of associations between Discord member and Minecraft nick
     * Supported edited messages from Discord and editing messages from Minecraft
         * Message should start with single `*` or with `*` and space if edited message should start with `**`
     * Supported Discord reply in message
@@ -68,19 +70,15 @@
 `@Minecrafters` - an optional role in Discord for managing the Minecraft server. If not stated then bot will
 mention `@everyone`.
 
-Note: Mentions from Minecraft mustn't contain `@` in them!
+> **Note**
+> Mentions from Minecraft mustn't contain `@` in them!
 
 ## Commands
 
 If you want to see help on all bot's commands use `help` command when bot is running.
 
-Note: some commands will require optional role or/and admin role if you set them in bot config.
-
-To enable cross-platform chat you need to enter in bot setup channel id (or use `chat` command) and webhook url!
-
-And to enable rss feed you also need webhook url!
-
-[How to create webhook and get its url.](https://github.com/Akizo96/de.isekaidev.discord.wbbBridge/wiki/How-to-get-Webhook-ID-&-Token)
+> **Note**
+> Some commands will require optional role or/and admin role if you set them in bot config.
 
 **For backups: remember that if there are files in backups directory that not in server config, they will be deleted!
 And vice versa!**
@@ -132,11 +130,11 @@ Executable file will be in `%project_root_dir%/build_dist`.
 
 ## Run
 
-**Important! If you're running Minecraft server between versions `1.7.2` and `1.18` to avoid critical security
+**Important! If you're running Minecraft server between versions `1.7.2` and `1.18.0` to avoid critical security
 vulnerability `Log4Shell` do instructions stated in
 this [article](https://www.minecraft.net/en-us/article/important-message--security-vulnerability-java-edition)!**
 
-For Minecraft server lower than version `1.17` for cross-platform chat to work properly you have to have
+For Minecraft server lower than version `1.17.0` for cross-platform chat to work properly you have to have
 argument `-Dfile.encoding=UTF-8` when you're executing `*.bat`, `*.cmd`, shortcut, `*.sh` or `*.command` script (
 necessary for Windows).
 
