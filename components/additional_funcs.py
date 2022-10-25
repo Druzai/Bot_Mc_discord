@@ -286,12 +286,18 @@ async def start_server(
             Config.get_secure_auth().enable_secure_auth:
         BotVars.watcher_of_log_file = create_watcher(BotVars.watcher_of_log_file, get_server_version())
         BotVars.watcher_of_log_file.start()
+    to_save = False
     if Config.get_selected_server_from_list().server_loading_time:
-        Config.get_selected_server_from_list().server_loading_time = \
-            (Config.get_selected_server_from_list().server_loading_time + (datetime.now() - check_time).seconds) // 2
+        average_server_loading_time = (Config.get_selected_server_from_list().server_loading_time +
+                       (datetime.now() - check_time).seconds) // 2
+        if average_server_loading_time != Config.get_selected_server_from_list().server_loading_time:
+            Config.get_selected_server_from_list().server_loading_time = average_server_loading_time
+            to_save = True
     else:
         Config.get_selected_server_from_list().server_loading_time = (datetime.now() - check_time).seconds
-    Config.save_config()
+        to_save = True
+    if to_save:
+        Config.save_config()
     print(get_translation("Server on!"))
     if ctx and not shut_up:
         await send_msg(ctx, author_mention + "\n" + add_quotes(get_translation("Server's on now")), is_reaction)
@@ -1455,7 +1461,7 @@ async def bot_associate(
             Config.add_to_known_users_list(minecraft_nick, discord_mention.id)
             await ctx.send(get_translation("Now {0} associates with nick `{1}` in Minecraft.")
                            .format(discord_mention.mention, minecraft_nick))
-    elif assoc_command == "del":
+    elif assoc_command == "remove":
         if minecraft_nick in [u.user_minecraft_nick for u in Config.get_known_users_list()] and \
                 discord_mention.id in [u.user_discord_id for u in Config.get_known_users_list()]:
             need_to_save = True
@@ -2420,12 +2426,13 @@ async def _handle_components_in_message(
                     "name": ""
                 })
             else:
-                resp = req_head(link, timeout=(4, 8), headers={"User-Agent": UserAgent.get_header()})
-                if resp.status_code == 200 and "image" in resp.headers.get("content-type"):
-                    images_for_preview.append({
-                        "url": link,
-                        "name": ""
-                    })
+                with suppress(Timeout):
+                    resp = req_head(link, timeout=(4, 8), headers={"User-Agent": UserAgent.get_header()})
+                    if resp.status_code == 200 and "image" in resp.headers.get("content-type"):
+                        images_for_preview.append({
+                            "url": link,
+                            "name": ""
+                        })
         if only_replace_links:
             if version_lower_1_7_2:
                 if is_tenor:

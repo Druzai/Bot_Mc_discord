@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
-"POT-Creation-Date: 2022-10-25 16:01+0300\n"
-"PO-Revision-Date: 2022-10-25 16:02+0300\n"
+"POT-Creation-Date: 2022-10-25 23:05+0300\n"
+"PO-Revision-Date: 2022-10-25 23:06+0300\n"
 "Last-Translator: Druzai\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -804,17 +804,17 @@ msgid "help_associate_add_minecraft_nick"
 msgstr "Ник в майнкрафте, который вы хотите связать"
 
 #: ..\_frozen_translations.py:184
-msgid "help_associate_del"
+msgid "help_associate_remove"
 msgstr ""
 "**Только для админа!**\n"
 "Удаляет связь пользователя в дискорде с ником в майнкрафте"
 
 #: ..\_frozen_translations.py:185
-msgid "help_associate_del_discord_mention"
+msgid "help_associate_remove_discord_mention"
 msgstr "Упоминание пользователя в дискорде, пример: '@Пользователь'"
 
 #: ..\_frozen_translations.py:186
-msgid "help_associate_del_minecraft_nick"
+msgid "help_associate_remove_minecraft_nick"
 msgstr "Ник в майнкрафте, который вы хотите отвязать"
 
 #: ..\_frozen_translations.py:187
@@ -907,18 +907,18 @@ msgid "help_backup"
 msgstr "Возвращает информацию о резервных копиях"
 
 #: ..\_frozen_translations.py:206
-msgid "help_backup_del"
+msgid "help_backup_remove"
 msgstr ""
 "Удаляет резервную копию по предоставленному номеру для выбранного майнкрафт "
 "сервера\n"
 "Создаёт опрос, чтобы подтвердить ваши намерения"
 
 #: ..\_frozen_translations.py:207
-msgid "help_backup_del_backup_number"
+msgid "help_backup_remove_backup_number"
 msgstr "Номер резервной копии из '{prefix}backup list'"
 
 #: ..\_frozen_translations.py:208
-msgid "help_backup_del_all"
+msgid "help_backup_remove_all"
 msgstr ""
 "Удаляет все резервные копии для выбранного майнкрафт сервера\n"
 "Создаёт опрос, чтобы подтвердить ваши намерения"
@@ -1534,11 +1534,11 @@ msgid "help_whitelist_add_minecraft_nick"
 msgstr "Ник игрока майнкрафта"
 
 #: ..\_frozen_translations.py:333
-msgid "help_whitelist_del"
+msgid "help_whitelist_remove"
 msgstr "Удаляет ник майнкрафта из списка разрешённых ников"
 
 #: ..\_frozen_translations.py:334
-msgid "help_whitelist_del_minecraft_nick"
+msgid "help_whitelist_remove_minecraft_nick"
 msgstr "Ник игрока майнкрафта"
 
 #: ..\_frozen_translations.py:335
@@ -2521,8 +2521,8 @@ msgid "There are no backups for '{0}' server!"
 msgstr "На '{0}' сервере нет резервных копий!"
 
 #: ..\commands\minecraft_commands.py:1077
-msgid "{0}, bot already has poll on `backup del` command!"
-msgstr "{0}, у бота уже есть опрос по команде `backup del`!"
+msgid "{0}, bot already has poll on `backup remove` command!"
+msgstr "{0}, у бота уже есть опрос по команде `backup remove`!"
 
 #: ..\commands\minecraft_commands.py:1087
 msgid ""
@@ -2537,8 +2537,8 @@ msgid "Deleted backup {0}.zip of '{1}' server"
 msgstr "Удалена резервная копия {0}.zip сервера '{1}'"
 
 #: ..\commands\minecraft_commands.py:1131
-msgid "{0}, bot already has poll on `backup del all` command!"
-msgstr "{0}, у бота уже есть опрос по команде `backup del all`!"
+msgid "{0}, bot already has poll on `backup remove all` command!"
+msgstr "{0}, у бота уже есть опрос по команде `backup remove all`!"
 
 #: ..\commands\minecraft_commands.py:1139
 msgid ""

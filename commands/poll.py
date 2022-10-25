@@ -23,7 +23,7 @@ class Poll(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self._bot: commands.Bot = bot
-        for command in ["clear", "stop", "backup_del", "backup_del_all"]:
+        for command in ["clear", "stop", "backup_remove", "backup_remove_all"]:
             self._await_date[command] = datetime.now()
 
     async def run(

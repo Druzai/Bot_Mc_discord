@@ -333,12 +333,12 @@ class MinecraftCommands(commands.Cog):
     async def a_add(self, ctx: commands.Context, discord_mention: Member, *, minecraft_nick: str):
         await bot_associate(ctx, self._bot, discord_mention, "add", minecraft_nick)
 
-    @associate.command(pass_context=True, name="del", aliases=["remove"], ignore_extra=False)
+    @associate.command(pass_context=True, name="remove", aliases=["del"], ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @decorators.has_admin_role()
     @commands.guild_only()
-    async def a_del(self, ctx: commands.Context, discord_mention: Member, *, minecraft_nick: str):
-        await bot_associate(ctx, self._bot, discord_mention, "del", minecraft_nick)
+    async def a_remove(self, ctx: commands.Context, discord_mention: Member, *, minecraft_nick: str):
+        await bot_associate(ctx, self._bot, discord_mention, "remove", minecraft_nick)
 
     @commands.group(pass_context=True, aliases=["auth"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -764,11 +764,11 @@ class MinecraftCommands(commands.Cog):
                 else:
                     await ctx.send(add_quotes(get_translation("Nick wasn't added to the list of allowed nicks")))
 
-    @whitelist.command(pass_context=True, name="del", ignore_extra=False)
+    @whitelist.command(pass_context=True, name="remove", aliases=["del"], ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @decorators.has_role_or_default()
     @commands.guild_only()
-    async def w_del(self, ctx: commands.Context, *, minecraft_nick: str):
+    async def w_remove(self, ctx: commands.Context, *, minecraft_nick: str):
         async with handle_rcon_error(ctx):
             version = get_server_version()
             with connect_rcon() as cl_r:
@@ -1060,11 +1060,11 @@ class MinecraftCommands(commands.Cog):
         else:
             await send_status(ctx)
 
-    @backup.group(pass_context=True, name="del", aliases=["remove"], invoke_without_command=True, ignore_extra=False)
+    @backup.group(pass_context=True, name="remove", aliases=["del"], invoke_without_command=True, ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @decorators.has_role_or_default()
     @commands.guild_only()
-    async def b_del(self, ctx: commands.Context, backup_number: int):
+    async def b_remove(self, ctx: commands.Context, backup_number: int):
         if len(Config.get_server_config().backups) == 0:
             await ctx.send(add_quotes(get_translation("There are no backups for '{0}' server!")
                                       .format(Config.get_selected_server_from_list().server_name)))
@@ -1072,14 +1072,14 @@ class MinecraftCommands(commands.Cog):
 
         if 0 < backup_number <= len(Config.get_server_config().backups):
             if Config.get_server_config().backups[backup_number - 1].initiator is not None:
-                if "backup_del" in [p.command for p in self._IndPoll.get_polls().values()]:
+                if "backup_remove" in [p.command for p in self._IndPoll.get_polls().values()]:
                     await delete_after_by_msg(ctx.message)
-                    await ctx.send(get_translation("{0}, bot already has poll on `backup del` command!")
+                    await ctx.send(get_translation("{0}, bot already has poll on `backup remove` command!")
                                    .format(ctx.author.mention),
                                    delete_after=Config.get_timeouts_settings().await_seconds_before_message_deletion)
                     return
 
-                if await self._IndPoll.timer(ctx, 5, "backup_del"):
+                if await self._IndPoll.timer(ctx, 5, "backup_remove"):
                     member = await get_member_string(self._bot,
                                                      Config.get_server_config().backups[backup_number - 1].initiator)
                     if not await self._IndPoll.run(
@@ -1091,7 +1091,7 @@ class MinecraftCommands(commands.Cog):
                                      Config.get_server_config().backups[backup_number - 1].file_name + ".zip",
                                      member,
                                      Config.get_selected_server_from_list().server_name),
-                            command="backup_del",
+                            command="backup_remove",
                             needed_role=Config.get_settings().bot_settings.managing_commands_role_id,
                             need_for_voting=get_half_members_count_with_role(
                                 ctx.channel,
@@ -1116,24 +1116,24 @@ class MinecraftCommands(commands.Cog):
             await ctx.send(add_quotes(get_translation("Bot doesn't have backup with this number "
                                                       "in backups list for current server!")))
 
-    @b_del.command(pass_context=True, name="all")
+    @b_remove.command(pass_context=True, name="all")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @decorators.has_role_or_default()
     @commands.guild_only()
-    async def b_d_all(self, ctx: commands.Context):
+    async def b_r_all(self, ctx: commands.Context):
         if len(Config.get_server_config().backups) == 0:
             await ctx.send(add_quotes(get_translation("There are no backups for '{0}' server!")
                                       .format(Config.get_selected_server_from_list().server_name)))
             return
 
-        if "backup_del_all" in [p.command for p in self._IndPoll.get_polls().values()]:
+        if "backup_remove_all" in [p.command for p in self._IndPoll.get_polls().values()]:
             await delete_after_by_msg(ctx.message)
-            await ctx.send(get_translation("{0}, bot already has poll on `backup del all` command!")
+            await ctx.send(get_translation("{0}, bot already has poll on `backup remove all` command!")
                            .format(ctx.author.mention),
                            delete_after=Config.get_timeouts_settings().await_seconds_before_message_deletion)
             return
 
-        if await self._IndPoll.timer(ctx, 5, "backup_del_all"):
+        if await self._IndPoll.timer(ctx, 5, "backup_remove_all"):
             if not await self._IndPoll.run(
                     channel=ctx.channel,
                     message=get_translation(
@@ -1141,7 +1141,7 @@ class MinecraftCommands(commands.Cog):
                         "Will you let that happen?"
                     ).format(ctx.author.mention,
                              Config.get_selected_server_from_list().server_name),
-                    command="backup_del_all",
+                    command="backup_remove_all",
                     needed_role=Config.get_settings().bot_settings.managing_commands_role_id,
                     need_for_voting=get_half_members_count_with_role(
                         ctx.channel,

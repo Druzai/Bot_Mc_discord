@@ -41,7 +41,7 @@
     * Supported edited messages from Discord and editing messages from Minecraft
         * Message should start with single `*` or with `*` and space if edited message should start with `**`
     * Supported Discord reply in message
-    * Supported url links (shortens if link longer than 256 symbols)
+    * Supported url links (shortens via `clck.ru` or `tinyURL` if link longer than 256 symbols)
     * Supported stickers in message
     * Supported attached files to message in Discord
     * Half supported emojis
@@ -53,7 +53,7 @@
         * If you set custom image link in bot config and getting standard avatar in webhook message then your image link
           is invalid!
     * Showing low quality preview of an image in Minecraft chat (max - 160 pixels in width)
-      * Can fetch image from links and attachments in Discord message
+      * Can fetch image from links, attachments and stickers in Discord message
       * Supported image opacity
       * Works in versions `1.16.0` and higher
     * Some features may not work in versions lower than `1.7.2`!

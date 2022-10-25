@@ -34,6 +34,7 @@ All important changes to this project will be documented in this file.
     * Moved logic:
         * From `edit` to `chat edit`
         * From `channel chat` to `chat webhook channel`
+    * Added alias `remove` to all `del` subcommands
 
 #### Breaking changes:
 
