@@ -1,9 +1,9 @@
 import datetime as dt
 import sys
-from ast import literal_eval
 from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import datetime
+from enum import Enum, auto
 from glob import glob
 from hashlib import md5
 from json import load, JSONDecodeError, dump
@@ -32,6 +32,9 @@ from config.crypt_wrapper import encrypt_string, decrypt_string
 if TYPE_CHECKING:
     from components.additional_funcs import ServerVersion, IPv4Address
     from components.watcher_handle import Watcher
+
+CODE_LETTERS = "WERTYUPASFGHKZXCVBNM23456789$%&+="
+URL_REGEX = r"https?://(?:[a-zA-Z]|[0-9]|[#-_@.&+]|[!*(),]|%[0-9a-fA-F][0-9a-fA-F])+"
 
 
 class BotVars:
@@ -69,7 +72,29 @@ class BotVars:
         return cls.players_login_dict.get(nick, None)
 
 
-CODE_LETTERS = "WERTYUPASFGHKZXCVBNM23456789$%&+="
+class OS(Enum):
+    Windows = auto()
+    Linux = auto()
+    MacOS = auto()
+    Unknown = auto()
+
+    @staticmethod
+    def resolve_os():
+        if sys.platform == "linux" or sys.platform == "linux2":
+            return OS.Linux
+        elif sys.platform == "win32":
+            return OS.Windows
+        elif sys.platform == "darwin":
+            return OS.MacOS
+        else:
+            return OS.Unknown
+
+
+@dataclass
+class Image_preview:
+    enable_images_preview: Optional[bool] = None
+    max_width: Optional[int] = None
+    max_height: Optional[int] = None
 
 
 @dataclass
@@ -79,6 +104,7 @@ class Cross_platform_chat:
     avatar_url_for_death_messages: Optional[str] = None
     max_words_in_mention: Optional[int] = None
     max_wrong_symbols_in_mention_from_right: Optional[int] = None
+    image_preview: Image_preview = Image_preview()
 
 
 @dataclass
@@ -356,11 +382,12 @@ class ServerProperties:
             return value
         else:
             if is_bool:
-                try:
-                    res = literal_eval(value.capitalize())
-                except ValueError:
-                    res = None
-                return res if isinstance(res, bool) else None
+                if value.lower() == "true":
+                    return True
+                elif value.lower() == "false":
+                    return False
+                else:
+                    return
             elif is_int:
                 try:
                     return int(value)
@@ -476,6 +503,7 @@ class Config:
     _bot_log_name = "bot.log"
     _need_to_rewrite = False
     _system_lang = None
+    _os = OS.resolve_os()
 
     @classmethod
     def read_config(cls, change_servers=False):
@@ -511,6 +539,10 @@ class Config:
     def init_with_system_language(cls):
         lang = getdefaultlocale()[0].split('_')[0].lower()
         cls._system_lang = set_locale(lang, set_eng_if_error=True)
+
+    @classmethod
+    def get_os(cls):
+        return cls._os
 
     @classmethod
     def get_bot_config_path(cls) -> str:
@@ -1017,7 +1049,7 @@ class Config:
                     elif answer.lower() != match_str:
                         return False
                 if try_link:
-                    if search(r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|%[0-9a-fA-F][0-9a-fA-F])+", answer):
+                    if search(URL_REGEX, answer):
                         return answer
                     else:
                         continue
@@ -1430,21 +1462,21 @@ class Config:
     def _get_server_start_file_name(cls, working_directory: str):
         file_extensions = []
         existing_files = []
-        if sys.platform == "linux" or sys.platform == "linux2":
+        if cls.get_os() == OS.Linux:
             file_extensions.append(".sh")
             print(get_translation(
                 "Bot detected your operating system is Linux.\n"
                 "Bot will search for '*.sh' file.\n"
                 "You need to enter file name {0}without{1} file extension!"
             ).format(Style.BRIGHT, Style.RESET_ALL))
-        elif sys.platform == "win32":
+        elif cls.get_os() == OS.Windows:
             file_extensions.extend([".bat", ".cmd", ".lnk", ".bat.lnk", ".cmd.lnk"])
             print(get_translation(
                 "Bot detected your operating system is Windows.\n"
                 "Bot will search for '*.bat' file, '*.cmd' file or shortcut.\n"
                 "You need to enter file name {0}without{1} file extension!"
             ).format(Style.BRIGHT, Style.RESET_ALL))
-        elif sys.platform == "darwin":
+        elif cls.get_os() == OS.MacOS:
             file_extensions.extend([".command", ".sh"])
             print(get_translation(
                 "Bot detected your operating system is macOS.\n"
@@ -1541,6 +1573,7 @@ class Config:
                 cls._ask_for_data(get_translation("Set number of lines to check") + "\n> ",
                                   try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=100)
 
+        # Cross-platform chat
         if cls.get_cross_platform_chat_settings().enable_cross_platform_chat is None:
             cls._need_to_rewrite = True
             if cls._ask_for_data(get_translation("Would you like to enable cross-platform chat?") + " Y/n\n> ", "y"):
@@ -1594,6 +1627,43 @@ class Config:
                                     " (0 - don't try to find similar ones) (default - 5, int)") + "\n> ",
                     try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=20)
 
+        # Images preview
+        if cls.get_cross_platform_chat_settings().image_preview.enable_images_preview is None and \
+                not cls.get_cross_platform_chat_settings().enable_cross_platform_chat:
+            cls.get_cross_platform_chat_settings().image_preview.enable_images_preview = False
+            cls.get_cross_platform_chat_settings().image_preview.max_width = 160
+            cls.get_cross_platform_chat_settings().image_preview.max_height = 40
+        elif cls.get_cross_platform_chat_settings().image_preview.enable_images_preview is None:
+            cls._need_to_rewrite = True
+            if cls._ask_for_data(get_translation("Would you like to enable image preview in cross-platform chat?") +
+                                 " Y/n\n> ", "y"):
+                cls.get_cross_platform_chat_settings().image_preview.enable_images_preview = True
+                print(get_translation("Image preview enabled") + ".")
+            else:
+                cls.get_cross_platform_chat_settings().image_preview.enable_images_preview = False
+                print(get_translation("Image preview disabled") + ".")
+
+        if cls.get_cross_platform_chat_settings().image_preview.max_width is None or \
+                cls.get_cross_platform_chat_settings().image_preview.max_width < 1 or \
+                cls.get_cross_platform_chat_settings().image_preview.max_width > 160:
+            cls._need_to_rewrite = True
+            cls.get_cross_platform_chat_settings().image_preview.max_width = \
+                cls._ask_for_data(
+                    get_translation("Enter the maximum image width that will be displayed in cross-platform chat"
+                                    " (default - 160 pixels, int)") + "\n> ",
+                    try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=160)
+
+        if cls.get_cross_platform_chat_settings().image_preview.max_height is None or \
+                cls.get_cross_platform_chat_settings().image_preview.max_height < 1 or \
+                cls.get_cross_platform_chat_settings().image_preview.max_height > 62:
+            cls._need_to_rewrite = True
+            cls.get_cross_platform_chat_settings().image_preview.max_height = \
+                cls._ask_for_data(
+                    get_translation("Enter the maximum image height that will be displayed in cross-platform chat"
+                                    " (default - 40 pixels, int)") + "\n> ",
+                    try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=62)
+
+        # Secure auth
         if cls.get_secure_auth().enable_secure_auth is None:
             cls._need_to_rewrite = True
             if cls._ask_for_data(get_translation("Would you like to enable authorization security?") + " Y/n\n> ",
@@ -1712,10 +1782,10 @@ class Config:
                  cls.get_backups_settings().max_backups_limit_for_server > 100):
             cls._need_to_rewrite = True
             if cls._ask_for_data(
-                    get_translation("Max backups' count limit for server not found. Would you like to set it?") +
+                    get_translation("The maximum backups' count limit for server not found. Would you like to set it?") +
                     " Y/n\n> ", "y"):
                 cls.get_backups_settings().max_backups_limit_for_server = \
-                    cls._ask_for_data(get_translation("Set max backups' count limit for server (int)") + "\n> ",
+                    cls._ask_for_data(get_translation("Set maximum backups' count limit for server (int)") + "\n> ",
                                       try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=100)
             else:
                 cls.get_backups_settings().max_backups_limit_for_server = None

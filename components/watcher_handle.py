@@ -332,10 +332,13 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                             with connect_rcon() as cl_r:
                                 with times(0, 60, 20, cl_r):
                                     for logged_in_nick in mention_nicks:
-                                        announce(logged_in_nick,
-                                                 f"@{player_nick} "
-                                                 f"-> @{logged_in_nick if logged_in_nick != '@a' else 'everyone'}",
-                                                 cl_r)
+                                        announce(
+                                            logged_in_nick,
+                                            f"@{player_nick} "
+                                            f"-> @{logged_in_nick if logged_in_nick != '@a' else 'everyone'}",
+                                            cl_r,
+                                            server_version
+                                        )
 
                 if search(r":\w+:", player_message):
                     split_arr = split(r":\w+:", player_message)

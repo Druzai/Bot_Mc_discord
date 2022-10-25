@@ -72,8 +72,8 @@ class ChatCommands(commands.Cog):
 
     @channel.command(pass_context=True, name="commands", ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @commands.guild_only()
     @decorators.has_role_or_default()
+    @commands.guild_only()
     async def c_commands(self, ctx: commands.Context, channel: TextChannel = None):
         if channel is None:
             channel = ctx.channel
@@ -107,8 +107,8 @@ class ChatCommands(commands.Cog):
 
     @role.group(pass_context=True, name="command", invoke_without_command=True, ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @commands.guild_only()
     @decorators.has_admin_role()
+    @commands.guild_only()
     async def r_command(self, ctx: commands.Context, role: Role):
         Config.get_settings().bot_settings.managing_commands_role_id = role.id
         Config.save_config()
@@ -118,8 +118,8 @@ class ChatCommands(commands.Cog):
 
     @r_command.command(pass_context=True, name="clear")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @commands.guild_only()
     @decorators.has_admin_role()
+    @commands.guild_only()
     async def r_c_clear(self, ctx: commands.Context):
         Config.get_settings().bot_settings.managing_commands_role_id = None
         Config.save_config()
@@ -128,8 +128,8 @@ class ChatCommands(commands.Cog):
 
     @role.group(pass_context=True, name="admin", invoke_without_command=True, ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @commands.guild_only()
     @decorators.has_admin_role()
+    @commands.guild_only()
     async def r_admin(self, ctx: commands.Context, role: Role):
         Config.get_settings().bot_settings.admin_role_id = role.id
         Config.save_config()
@@ -137,8 +137,8 @@ class ChatCommands(commands.Cog):
 
     @r_admin.command(pass_context=True, name="clear")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @commands.guild_only()
     @decorators.has_admin_role()
+    @commands.guild_only()
     async def r_a_clear(self, ctx: commands.Context):
         Config.get_settings().bot_settings.admin_role_id = None
         Config.save_config()
@@ -298,6 +298,70 @@ class ChatCommands(commands.Cog):
                 True
             )
         await delete_after_by_msg(ctx.message)
+
+    @chat.group(pass_context=True, name="images", aliases=["imgs"], invoke_without_command=True)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    async def c_images(self, ctx: commands.Context):
+        if Config.get_cross_platform_chat_settings().image_preview.enable_images_preview:
+            msg = get_translation("Image preview enabled") + "\n" + \
+                  get_translation("The maximum image width set to {0}") \
+                      .format(f"{Config.get_cross_platform_chat_settings().image_preview.max_width}px") + "\n" + \
+                  get_translation("The maximum image height set to {0}") \
+                      .format(f"{Config.get_cross_platform_chat_settings().image_preview.max_height}px")
+        else:
+            msg = get_translation("Image preview disabled")
+        await ctx.send(add_quotes(msg))
+
+    @c_images.command(pass_context=True, name="on")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @decorators.has_role_or_default()
+    @commands.guild_only()
+    async def c_i_on(self, ctx: commands.Context):
+        Config.get_cross_platform_chat_settings().image_preview.enable_images_preview = True
+        Config.save_config()
+        await ctx.send(get_translation("Image preview enabled") + "!")
+
+    @c_images.command(pass_context=True, name="off")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @decorators.has_role_or_default()
+    @commands.guild_only()
+    async def c_i_off(self, ctx: commands.Context):
+        Config.get_cross_platform_chat_settings().image_preview.enable_images_preview = False
+        Config.save_config()
+        await ctx.send(get_translation("Image preview disabled") + "!")
+
+    @c_images.command(pass_context=True, name="width", ignore_extra=False)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @decorators.has_role_or_default()
+    @commands.guild_only()
+    async def c_i_width(self, ctx: commands.Context, pixels: int):
+        if pixels < 1:
+            await ctx.send(add_quotes(get_translation("Wrong 1-st argument used!") + "\n" +
+                                      get_translation("Integer must be above or equal {0}!").format(1)))
+        elif pixels > 160:
+            await ctx.send(add_quotes(get_translation("Wrong 1-st argument used!") + "\n" +
+                                      get_translation("Integer must be below or equal {0}!").format(160)))
+        else:
+            Config.get_cross_platform_chat_settings().image_preview.max_width = pixels
+            Config.save_config()
+            await ctx.send(get_translation("The maximum image width set to {0}").format(f"{pixels}px") + "!")
+
+    @c_images.command(pass_context=True, name="height", ignore_extra=False)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @decorators.has_role_or_default()
+    @commands.guild_only()
+    async def c_i_height(self, ctx: commands.Context, pixels: int):
+        if pixels < 1:
+            await ctx.send(add_quotes(get_translation("Wrong 1-st argument used!") + "\n" +
+                                      get_translation("Integer must be above or equal {0}!").format(1)))
+        elif pixels > 62:
+            await ctx.send(add_quotes(get_translation("Wrong 1-st argument used!") + "\n" +
+                                      get_translation("Integer must be below or equal {0}!").format(62)))
+        else:
+            Config.get_cross_platform_chat_settings().image_preview.max_height = pixels
+            Config.save_config()
+            await ctx.send(get_translation("The maximum image height set to {0}").format(f"{pixels}px") + "!")
 
     @chat.group(pass_context=True, name="webhook", aliases=["wh"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)

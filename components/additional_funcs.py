@@ -5,15 +5,16 @@ import typing
 from asyncio import sleep as asleep, Task, CancelledError
 from contextlib import contextmanager, suppress, asynccontextmanager
 from datetime import datetime, timedelta
+from io import BytesIO
 from itertools import chain
 from json import dumps
 from os import chdir, system, walk, mkdir, remove
 from os.path import join as p_join, getsize, isfile
 from pathlib import Path
-from random import randint
+from random import randint, choice
 from re import search, split, findall, sub, compile
 from shutil import rmtree
-from sys import platform, argv
+from sys import argv
 from textwrap import wrap
 from threading import Thread, Event
 from time import sleep
@@ -21,6 +22,7 @@ from traceback import format_exception
 from typing import Tuple, List, Dict, Optional, Union, TYPE_CHECKING, AsyncIterator
 from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 
+from PIL import Image
 from aiohttp import ClientSession
 from colorama import Style, Fore
 from discord import (
@@ -33,25 +35,26 @@ from discord.utils import get as utils_get, _get_mime_type_for_image
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r, WrongPassword
 from psutil import process_iter, NoSuchProcess, disk_usage, Process, AccessDenied
-from requests import post as req_post, get as req_get
+from requests import post as req_post, get as req_get, head as req_head, Timeout
 
 from components.decorators import MissingAdminPermissions
 from components.localization import get_translation, get_locales, get_current_locale, set_locale
 from components.rss_feed_handle import get_feed_webhook
 from components.watcher_handle import create_watcher, get_chat_webhook
-from config.init_config import Config, BotVars, ServerProperties
+from config.init_config import Config, BotVars, ServerProperties, OS, URL_REGEX
 
 if TYPE_CHECKING:
     from commands.poll import Poll
 
-if platform == "win32":
+if Config.get_os() == OS.Windows:
     from os import startfile
 
 UNITS = ("B", "KB", "MB", "GB", "TB", "PB")
 DISCORD_SYMBOLS_IN_MESSAGE_LIMIT = 2000
 MAX_RCON_COMMAND_STR_LENGTH = 1446
+MAX_RCON_COMMAND_RUN_STR_LENGTH = 1370
 MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH = MAX_RCON_COMMAND_STR_LENGTH - 9 - 2
-ANSI_ESCAPE = compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+ANSI_ESCAPE = compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 
 # Messages taken from https://minecraft.fandom.com/wiki/Death_messages
 DEATH_MESSAGES = [
@@ -185,9 +188,9 @@ async def start_server(
     try:
         if not isfile(Config.get_selected_server_from_list().start_file_name):
             raise FileNotFoundError()
-        if platform == "linux" or platform == "linux2" or platform == "darwin":
+        if Config.get_os() in [OS.Linux, OS.MacOS]:
             exts = [".sh"]
-            if platform == "darwin":
+            if Config.get_os() == OS.MacOS:
                 exts.append(".command")
             if not any(ext in Config.get_selected_server_from_list().start_file_name for ext in exts):
                 raise NameError()
@@ -195,7 +198,7 @@ async def start_server(
                           f"./{Config.get_selected_server_from_list().start_file_name}")
             if code != 0:
                 raise ReferenceError()
-        elif platform == "win32":
+        elif Config.get_os() == OS.Windows:
             is_file_exists = False
             for ext in [".bat", ".cmd", ".lnk"]:
                 if ext in Config.get_selected_server_from_list().start_file_name:
@@ -321,13 +324,14 @@ async def stop_server(
 ):
     no_connection = False
     players_info = None
+    author, author_mention = get_author_and_mention(ctx, bot, is_reaction)
 
     if "stop" in [p.command for p in poll.get_polls().values()]:
         if not is_reaction:
             await delete_after_by_msg(ctx.message)
         if not shut_up:
             await ctx.send(get_translation("{0}, bot already has poll on `stop`/`restart` command!")
-                           .format(ctx.author.mention),
+                           .format(author_mention),
                            delete_after=Config.get_timeouts_settings().await_seconds_before_message_deletion)
         return
 
@@ -344,7 +348,6 @@ async def stop_server(
             return
         no_connection = True
 
-    author, author_mention = get_author_and_mention(ctx, bot, is_reaction)
     if not no_connection:
         if players_info["current"] > 0:
             logged_only_author_accounts = None
@@ -360,7 +363,7 @@ async def stop_server(
                         break
 
             if not logged_only_author_accounts and await poll.timer(ctx, 5, "stop"):
-                if not await poll.run(channel=ctx.channel,
+                if not await poll.run(channel=ctx.channel if hasattr(ctx, 'channel') else ctx,
                                       message=get_translation("this man {0} trying to stop the server with {1} "
                                                               "player(s) on it. Will you let that happen?")
                                               .format(author_mention, players_info["current"]),
@@ -368,7 +371,7 @@ async def stop_server(
                                       needed_role=Config.get_settings().bot_settings.managing_commands_role_id,
                                       remove_logs_after=5):
                     return
-            elif not logged_only_author_accounts:
+            elif not logged_only_author_accounts and not is_reaction:
                 await delete_after_by_msg(ctx.message)
         elif players_info["current"] == 0 and is_reaction:
             how_many_sec = 0
@@ -1642,7 +1645,7 @@ async def get_avatar_info(ctx: commands.Context, url: Optional[str]):
     avatar_url = None
     if url is not None:
         avatar_url = url
-        async with ClientSession() as session:
+        async with ClientSession(timeout=30) as session:
             async with session.get(url=url) as response:
                 avatar_blob = await response.read()
                 try:
@@ -1829,7 +1832,7 @@ class BadURLAddress(commands.BadArgument):
 
 class URLAddress(commands.Converter):
     async def convert(self, ctx: commands.Context, argument: str):
-        if search(r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|%[0-9a-fA-F][0-9a-fA-F])+", argument):
+        if search(URL_REGEX, argument):
             return argument
         raise BadURLAddress(argument)
 
@@ -2091,7 +2094,7 @@ async def handle_message_for_chat(
             result_msg = _clean_message(message, edit_command_content)
             if not edit_command:
                 result_msg, reply_from_minecraft_user = await _handle_reply_in_message(message, result_msg)
-            result_msg = await _handle_components_in_message(
+            result_msg, _ = await _handle_components_in_message(
                 result_msg,
                 message,
                 bot,
@@ -2155,7 +2158,12 @@ async def handle_message_for_chat(
             result_msg = _clean_message(message, edit_command_content)
             if not edit_command:
                 result_msg, reply_from_minecraft_user = await _handle_reply_in_message(message, result_msg)
-            result_msg = await _handle_components_in_message(result_msg, message, bot)
+            result_msg, images_for_preview = await _handle_components_in_message(
+                result_msg,
+                message, bot,
+                store_images_for_preview=server_version.minor >= 16 and
+                                         Config.get_cross_platform_chat_settings().image_preview.enable_images_preview
+            )
             # Building object for tellraw
             res_obj = [""]
             if result_msg.get("reply", None) is not None:
@@ -2186,7 +2194,7 @@ async def handle_message_for_chat(
             if on_edit:
                 if before_message is not None:
                     result_before = _clean_message(before_message)
-                    result_before = await _handle_components_in_message(
+                    result_before, _ = await _handle_components_in_message(
                         result_before,
                         before_message,
                         bot,
@@ -2209,6 +2217,10 @@ async def handle_message_for_chat(
                     for tellraw in res:
                         cl_r.tellraw("@a", tellraw)
 
+            if len(images_for_preview) > 0:
+                for image in images_for_preview:
+                    send_image_to_chat(image["url"], image["name"])
+
             if server_version.minor > 7:
                 nicks = _search_mentions_in_message(message, edit_command)
                 if len(nicks) > 0:
@@ -2216,10 +2228,13 @@ async def handle_message_for_chat(
                         with connect_rcon() as cl_r:
                             with times(0, 60, 20, cl_r):
                                 for nick in nicks:
-                                    announce(nick,
-                                             f"@{message.author.display_name} "
-                                             f"-> @{nick if nick != '@a' else 'everyone'}",
-                                             cl_r)
+                                    announce(
+                                        nick,
+                                        f"@{message.author.display_name} "
+                                        f"-> @{nick if nick != '@a' else 'everyone'}",
+                                        cl_r,
+                                        server_version
+                                    )
 
 
 def _handle_long_tellraw_object(tellraw_obj: list):
@@ -2369,11 +2384,13 @@ async def _handle_components_in_message(
         message: Message,
         bot: commands.Bot,
         only_replace_links=False,
-        version_lower_1_7_2=False
+        version_lower_1_7_2=False,
+        store_images_for_preview=False
 ):
-    attachments = _handle_attachments_in_message(message)
+    if only_replace_links or version_lower_1_7_2:
+        store_images_for_preview = False
+    attachments, images_for_preview = _handle_attachments_in_message(message, store_images_for_preview)
     emoji_regex = r"<a?:\w+:\d+>"
-    url_regex = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|%[0-9a-fA-F][0-9a-fA-F])+"
     tenor_regex = r"https?://tenor\.com/view"
 
     async def repl_emoji(match: str):
@@ -2395,32 +2412,46 @@ async def _handle_components_in_message(
                 return emoji_name
 
     def repl_url(link: str):
+        is_tenor = bool(search(tenor_regex, link))
+        if store_images_for_preview:
+            if is_tenor:
+                images_for_preview.append({
+                    "url": link,
+                    "name": ""
+                })
+            else:
+                resp = req_head(link, timeout=(4, 8), headers={"User-Agent": UserAgent.get_header()})
+                if resp.status_code == 200 and "image" in resp.headers.get("content-type"):
+                    images_for_preview.append({
+                        "url": link,
+                        "name": ""
+                    })
         if only_replace_links:
             if version_lower_1_7_2:
-                if search(tenor_regex, link):
+                if is_tenor:
                     return "[gif]"
                 elif len(link) > 30:
                     return get_shortened_url(link)
                 else:
                     return link
             else:
-                return "[gif]" if search(tenor_regex, link) else shorten_string(link, 30)
+                return "[gif]" if is_tenor else shorten_string(link, 30)
         else:
             return {
-                "text": "[gif]" if search(tenor_regex, link) else shorten_string(link, 30),
+                "text": "[gif]" if is_tenor else shorten_string(link, 30),
                 "hyperlink": link if len(link) < 257 else get_shortened_url(link)
             }
 
     transformations = {
         emoji_regex: repl_emoji,
-        url_regex: repl_url
+        URL_REGEX: repl_url
     }
     mass_regex = "|".join(transformations.keys())
 
     async def repl(obj):
         match = obj.group(0)
-        if search(url_regex, match):
-            return transformations.get(url_regex)(match)
+        if search(URL_REGEX, match):
+            return transformations.get(URL_REGEX)(match)
         else:
             return await transformations.get(emoji_regex)(match)
 
@@ -2466,12 +2497,13 @@ async def _handle_components_in_message(
             result_msg[key] = [ms[0], ms[1], ms[2], "".join(temp_split) if only_replace_links else temp_split]
         else:
             result_msg[key] = "".join(temp_split) if only_replace_links else temp_split
-    return result_msg
+    return result_msg, images_for_preview
 
 
-def _handle_attachments_in_message(message: Message):
+def _handle_attachments_in_message(message: Message, store_images_for_preview=False):
     attachments = {}
     messages = [message]
+    images_for_preview = []
     if message.reference is not None:
         messages.append(message.reference.resolved)
     for i in range(len(messages)):
@@ -2490,6 +2522,11 @@ def _handle_attachments_in_message(message: Message):
                         iattach[-1].update({
                             "hyperlink": sticker.url if len(sticker.url) < 257 else get_shortened_url(sticker.url)
                         })
+                        if store_images_for_preview and i == 0:
+                            images_for_preview.append({
+                                "url": sticker.url,
+                                "name": sticker.name
+                            })
             if len(messages[i].attachments) != 0:
                 for attachment in messages[i].attachments:
                     need_hover = True
@@ -2507,7 +2544,13 @@ def _handle_attachments_in_message(message: Message):
                     })
                     if need_hover:
                         iattach[-1].update({"hover": attachment.filename})
-    return attachments
+                    if store_images_for_preview and i == 0 and \
+                            attachment.content_type is not None and "image" in attachment.content_type:
+                        images_for_preview.append({
+                            "url": attachment.url,
+                            "name": attachment.filename
+                        })
+    return attachments, images_for_preview
 
 
 def _build_components_in_message(res_obj: list, content_name: str, obj, default_text_color: str = None):
@@ -2671,6 +2714,193 @@ def build_nickname_tellraw_for_bot(
     return tellraw_obj
 
 
+class UserAgent:
+    _header: str = None
+
+    @classmethod
+    def _get_os(cls):
+        if Config.get_os() == OS.Windows:
+            return "Windows NT 10.0; Win64; x64"
+        elif Config.get_os() == OS.MacOS:
+            separator = choice([".", "_"])
+            version = choice([
+                separator.join(["10", str(randint(13, 15)), str(randint(0, 10))]),
+                f"{randint(11, 13)}{separator}0"
+            ])
+            return f"Macintosh; Intel Mac OS X {version}"
+        else:
+            return choice(["X11; Linux", "X11; OpenBSD", "X11; Ubuntu; Linux"]) + \
+                   choice([" i386", " i686", " amd64", " x86_64"])
+
+    @classmethod
+    def _set_header(cls):
+        if randint(0, 1):
+            # Chrome
+            version = f"{randint(70, 99)}.{randint(0, 99)}.{randint(0, 9999)}.{randint(0, 999)}"
+            cls._header = f"Mozilla/5.0 ({cls._get_os()}) AppleWebKit/537.36 " \
+                          f"(KHTML, like Gecko) Chrome/{version} Safari/537.36"
+        else:
+            # Firefox
+            version = f"{randint(78, 102)}.0"
+            cls._header = f"Mozilla/5.0 ({cls._get_os()}; rv:{version}) Gecko/20100101 Firefox/{version}"
+
+    @classmethod
+    def get_header(cls):
+        if cls._header is None:
+            cls._set_header()
+        return cls._header
+
+
+def rgb2hex(r, g, b):
+    return "#{:02x}{:02x}{:02x}".format(r, g, b)
+
+
+def has_transparency(img: Image.Image):
+    if img.info.get("transparency", None) is not None:
+        return True
+    if img.mode == "P":
+        transparent = img.info.get("transparency", -1)
+        for _, index in img.getcolors():
+            if index == transparent:
+                return True
+    elif img.mode == "RGBA":
+        extrema = img.getextrema()
+        if extrema[3][0] < 255:
+            return True
+
+    return False
+
+
+def get_image_data(url: str):
+    if search(r"https?://tenor\.com/view", url):
+        with suppress(Timeout):
+            text = req_get(url, timeout=(4, 8), headers={"User-Agent": UserAgent.get_header()}).text
+            match = search(rf"property=\"og:image\"\scontent=\"(?P<link>{URL_REGEX})?\"", text)
+            url = match.group("link") if match is not None else None
+
+    if url is not None:
+        match = search(r"[^/]+/(?P<name>[^/\\&?]+\.\w{3,4})(?:[/?&].*$|$)", url)
+        if match is not None:
+            filename = match.group("name")
+        else:
+            filename = url.split("/")[-1].split("?", maxsplit=1)[0]
+        with suppress(Timeout):
+            return dict(
+                bytes=BytesIO(req_get(url, timeout=(4, 8), headers={"User-Agent": UserAgent.get_header()}).content),
+                name=filename
+            )
+
+
+def send_image_to_chat(url: str, image_name: str):
+    image_data = get_image_data(url)
+    if image_data is None:
+        return
+
+    if len(image_name) == 0:
+        image_name = image_data["name"] if len(image_data["name"]) else "unknown"
+    img = Image.open(image_data["bytes"], "r")
+
+    max_height = Config.get_cross_platform_chat_settings().image_preview.max_height
+    calc_width = Config.get_cross_platform_chat_settings().image_preview.max_width
+    calc_height = int(round((img.height * 8) / (img.width / calc_width), 0) / 29)
+    if calc_height > max_height:
+        calc_width = int((calc_width * max_height) / calc_height)
+        calc_height = max_height
+    img = img.resize((calc_width if calc_width > 0 else 1, calc_height if calc_height > 0 else 1))
+
+    img_has_transparency = has_transparency(img)
+    if img_has_transparency and img.mode != "RGBA":
+        img = img.convert("RGBA")
+    elif not img_has_transparency and img.mode != "RGB":
+        img = img.convert("RGB")
+
+    pixels = img.load()
+    width, height = img.size
+
+    storage_unit = "mc_chat"
+
+    with disable_logging(disable_log_admin_commands=True, disable_send_command_feedback=True):
+        with suppress(ConnectionError, socket.error):
+            with connect_rcon() as cl_r:
+                max_number_of_arrays = 0
+                for y in range(height):
+                    tellraw = [
+                        {
+                            "text": "",
+                            "clickEvent": {"action": "open_url",
+                                           "value": url if len(url) < 257 else get_shortened_url(url)},
+                            "hoverEvent": {"action": "show_text", "contents": shorten_string(image_name, 250)}
+                        }
+                    ]
+                    array_count = 0
+                    tellraw_str_length = len(dumps(tellraw, ensure_ascii=False))
+                    for x in range(width):
+                        if img_has_transparency:
+                            r, g, b, a = pixels[x, y]
+                            if a < 20:
+                                pixel = {"text": "·", "color": rgb2hex(r, g, b)}
+                            elif 20 <= a <= 70:
+                                pixel = {"text": ":", "color": rgb2hex(r, g, b)}
+                            else:
+                                pixel = {"text": "┇", "color": rgb2hex(r, g, b)}
+                        else:
+                            pixel = {"text": "┇", "color": rgb2hex(*pixels[x, y])}
+                        pixel_str = len(dumps(pixel, ensure_ascii=False)) + 2
+
+                        if len(f"data modify storage {storage_unit} {array_count + 1} set value ''") + \
+                                tellraw_str_length + pixel_str > MAX_RCON_COMMAND_RUN_STR_LENGTH:
+                            array_count += 1
+                            cl_r.run(f"data modify storage {storage_unit} {array_count} "
+                                     f"set value '{dumps(tellraw, ensure_ascii=False)}'")
+                            tellraw = [pixel]
+                            tellraw_str_length = pixel_str
+                        else:
+                            tellraw.append(pixel)
+                            tellraw_str_length += pixel_str
+                    if len(tellraw) > 0:
+                        array_count += 1
+                        cl_r.run(f"data modify storage {storage_unit} {array_count} "
+                                 f"set value '{dumps(tellraw, ensure_ascii=False)}'")
+                    cl_r.tellraw("@a", [
+                        {"nbt": str(i), "storage": storage_unit, "interpret": True}
+                        for i in range(1, array_count + 1)
+                    ])
+                    if max_number_of_arrays < array_count + 1:
+                        max_number_of_arrays = array_count
+                for number in range(1, max_number_of_arrays + 1):
+                    cl_r.run(f"data remove storage {storage_unit} {number}")
+
+
+@contextmanager
+def disable_logging(disable_log_admin_commands: bool = False, disable_send_command_feedback: bool = False):
+    command_regex = r"(?i)gamerule \w+ is currently set to: (?P<value>\w+)"
+    log_admin_commands = True
+    send_command_feedback = True
+    if disable_log_admin_commands or disable_send_command_feedback:
+        with suppress(ConnectionError, socket.error):
+            with connect_rcon() as cl_r:
+                if disable_log_admin_commands:
+                    match = search(command_regex, cl_r.run("gamerule logAdminCommands"))
+                    if match is not None:
+                        log_admin_commands = not (match.group("value") == "false")
+                        if log_admin_commands:
+                            cl_r.run("gamerule logAdminCommands false")
+                if disable_send_command_feedback:
+                    match = search(command_regex, cl_r.run("gamerule sendCommandFeedback"))
+                    if match is not None:
+                        send_command_feedback = not (match.group("value") == "false")
+                        if send_command_feedback:
+                            cl_r.run("gamerule sendCommandFeedback false")
+    yield
+    if disable_log_admin_commands or disable_send_command_feedback:
+        with suppress(ConnectionError, socket.error):
+            with connect_rcon() as cl_r:
+                if send_command_feedback and disable_send_command_feedback:
+                    cl_r.run("gamerule sendCommandFeedback true")
+                if log_admin_commands and disable_log_admin_commands:
+                    cl_r.run("gamerule logAdminCommands true")
+
+
 class ServerVersion:
     def __init__(self, version_string: str):
         parsed_version = version_string
@@ -2710,18 +2940,23 @@ def get_server_version() -> ServerVersion:
 
 
 def parse_snapshot(version: str) -> Optional[str]:
-    answer = req_get(url="https://minecraft.fandom.com/api.php",
-                     params={
-                         "action": "parse",
-                         "page": f"Java Edition {version}",
-                         "prop": "categories",
-                         "format": "json"
-                     }).json()
-    if answer.get("parse", None) is not None and answer["parse"].get("categories", None) is not None:
-        for category in answer["parse"]["categories"]:
-            if all(i in category["*"].lower() for i in ["java_edition", "snapshots"]) and \
-                    version in category["sortkey"]:
-                return category["*"]
+    with suppress(Timeout):
+        answer = req_get(
+            url="https://minecraft.fandom.com/api.php",
+            params={
+                "action": "parse",
+                "page": f"Java Edition {version}",
+                "prop": "categories",
+                "format": "json"
+            },
+            timeout=(4, 8),
+            headers={"User-Agent": UserAgent.get_header()}
+        ).json()
+        if answer.get("parse", None) is not None and answer["parse"].get("categories", None) is not None:
+            for category in answer["parse"]["categories"]:
+                if all(i in category["*"].lower() for i in ["java_edition", "snapshots"]) and \
+                        version in category["sortkey"]:
+                    return category["*"]
 
 
 def get_server_players() -> dict:
@@ -2740,11 +2975,17 @@ def shorten_string(string: str, max_length: int):
 
 def get_shortened_url(url: str):
     for service_url in ["https://clck.ru/--", "https://tinyurl.com/api-create.php"]:
-        response = req_post(service_url, params={"url": url})
-        if response.ok and response.text != "":
-            return response.text
+        with suppress(Timeout):
+            response = req_post(
+                service_url,
+                params={"url": url},
+                timeout=(3, 6),
+                headers={"User-Agent": UserAgent.get_header()}
+            )
+            if response.ok and response.text != "":
+                return response.text
     print(get_translation("Bot couldn't shorten the URL \"{0}\" using link shortening services.").format(url))
-    return url
+    return url[:256]
 
 
 @contextmanager
@@ -2754,9 +2995,9 @@ def times(fade_in: Union[int, float], duration: Union[int, float], fade_out: Uni
     rcon_client.run("title @a reset")
 
 
-def announce(player: str, message: str, rcon_client, subtitle=False):
-    if get_server_version().minor >= 11 and not subtitle:
-        player = player if get_server_version().minor < 14 else f"'{player}'"
+def announce(player: str, message: str, rcon_client, server_version: ServerVersion, subtitle=False):
+    if server_version.minor >= 11 and not subtitle:
+        player = player if server_version.minor < 14 else f"'{player}'"
         rcon_client.run(f'title {player} actionbar ' + '{' + f'"text":"{message}"' + ',"bold":true,"color":"gold"}')
     else:
         rcon_client.run(f'title {player} subtitle ' + '{' + f'"text":"{message}"' + ',"color":"gold"}')

@@ -1,6 +1,6 @@
 from asyncio import run
 from logging import ERROR
-from sys import platform, exit, argv
+from sys import exit, argv
 from threading import enumerate as threads
 from traceback import format_exc
 from typing import Union
@@ -18,9 +18,9 @@ from commands.minecraft_commands import MinecraftCommands
 from commands.poll import Poll
 from components.additional_funcs import setup_print_handlers
 from components.localization import get_translation, RuntimeTextHandler
-from config.init_config import Config, BotVars
+from config.init_config import Config, BotVars, OS
 
-if platform == "win32":
+if Config.get_os() == OS.Windows:
     from colorama import init
 
 VERSION = "1.3.2"
@@ -58,7 +58,7 @@ def get_prefix(bot, msg):
 def main():
     if len(argv) == 1 or (len(argv) > 1 and argv[1] not in ["-v", "--version", "-g"]):
         Config.init_with_system_language()
-    if platform == "win32":
+    if Config.get_os() == OS.Windows:
         init()
     if len(argv) > 1 and argv[1] not in ["-h", "--help", "-v", "--version", "-g", "-cs"]:
         print(get_translation("Bot doesn't have this command line argument!"))

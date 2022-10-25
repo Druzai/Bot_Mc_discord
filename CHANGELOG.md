@@ -6,7 +6,7 @@ All important changes to this project will be documented in this file.
 
 #### Improvements:
 
-* Updated discord.py from `1.7.3` to `2.0.1`
+* **Updated discord.py from `1.7.3` to `2.0.1`**
 * Updated other dependencies
 * Added `tinyURL` as another link shortening service
 * Added support for attachments in webhooks
@@ -14,6 +14,8 @@ All important changes to this project will be documented in this file.
 * Improved working with webhooks:
     * Bot can fetch given webhook or create a new one if it doesn't find anything
     * More easy setting up a webhook via bot commands
+* Added fetching image from links and attachments in Discord message and showing its preview in Minecraft chat
+* Added parameters timeout and `User-Agent` header to requests
 
 #### Fixed:
 
@@ -21,12 +23,22 @@ All important changes to this project will be documented in this file.
 * Improved parsing such types as `Union` and `Literal` in `help` command
 * Improved kicking players with illegal characters such as space from server
 * Improved execution of commands `whitelist add` and `whitelist del` for Minecraft server version lower than `1.7.6`
+* Fixed URL regex to include `#` fragment
+
+#### Changes in bot commands
+
+* Created commands:
+    * `chat`
+    * `rss`
+* Changed commands:
+    * Moved logic:
+        * From `edit` to `chat edit`
+        * From `channel chat` to `chat webhook channel`
 
 #### Breaking changes:
 
 * Changed date format for logging (`bot.log` and `op.log`)
     * From `DD/MM/YYYY` to `YYYY-MM-DD`
-* Moved command `edit` to subcommand `chat edit`
 
 ### [1.3.2](https://github.com/Druzai/Bot_Mc_discord/compare/1.3.1...1.3.2) (2022-07-28)
 

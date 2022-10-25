@@ -52,8 +52,12 @@
     * Logging of death messages from Minecraft
         * If you set custom image link in bot config and getting standard avatar in webhook message then your image link
           is invalid!
+    * Showing low quality preview of an image in Minecraft chat (max - 160 pixels in width)
+      * Can fetch image from links and attachments in Discord message
+      * Supported image opacity
+      * Works in versions `1.16.0` and higher
     * Some features may not work in versions lower than `1.7.2`!
-* Setting up optional rss feed. Bot will send new items of feed to Discord text channel via webhook
+* Setting up optional rss feed. Bot will send new items from feed to Discord text channel via webhook
 
 **How bot converts mentions from Minecraft chat to Discord for cross-platform chat:**
 
