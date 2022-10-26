@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Union, Optional
 import discord
 from discord import (
     Role, Member, TextChannel, InvalidData, HTTPException, NotFound, Forbidden, DMChannel, Message,
-    RawMessageUpdateEvent
+    RawMessageUpdateEvent, Interaction, SelectOption
 )
 from discord.ext import commands, tasks
 
@@ -13,7 +13,8 @@ from components.additional_funcs import (
     handle_message_for_chat, send_error, bot_clear, add_quotes, parse_params_for_help, send_help_of_command,
     parse_subcommands_for_help, find_subcommand, make_underscored_line, create_webhooks, bot_dm_clear, send_msg,
     delete_after_by_msg, HelpCommandArgument, handle_unhandled_error_in_task, handle_unhandled_error_in_events,
-    get_avatar_info, URLAddress, get_server_version, get_time_string, get_channel_string
+    get_avatar_info, URLAddress, get_server_version, get_time_string, get_channel_string, send_select_view,
+    SelectChoice, send_interaction, shorten_string, DISCORD_SELECT_FIELD_MAX_LENGTH
 )
 from components.localization import get_translation, get_locales, set_locale, get_current_locale
 from components.rss_feed_handle import check_on_rss_feed
@@ -609,28 +610,56 @@ class ChatCommands(commands.Cog):
                     before_message=payload.cached_message
                 )
 
-    @commands.command(pass_context=True, aliases=["lang"], ignore_extra=False)
+    @commands.group(pass_context=True, aliases=["lang"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
-    async def language(self, ctx: commands.Context, set_language: str = ""):
-        """Get/Select language"""
-        if len(set_language) > 0:
-            if not set_locale(set_language):
-                await ctx.send(add_quotes(get_translation("Bot doesn't have this language!\n"
-                                                          "Check list of available languages via {0}language")
-                                          .format(Config.get_settings().bot_settings.prefix)))
+    async def language(self, ctx: commands.Context):
+        langs = []
+        for lang in get_locales():
+            lang_code = lang.capitalize()
+            if get_current_locale() == lang:
+                lang_code = make_underscored_line(lang_code)
+            langs.append(f"{lang_code} ({get_translation(lang)})")
+        await ctx.send(add_quotes(get_translation("Available languages:") + "\n- " + "\n- ".join(langs)))
+
+    @language.command(pass_context=True, name="select", ignore_extra=False)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @commands.guild_only()
+    async def l_select(self, ctx, set_language: str = None):
+        async def on_callback(interaction: Optional[Interaction]):
+            new_language = interaction.data.get("values", [None])[0] if interaction is not None else set_language
+
+            if not set_locale(new_language):
+                msg = add_quotes(get_translation("Bot doesn't have this language!\n"
+                                                 "Check list of available languages via {0}language")
+                                 .format(Config.get_settings().bot_settings.prefix))
+                await send_interaction(interaction, msg, ctx=ctx)
+                return SelectChoice.DO_NOTHING
             else:
-                Config.get_settings().bot_settings.language = set_language.lower()
+                Config.get_settings().bot_settings.language = new_language.lower()
                 Config.save_config()
-                await ctx.send(add_quotes(get_translation("Language switched successfully!")))
-        else:
-            langs = []
-            for lang in get_locales():
-                lang_code = lang.capitalize()
-                if get_current_locale() == lang:
-                    lang_code = make_underscored_line(lang_code)
-                langs.append(f"{lang_code} ({get_translation(lang)})")
-            await ctx.send(add_quotes(get_translation("Available languages:") + "\n- " + "\n- ".join(langs)))
+                await send_interaction(interaction, add_quotes(get_translation("Language switched successfully!")),
+                                       ctx=ctx)
+                return SelectChoice.STOP_VIEW
+
+        if set_language is not None:
+            await on_callback(None)
+            return
+
+        await send_select_view(
+            ctx,
+            [
+                SelectOption(
+                    label=shorten_string(lang.capitalize(), DISCORD_SELECT_FIELD_MAX_LENGTH),
+                    value=shorten_string(lang, DISCORD_SELECT_FIELD_MAX_LENGTH),
+                    description=shorten_string(get_translation(lang), DISCORD_SELECT_FIELD_MAX_LENGTH),
+                    default=get_current_locale() == lang
+                ) for lang in get_locales()
+            ],
+            on_callback,
+            message=get_translation("Select bot language:"),
+            timeout=60
+        )
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)

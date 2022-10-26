@@ -5,6 +5,7 @@ import typing
 from asyncio import sleep as asleep, Task, CancelledError
 from contextlib import contextmanager, suppress, asynccontextmanager
 from datetime import datetime, timedelta
+from enum import Enum, auto
 from io import BytesIO
 from itertools import chain
 from json import dumps
@@ -19,7 +20,7 @@ from textwrap import wrap
 from threading import Thread, Event
 from time import sleep
 from traceback import format_exception
-from typing import Tuple, List, Dict, Optional, Union, TYPE_CHECKING, AsyncIterator
+from typing import Tuple, List, Dict, Optional, Union, TYPE_CHECKING, AsyncIterator, Callable, Awaitable, Any
 from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 
 from PIL import Image
@@ -27,10 +28,12 @@ from aiohttp import ClientSession
 from colorama import Style, Fore
 from discord import (
     Activity, ActivityType, Message, Status, Member, Role, MessageType, NotFound, HTTPException, Forbidden, Emoji,
-    ChannelType, TextChannel, VoiceChannel, Thread as ChannelThread, GroupChannel, Webhook, InvalidData
+    ChannelType, TextChannel, VoiceChannel, Thread as ChannelThread, GroupChannel, Webhook, InvalidData, SelectOption,
+    Interaction, InteractionResponded, Client
 )
 from discord.abc import Messageable
 from discord.ext import commands
+from discord.ui import View, Select, Item
 from discord.utils import get as utils_get, _get_mime_type_for_image
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r, WrongPassword
@@ -54,6 +57,8 @@ DISCORD_SYMBOLS_IN_MESSAGE_LIMIT = 2000
 MAX_RCON_COMMAND_STR_LENGTH = 1446
 MAX_RCON_COMMAND_RUN_STR_LENGTH = 1370
 MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH = MAX_RCON_COMMAND_STR_LENGTH - 9 - 2
+DISCORD_SELECT_FIELD_MAX_LENGTH = 100
+DISCORD_SELECT_OPTIONS_MAX_LENGTH = 25
 ANSI_ESCAPE = compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 
 # Messages taken from https://minecraft.fandom.com/wiki/Death_messages
@@ -114,6 +119,17 @@ async def send_msg(ctx: Messageable, msg: str, is_reaction=False):
         await ctx.send(msg)
 
 
+async def send_interaction(interaction: Optional[Interaction], msg: str, ctx: Messageable = None, ephemeral=False):
+    if interaction is None:
+        await ctx.send(msg)
+        return
+
+    try:
+        await interaction.response.send_message(msg, ephemeral=ephemeral)
+    except (InteractionResponded, HTTPException):
+        await ctx.send(msg)
+
+
 def add_quotes(msg: str) -> str:
     return f"```{msg}```"
 
@@ -147,7 +163,7 @@ def get_author_and_mention(
     return author, author_mention
 
 
-async def send_status(ctx: commands.Context, is_reaction=False):
+async def send_status(ctx: Union[commands.Context, Interaction], is_reaction=False):
     if BotVars.is_server_on:
         if BotVars.is_backing_up:
             await send_msg(ctx, add_quotes(get_translation("Bot is backing up server!")), is_reaction)
@@ -289,7 +305,7 @@ async def start_server(
     to_save = False
     if Config.get_selected_server_from_list().server_loading_time:
         average_server_loading_time = (Config.get_selected_server_from_list().server_loading_time +
-                       (datetime.now() - check_time).seconds) // 2
+                                       (datetime.now() - check_time).seconds) // 2
         if average_server_loading_time != Config.get_selected_server_from_list().server_loading_time:
             Config.get_selected_server_from_list().server_loading_time = average_server_loading_time
             to_save = True
@@ -528,7 +544,7 @@ async def get_channel_string(bot: commands.Bot, id: int, mention: bool = False):
     return channel
 
 
-async def get_role_string(bot: commands.Bot, id: int, mention: bool = False):
+async def get_role_string(bot: Union[commands.Bot, Client], id: int, mention: bool = False):
     try:
         role = bot.guilds[0].get_role(id)
         if role is None:
@@ -1419,6 +1435,38 @@ async def bot_backup(
     await send_msg(ctx, add_quotes(bot_message), is_reaction)
 
 
+async def create_backups_select_options_list(bot: commands.Bot):
+    options = []
+
+    for i in range(len(Config.get_server_config().backups)):
+        backup = Config.get_server_config().backups[i]
+
+        if backup.reason is None and backup.initiator is None:
+            description_str = shorten_string(get_translation("Reason: ") + get_translation("Automatic backup"),
+                                             DISCORD_SELECT_FIELD_MAX_LENGTH)
+        else:
+            if backup.reason:
+                description_str = shorten_string(await get_member_string(bot, backup.initiator) + f" ({backup.reason}",
+                                                 DISCORD_SELECT_FIELD_MAX_LENGTH - 1) + ")"
+            else:
+                description_str = shorten_string(await get_member_string(bot, backup.initiator),
+                                                 DISCORD_SELECT_FIELD_MAX_LENGTH)
+
+        options.append(SelectOption(
+            label=shorten_string(
+                get_translation("Backup from") + " " +
+                backup.file_creation_date.strftime(
+                    get_translation("%H:%M:%S %d/%m/%Y")
+                ),
+                DISCORD_SELECT_FIELD_MAX_LENGTH
+            ),
+            value=str(i),
+            description=description_str
+        ))
+
+    return options
+
+
 def check_if_string_in_all_translations(translate_text: str, match_text: str):
     current_locale = get_current_locale()
     list_of_locales = get_locales()
@@ -1780,6 +1828,89 @@ def make_underscored_line(line: Union[int, float, str]):
         return underscore.join(line) + underscore
 
 
+async def send_select_view(
+        ctx: commands.Context,
+        options: List[SelectOption],
+        on_callback: Callable[[Optional[Interaction]], Awaitable[SelectOption]],
+        on_interaction_check: Optional[Callable[[Interaction], bool]] = None,
+        message: Optional[str] = None,
+        min_values: int = 1,
+        max_values: int = 1,
+        disabled: bool = False,
+        timeout: Optional[int] = 180.0
+):
+    messages_data = []
+    divided_options = [options[i:i + DISCORD_SELECT_OPTIONS_MAX_LENGTH]
+                       for i in range(0, len(options), DISCORD_SELECT_OPTIONS_MAX_LENGTH)]
+    for o in range(len(divided_options)):
+        messages_data.append(
+            await send_partial_select_view(
+                ctx,
+                divided_options[o],
+                on_interaction_check,
+                message if o == 0 else None,
+                min_values,
+                max_values,
+                disabled,
+                timeout
+            )
+        )
+
+    async def callback(interaction: Optional[Interaction]):
+        choice = await on_callback(interaction)
+        if choice == SelectChoice.STOP_VIEW:
+            for data in messages_data:
+                data["view"].stop()
+        elif choice == SelectChoice.DELETE_SELECT:
+            for data in messages_data:
+                data["view"].stop()
+                await data["message"].delete()
+
+    for data in messages_data:
+        data["menu"].callback = callback
+
+
+async def send_partial_select_view(
+        ctx: commands.Context,
+        options: List[SelectOption],
+        on_interaction_check: Optional[Callable[[Interaction], bool]] = None,
+        msg: Optional[str] = None,
+        min_values: int = 1,
+        max_values: int = 1,
+        disabled: bool = False,
+        timeout: Optional[int] = 180.0
+):
+    menu = Select(min_values=min_values, max_values=max_values, options=options, disabled=disabled)
+    view = View(timeout=timeout)
+    view.add_item(menu)
+
+    if on_interaction_check is not None:
+        async def interaction_check(interaction: Interaction):
+            return on_interaction_check(interaction)
+
+        view.interaction_check = interaction_check
+
+    async def on_error(interaction: Interaction, error: Exception, item: Item[Any], /):
+        await send_error_on_interaction("Select", interaction, ctx, error)
+
+    view.on_error = on_error
+
+    message = await ctx.send(content=msg, view=view)
+
+    async def on_timeout():
+        view.stop()
+        await message.delete()
+
+    view.on_timeout = on_timeout
+    return dict(message=message, view=view, menu=menu)
+
+
+class SelectChoice(Enum):
+    DO_NOTHING = auto()
+    STOP_VIEW = auto()
+    DELETE_SELECT = auto()
+
+
 @contextmanager
 def connect_rcon(timeout=1):
     try:
@@ -1803,14 +1934,15 @@ def connect_query():
 
 
 @asynccontextmanager
-async def handle_rcon_error(ctx: commands.Context):
+async def handle_rcon_error(ctx: commands.Context, interaction: Interaction = None):
     try:
         yield
     except (ConnectionError, socket.error):
         if BotVars.is_server_on:
-            await ctx.send(add_quotes(get_translation("Couldn't connect to server, try again(")))
+            await send_interaction(interaction,
+                                   add_quotes(get_translation("Couldn't connect to server, try again(")), ctx=ctx)
         else:
-            await ctx.send(add_quotes(get_translation("server offline").capitalize()))
+            await send_interaction(interaction, add_quotes(get_translation("server offline").capitalize()), ctx=ctx)
 
 
 class HelpCommandArgument(commands.CheckFailure):
@@ -1951,12 +2083,8 @@ async def send_error(
                                                       "string '{0}' in this command!").format(parsed_input)),
                            is_reaction)
     elif isinstance(error, commands.MissingPermissions):
-        print(get_translation("{0} don't have some permissions to run command").format(author))
-        missing_perms = [get_translation(perm.replace("_", " ").replace("guild", "server").title())
-                         for perm in error.missing_permissions]
-        await send_msg(ctx, f"{author_mention}\n" +
-                       add_quotes(get_translation("You don't have these permissions to run this command:")
-                                  .capitalize() + "\n- " + "\n- ".join(missing_perms)), is_reaction)
+        await send_msg(ctx, f"{author_mention}\n" + add_quotes(await get_missing_permissions_message(error, author)),
+                       is_reaction)
     elif isinstance(error, commands.BotMissingPermissions):
         print(get_translation("Bot doesn't have some permissions"))
         missing_perms = [get_translation(perm.replace("_", " ").replace("guild", "server").title())
@@ -1965,13 +2093,7 @@ async def send_error(
                        add_quotes(get_translation("Bot don't have these permissions to run this command:")
                                   .capitalize() + "\n- " + "\n- ".join(missing_perms)), is_reaction)
     elif isinstance(error, commands.MissingRole):
-        if isinstance(error.missing_role, int):
-            role = await get_role_string(bot, error.missing_role)
-        else:
-            role = error.missing_role
-        print(get_translation("{0} don't have role '{1}' to run command").format(author, role))
-        await send_msg(ctx, f"{author_mention}\n" +
-                       add_quotes(get_translation("You don't have role '{0}' to run this command!").format(role)),
+        await send_msg(ctx, f"{author_mention}\n" + add_quotes(await get_missing_role_message(error, bot, author)),
                        is_reaction)
     elif isinstance(error, commands.CommandNotFound):
         print(get_translation("{0} entered non-existent command").format(author))
@@ -2006,10 +2128,15 @@ async def send_error(
     elif isinstance(error, HelpCommandArgument):
         pass
     elif isinstance(error, MissingAdminPermissions):
+        msg = ""
         if Config.get_settings().bot_settings.admin_role_id is not None:
-            await send_error(ctx, bot,
-                             commands.MissingRole(Config.get_settings().bot_settings.admin_role_id), is_reaction)
-        await send_error(ctx, bot, commands.MissingPermissions(['administrator']), is_reaction)
+            msg += await get_missing_role_message(
+                commands.MissingRole(Config.get_settings().bot_settings.admin_role_id),
+                bot,
+                author
+            ) + "\n\n"
+        msg += await get_missing_permissions_message(commands.MissingPermissions(['administrator']), author)
+        await send_msg(ctx, f"{author_mention}\n" + add_quotes(msg), is_reaction)
     else:
         print_unhandled_error(error.original, get_translation("Ignoring exception in command '{0}{1}':")
                               .format(Config.get_settings().bot_settings.prefix, ctx.command))
@@ -2022,6 +2149,91 @@ async def send_error(
 def print_unhandled_error(error, error_title: str):
     exc = "".join(format_exception(type(error), error, error.__traceback__)).rstrip("\n")
     print(f"{error_title}\n{Fore.RED}{exc}{Style.RESET_ALL}")
+
+
+async def get_missing_role_message(
+        error: commands.MissingRole,
+        bot: Union[commands.Bot, Client],
+        author: Member,
+        interaction=False
+):
+    if isinstance(error.missing_role, int):
+        role = await get_role_string(bot, error.missing_role)
+    else:
+        role = error.missing_role
+    if interaction:
+        print(get_translation("{0} don't have role '{1}' to use interaction").format(author, role))
+        return get_translation("You don't have role '{0}' to use this interaction!").format(role)
+    print(get_translation("{0} don't have role '{1}' to run command").format(author, role))
+    return get_translation("You don't have role '{0}' to run this command!").format(role)
+
+
+async def get_missing_permissions_message(
+        error: commands.MissingPermissions,
+        author: Member,
+        interaction=False
+):
+    missing_perms = [get_translation(perm.replace("_", " ").replace("guild", "server").title())
+                     for perm in error.missing_permissions]
+    if interaction:
+        print(get_translation("{0} don't have some permissions to use interaction").format(author))
+        return get_translation("You don't have these permissions to use this interaction:").capitalize() + \
+               "\n- " + "\n- ".join(missing_perms)
+    print(get_translation("{0} don't have some permissions to run command").format(author))
+    return get_translation("You don't have these permissions to run this command:").capitalize() + \
+           "\n- " + "\n- ".join(missing_perms)
+
+
+async def send_error_on_interaction(
+        component_name: str,
+        interaction: Interaction,
+        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel],
+        error: Union[commands.CommandError, Exception]
+):
+    author, author_mention = interaction.user, interaction.user.mention
+
+    if isinstance(error, commands.MissingPermissions):
+        await send_interaction(
+            interaction,
+            f"{author_mention}\n" + add_quotes(await get_missing_permissions_message(error, author, interaction=True)),
+            ephemeral=True,
+            ctx=ctx
+        )
+    elif isinstance(error, commands.MissingRole):
+        await send_interaction(
+            interaction,
+            f"{author_mention}\n" +
+            add_quotes(await get_missing_role_message(error, interaction.client, author, interaction=True)),
+            ephemeral=True,
+            ctx=ctx
+        )
+    elif isinstance(error, MissingAdminPermissions):
+        msg = ""
+        if Config.get_settings().bot_settings.admin_role_id is not None:
+            msg += await get_missing_role_message(
+                commands.MissingRole(Config.get_settings().bot_settings.admin_role_id),
+                interaction.client,
+                author,
+                interaction=True
+            ) + "\n\n"
+        msg += await get_missing_permissions_message(
+            commands.MissingPermissions(['administrator']),
+            author,
+            interaction=True
+        )
+        await send_interaction(interaction, f"{author_mention}\n" + add_quotes(msg), ephemeral=True, ctx=ctx)
+    else:
+        msg = get_translation("This interaction failed! Try again!") + \
+              add_quotes(error.__class__.__name__ +
+                         (": " + ", ".join([str(a) for a in error.args]) if len(error.args) > 0 else ""))
+
+        try:
+            await interaction.response.send_message(msg)
+        except (InteractionResponded, HTTPException):
+            await send_msg(ctx, f"{author_mention}\n{msg}")
+
+        print_unhandled_error(error, get_translation("Ignoring exception in component '{0}' created by command '{1}':")
+                              .format(component_name, str(ctx.command)))
 
 
 def func_name(func_number: int = 1):
@@ -2975,7 +3187,7 @@ def get_server_players() -> dict:
 
 def shorten_string(string: str, max_length: int):
     if len(string) > max_length:
-        return f"{string[:max_length].strip(' ')}..."
+        return f"{string[:max_length - 3].strip(' ')}..."
     else:
         return string
 

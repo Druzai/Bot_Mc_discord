@@ -9,7 +9,7 @@ from re import search
 from sys import argv
 from typing import TYPE_CHECKING, Literal, Optional
 
-from discord import Embed, Color as d_Color, DMChannel, Member, RawReactionActionEvent
+from discord import Embed, Color as d_Color, DMChannel, Member, RawReactionActionEvent, SelectOption, Interaction
 from discord.ext import commands, tasks
 from psutil import disk_usage
 
@@ -23,7 +23,8 @@ from components.additional_funcs import (
     DISCORD_SYMBOLS_IN_MESSAGE_LIMIT, get_number_of_digits, bot_associate, bot_associate_info, get_time_string,
     bot_shutdown_info, bot_forceload_info, get_member_string, handle_rcon_error, IPv4Address,
     handle_unhandled_error_in_task, check_if_string_in_all_translations, handle_unhandled_error_in_events,
-    build_nickname_tellraw_for_bot
+    build_nickname_tellraw_for_bot, send_select_view, shorten_string, SelectChoice, send_interaction,
+    create_backups_select_options_list, DISCORD_SELECT_FIELD_MAX_LENGTH
 )
 from components.localization import get_translation
 from components.watcher_handle import create_watcher
@@ -34,8 +35,15 @@ if TYPE_CHECKING:
 
 
 class MinecraftCommands(commands.Cog):
-    _emoji_symbols = {"status": "🗨", "list": "📋", "backup": "💾", "start": "♿",
-                      "stop 10": "⏹", "restart 10": "🔄", "update": "📶"}  # Symbols for menu
+    _emoji_symbols = {  # Symbols for menu
+        "status": "🗨",
+        "list": "📋",
+        "backup": "💾",
+        "start": "♿",
+        "stop 10": "⏹",
+        "restart 10": "🔄",
+        "update": "📶"
+    }
 
     def __init__(self, bot: commands.Bot):
         self._bot: commands.Bot = bot
@@ -526,15 +534,46 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @decorators.has_admin_role()
     @commands.guild_only()
-    async def a_unban(self, ctx: commands.Context, ip: IPv4Address):
-        if len(Config.get_list_of_banned_ips_and_reasons(get_server_version())) == 0:
-            await ctx.send(add_quotes(get_translation("There are no banned IP-addresses!")))
-            return
-
+    async def a_unban(self, ctx: commands.Context, ip: IPv4Address = None):
         async with handle_rcon_error(ctx):
-            with connect_rcon() as cl_r:
-                cl_r.run(f"pardon-ip {ip}")
-            await ctx.send(add_quotes(get_translation("Unbanned IP-address {0}!").format(ip)))
+            banned_ips = Config.get_list_of_banned_ips_and_reasons(get_server_version())
+            if len(banned_ips) == 0:
+                await ctx.send(add_quotes(get_translation("There are no banned IP-addresses!")))
+                return
+
+            async def on_callback(interaction: Optional[Interaction]):
+                set_ip = interaction.data.get("values", [None])[0] if interaction is not None else ip
+
+                async with handle_rcon_error(ctx):
+                    with connect_rcon() as cl_r:
+                        cl_r.run(f"pardon-ip {set_ip}")
+                    await send_interaction(
+                        interaction,
+                        add_quotes(get_translation("Unbanned IP-address {0}!").format(set_ip)),
+                        ctx=ctx
+                    )
+                return SelectChoice.STOP_VIEW
+
+            if ip is not None:
+                await on_callback(None)
+                return
+
+            await send_select_view(
+                ctx,
+                [
+                    SelectOption(
+                        label=shorten_string(e["ip"], DISCORD_SELECT_FIELD_MAX_LENGTH),
+                        value=shorten_string(e["ip"], DISCORD_SELECT_FIELD_MAX_LENGTH),
+                        description=(shorten_string(get_translation("Reason: ") + e["reason"],
+                                                    DISCORD_SELECT_FIELD_MAX_LENGTH)
+                                     if e["reason"] is not None else None)
+                    ) for e in banned_ips
+                ],
+                on_callback,
+                on_interaction_check=decorators.is_admin,
+                message=get_translation("Select from the list of banned IP-addresses:"),
+                timeout=60
+            )
 
     @authorize.group(pass_context=True, name="revoke", invoke_without_command=True, ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -850,37 +889,55 @@ class MinecraftCommands(commands.Cog):
                                   Config.get_selected_server_from_list().server_name +
                                   f" [{str(Config.get_settings().selected_server_number)}]"))
 
-    @server.command(pass_context=True, name="select", ignore_extra=False)
+    @server.command(pass_context=True, name="select")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @decorators.has_role_or_default()
     @commands.guild_only()
-    async def s_select(self, ctx: commands.Context, selected_server: int):
-        if 0 < selected_server <= len(Config.get_settings().servers_list):
-            if selected_server == Config.get_settings().selected_server_number:
-                await ctx.send(add_quotes(get_translation("My, you have chosen selected server, insane?)\n"
-                                                          " ...Patsan ramsi poputal")))
-                return
+    async def s_select(self, ctx: commands.Context):
+        options = []
+        for i in range(1, len(Config.get_settings().servers_list) + 1):
+            options.append(SelectOption(
+                label=shorten_string(Config.get_settings().servers_list[i - 1].server_name,
+                                     DISCORD_SELECT_FIELD_MAX_LENGTH),
+                value=str(i),
+                default=i == Config.get_settings().selected_server_number
+            ))
+
+        async def on_callback(interaction: Interaction):
+            selected_server = int(interaction.data.get("values", [None])[0])
+
             if BotVars.is_server_on or BotVars.is_loading or BotVars.is_stopping or BotVars.is_restarting:
-                await ctx.send(add_quotes(
-                    get_translation("You can't change server, while some instance is still running\n"
-                                    "Please stop it, before trying again")))
-                return
+                await ctx.send(
+                    add_quotes(get_translation("You can't change server, while some instance is still running\n"
+                                               "Please stop it, before trying again"))
+                )
+                return SelectChoice.STOP_VIEW
 
             if BotVars.watcher_of_log_file is not None:
                 BotVars.watcher_of_log_file.stop()
                 BotVars.watcher_of_log_file = None
             Config.get_settings().selected_server_number = selected_server
             Config.save_config()
-            await ctx.send(add_quotes(get_translation("Selected server") + ": " +
-                                      Config.get_selected_server_from_list().server_name +
-                                      f" [{str(Config.get_settings().selected_server_number)}]"))
+            await send_interaction(
+                interaction,
+                add_quotes(get_translation("Selected server") + ": " +
+                           Config.get_selected_server_from_list().server_name +
+                           f" [{str(Config.get_settings().selected_server_number)}]"),
+                ctx=ctx
+            )
             print(get_translation("Selected server") + f" - '{Config.get_selected_server_from_list().server_name}'")
             Config.read_server_info()
             await ctx.send(add_quotes(get_translation("Server properties read!")))
             print(get_translation("Server info read!"))
-        else:
-            await ctx.send(add_quotes(get_translation("Use server list, there's no such "
-                                                      "server number on the list!")))
+            return SelectChoice.DO_NOTHING
+
+        await send_select_view(
+            ctx,
+            options,
+            on_callback,
+            message=get_translation("Select Minecraft server:"),
+            timeout=60
+        )
 
     @server.command(pass_context=True, name="list", aliases=["ls"])
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -1017,14 +1074,16 @@ class MinecraftCommands(commands.Cog):
         else:
             await send_status(ctx)
 
-    @backup.command(pass_context=True, name="restore", ignore_extra=False)
+    @backup.command(pass_context=True, name="restore")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @decorators.has_role_or_default()
     @commands.guild_only()
-    async def b_restore(self, ctx: commands.Context, backup_number: int):
-        if not BotVars.is_server_on and not BotVars.is_loading and not BotVars.is_stopping and \
-                not BotVars.is_restarting and not BotVars.is_backing_up:
-            if 0 < backup_number <= len(Config.get_server_config().backups):
+    async def b_restore(self, ctx: commands.Context):
+        async def on_callback(interaction: Interaction):
+            backup_number = int(interaction.data.get("values", [None])[0])
+
+            if not BotVars.is_server_on and not BotVars.is_loading and not BotVars.is_stopping and \
+                    not BotVars.is_restarting and not BotVars.is_backing_up and not BotVars.is_restoring:
                 level_name = ServerProperties().level_name
                 free_space = disk_usage(Config.get_selected_server_from_list().working_directory).free
                 bc_folder_bytes = get_folder_size(Config.get_selected_server_from_list().working_directory,
@@ -1032,17 +1091,19 @@ class MinecraftCommands(commands.Cog):
                 uncompressed_size = get_archive_uncompressed_size(
                     Config.get_selected_server_from_list().working_directory,
                     Config.get_backups_settings().name_of_the_backups_folder,
-                    f"{Config.get_server_config().backups[backup_number - 1].file_name}.zip")
+                    f"{Config.get_server_config().backups[backup_number].file_name}.zip")
                 if free_space + bc_folder_bytes <= uncompressed_size:
                     await ctx.send(
                         add_quotes(get_translation("There are not enough space on disk to restore from backup!"
                                                    "\nFree - {0}\nRequired at least - {1}"
                                                    "\nDelete some backups to proceed!")
                                    .format(get_human_readable_size(free_space + bc_folder_bytes),
-                                           get_human_readable_size(uncompressed_size))))
-                    return
-                await ctx.send(add_quotes(get_translation("Starting restore from backup...")))
-                restore_from_zip_archive(Config.get_server_config().backups[backup_number - 1].file_name,
+                                           get_human_readable_size(uncompressed_size)))
+                    )
+                    return SelectChoice.DELETE_SELECT
+                await send_interaction(interaction, add_quotes(get_translation("Starting restore from backup...")),
+                                       ctx=ctx)
+                restore_from_zip_archive(Config.get_server_config().backups[backup_number].file_name,
                                          Path(Config.get_selected_server_from_list().working_directory,
                                               Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
                                          Path(Config.get_selected_server_from_list().working_directory,
@@ -1050,45 +1111,56 @@ class MinecraftCommands(commands.Cog):
                 for backup in Config.get_server_config().backups:
                     if backup.restored_from:
                         backup.restored_from = False
-                Config.get_server_config().backups[backup_number - 1].restored_from = True
+                Config.get_server_config().backups[backup_number].restored_from = True
                 Config.save_server_config()
                 await ctx.send(add_quotes(get_translation("Done!")))
                 self._backups_thread.skip()
+                return SelectChoice.STOP_VIEW
             else:
-                await ctx.send(add_quotes(get_translation("Bot doesn't have backup with this number "
-                                                          "in backups list for current server!")))
-        else:
-            await send_status(ctx)
+                await send_status(ctx)
+                return SelectChoice.DELETE_SELECT
 
-    @backup.group(pass_context=True, name="remove", aliases=["del"], invoke_without_command=True, ignore_extra=False)
+        await send_select_view(
+            ctx,
+            await create_backups_select_options_list(self._bot),
+            on_callback,
+            on_interaction_check=decorators.is_minecrafter,
+            message=get_translation("Select backup:"),
+            timeout=60
+        )
+
+    @backup.group(pass_context=True, name="remove", aliases=["del"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @decorators.has_role_or_default()
     @commands.guild_only()
-    async def b_remove(self, ctx: commands.Context, backup_number: int):
+    async def b_remove(self, ctx: commands.Context):
         if len(Config.get_server_config().backups) == 0:
             await ctx.send(add_quotes(get_translation("There are no backups for '{0}' server!")
                                       .format(Config.get_selected_server_from_list().server_name)))
             return
 
-        if 0 < backup_number <= len(Config.get_server_config().backups):
-            if Config.get_server_config().backups[backup_number - 1].initiator is not None:
+        async def on_callback(interaction: Interaction):
+            backup_number = int(interaction.data.get("values", [None])[0])
+
+            if Config.get_server_config().backups[backup_number].initiator is not None:
                 if "backup_remove" in [p.command for p in self._IndPoll.get_polls().values()]:
                     await delete_after_by_msg(ctx.message)
                     await ctx.send(get_translation("{0}, bot already has poll on `backup remove` command!")
                                    .format(ctx.author.mention),
                                    delete_after=Config.get_timeouts_settings().await_seconds_before_message_deletion)
-                    return
+                    return SelectChoice.DELETE_SELECT
 
                 if await self._IndPoll.timer(ctx, 5, "backup_remove"):
-                    member = await get_member_string(self._bot,
-                                                     Config.get_server_config().backups[backup_number - 1].initiator)
+                    member = await get_member_string(
+                        self._bot, Config.get_server_config().backups[backup_number].initiator
+                    )
                     if not await self._IndPoll.run(
                             channel=ctx.channel,
                             message=get_translation(
                                 "this man {0} trying to delete {1} backup by {2} of '{3}' "
                                 "server. Will you let that happen?"
                             ).format(ctx.author.mention,
-                                     Config.get_server_config().backups[backup_number - 1].file_name + ".zip",
+                                     Config.get_server_config().backups[backup_number].file_name + ".zip",
                                      member,
                                      Config.get_selected_server_from_list().server_name),
                             command="backup_remove",
@@ -1099,22 +1171,32 @@ class MinecraftCommands(commands.Cog):
                             ),
                             remove_logs_after=5
                     ):
-                        return
+                        return SelectChoice.DELETE_SELECT
                 else:
                     await delete_after_by_msg(ctx.message)
+                    return SelectChoice.DELETE_SELECT
 
-            backup = Config.get_server_config().backups[backup_number - 1]
+            backup = Config.get_server_config().backups[backup_number]
             remove(Path(Config.get_selected_server_from_list().working_directory,
                         Config.get_backups_settings().name_of_the_backups_folder, f"{backup.file_name}.zip"))
-            send_message_of_deleted_backup(self._bot, f"{ctx.author.display_name}#{ctx.author.discriminator}", backup,
+            send_message_of_deleted_backup(self._bot, f"{ctx.author.display_name}#{ctx.author.discriminator}",
+                                           backup,
                                            member_name=await get_member_string(self._bot, backup.initiator))
             Config.get_server_config().backups.remove(backup)
             Config.save_server_config()
             await ctx.send(add_quotes(get_translation("Deleted backup {0}.zip of '{1}' server")
-                                      .format(backup.file_name, Config.get_selected_server_from_list().server_name)))
-        else:
-            await ctx.send(add_quotes(get_translation("Bot doesn't have backup with this number "
-                                                      "in backups list for current server!")))
+                                      .format(backup.file_name,
+                                              Config.get_selected_server_from_list().server_name)))
+            return SelectChoice.DELETE_SELECT
+
+        await send_select_view(
+            ctx,
+            await create_backups_select_options_list(self._bot),
+            on_callback,
+            on_interaction_check=decorators.is_minecrafter,
+            message=get_translation("Select backup:"),
+            timeout=60
+        )
 
     @b_remove.command(pass_context=True, name="all")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)

@@ -30,11 +30,17 @@ All important changes to this project will be documented in this file.
 * Created commands:
     * `chat`
     * `rss`
+    * `language select`
 * Changed commands:
     * Moved logic:
         * From `edit` to `chat edit`
         * From `channel chat` to `chat webhook channel`
     * Added alias `remove` to all `del` subcommands
+    * Added usage of Discord dropdown lists in commands:
+      * `language select`
+      * `authorize unban`
+      * `backups remove`
+      * `backups resore`
 
 #### Breaking changes:
 
