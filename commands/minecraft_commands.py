@@ -782,7 +782,9 @@ class MinecraftCommands(commands.Cog):
             version = get_server_version()
             with connect_rcon() as cl_r:
                 added = False
-                if " " not in minecraft_nick and not any(map(str.isupper, minecraft_nick)):
+                server_properties = ServerProperties()
+                if " " not in minecraft_nick and \
+                        (not any(map(str.isupper, minecraft_nick)) or server_properties.online_mode):
                     response = cl_r.run("whitelist add", minecraft_nick).strip()
                     match = search(r"^Added\s(?P<nick>\S+)", response)
                     if match is not None:
@@ -792,7 +794,7 @@ class MinecraftCommands(commands.Cog):
                             if Config.check_and_delete_from_whitelist(version, match.group("nick")):
                                 cl_r.run("whitelist reload")
 
-                if not ServerProperties().online_mode and not added:
+                if not server_properties.online_mode and not added:
                     Config.save_to_whitelist(version, minecraft_nick)
                     cl_r.run("whitelist reload")
                     added = True

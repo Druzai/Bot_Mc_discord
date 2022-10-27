@@ -411,7 +411,7 @@ class ServerProperties:
                 raise ValueError(f"Wrong passed value {value!r}!")
 
     @property
-    def enable_query(self):
+    def enable_query(self) -> bool:
         return self._parse_from_parameter(self["enable-query"], is_bool=True)
 
     @enable_query.setter
@@ -419,7 +419,7 @@ class ServerProperties:
         self["enable-query"] = self._parse_to_parameter(value)
 
     @property
-    def query_port(self):
+    def query_port(self) -> int:
         return self._parse_from_parameter(self["query.port"], is_int=True)
 
     @query_port.setter
@@ -427,7 +427,7 @@ class ServerProperties:
         self["query.port"] = self._parse_to_parameter(value)
 
     @property
-    def enable_rcon(self):
+    def enable_rcon(self) -> bool:
         return self._parse_from_parameter(self["enable-rcon"], is_bool=True)
 
     @enable_rcon.setter
@@ -435,7 +435,7 @@ class ServerProperties:
         self["enable-rcon"] = self._parse_to_parameter(value)
 
     @property
-    def rcon_port(self):
+    def rcon_port(self) -> int:
         return self._parse_from_parameter(self["rcon.port"], is_int=True)
 
     @rcon_port.setter
@@ -443,7 +443,7 @@ class ServerProperties:
         self["rcon.port"] = self._parse_to_parameter(value)
 
     @property
-    def rcon_password(self):
+    def rcon_password(self) -> str:
         return self._parse_from_parameter(self["rcon.password"])
 
     @rcon_password.setter
@@ -451,7 +451,7 @@ class ServerProperties:
         self["rcon.password"] = self._parse_to_parameter(value)
 
     @property
-    def force_gamemode(self):
+    def force_gamemode(self) -> bool:
         return self._parse_from_parameter(self["force-gamemode"], is_bool=True)
 
     @force_gamemode.setter
@@ -459,7 +459,7 @@ class ServerProperties:
         self["force-gamemode"] = self._parse_to_parameter(value)
 
     @property
-    def online_mode(self):
+    def online_mode(self) -> bool:
         return self._parse_from_parameter(self["online-mode"], is_bool=True)
 
     @online_mode.setter
@@ -467,7 +467,7 @@ class ServerProperties:
         self["online-mode"] = self._parse_to_parameter(value)
 
     @property
-    def enforce_secure_profile(self):
+    def enforce_secure_profile(self) -> bool:
         return self._parse_from_parameter(self["enforce-secure-profile"], is_bool=True)
 
     @enforce_secure_profile.setter
@@ -475,7 +475,7 @@ class ServerProperties:
         self["enforce-secure-profile"] = self._parse_to_parameter(value)
 
     @property
-    def level_name(self):
+    def level_name(self) -> str:
         return self._parse_from_parameter(self["level-name"])
 
     @level_name.setter
@@ -483,7 +483,7 @@ class ServerProperties:
         self["level-name"] = self._parse_to_parameter(value)
 
     @property
-    def white_list(self):
+    def white_list(self) -> bool:
         return self._parse_from_parameter(self["white-list"], is_bool=True)
 
     @white_list.setter
