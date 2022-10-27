@@ -931,7 +931,7 @@ class MinecraftCommands(commands.Cog):
             Config.read_server_info()
             await ctx.send(add_quotes(get_translation("Server properties read!")))
             print(get_translation("Server info read!"))
-            return SelectChoice.DO_NOTHING
+            return SelectChoice.STOP_VIEW
 
         await send_select_view(
             ctx,

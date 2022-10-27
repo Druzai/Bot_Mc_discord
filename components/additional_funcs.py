@@ -1861,6 +1861,7 @@ async def send_select_view(
         if choice == SelectChoice.STOP_VIEW:
             for data in messages_data:
                 data["view"].stop()
+                data["view"].on_timeout = lambda: None
         elif choice == SelectChoice.DELETE_SELECT:
             for data in messages_data:
                 data["view"].stop()
