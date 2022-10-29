@@ -24,6 +24,7 @@ All important changes to this project will be documented in this file.
 * Improved kicking players with illegal characters such as space from server
 * Improved execution of commands `whitelist add` and `whitelist del` for Minecraft server version lower than `1.7.6`
 * Fixed URL regex to include `#` fragment
+* Improved parsing death messages for duplicates
 
 #### Changes in bot commands
 

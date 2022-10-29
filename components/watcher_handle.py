@@ -1,6 +1,7 @@
 import socket
 from asyncio import run_coroutine_threadsafe, sleep as asleep
 from contextlib import suppress
+from dataclasses import dataclass
 from datetime import datetime
 from os import SEEK_END, stat
 from pathlib import Path
@@ -12,7 +13,7 @@ from traceback import format_exc
 from typing import TYPE_CHECKING, Optional, List
 
 from colorama import Fore, Style
-from discord import SyncWebhook, Webhook, TextChannel, Role, ChannelType
+from discord import SyncWebhook, Webhook, TextChannel, Role, ChannelType, SyncWebhookMessage
 from discord.utils import get as utils_get, escape_markdown, find as utils_find
 
 from components.localization import get_translation
@@ -55,11 +56,12 @@ class WatchThread(Thread):
         self.name = "WatchThread"
         self.daemon = True
         self._running = True
-        self._cached_stamp = None
-        self._last_line = None
+        self._cached_stamp: Optional[int] = None
+        self._last_line: Optional[str] = None
         self._filename: Path = watch_file
         self._call_func_on_change = call_func_on_change
         self._refresh_delay_secs = Config.get_server_watcher().refresh_delay_of_console_log
+        self._last_death_message: Optional[DeathMessage] = None
         self._kwargs = kwargs
 
     # Look for changes
@@ -68,9 +70,10 @@ class WatchThread(Thread):
         if stamp != self._cached_stamp:
             self._cached_stamp = stamp
             if self._call_func_on_change is not None:
-                self._last_line = self._call_func_on_change(
+                self._last_line, self._last_death_message = self._call_func_on_change(
                     file=self._filename,
                     last_line=self._last_line,
+                    last_death_message=self._last_death_message,
                     **self._kwargs
                 )
 
@@ -95,6 +98,15 @@ class WatchThread(Thread):
     def join(self, timeout=0.5):
         self._running = False
         sleep(max(timeout, 0.5))
+
+
+@dataclass
+class DeathMessage:
+    discord_message: Optional[SyncWebhookMessage]
+    death_message: str
+    count: int
+    last_used_date: Optional[datetime]
+    last_count: int = 0
 
 
 def create_watcher(watcher: Optional[Watcher], server_version: 'ServerVersion'):
@@ -139,14 +151,20 @@ async def get_chat_webhook(channel: Optional[TextChannel], webhooks: Optional[Li
         Config.save_config()
 
 
-def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str = None, poll: Optional['Poll'] = None):
+def _check_log_file(
+        file: Path,
+        server_version: 'ServerVersion',
+        last_death_message: Optional[DeathMessage],
+        last_line: Optional[str] = None,
+        poll: Optional['Poll'] = None
+):
     if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
             not Config.get_secure_auth().enable_secure_auth:
-        return
+        return None, None
 
     last_lines = _get_last_n_lines(file, Config.get_server_watcher().number_of_lines_to_check_in_console_log, last_line)
     if len(last_lines) == 0:
-        return last_line
+        return last_line, last_death_message
 
     date_line = r"^\[(\d{2}\w{3}\d{4} )?\d+:\d+:\d+(\.\d+)?]" if server_version.minor > 6 \
         else r"^\d+-\d+-\d+ \d+:\d+:\d+"
@@ -155,7 +173,8 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
     if last_line is None:
         last_lines = last_lines[-min(50, Config.get_server_watcher().number_of_lines_to_check_in_console_log):]
     last_lines = [sub(r"§[\dabcdefklmnor]", "", line) for line in last_lines]
-    death_message = ""
+    last_death_mob_id = ""
+    date = datetime.now()
 
     for line in last_lines:
         if not search(rf"{date_line} {INFO_line}", line) or search(rf"{date_line} {INFO_line} \* ", line):
@@ -586,6 +605,15 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                 for regex in range(len(REGEX_DEATH_MESSAGES)):
                     message_match = search(f"{INFO_line} {REGEX_DEATH_MESSAGES[regex]}", line)
                     if message_match:
+                        id_match = search(
+                            r"\['[^']+'/(?P<id>\d+), l='[^']+', x=-?\d+\.\d+, y=-?\d+\.\d+, z=-?\d+\.\d+]",
+                            line
+                        )
+                        if id_match is not None:
+                            if last_death_mob_id == id_match.group("id"):
+                                break
+                            last_death_mob_id = id_match.group("id")
+
                         groups = [g.strip() for g in message_match.groups()]
                         if len(groups) == 3 and DEATH_MESSAGES[regex].find("{1}") > DEATH_MESSAGES[regex].find("{2}"):
                             groups = [groups[0], groups[2], groups[1]]
@@ -605,22 +633,64 @@ def _check_log_file(file: Path, server_version: 'ServerVersion', last_line: str 
                         groups[0] = get_translation(groups[0])
                         groups = [f"**{escape_markdown(g)}**" for g in groups]
                         msg = get_translation(DEATH_MESSAGES[regex]).format(*groups)
-                        if death_message != msg:
-                            avatar_url = Config.get_cross_platform_chat_settings().avatar_url_for_death_messages
-                            if avatar_url is None:
-                                avatar_url = BotVars.bot_for_webhooks.user.avatar.url
-                            BotVars.webhook_chat.send(
-                                msg,
-                                username=get_translation("☠ Obituary ☠"),
-                                avatar_url=avatar_url
-                            )
-                            death_message = msg
+
+                        if last_death_message is not None:
+                            if last_death_message.death_message == msg:
+                                if (date - last_death_message.last_used_date).seconds > 60:
+                                    last_death_message = send_death_message(msg, 1, date)
+                                else:
+                                    last_death_message.count += 1
+                                    last_death_message.last_used_date = date
+                            else:
+                                if last_death_message.count > last_death_message.last_count:
+                                    last_death_message.discord_message.edit(
+                                        content=f"{last_death_message.death_message} *(x{last_death_message.count})*"
+                                    )
+                                last_death_message = send_death_message(msg, 1, date)
+                        else:
+                            last_death_message = send_death_message(msg, 1, date)
                         break
                 continue
 
+    if BotVars.webhook_chat is not None and\
+            last_death_message is not None and last_death_message.count > last_death_message.last_count:
+        date = datetime.now()
+        if (date - last_death_message.last_used_date).seconds > 60:
+            last_death_message = send_death_message(
+                last_death_message.death_message,
+                last_death_message.last_count - last_death_message.count,
+                date
+            )
+        else:
+            last_death_message.discord_message.edit(
+                content=f"{last_death_message.death_message} *(x{last_death_message.count})*"
+            )
+            last_death_message.last_count = last_death_message.count
+            last_death_message.last_used_date = date
+
     for line in reversed(last_lines):
         if search(date_line, line):
-            return line
+            return line, last_death_message
+    return None, last_death_message
+
+
+def send_death_message(death_message: str, count: int, date: datetime):
+    avatar_url = Config.get_cross_platform_chat_settings().avatar_url_for_death_messages
+    if avatar_url is None:
+        avatar_url = BotVars.bot_for_webhooks.user.avatar.url
+
+    return DeathMessage(
+        death_message=death_message,
+        discord_message=BotVars.webhook_chat.send(
+            death_message + (f" *(x{count})*" if count > 1 else ""),
+            username=get_translation("☠ Obituary ☠"),
+            avatar_url=avatar_url,
+            wait=True
+        ),
+        count=count,
+        last_count=count,
+        last_used_date=date
+    )
 
 
 def _get_commands_channel():

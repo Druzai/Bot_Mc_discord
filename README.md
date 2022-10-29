@@ -52,6 +52,12 @@
     * Logging of death messages from Minecraft
         * If you set custom image link in bot config and getting standard avatar in webhook message then your image link
           is invalid!
+        * If the same death message is repeated in the Minecraft log, bot will group it and send it to Discord with the
+          modifier `(xN)`, where `N` is the number of these messages
+        * Works in versions `1.4.6` and higher
+            * From version `1.4.6` server started logging players deaths
+            * From version `1.15.0` server started logging villagers' deaths
+            * From version `1.17.1` server started logging named mobs' deaths
     * Showing low quality preview of an image in Minecraft chat (max - 160 pixels in width)
       * Can fetch image from links, attachments and stickers in Discord message
       * Supported image opacity
