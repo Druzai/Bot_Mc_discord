@@ -2436,10 +2436,6 @@ async def handle_message_for_chat(
                     for tellraw in res:
                         cl_r.tellraw("@a", tellraw)
 
-            if len(images_for_preview) > 0:
-                for image in images_for_preview:
-                    send_image_to_chat(image["url"], image["name"])
-
             if server_version.minor > 7:
                 nicks = _search_mentions_in_message(message, edit_command)
                 if len(nicks) > 0:
@@ -2454,6 +2450,22 @@ async def handle_message_for_chat(
                                         cl_r,
                                         server_version
                                     )
+
+            if len(images_for_preview) > 0:
+                emoji_count = len([0 for i in images_for_preview if i.get("type", "") == "emoji"])
+                if emoji_count > 0:
+                    if len(images_for_preview) == emoji_count:
+                        if emoji_count > 1:
+                            images_for_preview = images_for_preview[:1]
+                    else:
+                        images_for_preview = [i for i in images_for_preview if i.get("type", "") != "emoji"]
+                for image in images_for_preview:
+                    send_image_to_chat(
+                        url=image["url"],
+                        image_name=image["name"],
+                        required_width=image.get("width", None),
+                        required_height=image.get("height", None)
+                    )
 
 
 def _handle_long_tellraw_object(tellraw_obj: list):
@@ -2626,6 +2638,13 @@ async def _handle_components_in_message(
                 with suppress(NotFound, HTTPException):
                     emoji = await bot.guilds[0].fetch_emoji(emoji_id)
             if isinstance(emoji, Emoji):
+                if store_images_for_preview:
+                    images_for_preview.append({
+                        "type": "emoji",
+                        "url": emoji.url,
+                        "name": emoji_name,
+                        "height": 25
+                    })
                 return {"text": emoji_name, "hyperlink": str(emoji.url)}
             else:
                 return emoji_name
@@ -2635,6 +2654,7 @@ async def _handle_components_in_message(
         if store_images_for_preview:
             if is_tenor:
                 images_for_preview.append({
+                    "type": "link",
                     "url": link,
                     "name": ""
                 })
@@ -2643,6 +2663,7 @@ async def _handle_components_in_message(
                     resp = req_head(link, timeout=(4, 8), headers={"User-Agent": UserAgent.get_header()})
                     if resp.status_code == 200 and "image" in resp.headers.get("content-type"):
                         images_for_preview.append({
+                            "type": "link",
                             "url": link,
                             "name": ""
                         })
@@ -2723,7 +2744,7 @@ async def _handle_components_in_message(
 def _handle_attachments_in_message(message: Message, store_images_for_preview=False):
     attachments = {}
     messages = [message]
-    images_for_preview = []
+    images_for_preview: List[Dict[str, Union[str, int]]] = []
     if message.reference is not None:
         messages.append(message.reference.resolved)
     for i in range(len(messages)):
@@ -2737,16 +2758,16 @@ def _handle_attachments_in_message(message: Message, store_images_for_preview=Fa
                 iattach = attachments["reply"]
             if len(stickers) != 0:
                 for sticker in stickers:
-                    iattach.append({"text": sticker.name})
-                    if sticker.url is not None:
-                        iattach[-1].update({
-                            "hyperlink": sticker.url if len(sticker.url) < 257 else get_shortened_url(sticker.url)
+                    iattach.append({
+                        "text": sticker.name,
+                        "hyperlink": sticker.url if len(sticker.url) < 257 else get_shortened_url(sticker.url)
+                    })
+                    if store_images_for_preview and i == 0:
+                        images_for_preview.append({
+                            "type": "sticker",
+                            "url": sticker.url,
+                            "name": sticker.name
                         })
-                        if store_images_for_preview and i == 0:
-                            images_for_preview.append({
-                                "url": sticker.url,
-                                "name": sticker.name
-                            })
             if len(messages[i].attachments) != 0:
                 for attachment in messages[i].attachments:
                     need_hover = True
@@ -2767,6 +2788,7 @@ def _handle_attachments_in_message(message: Message, store_images_for_preview=Fa
                     if store_images_for_preview and i == 0 and \
                             attachment.content_type is not None and "image" in attachment.content_type:
                         images_for_preview.append({
+                            "type": "image",
                             "url": attachment.url,
                             "name": attachment.filename
                         })
@@ -3011,7 +3033,7 @@ def get_image_data(url: str):
             )
 
 
-def send_image_to_chat(url: str, image_name: str):
+def send_image_to_chat(url: str, image_name: str, required_width: int = None, required_height: int = None):
     image_data = get_image_data(url)
     if image_data is None:
         return
@@ -3020,8 +3042,18 @@ def send_image_to_chat(url: str, image_name: str):
         image_name = image_data["name"] if len(image_data["name"]) else "unknown"
     img = Image.open(image_data["bytes"], "r")
 
-    max_height = Config.get_cross_platform_chat_settings().image_preview.max_height
-    calc_width = Config.get_cross_platform_chat_settings().image_preview.max_width
+    if required_height is not None and \
+            required_height < Config.get_cross_platform_chat_settings().image_preview.max_height:
+        max_height = required_height
+    else:
+        max_height = Config.get_cross_platform_chat_settings().image_preview.max_height
+
+    if required_width is not None and \
+            required_width < Config.get_cross_platform_chat_settings().image_preview.max_width:
+        calc_width = required_height
+    else:
+        calc_width = Config.get_cross_platform_chat_settings().image_preview.max_width
+
     calc_height = int(round((img.height * 8) / (img.width / calc_width), 0) / 29)
     if calc_height > max_height:
         calc_width = int((calc_width * max_height) / calc_height)

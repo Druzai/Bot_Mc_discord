@@ -59,9 +59,10 @@
             * From version `1.15.0` server started logging villagers' deaths
             * From version `1.17.1` server started logging named mobs' deaths
     * Showing low quality preview of an image in Minecraft chat (max - 160 pixels in width)
-      * Can fetch image from links, attachments and stickers in Discord message
-      * Supported image opacity
-      * Works in versions `1.16.0` and higher
+        * Can fetch image from links, attachments, stickers and emojis in Discord message
+          * Shows emoji if there is only one emoji in the message
+        * Supported image opacity
+        * Works in versions `1.16.0` and higher
     * Some features may not work in versions lower than `1.7.2`!
 * Setting up optional rss feed. Bot will send new items from feed to Discord text channel via webhook
 

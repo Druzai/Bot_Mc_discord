@@ -14,7 +14,7 @@ All important changes to this project will be documented in this file.
 * Improved working with webhooks:
     * Bot can fetch given webhook or create a new one if it doesn't find anything
     * More easy setting up a webhook via bot commands
-* Added fetching image from links and attachments in Discord message and showing its preview in Minecraft chat
+* Added fetching image from links, attachments, stickers and emojis in Discord message and showing its preview in Minecraft chat
 * Added parameters timeout and `User-Agent` header to requests
 
 #### Fixed:
