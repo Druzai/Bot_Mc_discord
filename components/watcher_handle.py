@@ -166,7 +166,7 @@ def _check_log_file(
     if len(last_lines) == 0:
         return last_line, last_death_message
 
-    date_line = r"^\[(\d{2}\w{3}\d{4} )?\d+:\d+:\d+(\.\d+)?]" if server_version.minor > 6 \
+    date_line = r"^\[(?:\d{2}\w{3}\d{4} )?\d+:\d+:\d+(\.\d+)?]" if server_version.minor > 6 \
         else r"^\d+-\d+-\d+ \d+:\d+:\d+"
     INFO_line = r"\[Server thread/INFO][^\*<>]*:" if server_version.minor > 6 else r"\[INFO]"
 
@@ -181,7 +181,7 @@ def _check_log_file(
             continue
 
         if BotVars.webhook_chat is not None:
-            match = search(rf"{date_line} {INFO_line}( \[Not Secure])? <(?P<nick>[^>]*)> (?P<message>.*)", line)
+            match = search(rf"{date_line} {INFO_line}( \[Not Secure])? <(?P<nick>[^>]+)> (?P<message>.+)", line)
             if match is not None:
                 player_nick = match.group("nick")
                 player_message = match.group("message")
@@ -711,7 +711,7 @@ def _get_members_nicks_of_the_role(role: Role, mention_nicks: list):
 
 
 def check_if_player_logged_out(line: str, INFO_line: str):
-    match = search(rf"{INFO_line} (?P<nick>[^\[\]<>]+) lost connection:", line)
+    match = search(rf"{INFO_line} (?P<nick>.+) lost connection:", line)
     if match:
         nick = match.group("nick").strip()
         reason = split(r"lost connection:", line, maxsplit=1)[-1].strip()
@@ -723,7 +723,7 @@ def check_if_player_logged_out(line: str, INFO_line: str):
 
 def check_if_player_logged_in(line: str, INFO_line: str):
     match = search(
-        rf"{INFO_line} (?P<nick>[^\[\]<>]+)\[/(?P<ip>\d+\.\d+\.\d+\.\d+):\d+] logged in with entity id \d+ at",
+        rf"{INFO_line} (?P<nick>.+)\[/(?P<ip>\d+\.\d+\.\d+\.\d+):\d+] logged in with entity id \d+ at",
         line
     )
     if match:

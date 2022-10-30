@@ -25,6 +25,7 @@ All important changes to this project will be documented in this file.
 * Improved execution of commands `whitelist add` and `whitelist del` for Minecraft server version lower than `1.7.6`
 * Fixed URL regex to include `#` fragment
 * Improved parsing death messages for duplicates
+* Removed requirement for logging players with secure authorization that players' nicks mustn't contain these characters: `[`,`]`,`<`,`>`
 
 #### Changes in bot commands
 

@@ -21,8 +21,8 @@
     * Get info about players on the server
     * Work with server whitelist
     * Secure authorization
-        * **Can't guarantee security when nick has spaces!** (bot can't kick these players because of Minecraft server)
-        * Players' nicks mustn't contain these characters: `[`,`]`,`<`,`>`
+        * **Can't guarantee security when nick has spaces on versions lower than `1.14.0`!** (Bot can't kick these
+          players because of Minecraft server)
         * Has options to ban and unban IP-address regardless of whether secure authorization is enabled or not
     * Autoload if the Minecraft server crashes
     * Auto stop if the Minecraft server online during certain period of time without players
@@ -38,6 +38,7 @@
 * Setting an optional admin role in Discord. If set then commands that interacts with Minecraft server commands will
   execute if member has admin role. Otherwise, member must have `Administrator` permission.
 * Creating optional cross-platform chat between Discord text channel and Minecraft server via bot and webhook
+    * **Players' nicks for Minecraft chat mustn't contain `>` character!**
     * Supported mentions in Discord and Minecraft
         * Also, for better recognition you can create list of associations between Discord member and Minecraft nick
     * Supported edited messages from Discord and editing messages from Minecraft
@@ -62,7 +63,7 @@
             * From version `1.17.1` server started logging named mobs' deaths
     * Showing low quality preview of an image in Minecraft chat (max - 160 pixels in width)
         * Can fetch image from links, attachments, stickers and emojis in Discord message
-          * Shows emoji if there is only one emoji in the message
+            * Shows emoji if there is only one emoji in the message
         * Supported image opacity
         * Works in versions `1.16.0` and higher
     * Some features may not work in versions lower than `1.7.2`!
