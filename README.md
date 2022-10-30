@@ -11,6 +11,7 @@
 ## Main features
 
 > **Warning**
+>
 > **This bot designed to work only on 1 Discord server!**
 
 * Managing Minecraft server via Discord bot:
@@ -27,9 +28,10 @@
     * Auto stop if the Minecraft server online during certain period of time without players
     * Auto backup at specified intervals and forced backup by member
         * Auto deleting backup(s) if backup's limit or space exceeded
+        * **If there are files in backups directory that not in server config, they will be deleted! And vice versa!**
     * Make yourself an operator for limited amount of time if your Discord account has association with Minecraft nick
         * **Bot can't do it when nick has spaces!**
-          * This applies to servers from `1.0.0` to `1.19.0`!
+            * This applies to servers from `1.0.0` to `1.19.0`!
 * Changing Minecraft servers on the go while server is down
 * Setting an optional role in Discord. If set then the bot commands for managing the Minecraft server will require this
   role from the member
@@ -82,6 +84,7 @@
 mention `@everyone`.
 
 > **Note**
+>
 > Mentions from Minecraft mustn't contain `@` in them!
 
 ## Commands
@@ -89,10 +92,8 @@ mention `@everyone`.
 If you want to see help on all bot's commands use `help` command when bot is running.
 
 > **Note**
+>
 > Some commands will require optional role or/and admin role if you set them in bot config.
-
-**For backups: remember that if there are files in backups directory that not in server config, they will be deleted!
-And vice versa!**
 
 ## Languages
 
@@ -141,9 +142,13 @@ Executable file will be in `%project_root_dir%/build_dist`.
 
 ## Run
 
-**Important! If you're running Minecraft server between versions `1.7.2` and `1.18.0` to avoid critical security
+> **Warning**
+>
+> **If you're running Minecraft server between versions `1.7.2` and `1.18.0` to avoid critical security
 vulnerability `Log4Shell` do instructions stated in
 this [article](https://www.minecraft.net/en-us/article/important-message--security-vulnerability-java-edition)!**
+>
+> **Or check if your modded server already has a patch for it!**
 
 For Minecraft server lower than version `1.17.0` for cross-platform chat to work properly you have to have
 argument `-Dfile.encoding=UTF-8` when you're executing `*.bat`, `*.cmd`, shortcut, `*.sh` or `*.command` script (
