@@ -356,9 +356,9 @@ class ChatCommands(commands.Cog):
         if pixels < 1:
             await ctx.send(add_quotes(get_translation("Wrong 1-st argument used!") + "\n" +
                                       get_translation("Integer must be above or equal {0}!").format(1)))
-        elif pixels > 62:
+        elif pixels > 36:
             await ctx.send(add_quotes(get_translation("Wrong 1-st argument used!") + "\n" +
-                                      get_translation("Integer must be below or equal {0}!").format(62)))
+                                      get_translation("Integer must be below or equal {0}!").format(36)))
         else:
             Config.get_cross_platform_chat_settings().image_preview.max_height = pixels
             Config.save_config()

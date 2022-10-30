@@ -4207,10 +4207,10 @@ msgstr ""
 #: ..\config\init_config.py:1662
 msgid ""
 "Enter the maximum image height that will be displayed in cross-platform chat "
-"(default - 40 pixels, int)"
+"(default - 30 pixels, int)"
 msgstr ""
 "Введите максимальную высоту изображения, которое будет отображаться в "
-"кроссплатформенном чате (по умолчанию - 40 пикселей, целое число)"
+"кроссплатформенном чате (по умолчанию - 30 пикселей, целое число)"
 
 #: ..\config\init_config.py:1669
 msgid "Would you like to enable authorization security?"

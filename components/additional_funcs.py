@@ -23,7 +23,7 @@ from traceback import format_exception
 from typing import Tuple, List, Dict, Optional, Union, TYPE_CHECKING, AsyncIterator, Callable, Awaitable, Any
 from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from aiohttp import ClientSession
 from colorama import Style, Fore
 from discord import (
@@ -2460,12 +2460,13 @@ async def handle_message_for_chat(
                     else:
                         images_for_preview = [i for i in images_for_preview if i.get("type", "") != "emoji"]
                 for image in images_for_preview:
-                    send_image_to_chat(
-                        url=image["url"],
-                        image_name=image["name"],
-                        required_width=image.get("width", None),
-                        required_height=image.get("height", None)
-                    )
+                    with suppress(UnidentifiedImageError):
+                        send_image_to_chat(
+                            url=image["url"],
+                            image_name=image["name"],
+                            required_width=image.get("width", None),
+                            required_height=image.get("height", None)
+                        )
 
 
 def _handle_long_tellraw_object(tellraw_obj: list):
@@ -2625,12 +2626,12 @@ async def _handle_components_in_message(
     tenor_regex = r"https?://tenor\.com/view"
 
     async def repl_emoji(match: str):
-        obj = search(r"<a?:(\w+):(\d+)>", match)
-        emoji_name = f":{obj.group(1)}:"
+        obj = search(r"<a?:(?P<name>\w+):(?P<id>\d+)>", match)
+        emoji_name = f":{obj.group('name')}:"
         if only_replace_links:
             return emoji_name
         else:
-            emoji_id = int(obj.group(2))
+            emoji_id = int(obj.group("id"))
             emoji = bot.get_emoji(emoji_id)
             if emoji is None:
                 emoji = utils_get(bot.guilds[0].emojis, id=emoji_id)
@@ -2642,8 +2643,8 @@ async def _handle_components_in_message(
                     images_for_preview.append({
                         "type": "emoji",
                         "url": emoji.url,
-                        "name": emoji_name,
-                        "height": 25
+                        "name": obj.group("name"),
+                        "height": 22
                     })
                 return {"text": emoji_name, "hyperlink": str(emoji.url)}
             else:
@@ -2661,7 +2662,8 @@ async def _handle_components_in_message(
             else:
                 with suppress(Timeout):
                     resp = req_head(link, timeout=(4, 8), headers={"User-Agent": UserAgent.get_header()})
-                    if resp.status_code == 200 and "image" in resp.headers.get("content-type"):
+                    if resp.status_code == 200 and resp.headers.get("content-type") is not None and \
+                            "image" in resp.headers.get("content-type"):
                         images_for_preview.append({
                             "type": "link",
                             "url": link,
@@ -3054,7 +3056,7 @@ def send_image_to_chat(url: str, image_name: str, required_width: int = None, re
     else:
         calc_width = Config.get_cross_platform_chat_settings().image_preview.max_width
 
-    calc_height = int(round((img.height * 8) / (img.width / calc_width), 0) / 29)
+    calc_height = int(round((img.height * 2) / (img.width / calc_width), 0) / 9)
     if calc_height > max_height:
         calc_width = int((calc_width * max_height) / calc_height)
         calc_height = max_height

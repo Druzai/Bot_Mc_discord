@@ -1632,7 +1632,7 @@ class Config:
                 not cls.get_cross_platform_chat_settings().enable_cross_platform_chat:
             cls.get_cross_platform_chat_settings().image_preview.enable_images_preview = False
             cls.get_cross_platform_chat_settings().image_preview.max_width = 160
-            cls.get_cross_platform_chat_settings().image_preview.max_height = 40
+            cls.get_cross_platform_chat_settings().image_preview.max_height = 30
         elif cls.get_cross_platform_chat_settings().image_preview.enable_images_preview is None:
             cls._need_to_rewrite = True
             if cls._ask_for_data(get_translation("Would you like to enable image preview in cross-platform chat?") +
@@ -1655,13 +1655,13 @@ class Config:
 
         if cls.get_cross_platform_chat_settings().image_preview.max_height is None or \
                 cls.get_cross_platform_chat_settings().image_preview.max_height < 1 or \
-                cls.get_cross_platform_chat_settings().image_preview.max_height > 62:
+                cls.get_cross_platform_chat_settings().image_preview.max_height > 36:
             cls._need_to_rewrite = True
             cls.get_cross_platform_chat_settings().image_preview.max_height = \
                 cls._ask_for_data(
                     get_translation("Enter the maximum image height that will be displayed in cross-platform chat"
-                                    " (default - 40 pixels, int)") + "\n> ",
-                    try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=62)
+                                    " (default - 30 pixels, int)") + "\n> ",
+                    try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=36)
 
         # Secure auth
         if cls.get_secure_auth().enable_secure_auth is None:

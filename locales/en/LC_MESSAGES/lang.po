@@ -4136,10 +4136,10 @@ msgstr ""
 #: ..\config\init_config.py:1662
 msgid ""
 "Enter the maximum image height that will be displayed in cross-platform chat "
-"(default - 40 pixels, int)"
+"(default - 30 pixels, int)"
 msgstr ""
 "Enter the maximum image height that will be displayed in cross-platform chat "
-"(default - 40 pixels, int)"
+"(default - 30 pixels, int)"
 
 #: ..\config\init_config.py:1669
 msgid "Would you like to enable authorization security?"
