@@ -59,6 +59,7 @@ MAX_RCON_COMMAND_RUN_STR_LENGTH = 1370
 MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH = MAX_RCON_COMMAND_STR_LENGTH - 9 - 2
 DISCORD_SELECT_FIELD_MAX_LENGTH = 100
 DISCORD_SELECT_OPTIONS_MAX_LENGTH = 25
+DISCORD_MAX_SELECT_OPTIONS_IN_MESSAGE = DISCORD_SELECT_OPTIONS_MAX_LENGTH * 5
 ANSI_ESCAPE = compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 
 # Messages taken from https://minecraft.fandom.com/wiki/Death_messages
@@ -1840,8 +1841,10 @@ async def send_select_view(
         timeout: Optional[int] = 180.0
 ):
     messages_data = []
-    divided_options = [options[i:i + DISCORD_SELECT_OPTIONS_MAX_LENGTH]
-                       for i in range(0, len(options), DISCORD_SELECT_OPTIONS_MAX_LENGTH)]
+    divided_options = [
+        options[i:i + DISCORD_MAX_SELECT_OPTIONS_IN_MESSAGE]
+        for i in range(0, len(options), DISCORD_MAX_SELECT_OPTIONS_IN_MESSAGE)
+    ]
     for o in range(len(divided_options)):
         messages_data.append(
             await send_partial_select_view(
@@ -1868,7 +1871,8 @@ async def send_select_view(
                 await data["message"].delete()
 
     for data in messages_data:
-        data["menu"].callback = callback
+        for select in data["view"].children:
+            select.callback = callback
 
 
 async def send_partial_select_view(
@@ -1881,9 +1885,15 @@ async def send_partial_select_view(
         disabled: bool = False,
         timeout: Optional[int] = 180.0
 ):
-    menu = Select(min_values=min_values, max_values=max_values, options=options, disabled=disabled)
     view = View(timeout=timeout)
-    view.add_item(menu)
+    for i in range(0, len(options), DISCORD_SELECT_OPTIONS_MAX_LENGTH):
+        select = Select(
+            min_values=min_values,
+            max_values=max_values,
+            options=options[i:i + DISCORD_SELECT_OPTIONS_MAX_LENGTH],
+            disabled=disabled
+        )
+        view.add_item(select)
 
     if on_interaction_check is not None:
         async def interaction_check(interaction: Interaction):
@@ -1903,7 +1913,7 @@ async def send_partial_select_view(
         await message.delete()
 
     view.on_timeout = on_timeout
-    return dict(message=message, view=view, menu=menu)
+    return dict(message=message, view=view)
 
 
 class SelectChoice(Enum):
