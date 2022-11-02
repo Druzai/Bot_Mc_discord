@@ -9,22 +9,22 @@ from re import search
 from sys import argv
 from typing import TYPE_CHECKING, Literal, Optional
 
-from discord import Embed, Color as d_Color, DMChannel, Member, RawReactionActionEvent, SelectOption, Interaction
+from discord import DMChannel, Member, SelectOption, Interaction
 from discord.ext import commands, tasks
 from psutil import disk_usage
 
 from components import decorators
 from components.additional_funcs import (
-    server_checkups, send_error, send_status, get_server_players, add_quotes, bot_status, bot_list, bot_start, bot_stop,
+    server_checkups, send_status, get_server_players, add_quotes, bot_status, bot_list, bot_start, bot_stop,
     bot_restart, connect_rcon, make_underscored_line, get_human_readable_size, create_zip_archive,
     restore_from_zip_archive, get_file_size, BackupsThread, get_folder_size, send_message_of_deleted_backup,
     handle_backups_limit_and_size, bot_backup, delete_after_by_msg, get_half_members_count_with_role,
     warn_about_auto_backups, get_archive_uncompressed_size, get_bot_display_name, get_server_version,
     DISCORD_SYMBOLS_IN_MESSAGE_LIMIT, get_number_of_digits, bot_associate, bot_associate_info, get_time_string,
     bot_shutdown_info, bot_forceload_info, get_member_string, handle_rcon_error, IPv4Address,
-    handle_unhandled_error_in_task, check_if_string_in_all_translations, handle_unhandled_error_in_events,
-    build_nickname_tellraw_for_bot, send_select_view, shorten_string, SelectChoice, send_interaction,
-    create_backups_select_options_list, DISCORD_SELECT_FIELD_MAX_LENGTH
+    handle_unhandled_error_in_task, check_if_string_in_all_translations, build_nickname_tellraw_for_bot,
+    send_select_view, shorten_string, SelectChoice, send_interaction, on_backups_select_option,
+    DISCORD_SELECT_FIELD_MAX_LENGTH, MenuServerView, on_server_select_callback
 )
 from components.localization import get_translation
 from components.watcher_handle import create_watcher
@@ -35,24 +35,18 @@ if TYPE_CHECKING:
 
 
 class MinecraftCommands(commands.Cog):
-    _emoji_symbols = {  # Symbols for menu
-        "status": "🗨",
-        "list": "📋",
-        "backup": "💾",
-        "start": "♿",
-        "stop 10": "⏹",
-        "restart 10": "🔄",
-        "update": "📶"
-    }
-
     def __init__(self, bot: commands.Bot):
         self._bot: commands.Bot = bot
         self._IndPoll: Optional['Poll'] = bot.get_cog("Poll")
         if self._IndPoll is None:
             raise RuntimeError("Cog 'Poll' not found!")
-        self._backups_thread = BackupsThread(self._bot)
+        self.backups_thread = BackupsThread(self._bot)
+        if Config.get_menu_settings().server_menu_message_id is not None:
+            self.menu_server_view = MenuServerView(self)
+        else:
+            self.menu_server_view = None
         if len(argv) == 1:
-            self._backups_thread.start()
+            self.backups_thread.start()
             self.checkups_task.change_interval(seconds=Config.get_timeouts_settings().await_seconds_in_check_ups)
 
     @commands.command(pass_context=True)
@@ -73,7 +67,7 @@ class MinecraftCommands(commands.Cog):
     @decorators.has_role_or_default()
     async def start(self, ctx: commands.Context):
         """Start server"""
-        await bot_start(ctx, self._bot, self._backups_thread)
+        await bot_start(ctx, self._bot, self.backups_thread)
 
     @commands.command(pass_context=True, ignore_extra=False)
     @commands.bot_has_permissions(
@@ -95,7 +89,7 @@ class MinecraftCommands(commands.Cog):
     @decorators.has_role_or_default()
     async def restart(self, ctx: commands.Context, timeout: int = 0):
         """Restart server"""
-        await bot_restart(ctx, timeout, self._bot, self._IndPoll, self._backups_thread)
+        await bot_restart(ctx, timeout, self._bot, self._IndPoll, self.backups_thread)
 
     @commands.group(pass_context=True, invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -558,21 +552,24 @@ class MinecraftCommands(commands.Cog):
                 await on_callback(None)
                 return
 
+            async def on_select_option(i: int, _):
+                return SelectOption(
+                    label=shorten_string(banned_ips[i]["ip"], DISCORD_SELECT_FIELD_MAX_LENGTH),
+                    value=shorten_string(banned_ips[i]["ip"], DISCORD_SELECT_FIELD_MAX_LENGTH),
+                    description=(shorten_string(get_translation("Reason: ") + banned_ips[i]["reason"],
+                                                DISCORD_SELECT_FIELD_MAX_LENGTH)
+                                 if banned_ips[i]["reason"] is not None else None)
+                )
+
             await send_select_view(
-                ctx,
-                [
-                    SelectOption(
-                        label=shorten_string(e["ip"], DISCORD_SELECT_FIELD_MAX_LENGTH),
-                        value=shorten_string(e["ip"], DISCORD_SELECT_FIELD_MAX_LENGTH),
-                        description=(shorten_string(get_translation("Reason: ") + e["reason"],
-                                                    DISCORD_SELECT_FIELD_MAX_LENGTH)
-                                     if e["reason"] is not None else None)
-                    ) for e in banned_ips
-                ],
-                on_callback,
+                ctx=ctx,
+                raw_options=banned_ips,
+                pivot_index=None,
+                make_select_option=on_select_option,
+                on_callback=on_callback,
                 on_interaction_check=decorators.is_admin,
                 message=get_translation("Select from the list of banned IP-addresses:"),
-                timeout=60
+                timeout=180
             )
 
     @authorize.group(pass_context=True, name="revoke", invoke_without_command=True, ignore_extra=False)
@@ -791,7 +788,7 @@ class MinecraftCommands(commands.Cog):
                         if match.group("nick") == minecraft_nick:
                             added = True
                         else:
-                            if Config.check_and_delete_from_whitelist(version, match.group("nick")):
+                            if Config.check_entry_in_whitelist(version, match.group("nick"), remove_entry=True):
                                 cl_r.run("whitelist reload")
 
                 if not server_properties.online_mode and not added:
@@ -822,7 +819,7 @@ class MinecraftCommands(commands.Cog):
                             removed = True
 
                 if not removed:
-                    if Config.check_and_delete_from_whitelist(version, minecraft_nick):
+                    if Config.check_entry_in_whitelist(version, minecraft_nick, remove_entry=True):
                         cl_r.run("whitelist reload")
                         removed = True
 
@@ -896,49 +893,30 @@ class MinecraftCommands(commands.Cog):
     @decorators.has_role_or_default()
     @commands.guild_only()
     async def s_select(self, ctx: commands.Context):
-        options = []
-        for i in range(1, len(Config.get_settings().servers_list) + 1):
-            options.append(SelectOption(
-                label=shorten_string(Config.get_settings().servers_list[i - 1].server_name,
-                                     DISCORD_SELECT_FIELD_MAX_LENGTH),
-                value=str(i),
-                default=i == Config.get_settings().selected_server_number
-            ))
-
         async def on_callback(interaction: Interaction):
-            selected_server = int(interaction.data.get("values", [None])[0])
+            result = await on_server_select_callback(interaction, ctx=ctx)
+            if self.menu_server_view is not None:
+                await self.menu_server_view.update_view()
+            return result
 
-            if BotVars.is_server_on or BotVars.is_loading or BotVars.is_stopping or BotVars.is_restarting:
-                await ctx.send(
-                    add_quotes(get_translation("You can't change server, while some instance is still running\n"
-                                               "Please stop it, before trying again"))
-                )
-                return SelectChoice.STOP_VIEW
+        servers_list = Config.get_settings().servers_list
 
-            if BotVars.watcher_of_log_file is not None:
-                BotVars.watcher_of_log_file.stop()
-                BotVars.watcher_of_log_file = None
-            Config.get_settings().selected_server_number = selected_server
-            Config.save_config()
-            await send_interaction(
-                interaction,
-                add_quotes(get_translation("Selected server") + ": " +
-                           Config.get_selected_server_from_list().server_name +
-                           f" [{str(Config.get_settings().selected_server_number)}]"),
-                ctx=ctx
+        async def on_select_option(i: int, _):
+            return SelectOption(
+                label=shorten_string(servers_list[i].server_name, DISCORD_SELECT_FIELD_MAX_LENGTH),
+                value=str(i),
+                default=i + 1 == Config.get_settings().selected_server_number
             )
-            print(get_translation("Selected server") + f" - '{Config.get_selected_server_from_list().server_name}'")
-            Config.read_server_info()
-            await ctx.send(add_quotes(get_translation("Server properties read!")))
-            print(get_translation("Server info read!"))
-            return SelectChoice.STOP_VIEW
 
         await send_select_view(
-            ctx,
-            options,
-            on_callback,
+            ctx=ctx,
+            raw_options=servers_list,
+            pivot_index=Config.get_settings().selected_server_number,
+            make_select_option=on_select_option,
+            on_callback=on_callback,
+            on_interaction_check=decorators.is_minecrafter,
             message=get_translation("Select Minecraft server:"),
-            timeout=60
+            timeout=180
         )
 
     @server.command(pass_context=True, name="list", aliases=["ls"])
@@ -1057,7 +1035,7 @@ class MinecraftCommands(commands.Cog):
                         list_obj = obj
                 Config.add_backup_info(file_name=file_name, reason=reason, initiator=ctx.author.id)
                 Config.save_server_config()
-                self._backups_thread.skip()
+                self.backups_thread.skip()
                 print(get_translation("Backup completed!"))
                 if isinstance(list_obj, list):
                     await ctx.send(add_quotes(get_translation("Bot couldn't archive some files to this backup!")))
@@ -1103,8 +1081,11 @@ class MinecraftCommands(commands.Cog):
                                            get_human_readable_size(uncompressed_size)))
                     )
                     return SelectChoice.DELETE_SELECT
-                await send_interaction(interaction, add_quotes(get_translation("Starting restore from backup...")),
-                                       ctx=ctx)
+                await send_interaction(
+                    interaction,
+                    add_quotes(get_translation("Starting restore from backup...")),
+                    ctx=ctx
+                )
                 restore_from_zip_archive(Config.get_server_config().backups[backup_number].file_name,
                                          Path(Config.get_selected_server_from_list().working_directory,
                                               Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
@@ -1115,20 +1096,27 @@ class MinecraftCommands(commands.Cog):
                         backup.restored_from = False
                 Config.get_server_config().backups[backup_number].restored_from = True
                 Config.save_server_config()
-                await ctx.send(add_quotes(get_translation("Done!")))
-                self._backups_thread.skip()
+                self.backups_thread.skip()
+                await send_interaction(
+                    interaction,
+                    add_quotes(get_translation("Done!")),
+                    ctx=ctx
+                )
                 return SelectChoice.STOP_VIEW
             else:
                 await send_status(ctx)
                 return SelectChoice.DELETE_SELECT
 
         await send_select_view(
-            ctx,
-            await create_backups_select_options_list(self._bot),
-            on_callback,
+            ctx=ctx,
+            raw_options=Config.get_server_config().backups,
+            pivot_index=None,
+            make_select_option=on_backups_select_option,
+            on_callback=on_callback,
             on_interaction_check=decorators.is_minecrafter,
             message=get_translation("Select backup:"),
-            timeout=60
+            bot=self._bot,
+            timeout=180
         )
 
     @backup.group(pass_context=True, name="remove", aliases=["del"], invoke_without_command=True)
@@ -1186,18 +1174,25 @@ class MinecraftCommands(commands.Cog):
                                            member_name=await get_member_string(self._bot, backup.initiator))
             Config.get_server_config().backups.remove(backup)
             Config.save_server_config()
-            await ctx.send(add_quotes(get_translation("Deleted backup {0}.zip of '{1}' server")
-                                      .format(backup.file_name,
-                                              Config.get_selected_server_from_list().server_name)))
-            return SelectChoice.DELETE_SELECT
+            self.backups_thread.skip()
+            await send_interaction(
+                interaction,
+                add_quotes(get_translation("Deleted backup {0}.zip of '{1}' server")
+                           .format(backup.file_name, Config.get_selected_server_from_list().server_name)),
+                ctx=ctx
+            )
+            return SelectChoice.STOP_VIEW
 
         await send_select_view(
-            ctx,
-            await create_backups_select_options_list(self._bot),
-            on_callback,
+            ctx=ctx,
+            raw_options=Config.get_server_config().backups,
+            pivot_index=None,
+            make_select_option=on_backups_select_option,
+            on_callback=on_callback,
             on_interaction_check=decorators.is_minecrafter,
             message=get_translation("Select backup:"),
-            timeout=60
+            bot=self._bot,
+            timeout=180
         )
 
     @b_remove.command(pass_context=True, name="all")
@@ -1291,66 +1286,24 @@ class MinecraftCommands(commands.Cog):
     @commands.guild_only()
     async def menu(self, ctx: commands.Context):
         await delete_after_by_msg(ctx.message, without_delay=True)
-        emb = Embed(title=get_translation("List of commands via reactions"), color=d_Color.teal())
-        for key, value in self._emoji_symbols.items():
-            emb.add_field(name=key, value=value)
-        add_reactions_to = await ctx.send(embed=emb)
-        Config.get_settings().bot_settings.menu_id = add_reactions_to.id
+        for v in self._bot.persistent_views:
+            if isinstance(v, MenuServerView):
+                v.stop()
+        self.menu_server_view = MenuServerView(self)
+        await self.menu_server_view.update_view(send=False)
+        menu_msg = await ctx.send(get_translation("List of commands for interacting with Minecraft server via buttons"
+                                                  " and dropdown for selecting server"),
+                                  view=self.menu_server_view)
+        Config.get_menu_settings().server_menu_message_id = menu_msg.id
+        Config.get_menu_settings().server_menu_channel_id = menu_msg.channel.id
         Config.save_config()
-        for emote in self._emoji_symbols.values():
-            await add_reactions_to.add_reaction(emote)
 
     @tasks.loop()
     async def checkups_task(self):
         with handle_unhandled_error_in_task():
-            await server_checkups(self._bot, self._backups_thread, self._IndPoll)
+            await server_checkups(self._bot, self.backups_thread, self._IndPoll)
 
     @checkups_task.before_loop
     async def before_checkups(self):
         await self._bot.wait_until_ready()
         print(get_translation("Starting Minecraft server check-ups"))
-
-    @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
-        with handle_unhandled_error_in_events():
-            if payload.message_id == Config.get_settings().bot_settings.menu_id and \
-                    payload.member.id != self._bot.user.id:
-                channel = self._bot.get_channel(payload.channel_id)
-                message = await channel.fetch_message(payload.message_id)
-                await message.remove_reaction(payload.emoji, payload.member)
-                if payload.emoji.name in self._emoji_symbols.values():
-                    BotVars.react_auth = payload.member
-                    if payload.emoji.name == self._emoji_symbols.get("status"):
-                        await bot_status(channel, self._bot, is_reaction=True)
-                    elif payload.emoji.name == self._emoji_symbols.get("list"):
-                        await bot_list(channel, self._bot, is_reaction=True)
-                    elif payload.emoji.name == self._emoji_symbols.get("backup"):
-                        await bot_backup(channel, self._bot, is_reaction=True)
-                    elif payload.emoji.name == self._emoji_symbols.get("update"):
-                        if self.checkups_task.is_running():
-                            self.checkups_task.restart()
-                        return
-                    else:
-                        if Config.get_settings().bot_settings.managing_commands_role_id is None or \
-                                Config.get_settings().bot_settings.managing_commands_role_id \
-                                in (e.id for e in payload.member.roles):
-                            if payload.emoji.name == self._emoji_symbols.get("start"):
-                                await bot_start(channel, self._bot, self._backups_thread, is_reaction=True)
-                            elif payload.emoji.name == self._emoji_symbols.get("stop 10"):
-                                await bot_stop(channel, command=10, bot=self._bot, poll=self._IndPoll, is_reaction=True)
-                            elif payload.emoji.name == self._emoji_symbols.get("restart 10"):
-                                await bot_restart(
-                                    channel,
-                                    command=10,
-                                    bot=self._bot,
-                                    poll=self._IndPoll,
-                                    backups_thread=self._backups_thread,
-                                    is_reaction=True
-                                )
-                        else:
-                            await send_error(
-                                channel,
-                                self._bot,
-                                commands.MissingRole(Config.get_settings().bot_settings.managing_commands_role_id),
-                                is_reaction=True
-                            )

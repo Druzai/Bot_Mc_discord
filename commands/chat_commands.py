@@ -57,6 +57,12 @@ class ChatCommands(commands.Cog):
                 commands_cog.checkups_task.restart()
             print(get_translation("Bot is ready!"))
             print(get_translation("To stop the bot press Ctrl + C"))
+            if commands_cog.menu_server_view is not None:
+                await commands_cog.menu_server_view.update_view()
+                self._bot.add_view(
+                    commands_cog.menu_server_view,
+                    message_id=Config.get_menu_settings().server_menu_message_id
+                )
 
     @commands.group(pass_context=True, aliases=["chn"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -646,19 +652,25 @@ class ChatCommands(commands.Cog):
             await on_callback(None)
             return
 
+        locales_list = get_locales()
+        pivot = [i for i in range(len(locales_list)) if get_current_locale() == locales_list[i]][0]
+
+        async def on_select_option(i: int, _):
+            return SelectOption(
+                label=shorten_string(locales_list[i].capitalize(), DISCORD_SELECT_FIELD_MAX_LENGTH),
+                value=shorten_string(locales_list[i], DISCORD_SELECT_FIELD_MAX_LENGTH),
+                description=shorten_string(get_translation(locales_list[i]), DISCORD_SELECT_FIELD_MAX_LENGTH),
+                default=pivot == i
+            )
+
         await send_select_view(
-            ctx,
-            [
-                SelectOption(
-                    label=shorten_string(lang.capitalize(), DISCORD_SELECT_FIELD_MAX_LENGTH),
-                    value=shorten_string(lang, DISCORD_SELECT_FIELD_MAX_LENGTH),
-                    description=shorten_string(get_translation(lang), DISCORD_SELECT_FIELD_MAX_LENGTH),
-                    default=get_current_locale() == lang
-                ) for lang in get_locales()
-            ],
-            on_callback,
+            ctx=ctx,
+            raw_options=locales_list,
+            pivot_index=pivot,
+            make_select_option=on_select_option,
+            on_callback=on_callback,
             message=get_translation("Select bot language:"),
-            timeout=60
+            timeout=180
         )
 
     @commands.command(pass_context=True)

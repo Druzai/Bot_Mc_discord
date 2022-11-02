@@ -29,11 +29,11 @@ from colorama import Style, Fore
 from discord import (
     Activity, ActivityType, Message, Status, Member, Role, MessageType, NotFound, HTTPException, Forbidden, Emoji,
     ChannelType, TextChannel, VoiceChannel, Thread as ChannelThread, GroupChannel, Webhook, InvalidData, SelectOption,
-    Interaction, InteractionResponded, Client
+    Interaction, Client, ButtonStyle
 )
 from discord.abc import Messageable
 from discord.ext import commands
-from discord.ui import View, Select, Item
+from discord.ui import View, Select, Item, Button, button
 from discord.utils import get as utils_get, _get_mime_type_for_image
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r, WrongPassword
@@ -48,6 +48,7 @@ from config.init_config import Config, BotVars, ServerProperties, OS, URL_REGEX
 
 if TYPE_CHECKING:
     from commands.poll import Poll
+    from commands.minecraft_commands import MinecraftCommands
 
 if Config.get_os() == OS.Windows:
     from os import startfile
@@ -110,25 +111,55 @@ REGEX_DEATH_MESSAGES = [sub(r"\{\d}", r"(.+)", m) for m in DEATH_MESSAGES]
 MASS_REGEX_DEATH_MESSAGES = "|".join(REGEX_DEATH_MESSAGES)
 
 
-async def send_msg(ctx: Messageable, msg: str, is_reaction=False):
-    if is_reaction:
+async def send_msg(ctx: Union[Messageable, Interaction], msg: str, is_reaction=False):
+    if isinstance(ctx, Interaction):
+        await send_interaction(ctx, msg, is_reaction=is_reaction)
+    else:
         await ctx.send(
             content=msg,
-            delete_after=Config.get_timeouts_settings().await_seconds_before_message_deletion
+            delete_after=(Config.get_timeouts_settings().await_seconds_before_message_deletion
+                          if is_reaction else None)
         )
-    else:
-        await ctx.send(msg)
 
 
-async def send_interaction(interaction: Optional[Interaction], msg: str, ctx: Messageable = None, ephemeral=False):
-    if interaction is None:
-        await ctx.send(msg)
+async def send_interaction(
+        interaction: Optional[Interaction],
+        msg: str,
+        ctx: Messageable = None,
+        ephemeral=False,
+        is_reaction=False
+):
+    try:
+        if interaction is None or interaction.is_expired():
+            raise ValueError()
+
+        if interaction.response.is_done():
+            msg = await interaction.followup.send(msg, ephemeral=ephemeral, wait=True)
+        else:
+            await interaction.response.send_message(msg, ephemeral=ephemeral)
+            msg = await interaction.original_response()
+
+        if is_reaction:
+            await msg.delete(delay=Config.get_timeouts_settings().await_seconds_before_message_deletion)
+    except (NotFound, HTTPException, ValueError):
+        if ctx is None and interaction is not None:
+            ctx = interaction.channel()
+        if ctx is not None:
+            await ctx.send(
+                content=msg,
+                delete_after=(Config.get_timeouts_settings().await_seconds_before_message_deletion
+                              if is_reaction else None)
+            )
+
+
+async def edit_interaction(interaction: Optional[Interaction], view: View, message_id: int):
+    if interaction.is_expired():
         return
 
-    try:
-        await interaction.response.send_message(msg, ephemeral=ephemeral)
-    except (InteractionResponded, HTTPException):
-        await ctx.send(msg)
+    if interaction.response.is_done():
+        await interaction.followup.edit_message(message_id, view=view)
+    else:
+        await interaction.response.edit_message(view=view)
 
 
 def add_quotes(msg: str) -> str:
@@ -147,17 +178,20 @@ async def delete_after_by_msg(message: Union[Message, int], ctx: commands.Contex
 
 
 def get_author_and_mention(
-        ctx: Union[commands.Context, Message, TextChannel, VoiceChannel, ChannelThread, GroupChannel],
-        bot: commands.Bot,
+        ctx: Union[commands.Context, Message, TextChannel, VoiceChannel, ChannelThread, GroupChannel, Interaction],
+        bot: Union[commands.Bot, Client],
         is_reaction=False
 ):
     if is_reaction:
         author_mention = BotVars.react_auth.mention
         author = BotVars.react_auth
     else:
-        if hasattr(ctx, 'author'):
+        if hasattr(ctx, "author"):
             author_mention = ctx.author.mention
             author = ctx.author
+        elif hasattr(ctx, "user"):
+            author_mention = ctx.user.mention
+            author = ctx.user
         else:
             author_mention = bot.user.mention
             author = bot.user
@@ -190,8 +224,8 @@ def _ignore_some_tasks_errors(task: Task):
 
 
 async def start_server(
-        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel],
-        bot: commands.Bot,
+        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel, Interaction],
+        bot: Union[commands.Bot, Client],
         backups_thread=None,
         shut_up=False,
         is_reaction=False
@@ -337,8 +371,8 @@ async def start_server(
 
 
 async def stop_server(
-        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel],
-        bot: commands.Bot,
+        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel, Interaction],
+        bot: Union[commands.Bot, Client],
         poll: 'Poll',
         how_many_sec=10,
         is_restart=False,
@@ -1075,8 +1109,8 @@ async def server_checkups(bot: commands.Bot, backups_thread: BackupsThread, poll
 
 
 async def bot_status(
-        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel],
-        bot: commands.Bot,
+        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel, Interaction],
+        bot: Union[commands.Bot, Client],
         is_reaction=False
 ):
     states = ""
@@ -1152,8 +1186,8 @@ async def bot_status(
 
 
 async def bot_list(
-        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel],
-        bot: commands.Bot,
+        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel, Interaction],
+        bot: Union[commands.Bot, Client],
         is_reaction=False
 ):
     try:
@@ -1195,8 +1229,8 @@ async def bot_list(
 
 
 async def bot_start(
-        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel],
-        bot: commands.Bot,
+        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel, Interaction],
+        bot: Union[commands.Bot, Client],
         backups_thread,
         is_reaction=False
 ):
@@ -1208,9 +1242,9 @@ async def bot_start(
 
 
 async def bot_stop(
-        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel],
+        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel, Interaction],
         command,
-        bot: commands.Bot,
+        bot: Union[commands.Bot, Client],
         poll: 'Poll',
         is_reaction=False
 ):
@@ -1229,9 +1263,9 @@ async def bot_stop(
 
 
 async def bot_restart(
-        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel],
+        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel, Interaction],
         command,
-        bot: commands.Bot,
+        bot: Union[commands.Bot, Client],
         poll: 'Poll',
         backups_thread: BackupsThread,
         is_reaction=False
@@ -1382,8 +1416,8 @@ async def bot_dm_clear(ctx: commands.Context, bot: commands.Bot, subcommand: str
 
 
 async def bot_backup(
-        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel],
-        bot: commands.Bot,
+        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel, Interaction],
+        bot: Union[commands.Bot, Client],
         is_reaction=False
 ):
     bot_message = (get_translation("Automatic backups enabled") if Config.get_backups_settings()
@@ -1436,36 +1470,31 @@ async def bot_backup(
     await send_msg(ctx, add_quotes(bot_message), is_reaction)
 
 
-async def create_backups_select_options_list(bot: commands.Bot):
-    options = []
+async def on_backups_select_option(i: int, bot: commands.Bot):
+    backup = Config.get_server_config().backups[i]
 
-    for i in range(len(Config.get_server_config().backups)):
-        backup = Config.get_server_config().backups[i]
-
-        if backup.reason is None and backup.initiator is None:
-            description_str = shorten_string(get_translation("Reason: ") + get_translation("Automatic backup"),
-                                             DISCORD_SELECT_FIELD_MAX_LENGTH)
+    if backup.reason is None and backup.initiator is None:
+        description_str = shorten_string(get_translation("Reason: ") + get_translation("Automatic backup"),
+                                         DISCORD_SELECT_FIELD_MAX_LENGTH)
+    else:
+        if backup.reason:
+            description_str = shorten_string(await get_member_string(bot, backup.initiator) + f" ({backup.reason}",
+                                             DISCORD_SELECT_FIELD_MAX_LENGTH - 1) + ")"
         else:
-            if backup.reason:
-                description_str = shorten_string(await get_member_string(bot, backup.initiator) + f" ({backup.reason}",
-                                                 DISCORD_SELECT_FIELD_MAX_LENGTH - 1) + ")"
-            else:
-                description_str = shorten_string(await get_member_string(bot, backup.initiator),
-                                                 DISCORD_SELECT_FIELD_MAX_LENGTH)
+            description_str = shorten_string(await get_member_string(bot, backup.initiator),
+                                             DISCORD_SELECT_FIELD_MAX_LENGTH)
 
-        options.append(SelectOption(
-            label=shorten_string(
-                get_translation("Backup from") + " " +
-                backup.file_creation_date.strftime(
-                    get_translation("%H:%M:%S %d/%m/%Y")
-                ),
-                DISCORD_SELECT_FIELD_MAX_LENGTH
+    return SelectOption(
+        label=shorten_string(
+            get_translation("Backup from") + " " +
+            backup.file_creation_date.strftime(
+                get_translation("%H:%M:%S %d/%m/%Y")
             ),
-            value=str(i),
-            description=description_str
-        ))
-
-    return options
+            DISCORD_SELECT_FIELD_MAX_LENGTH
+        ),
+        value=str(i),
+        description=description_str
+    )
 
 
 def check_if_string_in_all_translations(translate_text: str, match_text: str):
@@ -1829,71 +1858,307 @@ def make_underscored_line(line: Union[int, float, str]):
         return underscore.join(line) + underscore
 
 
+class TemplateSelectView(View):
+    def __init__(
+            self,
+            options_raw: List,
+            namespace: str = "template_select_view",
+            name: str = "TemplateSelectView",
+            ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel, None] = None,
+            message_id: Optional[int] = None,
+            channel_id: Optional[int] = None,
+            message: Optional[Message] = None,
+            min_values: int = 1,
+            max_values: int = 1,
+            start_row: int = 0,
+            is_reaction: bool = False,
+            timeout: Optional[float] = None
+    ):
+        super().__init__(timeout=timeout)
+        self.namespace = namespace
+        self.name = name
+        self.ctx=ctx
+        self.message_id = message_id
+        self.channel_id = channel_id
+        self.message = message
+        self.select_page: int = -1
+        self.options_list_raw = options_raw
+        self.options_list_length = len(options_raw)
+        if start_row > 3:
+            raise RuntimeError("'start_row' more than 3!")
+        self.is_reaction = is_reaction
+        self.controls_removed = False
+
+        # Creating Select and buttons
+
+        self.v_select = Select(
+            custom_id=f"{namespace}:select",
+            min_values=min_values,
+            max_values=max_values,
+            row=start_row
+        )
+        self.v_select.callback = self.v_select_callback
+        self.add_item(self.v_select)
+
+        self.v_start = Button(
+            style=ButtonStyle.secondary,
+            custom_id=f"{namespace}:select_start",
+            emoji="⏪",
+            row=start_row + 1
+        )
+        self.v_start.callback = self.v_start_callback
+        self.add_item(self.v_start)
+
+        self.v_left = Button(
+            style=ButtonStyle.secondary,
+            custom_id=f"{namespace}:select_left",
+            emoji="⬅",
+            row=start_row + 1
+        )
+        self.v_left.callback = self.v_left_callback
+        self.add_item(self.v_left)
+
+        self.v_page = Button(
+            label="N / N",
+            style=ButtonStyle.secondary,
+            custom_id=f"{namespace}:select_page",
+            disabled=True,
+            row=start_row + 1
+        )
+        self.add_item(self.v_page)
+
+        self.v_right = Button(
+            style=ButtonStyle.secondary,
+            custom_id=f"{namespace}:select_right",
+            emoji="➡",
+            row=start_row + 1
+        )
+        self.v_right.callback = self.v_right_callback
+        self.add_item(self.v_right)
+
+        self.v_end = Button(
+            style=ButtonStyle.secondary,
+            custom_id=f"{namespace}:select_end",
+            emoji="⏩",
+            row=start_row + 1
+        )
+        self.v_end.callback = self.v_end_callback
+        self.add_item(self.v_end)
+
+    async def update_view(self, send: bool = True):
+        await self.update_view_components()
+        await self.update_select_options()
+        if self.options_list_length > DISCORD_SELECT_OPTIONS_MAX_LENGTH:
+            last_page = self.get_last_page()
+            if self.select_page == 0:
+                self.v_left.disabled = True
+                self.v_start.disabled = True
+                self.v_right.disabled = False
+                self.v_end.disabled = False
+            elif self.select_page == last_page:
+                self.v_left.disabled = False
+                self.v_start.disabled = False
+                self.v_right.disabled = True
+                self.v_end.disabled = True
+            else:
+                self.v_left.disabled = False
+                self.v_start.disabled = False
+                self.v_right.disabled = False
+                self.v_end.disabled = False
+            self.v_page.label = f"{self.select_page + 1} / {last_page + 1}"
+            if last_page == 1:
+                self.v_start.disabled = True
+                self.v_end.disabled = True
+        else:
+            if not self.controls_removed:
+                for c in [self.v_left, self.v_start, self.v_page, self.v_right, self.v_end]:
+                    self.remove_item(c)
+                self.controls_removed = True
+        if not send:
+            return
+
+        if self.message is None and self.message_id is not None:
+            if self.channel_id is None:
+                for ch in BotVars.bot_for_webhooks.guilds[0].channels:
+                    sub_chs = [ch]
+                    if hasattr(ch, "threads"):
+                        sub_chs.extend(ch.threads)
+                    for sub_ch in sub_chs:
+                        if isinstance(sub_ch, (TextChannel, VoiceChannel, Thread)):
+                            with suppress(NotFound, Forbidden, HTTPException):
+                                self.message = await sub_ch.fetch_message(self.message_id)
+                                self.channel_id = sub_ch.id
+            else:
+                channel = await BotVars.bot_for_webhooks.fetch_channel(self.channel_id)
+                self.message = await channel.fetch_message(self.message_id)
+        if self.message is not None:
+            await self.message.edit(view=self)
+        await self.do_after_sending_message()
+
+    async def update_select_options(self, page: Optional[int] = None):
+        if page is None:
+            self.v_select.options = [SelectOption(label="Not implemented!")]
+        else:
+            self.v_select.options = [SelectOption(label="Not implemented!")]
+
+    async def update_view_components(self):
+        pass
+
+    async def do_after_sending_message(self):
+        pass
+
+    def get_indexes(self, current_pos: int):
+        start_index = current_pos // DISCORD_SELECT_OPTIONS_MAX_LENGTH
+        if start_index > 0 and start_index > self.get_last_page():
+            start_index -= 1
+        self.select_page = start_index
+        stop_index = start_index * DISCORD_SELECT_OPTIONS_MAX_LENGTH + 25
+        if stop_index > self.options_list_length:
+            stop_index = self.options_list_length
+        start_index *= DISCORD_SELECT_OPTIONS_MAX_LENGTH
+
+        return start_index, stop_index
+
+    def set_by_page(self, page: int):
+        last_page = self.get_last_page()
+        if page <= 0:
+            self.select_page = 0
+        elif page >= last_page:
+            self.select_page = last_page
+        else:
+            self.select_page = page
+        stop_index = self.select_page * DISCORD_SELECT_OPTIONS_MAX_LENGTH + 25
+        if stop_index > self.options_list_length:
+            stop_index = self.options_list_length
+        start_index = self.select_page * DISCORD_SELECT_OPTIONS_MAX_LENGTH
+
+        return start_index, stop_index
+
+    def get_last_page(self):
+        if self.options_list_length % DISCORD_SELECT_OPTIONS_MAX_LENGTH == 0:
+            return (self.options_list_length // DISCORD_SELECT_OPTIONS_MAX_LENGTH) - 1
+        return self.options_list_length // DISCORD_SELECT_OPTIONS_MAX_LENGTH
+
+    async def interaction_check_select(self, interaction: Interaction, /) -> bool:
+        return True
+
+    async def on_error(self, interaction: Interaction, error: Exception, item: Item[Any], /) -> None:
+        await send_error_on_interaction(self.name, interaction, self.ctx, error, self.is_reaction)
+
+    async def v_select_callback(self, interaction: Interaction):
+        pass
+
+    async def v_start_callback(self, interaction: Interaction):
+        if await self.interaction_check_select(interaction):
+            await self.update_select_options(0)
+            self.v_start.disabled = True
+            self.v_left.disabled = True
+            self.v_right.disabled = False
+            self.v_end.disabled = False
+            self.v_page.label = f"{1} / {self.get_last_page() + 1}"
+            await edit_interaction(interaction, self, self.message_id)
+
+    async def v_left_callback(self, interaction: Interaction):
+        if await self.interaction_check_select(interaction):
+            await self.update_select_options(self.select_page - 1)
+            last_page = self.get_last_page()
+            self.v_start.disabled = self.select_page == 0 if last_page > 1 else True
+            self.v_left.disabled = self.select_page == 0
+            self.v_right.disabled = False
+            self.v_end.disabled = last_page == 1
+            self.v_page.label = f"{self.select_page + 1} / {last_page + 1}"
+            await edit_interaction(interaction, self, self.message_id)
+
+    async def v_right_callback(self, interaction: Interaction):
+        if await self.interaction_check_select(interaction):
+            await self.update_select_options(self.select_page + 1)
+            last_page = self.get_last_page()
+            self.v_start.disabled = last_page == 1
+            self.v_left.disabled = False
+            self.v_right.disabled = self.select_page == last_page
+            self.v_end.disabled = self.select_page == last_page if last_page > 1 else True
+            self.v_page.label = f"{self.select_page + 1} / {last_page + 1}"
+            await edit_interaction(interaction, self, self.message_id)
+
+    async def v_end_callback(self, interaction: Interaction):
+        if await self.interaction_check_select(interaction):
+            await self.update_select_options(self.get_last_page())
+            self.v_start.disabled = False
+            self.v_left.disabled = False
+            self.v_right.disabled = True
+            self.v_end.disabled = True
+            self.v_page.label = "{0} / {0}".format(self.get_last_page() + 1)
+            await edit_interaction(interaction, self, self.message_id)
+
+
+class SelectView(TemplateSelectView):
+    def __init__(
+            self,
+            options_raw: List,
+            pivot_index: Optional[int],
+            make_select_option: Callable[[int, Optional[commands.Bot]], Awaitable[SelectOption]],
+            ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel, None] = None,
+            bot: Optional[commands.Bot] = None,
+            namespace: str = "select_view",
+            name: str = "SelectView",
+            min_values: int = 1,
+            max_values: int = 1,
+            timeout: Optional[float] = 180.0
+    ):
+        super().__init__(
+            options_raw=options_raw,
+            ctx=ctx,
+            namespace=namespace,
+            name=name,
+            min_values=min_values,
+            max_values=max_values,
+            timeout=timeout
+        )
+        self.pivot_index = pivot_index if pivot_index is not None else 0  # Starts from 0 to len(options_raw) - 1
+        self.make_select_option = make_select_option
+        self.bot = bot
+
+    async def update_select_options(self, page: Optional[int] = None):
+        if page is None:
+            self.v_select.options = [
+                await self.make_select_option(i, self.bot) for i in range(*self.get_indexes(self.pivot_index))
+            ]
+        else:
+            self.v_select.options = [
+                await self.make_select_option(i, self.bot) for i in range(*self.set_by_page(page))
+            ]
+
+
+class SelectChoice(Enum):
+    DO_NOTHING = auto()
+    STOP_VIEW = auto()
+    DELETE_SELECT = auto()
+
+
 async def send_select_view(
         ctx: commands.Context,
-        options: List[SelectOption],
-        on_callback: Callable[[Optional[Interaction]], Awaitable[SelectOption]],
+        raw_options: List,
+        pivot_index: Optional[int],
+        make_select_option: Callable[[int, Optional[commands.Bot]], Awaitable[SelectOption]],
+        on_callback: Callable[[Optional[Interaction]], Awaitable[SelectChoice]],
         on_interaction_check: Optional[Callable[[Interaction], bool]] = None,
         message: Optional[str] = None,
         min_values: int = 1,
         max_values: int = 1,
-        disabled: bool = False,
+        bot: Optional[commands.Bot] = None,
         timeout: Optional[int] = 180.0
 ):
-    messages_data = []
-    divided_options = [
-        options[i:i + DISCORD_MAX_SELECT_OPTIONS_IN_MESSAGE]
-        for i in range(0, len(options), DISCORD_MAX_SELECT_OPTIONS_IN_MESSAGE)
-    ]
-    for o in range(len(divided_options)):
-        messages_data.append(
-            await send_partial_select_view(
-                ctx,
-                divided_options[o],
-                on_interaction_check,
-                message if o == 0 else None,
-                min_values,
-                max_values,
-                disabled,
-                timeout
-            )
-        )
-
-    async def callback(interaction: Optional[Interaction]):
-        choice = await on_callback(interaction)
-        if choice == SelectChoice.STOP_VIEW:
-            for data in messages_data:
-                data["view"].stop()
-                data["view"].on_timeout = lambda: None
-        elif choice == SelectChoice.DELETE_SELECT:
-            for data in messages_data:
-                data["view"].stop()
-                await data["message"].delete()
-
-    for data in messages_data:
-        for select in data["view"].children:
-            select.callback = callback
-
-
-async def send_partial_select_view(
-        ctx: commands.Context,
-        options: List[SelectOption],
-        on_interaction_check: Optional[Callable[[Interaction], bool]] = None,
-        msg: Optional[str] = None,
-        min_values: int = 1,
-        max_values: int = 1,
-        disabled: bool = False,
-        timeout: Optional[int] = 180.0
-):
-    view = View(timeout=timeout)
-    for i in range(0, len(options), DISCORD_SELECT_OPTIONS_MAX_LENGTH):
-        select = Select(
-            min_values=min_values,
-            max_values=max_values,
-            options=options[i:i + DISCORD_SELECT_OPTIONS_MAX_LENGTH],
-            disabled=disabled
-        )
-        view.add_item(select)
+    view = SelectView(
+        raw_options,
+        pivot_index,
+        make_select_option,
+        ctx=ctx,
+        min_values=min_values,
+        max_values=max_values,
+        bot=bot,
+        timeout=timeout
+    )
+    await view.update_view(send=False)
 
     if on_interaction_check is not None:
         async def interaction_check(interaction: Interaction):
@@ -1901,25 +2166,181 @@ async def send_partial_select_view(
 
         view.interaction_check = interaction_check
 
-    async def on_error(interaction: Interaction, error: Exception, item: Item[Any], /):
-        await send_error_on_interaction("Select", interaction, ctx, error)
-
-    view.on_error = on_error
-
-    message = await ctx.send(content=msg, view=view)
+    msg = await ctx.send(content=message, view=view)
 
     async def on_timeout():
         view.stop()
-        await message.delete()
+        await msg.delete()
 
     view.on_timeout = on_timeout
-    return dict(message=message, view=view)
+
+    async def callback(interaction: Interaction):
+        choice = await on_callback(interaction)
+        if choice == SelectChoice.STOP_VIEW:
+            view.stop()
+            view.on_timeout = lambda: None
+        elif choice == SelectChoice.DELETE_SELECT:
+            view.stop()
+            await msg.delete()
+
+    view.v_select.callback = callback
 
 
-class SelectChoice(Enum):
-    DO_NOTHING = auto()
-    STOP_VIEW = auto()
-    DELETE_SELECT = auto()
+async def on_server_select_callback(
+        interaction: Interaction,
+        ctx: Optional[commands.Context] = None,
+        is_reaction: bool = False
+):
+    selected_server = int(interaction.data.get("values", [None])[0])
+
+    if BotVars.is_server_on or BotVars.is_loading or BotVars.is_stopping or BotVars.is_restarting:
+        await send_interaction(
+            interaction,
+            add_quotes(get_translation("You can't change server, while some instance is still running\n"
+                                       "Please stop it, before trying again")),
+            ctx=ctx,
+            is_reaction=True
+        )
+        return SelectChoice.DO_NOTHING
+
+    if BotVars.watcher_of_log_file is not None:
+        BotVars.watcher_of_log_file.stop()
+        BotVars.watcher_of_log_file = None
+    Config.get_settings().selected_server_number = selected_server + 1
+    Config.save_config()
+    await send_interaction(
+        interaction,
+        add_quotes(get_translation("Selected server") + ": " +
+                   Config.get_selected_server_from_list().server_name +
+                   f" [{str(Config.get_settings().selected_server_number)}]"),
+        ctx=ctx,
+        is_reaction=is_reaction
+    )
+    print(get_translation("Selected server") + f" - '{Config.get_selected_server_from_list().server_name}'")
+    Config.read_server_info()
+    await send_interaction(
+        interaction,
+        add_quotes(get_translation("Server properties read!")),
+        ctx=ctx,
+        is_reaction=is_reaction
+    )
+    print(get_translation("Server info read!"))
+    return SelectChoice.STOP_VIEW
+
+
+class MenuServerView(TemplateSelectView):
+    def __init__(self, commands_cog: 'MinecraftCommands'):
+        super().__init__(
+            options_raw=Config.get_settings().servers_list,
+            namespace="menu_server_view",
+            name="MenuServerView",
+            message_id=Config.get_menu_settings().server_menu_message_id,
+            channel_id=Config.get_menu_settings().server_menu_channel_id,
+            start_row=2,
+            is_reaction=True
+        )
+        self.commands_cog = commands_cog
+
+    async def update_select_options(self, page: Optional[int] = None):
+        if page is None:
+            self.v_select.options = [
+                SelectOption(
+                    label=shorten_string(Config.get_settings().servers_list[i].server_name,
+                                         DISCORD_SELECT_FIELD_MAX_LENGTH),
+                    value=str(i),
+                    default=i + 1 == Config.get_settings().selected_server_number
+                ) for i in range(*self.get_indexes(Config.get_settings().selected_server_number))
+            ]
+        else:
+            self.v_select.options = [
+                SelectOption(
+                    label=shorten_string(Config.get_settings().servers_list[i].server_name,
+                                         DISCORD_SELECT_FIELD_MAX_LENGTH),
+                    value=str(i),
+                    default=i + 1 == Config.get_settings().selected_server_number
+                ) for i in range(*self.set_by_page(page))
+            ]
+
+    async def do_after_sending_message(self):
+        if self.channel_id is not None and Config.get_menu_settings().server_menu_channel_id is None:
+            Config.get_menu_settings().server_menu_channel_id = self.channel_id
+            Config.save_config()
+
+    async def interaction_check_select(self, interaction: Interaction, /) -> bool:
+        if Config.get_settings().bot_settings.managing_commands_role_id is None or \
+                Config.get_settings().bot_settings.managing_commands_role_id \
+                in (e.id for e in interaction.user.roles):
+            return True
+        else:
+            await send_error_on_interaction(
+                self.name,
+                interaction,
+                ctx=None,
+                error=commands.MissingRole(Config.get_settings().bot_settings.managing_commands_role_id),
+                is_reaction=True
+            )
+            return False
+
+    @button(label="status", style=ButtonStyle.secondary, custom_id="menu_server_view:status", emoji="🗨", row=0)
+    async def c_status(self, interaction: Interaction, button: Button):
+        BotVars.react_auth = interaction.user
+        await bot_status(interaction, interaction.client, is_reaction=True)
+
+    @button(label="list", style=ButtonStyle.secondary, custom_id="menu_server_view:list", emoji="📋", row=0)
+    async def c_list(self, interaction: Interaction, button: Button):
+        BotVars.react_auth = interaction.user
+        await bot_list(interaction, interaction.client, is_reaction=True)
+
+    @button(label="backup", style=ButtonStyle.secondary, custom_id="menu_server_view:backup", emoji="💾", row=0)
+    async def c_backup(self, interaction: Interaction, button: Button):
+        BotVars.react_auth = interaction.user
+        await bot_backup(interaction, interaction.client, is_reaction=True)
+
+    @button(label="update", style=ButtonStyle.secondary, custom_id="menu_server_view:update", emoji="📶", row=0)
+    async def c_update(self, interaction: Interaction, button: Button):
+        self.commands_cog.checkups_task.restart()
+        await send_interaction(interaction, get_translation("Updated bot status!"), is_reaction=True)
+
+    @button(label="start", style=ButtonStyle.secondary, custom_id="menu_server_view:start", emoji="♿", row=1)
+    async def c_start(self, interaction: Interaction, button: Button):
+        BotVars.react_auth = interaction.user
+        if self.interaction_check_select(interaction):
+            await bot_start(
+                interaction,
+                interaction.client,
+                self.commands_cog.backups_thread,
+                is_reaction=True
+            )
+
+    @button(label="stop 10", style=ButtonStyle.secondary, custom_id="menu_server_view:stop_10", emoji="⏹", row=1)
+    async def c_stop(self, interaction: Interaction, button: Button):
+        BotVars.react_auth = interaction.user
+        if await self.interaction_check_select(interaction):
+            await bot_stop(
+                interaction,
+                command=10,
+                bot=interaction.client,
+                poll=self.commands_cog._IndPoll,
+                is_reaction=True
+            )
+
+    @button(label="restart 10", style=ButtonStyle.secondary, custom_id="menu_server_view:restart_10", emoji="🔄", row=1)
+    async def c_restart(self, interaction: Interaction, button: Button):
+        BotVars.react_auth = interaction.user
+        if await self.interaction_check_select(interaction):
+            await bot_restart(
+                interaction,
+                command=10,
+                bot=interaction.client,
+                poll=self.commands_cog._IndPoll,
+                backups_thread=self.commands_cog.backups_thread,
+                is_reaction=True
+            )
+
+    async def v_select_callback(self, interaction: Interaction):
+        if await self.interaction_check_select(interaction):
+            await on_server_select_callback(interaction, is_reaction=True)
+            await self.update_view()
 
 
 @contextmanager
@@ -2196,10 +2617,11 @@ async def get_missing_permissions_message(
 
 
 async def send_error_on_interaction(
-        component_name: str,
+        view_name: str,
         interaction: Interaction,
-        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel],
-        error: Union[commands.CommandError, Exception]
+        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel, None],
+        error: Union[commands.CommandError, Exception],
+        is_reaction=False
 ):
     author, author_mention = interaction.user, interaction.user.mention
 
@@ -2208,7 +2630,8 @@ async def send_error_on_interaction(
             interaction,
             f"{author_mention}\n" + add_quotes(await get_missing_permissions_message(error, author, interaction=True)),
             ephemeral=True,
-            ctx=ctx
+            ctx=ctx,
+            is_reaction=is_reaction
         )
     elif isinstance(error, commands.MissingRole):
         await send_interaction(
@@ -2216,7 +2639,8 @@ async def send_error_on_interaction(
             f"{author_mention}\n" +
             add_quotes(await get_missing_role_message(error, interaction.client, author, interaction=True)),
             ephemeral=True,
-            ctx=ctx
+            ctx=ctx,
+            is_reaction=is_reaction
         )
     elif isinstance(error, MissingAdminPermissions):
         msg = ""
@@ -2232,19 +2656,28 @@ async def send_error_on_interaction(
             author,
             interaction=True
         )
-        await send_interaction(interaction, f"{author_mention}\n" + add_quotes(msg), ephemeral=True, ctx=ctx)
+        await send_interaction(
+            interaction,
+            f"{author_mention}\n" + add_quotes(msg),
+            ephemeral=True,
+            ctx=ctx,
+            is_reaction=is_reaction
+        )
     else:
-        msg = get_translation("This interaction failed! Try again!") + \
-              add_quotes(error.__class__.__name__ +
-                         (": " + ", ".join([str(a) for a in error.args]) if len(error.args) > 0 else ""))
-
-        try:
-            await interaction.response.send_message(msg)
-        except (InteractionResponded, HTTPException):
-            await send_msg(ctx, f"{author_mention}\n{msg}")
-
-        print_unhandled_error(error, get_translation("Ignoring exception in component '{0}' created by command '{1}':")
-                              .format(component_name, str(ctx.command)))
+        await send_interaction(
+            interaction,
+            f"{author_mention}\n" + get_translation("This interaction failed! Try again!") + \
+            add_quotes(error.__class__.__name__ +
+                       (": " + ", ".join([str(a) for a in error.args]) if len(error.args) > 0 else "")),
+            ctx=ctx,
+            is_reaction=is_reaction
+        )
+        if isinstance(ctx, commands.Context):
+            ignore_message = get_translation("Ignoring exception in view '{0}' created by command '{1}':") \
+                .format(view_name, str(ctx.command))
+        else:
+            ignore_message = get_translation("Ignoring exception in view '{0}':").format(view_name)
+        print_unhandled_error(error, ignore_message)
 
 
 def func_name(func_number: int = 1):
@@ -2671,7 +3104,7 @@ async def _handle_components_in_message(
                 })
             else:
                 with suppress(Timeout):
-                    resp = req_head(link, timeout=(4, 8), headers={"User-Agent": UserAgent.get_header()})
+                    resp = req_head(link, timeout=(3, 6), headers={"User-Agent": UserAgent.get_header()})
                     if resp.status_code == 200 and resp.headers.get("content-type") is not None and \
                             "image" in resp.headers.get("content-type"):
                         images_for_preview.append({
@@ -3213,7 +3646,7 @@ def parse_snapshot(version: str) -> Optional[str]:
                 "prop": "categories",
                 "format": "json"
             },
-            timeout=(4, 8),
+            timeout=(3, 6),
             headers={"User-Agent": UserAgent.get_header()}
         ).json()
         if answer.get("parse", None) is not None and answer["parse"].get("categories", None) is not None:

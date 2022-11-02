@@ -218,6 +218,13 @@ class Backups:
 
 
 @dataclass
+class Menu:
+    ask_about_server_menu: bool = True
+    server_menu_message_id: Optional[int] = None
+    server_menu_channel_id: Optional[int] = None
+
+
+@dataclass
 class Bot_settings:
     language: Optional[str] = None
     _token = None
@@ -242,7 +249,7 @@ class Bot_settings:
     local_address: str = ""
     log_bot_messages: bool = None
     deletion_messages_limit_without_poll: int = -1
-    menu_id: Optional[int] = None
+    menu: Menu = Menu()
     commands_channel_id: Optional[int] = None
     forceload: bool = False
     auto_shutdown: bool = False
@@ -727,6 +734,10 @@ class Config:
         return cls._settings_instance.bot_settings.backups
 
     @classmethod
+    def get_menu_settings(cls) -> Menu:
+        return cls._settings_instance.bot_settings.menu
+
+    @classmethod
     def get_selected_server_from_list(cls) -> Server_settings:
         return cls._settings_instance.servers_list[cls._settings_instance.selected_server_number - 1]
 
@@ -904,6 +915,9 @@ class Config:
 
     @classmethod
     def save_to_whitelist(cls, version: 'ServerVersion', username: str):
+        if cls.check_entry_in_whitelist(version, username):
+            return
+
         if version.minor < 7 or (version.minor == 7 and version.patch < 6):
             filepath = Path(Config.get_selected_server_from_list().working_directory + "/white-list.txt")
             if filepath.exists():
@@ -925,13 +939,15 @@ class Config:
                 dump(whitelist, f, indent=2)
 
     @classmethod
-    def check_and_delete_from_whitelist(cls, version: 'ServerVersion', username: str) -> bool:
+    def check_entry_in_whitelist(cls, version: 'ServerVersion', username: str, remove_entry: bool = False) -> bool:
         is_entry_deleted = False
         if version.minor < 7 or (version.minor == 7 and version.patch < 6):
             filepath = Path(Config.get_selected_server_from_list().working_directory + "/white-list.txt")
             if filepath.exists():
                 with open(filepath, "r", encoding="utf8") as f:
                     whitelist = [ln.strip() for ln in f.readlines()]
+                if not remove_entry:
+                    return username in whitelist
                 with suppress(ValueError):
                     whitelist.remove(username)
                     is_entry_deleted = True
@@ -944,6 +960,8 @@ class Config:
                 with suppress(JSONDecodeError):
                     with open(filepath, "r", encoding="utf8") as f:
                         whitelist = load(f)
+                    if not remove_entry:
+                        return username in [e["name"] for e in whitelist]
                 for entry in range(len(whitelist)):
                     if whitelist[entry]["name"] == username:
                         whitelist.remove(whitelist[entry])
@@ -1046,8 +1064,8 @@ class Config:
                 if match_str is not None:
                     if match_str.lower() == "y" and answer.lower() not in ["y", "n"]:
                         continue
-                    elif answer.lower() != match_str:
-                        return False
+                    else:
+                        return answer.lower() == match_str
                 if try_link:
                     if search(URL_REGEX, answer):
                         return answer
@@ -1098,7 +1116,7 @@ class Config:
         cls._setup_log_bot_messages()
         cls._print_tasks_info()
         cls._setup_clear_delete_limit_without_poll()
-        cls._setup_menu_id()
+        cls._setup_menu()
         cls._setup_commands_channel_id()
         cls._setup_default_number_of_times_to_op()
         cls._setup_server_watcher()
@@ -1223,18 +1241,41 @@ class Config:
                                   try_int=True, int_high_or_equal_than=0, int_low_or_equal_than=1000000)
 
     @classmethod
-    def _setup_menu_id(cls):
-        if cls._settings_instance.bot_settings.menu_id is None or cls._settings_instance.bot_settings.menu_id < 1:
+    def _setup_menu(cls):
+        may_shut_up = False
+        if cls.get_menu_settings().ask_about_server_menu and \
+                (cls.get_menu_settings().server_menu_message_id is None or
+                 cls.get_menu_settings().server_menu_message_id < 1):
             if cls._ask_for_data(
-                    get_translation("Menu message id not found. Would you like to enter it?") + " Y/n\n> ", "y"):
+                    get_translation("Server menu message id not found. Would you like to enter it?") + " Y/n\n> ", "y"):
                 cls._need_to_rewrite = True
-                cls._settings_instance.bot_settings.menu_id = \
-                    cls._ask_for_data(get_translation("Enter menu message id") + "\n> ", try_int=True,
+                cls.get_menu_settings().server_menu_message_id = \
+                    cls._ask_for_data(get_translation("Enter server menu message id") + "\n> ", try_int=True,
                                       int_high_or_equal_than=1)
             else:
-                print(get_translation("Menu via reactions wouldn't work. To make it work type "
-                                      "'{0}menu' to create new menu and its id.").format(
-                    cls._settings_instance.bot_settings.prefix))
+                may_shut_up = True
+                print(get_translation("Server menu via buttons won't work. To make it work type "
+                                      "'{0}menu' to create new server menu and its message id with channel id.")
+                      .format(cls._settings_instance.bot_settings.prefix))
+        if cls.get_menu_settings().ask_about_server_menu and \
+                cls.get_menu_settings().server_menu_message_id is not None and \
+                (cls.get_menu_settings().server_menu_channel_id is None or
+                 cls.get_menu_settings().server_menu_channel_id < 1):
+            if cls._ask_for_data(
+                    get_translation("Server menu channel id not found. Would you like to enter it?") + " Y/n\n> ", "y"):
+                cls._need_to_rewrite = True
+                cls.get_menu_settings().server_menu_channel_id = \
+                    cls._ask_for_data(get_translation("Enter server menu channel id") + "\n> ", try_int=True,
+                                      int_high_or_equal_than=1)
+            else:
+                may_shut_up = True
+                print(get_translation("Bot will try to find channel and message "
+                                      "by going through all channels in Discord server."))
+        if may_shut_up:
+            cls._need_to_rewrite = True
+            cls.get_menu_settings().ask_about_server_menu = \
+                not cls._ask_for_data(get_translation("Do you want the bot to never ask you about server menu setup?") +
+                                      " Y/n\n> ", "y")
 
     @classmethod
     def _setup_commands_channel_id(cls):
@@ -1782,8 +1823,8 @@ class Config:
                  cls.get_backups_settings().max_backups_limit_for_server > 100):
             cls._need_to_rewrite = True
             if cls._ask_for_data(
-                    get_translation("The maximum backups' count limit for server not found. Would you like to set it?") +
-                    " Y/n\n> ", "y"):
+                    get_translation("The maximum backups' count limit for server not found. Would you like to set it?")
+                    + " Y/n\n> ", "y"):
                 cls.get_backups_settings().max_backups_limit_for_server = \
                     cls._ask_for_data(get_translation("Set maximum backups' count limit for server (int)") + "\n> ",
                                       try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=100)
