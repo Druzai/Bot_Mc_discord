@@ -33,7 +33,9 @@
         * **Bot can't do it when nick has spaces!**
             * This applies to servers from `1.0.0` to `1.19.0`!
 * Changing Minecraft servers on the go while server is down
-* Creating a server menu with buttons and a dropdown to quickly execute common commands
+* Creating menus for quick bot and Minecraft server managing
+    * Creating a server menu with buttons and a dropdown to quickly execute common commands
+    * Creating a bot menu with buttons and a dropdown to quickly toggle bot features
 * Setting an optional role in Discord. If set then the bot commands for managing the Minecraft server will require this
   role from the member
 * Setting an optional admin role in Discord. If set then commands that interacts with Minecraft server commands will

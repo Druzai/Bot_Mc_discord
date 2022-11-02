@@ -222,6 +222,9 @@ class Menu:
     ask_about_server_menu: bool = True
     server_menu_message_id: Optional[int] = None
     server_menu_channel_id: Optional[int] = None
+    ask_about_bot_menu: bool = True
+    bot_menu_message_id: Optional[int] = None
+    bot_menu_channel_id: Optional[int] = None
 
 
 @dataclass
@@ -1242,6 +1245,7 @@ class Config:
 
     @classmethod
     def _setup_menu(cls):
+        # Server menu
         may_shut_up = False
         if cls.get_menu_settings().ask_about_server_menu and \
                 (cls.get_menu_settings().server_menu_message_id is None or
@@ -1255,7 +1259,7 @@ class Config:
             else:
                 may_shut_up = True
                 print(get_translation("Server menu via buttons won't work. To make it work type "
-                                      "'{0}menu' to create new server menu and its message id with channel id.")
+                                      "'{0}menu server' to create new server menu and its message id with channel id.")
                       .format(cls._settings_instance.bot_settings.prefix))
         if cls.get_menu_settings().ask_about_server_menu and \
                 cls.get_menu_settings().server_menu_message_id is not None and \
@@ -1275,6 +1279,41 @@ class Config:
             cls._need_to_rewrite = True
             cls.get_menu_settings().ask_about_server_menu = \
                 not cls._ask_for_data(get_translation("Do you want the bot to never ask you about server menu setup?") +
+                                      " Y/n\n> ", "y")
+        # Bot menu
+        may_shut_up = False
+        if cls.get_menu_settings().ask_about_bot_menu and \
+                (cls.get_menu_settings().bot_menu_message_id is None or
+                 cls.get_menu_settings().bot_menu_message_id < 1):
+            if cls._ask_for_data(
+                    get_translation("Bot menu message id not found. Would you like to enter it?") + " Y/n\n> ", "y"):
+                cls._need_to_rewrite = True
+                cls.get_menu_settings().bot_menu_message_id = \
+                    cls._ask_for_data(get_translation("Enter bot menu message id") + "\n> ", try_int=True,
+                                      int_high_or_equal_than=1)
+            else:
+                may_shut_up = True
+                print(get_translation("Bot menu via buttons won't work. To make it work type "
+                                      "'{0}menu bot' to create new bot menu and its message id with channel id.")
+                      .format(cls._settings_instance.bot_settings.prefix))
+        if cls.get_menu_settings().ask_about_bot_menu and \
+                cls.get_menu_settings().bot_menu_message_id is not None and \
+                (cls.get_menu_settings().bot_menu_channel_id is None or
+                 cls.get_menu_settings().bot_menu_channel_id < 1):
+            if cls._ask_for_data(
+                    get_translation("Bot menu channel id not found. Would you like to enter it?") + " Y/n\n> ", "y"):
+                cls._need_to_rewrite = True
+                cls.get_menu_settings().bot_menu_channel_id = \
+                    cls._ask_for_data(get_translation("Enter bot menu channel id") + "\n> ", try_int=True,
+                                      int_high_or_equal_than=1)
+            else:
+                may_shut_up = True
+                print(get_translation("Bot will try to find channel and message "
+                                      "by going through all channels in Discord server."))
+        if may_shut_up:
+            cls._need_to_rewrite = True
+            cls.get_menu_settings().ask_about_bot_menu = \
+                not cls._ask_for_data(get_translation("Do you want the bot to never ask you about bot menu setup?") +
                                       " Y/n\n> ", "y")
 
     @classmethod

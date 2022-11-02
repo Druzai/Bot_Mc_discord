@@ -1,3 +1,5 @@
+import socket
+from contextlib import suppress
 from sys import argv
 from typing import TYPE_CHECKING, Union, Optional
 
@@ -14,9 +16,10 @@ from components.additional_funcs import (
     parse_subcommands_for_help, find_subcommand, make_underscored_line, create_webhooks, bot_dm_clear, send_msg,
     delete_after_by_msg, HelpCommandArgument, handle_unhandled_error_in_task, handle_unhandled_error_in_events,
     get_avatar_info, URLAddress, get_server_version, get_time_string, get_channel_string, send_select_view,
-    SelectChoice, send_interaction, shorten_string, DISCORD_SELECT_FIELD_MAX_LENGTH
+    shorten_string, DISCORD_SELECT_FIELD_MAX_LENGTH, on_language_select_callback, get_message_and_channel,
+    MenuServerView, MenuBotView
 )
-from components.localization import get_translation, get_locales, set_locale, get_current_locale
+from components.localization import get_translation, get_locales, get_current_locale
 from components.rss_feed_handle import check_on_rss_feed
 from components.watcher_handle import create_watcher
 from config.init_config import Config, BotVars
@@ -32,6 +35,9 @@ class ChatCommands(commands.Cog):
         self._IndPoll: Optional['Poll'] = bot.get_cog("Poll")
         if self._IndPoll is None:
             raise RuntimeError("Cog 'Poll' not found!")
+        self._commands_cog: Optional['MinecraftCommands'] = bot.get_cog("MinecraftCommands")
+        if self._commands_cog is None:
+            raise RuntimeError("Cog 'MinecraftCommands' not found!")
         if len(argv) == 1 and Config.get_rss_feed_settings().enable_rss_feed:
             self.rss_feed_task.change_interval(seconds=Config.get_rss_feed_settings().rss_download_delay)
 
@@ -48,21 +54,41 @@ class ChatCommands(commands.Cog):
                 self.rss_feed_task.start()
             elif self.rss_feed_task.is_running():
                 self.rss_feed_task.restart()
-            commands_cog: Optional['MinecraftCommands'] = self._bot.get_cog("MinecraftCommands")
-            if commands_cog is None:
-                raise RuntimeError("Cog 'MinecraftCommands' not found!")
-            if not commands_cog.checkups_task.is_running():
-                commands_cog.checkups_task.start()
+            if not self._commands_cog.checkups_task.is_running():
+                self._commands_cog.checkups_task.start()
             else:
-                commands_cog.checkups_task.restart()
+                self._commands_cog.checkups_task.restart()
+            to_save = False
+            for view in [self._commands_cog.menu_server_view, self._commands_cog.menu_bot_view]:
+                if view is not None:
+                    message, _ = await get_message_and_channel(
+                        self._bot,
+                        view.message_id,
+                        view.channel_id
+                    )
+                    if message is not None:
+                        await view.update_view(
+                            update_content=True,
+                            check_if_content_is_different=True
+                        )
+                        self._bot.add_view(
+                            view,
+                            message_id=Config.get_menu_settings().server_menu_message_id
+                        )
+                    else:
+                        if isinstance(view, MenuServerView):
+                            self._commands_cog.menu_server_view = None
+                            Config.get_menu_settings().server_menu_message_id = None
+                            Config.get_menu_settings().server_menu_channel_id = None
+                        elif isinstance(view, MenuBotView):
+                            self._commands_cog.menu_bot_view = None
+                            Config.get_menu_settings().bot_menu_message_id = None
+                            Config.get_menu_settings().bot_menu_channel_id = None
+                        to_save = True
+            if to_save:
+                Config.save_config()
             print(get_translation("Bot is ready!"))
             print(get_translation("To stop the bot press Ctrl + C"))
-            if commands_cog.menu_server_view is not None:
-                await commands_cog.menu_server_view.update_view()
-                self._bot.add_view(
-                    commands_cog.menu_server_view,
-                    message_id=Config.get_menu_settings().server_menu_message_id
-                )
 
     @commands.group(pass_context=True, aliases=["chn"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -190,13 +216,15 @@ class ChatCommands(commands.Cog):
     @decorators.has_admin_role()
     @commands.guild_only()
     async def c_on(self, ctx: commands.Context):
-        Config.get_cross_platform_chat_settings().enable_cross_platform_chat = True
-        Config.save_config()
+        if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
+            Config.get_cross_platform_chat_settings().enable_cross_platform_chat = True
+            Config.save_config()
         BotVars.webhook_chat = None
         await create_webhooks(self._bot)
-        if BotVars.watcher_of_log_file is None:
-            BotVars.watcher_of_log_file = create_watcher(BotVars.watcher_of_log_file, get_server_version())
-        BotVars.watcher_of_log_file.start()
+        with suppress(ConnectionError, socket.error):
+            if BotVars.watcher_of_log_file is None:
+                BotVars.watcher_of_log_file = create_watcher(BotVars.watcher_of_log_file, get_server_version())
+            BotVars.watcher_of_log_file.start()
         await ctx.send(get_translation("Cross-platform chat enabled") + "!")
 
     @chat.command(pass_context=True, name="off")
@@ -204,9 +232,10 @@ class ChatCommands(commands.Cog):
     @decorators.has_admin_role()
     @commands.guild_only()
     async def c_off(self, ctx: commands.Context):
-        Config.get_cross_platform_chat_settings().enable_cross_platform_chat = False
-        Config.save_config()
-        if not Config.get_secure_auth().enable_secure_auth:
+        if Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
+            Config.get_cross_platform_chat_settings().enable_cross_platform_chat = False
+            Config.save_config()
+        if not Config.get_secure_auth().enable_secure_auth and BotVars.watcher_of_log_file is not None:
             BotVars.watcher_of_log_file.stop()
         await ctx.send(get_translation("Cross-platform chat disabled") + "!")
 
@@ -325,8 +354,9 @@ class ChatCommands(commands.Cog):
     @decorators.has_role_or_default()
     @commands.guild_only()
     async def c_i_on(self, ctx: commands.Context):
-        Config.get_cross_platform_chat_settings().image_preview.enable_images_preview = True
-        Config.save_config()
+        if not Config.get_cross_platform_chat_settings().image_preview.enable_images_preview:
+            Config.get_cross_platform_chat_settings().image_preview.enable_images_preview = True
+            Config.save_config()
         await ctx.send(get_translation("Image preview enabled") + "!")
 
     @c_images.command(pass_context=True, name="off")
@@ -334,8 +364,9 @@ class ChatCommands(commands.Cog):
     @decorators.has_role_or_default()
     @commands.guild_only()
     async def c_i_off(self, ctx: commands.Context):
-        Config.get_cross_platform_chat_settings().image_preview.enable_images_preview = False
-        Config.save_config()
+        if Config.get_cross_platform_chat_settings().image_preview.enable_images_preview:
+            Config.get_cross_platform_chat_settings().image_preview.enable_images_preview = False
+            Config.save_config()
         await ctx.send(get_translation("Image preview disabled") + "!")
 
     @c_images.command(pass_context=True, name="width", ignore_extra=False)
@@ -474,8 +505,9 @@ class ChatCommands(commands.Cog):
     @decorators.has_admin_role()
     @commands.guild_only()
     async def r_on(self, ctx: commands.Context):
-        Config.get_rss_feed_settings().enable_rss_feed = True
-        Config.save_config()
+        if not Config.get_rss_feed_settings().enable_rss_feed:
+            Config.get_rss_feed_settings().enable_rss_feed = True
+            Config.save_config()
         BotVars.webhook_rss = None
         await create_webhooks(self._bot)
         if self.rss_feed_task.is_running():
@@ -489,8 +521,9 @@ class ChatCommands(commands.Cog):
     @decorators.has_admin_role()
     @commands.guild_only()
     async def r_off(self, ctx: commands.Context):
-        Config.get_rss_feed_settings().enable_rss_feed = False
-        Config.save_config()
+        if Config.get_rss_feed_settings().enable_rss_feed:
+            Config.get_rss_feed_settings().enable_rss_feed = False
+            Config.save_config()
         if self.rss_feed_task.is_running():
             self.rss_feed_task.stop()
         await ctx.send(get_translation("RSS disabled") + "!")
@@ -633,20 +666,12 @@ class ChatCommands(commands.Cog):
     @commands.guild_only()
     async def l_select(self, ctx, set_language: str = None):
         async def on_callback(interaction: Optional[Interaction]):
-            new_language = interaction.data.get("values", [None])[0] if interaction is not None else set_language
-
-            if not set_locale(new_language):
-                msg = add_quotes(get_translation("Bot doesn't have this language!\n"
-                                                 "Check list of available languages via {0}language")
-                                 .format(Config.get_settings().bot_settings.prefix))
-                await send_interaction(interaction, msg, ctx=ctx)
-                return SelectChoice.DO_NOTHING
-            else:
-                Config.get_settings().bot_settings.language = new_language.lower()
-                Config.save_config()
-                await send_interaction(interaction, add_quotes(get_translation("Language switched successfully!")),
-                                       ctx=ctx)
-                return SelectChoice.STOP_VIEW
+            result = await on_language_select_callback(interaction, set_language, ctx=ctx)
+            if self._commands_cog.menu_bot_view is not None:
+                await self._commands_cog.menu_bot_view.update_view(update_content=True)
+                if self._commands_cog.menu_server_view is not None:
+                    await self._commands_cog.menu_server_view.update_view(update_content=True)
+            return result
 
         if set_language is not None:
             await on_callback(None)

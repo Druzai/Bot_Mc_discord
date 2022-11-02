@@ -24,7 +24,7 @@ from components.additional_funcs import (
     bot_shutdown_info, bot_forceload_info, get_member_string, handle_rcon_error, IPv4Address,
     handle_unhandled_error_in_task, check_if_string_in_all_translations, build_nickname_tellraw_for_bot,
     send_select_view, shorten_string, SelectChoice, send_interaction, on_backups_select_option,
-    DISCORD_SELECT_FIELD_MAX_LENGTH, MenuServerView, on_server_select_callback
+    DISCORD_SELECT_FIELD_MAX_LENGTH, MenuServerView, on_server_select_callback, MenuBotView, get_message_and_channel
 )
 from components.localization import get_translation
 from components.watcher_handle import create_watcher
@@ -42,9 +42,13 @@ class MinecraftCommands(commands.Cog):
             raise RuntimeError("Cog 'Poll' not found!")
         self.backups_thread = BackupsThread(self._bot)
         if Config.get_menu_settings().server_menu_message_id is not None:
-            self.menu_server_view = MenuServerView(self)
+            self.menu_server_view: Optional[MenuServerView] = MenuServerView(self)
         else:
-            self.menu_server_view = None
+            self.menu_server_view: Optional[MenuServerView] = None
+        if Config.get_menu_settings().bot_menu_message_id is not None:
+            self.menu_bot_view: Optional[MenuBotView] = MenuBotView(self._bot, self)
+        else:
+            self.menu_bot_view: Optional[MenuBotView] = None
         if len(argv) == 1:
             self.backups_thread.start()
             self.checkups_task.change_interval(seconds=Config.get_timeouts_settings().await_seconds_in_check_ups)
@@ -371,11 +375,13 @@ class MinecraftCommands(commands.Cog):
     @decorators.has_admin_role()
     @commands.guild_only()
     async def a_on(self, ctx: commands.Context):
-        Config.get_secure_auth().enable_secure_auth = True
-        Config.save_config()
-        if BotVars.watcher_of_log_file is None:
-            BotVars.watcher_of_log_file = create_watcher(BotVars.watcher_of_log_file, get_server_version())
-        BotVars.watcher_of_log_file.start()
+        if not Config.get_secure_auth().enable_secure_auth:
+            Config.get_secure_auth().enable_secure_auth = True
+            Config.save_config()
+        with suppress(ConnectionError, socket.error):
+            if BotVars.watcher_of_log_file is None:
+                BotVars.watcher_of_log_file = create_watcher(BotVars.watcher_of_log_file, get_server_version())
+            BotVars.watcher_of_log_file.start()
         await ctx.send(add_quotes(get_translation("Secure authorization on")))
 
     @authorize.command(pass_context=True, name="off")
@@ -383,9 +389,11 @@ class MinecraftCommands(commands.Cog):
     @decorators.has_admin_role()
     @commands.guild_only()
     async def a_off(self, ctx: commands.Context):
-        Config.get_secure_auth().enable_secure_auth = False
-        Config.save_config()
-        if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
+        if Config.get_secure_auth().enable_secure_auth:
+            Config.get_secure_auth().enable_secure_auth = False
+            Config.save_config()
+        if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
+                BotVars.watcher_of_log_file is not None:
             BotVars.watcher_of_log_file.stop()
         await ctx.send(add_quotes(get_translation("Secure authorization off")))
 
@@ -705,8 +713,9 @@ class MinecraftCommands(commands.Cog):
     @decorators.has_role_or_default()
     @commands.guild_only()
     async def s_s_on(self, ctx: commands.Context):
-        Config.get_settings().bot_settings.auto_shutdown = True
-        Config.save_config()
+        if not Config.get_settings().bot_settings.auto_shutdown:
+            Config.get_settings().bot_settings.auto_shutdown = True
+            Config.save_config()
         await ctx.send(add_quotes(bot_shutdown_info(with_timeout=True)))
 
     @s_shutdown.command(pass_context=True, name="off")
@@ -714,8 +723,9 @@ class MinecraftCommands(commands.Cog):
     @decorators.has_role_or_default()
     @commands.guild_only()
     async def s_s_off(self, ctx: commands.Context):
-        Config.get_settings().bot_settings.auto_shutdown = False
-        Config.save_config()
+        if Config.get_settings().bot_settings.auto_shutdown:
+            Config.get_settings().bot_settings.auto_shutdown = False
+            Config.save_config()
         await ctx.send(add_quotes(bot_shutdown_info()))
 
     @s_shutdown.command(pass_context=True, name="timeout", ignore_extra=False)
@@ -747,8 +757,9 @@ class MinecraftCommands(commands.Cog):
     @decorators.has_role_or_default()
     @commands.guild_only()
     async def s_f_on(self, ctx: commands.Context):
-        Config.get_settings().bot_settings.forceload = True
-        Config.save_config()
+        if not Config.get_settings().bot_settings.forceload:
+            Config.get_settings().bot_settings.forceload = True
+            Config.save_config()
         await ctx.send(add_quotes(bot_forceload_info()))
 
     @s_forceload.command(pass_context=True, name="off")
@@ -756,8 +767,9 @@ class MinecraftCommands(commands.Cog):
     @decorators.has_role_or_default()
     @commands.guild_only()
     async def s_f_off(self, ctx: commands.Context):
-        Config.get_settings().bot_settings.forceload = False
-        Config.save_config()
+        if Config.get_settings().bot_settings.forceload:
+            Config.get_settings().bot_settings.forceload = False
+            Config.save_config()
         await ctx.send(add_quotes(bot_forceload_info()))
 
     @commands.group(pass_context=True, aliases=["wl"], invoke_without_command=True)
@@ -1278,13 +1290,47 @@ class MinecraftCommands(commands.Cog):
             await ctx.send(add_quotes(get_translation("There are no backups for '{0}' server!")
                                       .format(Config.get_selected_server_from_list().server_name)))
 
-    @commands.command(pass_context=True)
-    @commands.bot_has_permissions(
-        manage_messages=True, send_messages=True, embed_links=True, add_reactions=True, view_channel=True
-    )
-    @decorators.has_role_or_default()
+    @commands.group(pass_context=True, invoke_without_command=True)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     async def menu(self, ctx: commands.Context):
+        msg = ""
+        message = None
+        channel = None
+        if self.menu_server_view is not None:
+            message, channel = await get_message_and_channel(
+                self._bot,
+                self.menu_server_view.message_id,
+                self.menu_server_view.channel_id
+            )
+        if message is not None and channel is not None:
+            msg += get_translation("Server menu was found in {0}\nLink - {1}").format(
+                channel.mention, f"<{message.jump_url}>"
+            ) + "\n\n"
+        else:
+            msg += get_translation("Server menu wasn't found!") + "\n"
+
+        message = None
+        channel = None
+        if self.menu_bot_view is not None:
+            message, channel = await get_message_and_channel(
+                self._bot,
+                self.menu_bot_view.message_id,
+                self.menu_bot_view.channel_id
+            )
+        if message is not None and channel is not None:
+            msg += get_translation("Bot menu was found in {0}\nLink - {1}").format(
+                channel.mention, f"<{message.jump_url}>"
+            )
+        else:
+            msg += get_translation("Bot menu wasn't found!")
+        await ctx.send(msg)
+
+    @menu.command(pass_context=True, name="server", aliases=["serv"])
+    @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
+    @decorators.has_role_or_default()
+    @commands.guild_only()
+    async def m_server(self, ctx: commands.Context):
         await delete_after_by_msg(ctx.message, without_delay=True)
         for v in self._bot.persistent_views:
             if isinstance(v, MenuServerView):
@@ -1295,7 +1341,29 @@ class MinecraftCommands(commands.Cog):
                                                   " and dropdown for selecting server"),
                                   view=self.menu_server_view)
         Config.get_menu_settings().server_menu_message_id = menu_msg.id
+        self.menu_server_view.message_id = menu_msg.id
         Config.get_menu_settings().server_menu_channel_id = menu_msg.channel.id
+        self.menu_server_view.channel_id = menu_msg.channel.id
+        Config.save_config()
+
+    @menu.command(pass_context=True, name="bot")
+    @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
+    @decorators.has_role_or_default()
+    @commands.guild_only()
+    async def m_bot(self, ctx: commands.Context):
+        await delete_after_by_msg(ctx.message, without_delay=True)
+        for v in self._bot.persistent_views:
+            if isinstance(v, MenuBotView):
+                v.stop()
+        self.menu_bot_view = MenuBotView(self._bot, self)
+        await self.menu_bot_view.update_view(send=False)
+        menu_msg = await ctx.send(get_translation("List of bot features for interaction via buttons"
+                                                  " and dropdown for selecting bot language"),
+                                  view=self.menu_bot_view)
+        Config.get_menu_settings().bot_menu_message_id = menu_msg.id
+        self.menu_bot_view.message_id = menu_msg.id
+        Config.get_menu_settings().bot_menu_channel_id = menu_msg.channel.id
+        self.menu_bot_view.channel_id = menu_msg.channel.id
         Config.save_config()
 
     @tasks.loop()

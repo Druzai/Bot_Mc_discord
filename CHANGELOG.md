@@ -16,7 +16,7 @@ All important changes to this project will be documented in this file.
     * More easy setting up a webhook via bot commands
 * Added fetching image from links, attachments, stickers and emojis in Discord message and showing its preview in Minecraft chat
 * Added parameters timeout and `User-Agent` header to requests
-* Changed menu to using buttons and a dropdown
+* Changed menu for server to using buttons and a dropdown and added menu for bot
 
 #### Fixed:
 
@@ -34,6 +34,7 @@ All important changes to this project will be documented in this file.
     * `chat`
     * `rss`
     * `language select`
+    * `menu server` and `menu bot`
 * Changed commands:
     * Moved logic:
         * From `edit` to `chat edit`
