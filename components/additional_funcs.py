@@ -3370,13 +3370,17 @@ async def _handle_components_in_message(
             else:
                 with suppress(Timeout):
                     resp = req_head(link, timeout=(3, 6), headers={"User-Agent": UserAgent.get_header()})
-                    if resp.status_code == 200 and resp.headers.get("content-type") is not None and \
-                            "image" in resp.headers.get("content-type"):
-                        images_for_preview.append({
-                            "type": "link",
-                            "url": link,
-                            "name": ""
-                        })
+                    if resp.status_code == 200 and resp.headers.get("content-length") is not None and \
+                            int(resp.headers.get("content-length")) <= 20971520:
+                        # Checks if Content-Length not larger than 20 MB
+                        if resp.headers.get("content-type") is None or \
+                                (resp.headers.get("content-type") is not None and
+                                 "image" in resp.headers.get("content-type")):
+                            images_for_preview.append({
+                                "type": "link",
+                                "url": link,
+                                "name": ""
+                            })
         if only_replace_links:
             if version_lower_1_7_2:
                 if is_tenor:
