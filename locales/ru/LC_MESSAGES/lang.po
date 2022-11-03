@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
-"POT-Creation-Date: 2022-11-02 23:20+0300\n"
-"PO-Revision-Date: 2022-11-02 23:21+0300\n"
+"POT-Creation-Date: 2022-11-03 20:33+0300\n"
+"PO-Revision-Date: 2022-11-03 20:35+0300\n"
 "Last-Translator: Druzai\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -999,18 +999,18 @@ msgstr "Упоминание канала, типа '#канал' или id ка
 
 #: ..\_frozen_translations.py:223
 msgid "help_brief_chat"
-msgstr "Управляет настройками для кроссплатформенного чата"
+msgstr "Управляет настройками для игрового чата"
 
 #: ..\_frozen_translations.py:224
 msgid "help_chat"
 msgstr ""
-"Управляет настройками для кроссплатформенного чата\n"
-"Возвращает информацию о настройках кроссплатформенного чата"
+"Управляет настройками для игрового чата\n"
+"Возвращает информацию о настройках игрового чата"
 
 #: ..\_frozen_translations.py:225
 msgid "help_chat_edit"
 msgstr ""
-"Изменяет сообщение (если его отправили вы) в кроссплатформенном чате\n"
+"Изменяет сообщение (если его отправили вы) в игровом чате\n"
 "Авторство определяется по связям (ник в майнкрафте - пользователь в "
 "дискорде), заданным через '{prefix}associate add'!\n"
 "Если команда отправляется в ответ на сообщение, бот отредактирует это "
@@ -1024,15 +1024,15 @@ msgstr "Новое содержимое отредактированного с�
 #: ..\_frozen_translations.py:227
 msgid "help_chat_images"
 msgstr ""
-"Управляет настройками изображения при предварительном просмотре в "
-"кроссплатформенном чате\n"
+"Управляет настройками изображения при предварительном просмотре в игровом "
+"чате\n"
 "Возвращает информацию о настройках предварительного просмотра изображения"
 
 #: ..\_frozen_translations.py:228
 msgid "help_chat_images_height"
 msgstr ""
 "Обновляет максимальную высоту изображения, которое будет отображаться в "
-"кроссплатформенном чате"
+"игровом чате"
 
 #: ..\_frozen_translations.py:229
 msgid "help_chat_images_height_pixels"
@@ -1050,7 +1050,7 @@ msgstr "Включает предварительный просмотр изо�
 msgid "help_chat_images_width"
 msgstr ""
 "Обновляет максимальную ширину изображения, которое будет отображаться в "
-"кроссплатформенном чате"
+"игровом чате"
 
 #: ..\_frozen_translations.py:233
 msgid "help_chat_images_width_pixels"
@@ -1068,22 +1068,22 @@ msgstr "URL-адрес для поиска"
 
 #: ..\_frozen_translations.py:236
 msgid "help_chat_off"
-msgstr "Отключает кроссплатформенный чат"
+msgstr "Отключает игровой чат"
 
 #: ..\_frozen_translations.py:237
 msgid "help_chat_on"
-msgstr "Включает кроссплатформенный чат"
+msgstr "Включает игровой чат"
 
 #: ..\_frozen_translations.py:238
 msgid "help_chat_webhook"
 msgstr ""
-"Управляет настройками вебхука кроссплатформенного чата\n"
+"Управляет настройками вебхука игрового чата\n"
 "Возвращает информацию о настройках для этого вебхука"
 
 #: ..\_frozen_translations.py:239
 msgid "help_chat_webhook_avatar"
 msgstr ""
-"Обновлен аватар для вебхука кроссплатформенного чата\n"
+"Обновлен аватар для вебхука игрового чата\n"
 "Бот ищет изображение либо по URL-адресу, либо во вложениях сообщения"
 
 #: ..\_frozen_translations.py:240
@@ -1092,7 +1092,7 @@ msgstr "URL-адрес для поиска"
 
 #: ..\_frozen_translations.py:241
 msgid "help_chat_webhook_channel"
-msgstr "Обновляет канал по умолчанию для вебхука кроссплатформенного чата"
+msgstr "Обновляет канал по умолчанию для вебхука игрового чата"
 
 #: ..\_frozen_translations.py:242
 msgid "help_chat_webhook_channel_channel"
@@ -1100,7 +1100,7 @@ msgstr "Упоминание канала, типа '#канал' или id ка
 
 #: ..\_frozen_translations.py:243
 msgid "help_chat_webhook_name"
-msgstr "Обновлено имя вебхука кроссплатформенного чата"
+msgstr "Обновлено имя вебхука игрового чата"
 
 #: ..\_frozen_translations.py:244
 msgid "help_chat_webhook_name_name"
@@ -1109,7 +1109,7 @@ msgstr "Новое имя вебхука"
 #: ..\_frozen_translations.py:245
 msgid "help_chat_webhook_reload"
 msgstr ""
-"Перезагружает вебхук кроссплатформенного чата для бота\n"
+"Перезагружает вебхук игрового чата для бота\n"
 "Если бот не может найти связанный вебхук, то он создаст новый"
 
 #: ..\_frozen_translations.py:246
@@ -1763,119 +1763,117 @@ msgstr "Просматривать каналы"
 msgid "View Server Insights"
 msgstr "Просмотр статистику сервера"
 
-#: ..\commands\chat_commands.py:47
+#: ..\commands\chat_commands.py:48
 msgid "Logged in Discord as"
 msgstr "Авторизовался в дискорде как"
 
-#: ..\commands\chat_commands.py:49
+#: ..\commands\chat_commands.py:50
 msgid "Version of discord.py"
 msgstr "Версия discord.py"
 
-#: ..\commands\chat_commands.py:78
+#: ..\commands\chat_commands.py:90
 msgid "Bot is ready!"
 msgstr "Бот готов к работе!"
 
-#: ..\commands\chat_commands.py:79
+#: ..\commands\chat_commands.py:91
 msgid "To stop the bot press Ctrl + C"
 msgstr "Чтобы остановить бота, нажмите Ctrl + C"
 
-#: ..\commands\chat_commands.py:89 ..\commands\chat_commands.py:103
+#: ..\commands\chat_commands.py:101 ..\commands\chat_commands.py:115
 msgid "Channel {0} set as commands' channel for bot"
 msgstr "Канал {0} настроен как канал команд для бота"
 
-#: ..\commands\chat_commands.py:91
+#: ..\commands\chat_commands.py:103
 msgid "Channel for bot commands is not found or unreachable!"
 msgstr "Канал для команд бота не найден или недоступен!"
 
-#: ..\commands\chat_commands.py:114 ..\commands\chat_commands.py:136
+#: ..\commands\chat_commands.py:126 ..\commands\chat_commands.py:148
 msgid "Role {0} set as role for commands that manage Minecraft server"
 msgstr ""
 "Роль {0} задана в качестве роли для команд, которые управляют майнкрафт "
 "сервером"
 
-#: ..\commands\chat_commands.py:117
+#: ..\commands\chat_commands.py:129
 msgid "Role for commands that manage Minecraft server not stated"
 msgstr "Роль для команд, которые управляют майнкрафт сервером, не задана"
 
-#: ..\commands\chat_commands.py:124 ..\commands\chat_commands.py:157
+#: ..\commands\chat_commands.py:136 ..\commands\chat_commands.py:169
 msgid "Role {0} set as admin role for bot"
 msgstr "Роль {0} установлена в качестве роли админа для бота"
 
-#: ..\commands\chat_commands.py:126
+#: ..\commands\chat_commands.py:138
 msgid "Admin role not stated"
 msgstr "Роль админа не указана"
 
-#: ..\commands\chat_commands.py:147
+#: ..\commands\chat_commands.py:159
 msgid "Role for commands that manage Minecraft server has been cleared"
 msgstr "Роль для команд, которые управляют майнкрафт сервером, была очищена"
 
-#: ..\commands\chat_commands.py:166
+#: ..\commands\chat_commands.py:178
 msgid "Admin role has been cleared"
 msgstr "Роль админа была очищена"
 
-#: ..\commands\chat_commands.py:174 ..\commands\chat_commands.py:216
+#: ..\commands\chat_commands.py:186 ..\commands\chat_commands.py:228
 #: ..\components\additional_funcs.py:2552 ..\config\init_config.py:1661
 #: ..\config\init_config.py:1686
-msgid "Cross-platform chat enabled"
-msgstr "Кроссплатформенный чат включён"
+msgid "Game chat enabled"
+msgstr "Игровой чат включён"
 
-#: ..\commands\chat_commands.py:176 ..\commands\chat_commands.py:397
-msgid ""
-"Webhook for cross-platform chat set to `{0}` owned by {1} and to channel {2}"
+#: ..\commands\chat_commands.py:188 ..\commands\chat_commands.py:409
+msgid "Webhook for game chat set to `{0}` owned by {1} and to channel {2}"
 msgstr ""
-"Вебхук для кроссплатформенного чата установлен на `{0}`, принадлежащий {1} и "
-"на канал {2}"
+"Вебхук для игрового чата установлен на `{0}`, принадлежащий {1} и на канал "
+"{2}"
 
-#: ..\commands\chat_commands.py:186
-msgid "Channel {0} set to Minecraft cross-platform chat"
-msgstr "Канал {0} настроен на кроссплатформенный чат майнкрафта"
+#: ..\commands\chat_commands.py:198
+msgid "Channel {0} set to Minecraft game chat"
+msgstr "Канал {0} настроен на игровой чат майнкрафта"
 
-#: ..\commands\chat_commands.py:188
-msgid "Channel for Minecraft cross-platform chat is not found or unreachable!"
-msgstr ""
-"Канал для кроссплатформенного чата майнкрафта не найден или недоступен!"
+#: ..\commands\chat_commands.py:200
+msgid "Channel for Minecraft game chat is not found or unreachable!"
+msgstr "Канал для игрового чата майнкрафта не найден или недоступен!"
 
-#: ..\commands\chat_commands.py:190 ..\commands\chat_commands.py:404
-msgid "Webhook for cross-platform chat not set!"
-msgstr "Вебхук для кроссплатформенного чата не установлен!"
+#: ..\commands\chat_commands.py:202 ..\commands\chat_commands.py:416
+msgid "Webhook for game chat not set!"
+msgstr "Вебхук для игрового чата не установлен!"
 
-#: ..\commands\chat_commands.py:193 ..\commands\chat_commands.py:247
+#: ..\commands\chat_commands.py:205 ..\commands\chat_commands.py:259
 msgid "Avatar URL for death messages set to {0}"
 msgstr "URL-адрес аватара для сообщений о смерти установлен на {0}"
 
-#: ..\commands\chat_commands.py:197
+#: ..\commands\chat_commands.py:209
 msgid "Avatar URL for death messages not set!"
 msgstr "URL-адрес аватара для сообщений о смерти не задан!"
 
-#: ..\commands\chat_commands.py:199 ..\commands\chat_commands.py:228
-#: ..\commands\chat_commands.py:236 ..\commands\chat_commands.py:254
-#: ..\commands\chat_commands.py:422 ..\commands\chat_commands.py:434
-#: ..\commands\chat_commands.py:450 ..\components\additional_funcs.py:2556
+#: ..\commands\chat_commands.py:211 ..\commands\chat_commands.py:240
+#: ..\commands\chat_commands.py:248 ..\commands\chat_commands.py:266
+#: ..\commands\chat_commands.py:434 ..\commands\chat_commands.py:446
+#: ..\commands\chat_commands.py:462 ..\components\additional_funcs.py:2556
 #: ..\config\init_config.py:1683 ..\config\init_config.py:1688
-msgid "Cross-platform chat disabled"
-msgstr "Кроссплатформенный чат выключен"
+msgid "Game chat disabled"
+msgstr "Игровой чат выключен"
 
-#: ..\commands\chat_commands.py:241 ..\commands\chat_commands.py:442
-#: ..\commands\chat_commands.py:588
+#: ..\commands\chat_commands.py:253 ..\commands\chat_commands.py:454
+#: ..\commands\chat_commands.py:600
 msgid "Unsupported image type was given!"
 msgstr "Был передан неподдерживаемый тип изображения!"
 
-#: ..\commands\chat_commands.py:246
+#: ..\commands\chat_commands.py:258
 msgid "Do not delete this message or attachment(s)!"
 msgstr "Не удаляйте это сообщение или вложение(ия)!"
 
-#: ..\commands\chat_commands.py:256
+#: ..\commands\chat_commands.py:268
 msgid "You can't edit messages from other members with this command!"
 msgstr ""
 "Вы не можете редактировать сообщения от других участников с помощью этой "
 "команды!"
 
-#: ..\commands\chat_commands.py:267 ..\commands\minecraft_commands.py:121
+#: ..\commands\chat_commands.py:279 ..\commands\minecraft_commands.py:121
 msgid "{0}, this nick isn't bound to you, use `{1}associate add` first..."
 msgstr ""
 "{0}, этот ник не привязан к вам, воспользуйся `{1}associate add` сначала..."
 
-#: ..\commands\chat_commands.py:279
+#: ..\commands\chat_commands.py:291
 msgid ""
 "The bot couldn't find any messages sent by your bound Minecraft accounts in "
 "the last 100 messages!"
@@ -1883,171 +1881,169 @@ msgstr ""
 "Бот не смог найти никаких сообщений, отправленных вашими связанными "
 "майнкрафт аккаунтами среди последних 100 сообщений!"
 
-#: ..\commands\chat_commands.py:282 ..\components\additional_funcs.py:1584
+#: ..\commands\chat_commands.py:294 ..\components\additional_funcs.py:1584
 msgid "{0}, you have no bound nicks"
 msgstr "{0}, у вас нет привязанных ников"
 
-#: ..\commands\chat_commands.py:302
-msgid "Can't edit this message, it's not owned by cross-platform chat webhook!"
+#: ..\commands\chat_commands.py:314
+msgid "Can't edit this message, it's not owned by game chat webhook!"
 msgstr ""
-"Невозможно изменить сообщение, оно не принадлежит вебхуку кросплатформенного "
-"чата!"
+"Невозможно изменить сообщение, оно не принадлежит вебхуку игрового чата!"
 
-#: ..\commands\chat_commands.py:308 ..\commands\chat_commands.py:315
+#: ..\commands\chat_commands.py:320 ..\commands\chat_commands.py:327
 msgid "Owner: "
 msgstr "Владелец: "
 
-#: ..\commands\chat_commands.py:309
+#: ..\commands\chat_commands.py:321
 msgid "webhook {0} owned by {1}"
 msgstr "вебхук {0}, принадлежащий {1}"
 
-#: ..\commands\chat_commands.py:321
-msgid "You're not in channel for Minecraft cross-platform chat!"
-msgstr "Вы не в канале для кроссплатформенного чата Minecraft!"
+#: ..\commands\chat_commands.py:333
+msgid "You're not in channel for Minecraft game chat!"
+msgstr "Вы не в канале для игрового чата майнкрафта!"
 
-#: ..\commands\chat_commands.py:331 ..\commands\chat_commands.py:348
+#: ..\commands\chat_commands.py:343 ..\commands\chat_commands.py:360
 #: ..\components\additional_funcs.py:2568 ..\config\init_config.py:1721
 msgid "Image preview enabled"
 msgstr "Предварительный просмотр изображения включён"
 
-#: ..\commands\chat_commands.py:332 ..\commands\chat_commands.py:374
+#: ..\commands\chat_commands.py:344 ..\commands\chat_commands.py:386
 msgid "The maximum image width set to {0}"
 msgstr "Максимальная ширина изображения установлена на {0}"
 
-#: ..\commands\chat_commands.py:334 ..\commands\chat_commands.py:390
+#: ..\commands\chat_commands.py:346 ..\commands\chat_commands.py:402
 msgid "The maximum image height set to {0}"
 msgstr "Максимальная высота изображения установлена на {0}"
 
-#: ..\commands\chat_commands.py:337 ..\commands\chat_commands.py:358
+#: ..\commands\chat_commands.py:349 ..\commands\chat_commands.py:370
 #: ..\components\additional_funcs.py:2570 ..\config\init_config.py:1724
 msgid "Image preview disabled"
 msgstr "Предварительный просмотр изображения выключен"
 
-#: ..\commands\chat_commands.py:366 ..\commands\chat_commands.py:369
-#: ..\commands\chat_commands.py:382 ..\commands\chat_commands.py:385
+#: ..\commands\chat_commands.py:378 ..\commands\chat_commands.py:381
+#: ..\commands\chat_commands.py:394 ..\commands\chat_commands.py:397
 #: ..\commands\minecraft_commands.py:258 ..\commands\minecraft_commands.py:312
 #: ..\commands\minecraft_commands.py:315 ..\commands\minecraft_commands.py:739
 #: ..\commands\minecraft_commands.py:742
 msgid "Wrong 1-st argument used!"
 msgstr "Использован неверный 1-й аргумент!"
 
-#: ..\commands\chat_commands.py:367 ..\commands\chat_commands.py:383
+#: ..\commands\chat_commands.py:379 ..\commands\chat_commands.py:395
 #: ..\commands\minecraft_commands.py:313 ..\commands\minecraft_commands.py:740
 msgid "Integer must be above or equal {0}!"
 msgstr "Целое число должно быть больше или равно {0}!"
 
-#: ..\commands\chat_commands.py:370 ..\commands\chat_commands.py:386
+#: ..\commands\chat_commands.py:382 ..\commands\chat_commands.py:398
 #: ..\commands\minecraft_commands.py:316 ..\commands\minecraft_commands.py:743
 msgid "Integer must be below or equal {0}!"
 msgstr "Целое число должно быть меньше или равно {0}!"
 
-#: ..\commands\chat_commands.py:414
-msgid "Reloaded webhook for cross-platform chat!"
-msgstr "Перезагружен вебхук для кроссплатформенного чата!"
+#: ..\commands\chat_commands.py:426
+msgid "Reloaded webhook for game chat!"
+msgstr "Перезагружен вебхук для игрового чата!"
 
-#: ..\commands\chat_commands.py:426 ..\commands\chat_commands.py:572
+#: ..\commands\chat_commands.py:438 ..\commands\chat_commands.py:584
 msgid "Updated webhook name to `{0}`!"
 msgstr "Имя вебхука изменено на `{0}`!"
 
-#: ..\commands\chat_commands.py:440 ..\commands\chat_commands.py:586
+#: ..\commands\chat_commands.py:452 ..\commands\chat_commands.py:598
 msgid "Updated webhook avatar!"
 msgstr "Обновлён аватар вебхука!"
 
-#: ..\commands\chat_commands.py:457
+#: ..\commands\chat_commands.py:469
 msgid ""
-"Channel {0} set to Minecraft cross-platform chat and as default channel for "
-"its webhook"
+"Channel {0} set to Minecraft game chat and as default channel for its webhook"
 msgstr ""
-"Канал {0} настроен на кроссплатформенный чат майнкрафта, а для его вебхука "
-"как канал по умолчанию"
+"Канал {0} настроен на игровой чат майнкрафта, а для его вебхука как канал по "
+"умолчанию"
 
-#: ..\commands\chat_commands.py:466 ..\commands\chat_commands.py:505
+#: ..\commands\chat_commands.py:478 ..\commands\chat_commands.py:517
 #: ..\components\additional_funcs.py:2588 ..\config\init_config.py:1801
 #: ..\config\init_config.py:1837
 msgid "RSS enabled"
 msgstr "RSS включён"
 
-#: ..\commands\chat_commands.py:468 ..\commands\chat_commands.py:544
+#: ..\commands\chat_commands.py:480 ..\commands\chat_commands.py:556
 msgid "Webhook for RSS set to `{0}` owned by {1} and to channel {2}"
 msgstr "Вебхук для RSS настроен на `{0}`, принадлежащий {1}, и на канал {2}"
 
-#: ..\commands\chat_commands.py:474 ..\commands\chat_commands.py:550
+#: ..\commands\chat_commands.py:486 ..\commands\chat_commands.py:562
 msgid "Webhook for RSS not set!"
 msgstr "Вебхук для RSS не указан!"
 
-#: ..\commands\chat_commands.py:477 ..\commands\chat_commands.py:526
+#: ..\commands\chat_commands.py:489 ..\commands\chat_commands.py:538
 msgid "URL for RSS set to {0}"
 msgstr "URL-адрес для RSS поставлен на {0}"
 
-#: ..\commands\chat_commands.py:479
+#: ..\commands\chat_commands.py:491
 msgid "URL for RSS not set!"
 msgstr "URL-адрес для RSS не указан!"
 
-#: ..\commands\chat_commands.py:482 ..\commands\chat_commands.py:536
+#: ..\commands\chat_commands.py:494 ..\commands\chat_commands.py:548
 msgid "Scan interval for RSS feed set to `{0}`"
 msgstr "Интервал сканирования для RSS-канала установлен как `{0}`"
 
-#: ..\commands\chat_commands.py:486 ..\config\init_config.py:1825
+#: ..\commands\chat_commands.py:498 ..\config\init_config.py:1825
 msgid "Scan interval for RSS feed not set"
 msgstr "Интервал сканирования для RSS-канала не установлен"
 
-#: ..\commands\chat_commands.py:488 ..\commands\chat_commands.py:517
-#: ..\commands\chat_commands.py:568 ..\commands\chat_commands.py:580
-#: ..\commands\chat_commands.py:596 ..\components\additional_funcs.py:2592
+#: ..\commands\chat_commands.py:500 ..\commands\chat_commands.py:529
+#: ..\commands\chat_commands.py:580 ..\commands\chat_commands.py:592
+#: ..\commands\chat_commands.py:608 ..\components\additional_funcs.py:2592
 #: ..\config\init_config.py:1834 ..\config\init_config.py:1839
 msgid "RSS disabled"
 msgstr "RSS выключен"
 
-#: ..\commands\chat_commands.py:560
+#: ..\commands\chat_commands.py:572
 msgid "Reloaded webhook for RSS!"
 msgstr "Перезагружен вебхук для RSS!"
 
-#: ..\commands\chat_commands.py:602
+#: ..\commands\chat_commands.py:614
 msgid "Channel {0} set to RSS webhook as default channel"
 msgstr "Канал {0} настроен как канал по умолчанию для RSS вебхука"
 
-#: ..\commands\chat_commands.py:624
+#: ..\commands\chat_commands.py:636
 msgid "Failed to parse data of edited message with exception - "
 msgstr ""
 "Не удалось пропарсить данные отредактированного сообщения с исключением - "
 
-#: ..\commands\chat_commands.py:627
+#: ..\commands\chat_commands.py:639
 msgid "Fetching message with id '{0}'..."
 msgstr "Получение сообщения с id '{0}'..."
 
-#: ..\commands\chat_commands.py:650
+#: ..\commands\chat_commands.py:662
 msgid "Available languages:"
 msgstr "Доступные языки:"
 
-#: ..\commands\chat_commands.py:685
+#: ..\commands\chat_commands.py:697
 msgid "Select bot language:"
 msgstr "Выберите язык бота:"
 
-#: ..\commands\chat_commands.py:694
+#: ..\commands\chat_commands.py:706
 msgid "Current prefix - '{0}'."
 msgstr "Текущий префикс - '{0}'."
 
-#: ..\commands\chat_commands.py:705
+#: ..\commands\chat_commands.py:717
 msgid "Prefix can't have spaces!"
 msgstr "Префикс не может иметь пробелов!"
 
-#: ..\commands\chat_commands.py:710
+#: ..\commands\chat_commands.py:722
 msgid "Changed prefix to '{0}'."
 msgstr "Префикс изменён на '{0}'."
 
-#: ..\commands\chat_commands.py:730 ..\commands\chat_commands.py:750
+#: ..\commands\chat_commands.py:742 ..\commands\chat_commands.py:762
 msgid "Bot doesn't have such subcommand!"
 msgstr "Бот не имеет такой подкоманды!"
 
-#: ..\commands\chat_commands.py:752
+#: ..\commands\chat_commands.py:764
 msgid "Bot doesn't have such command!"
 msgstr "Бот не имеет такой команды!"
 
-#: ..\commands\chat_commands.py:759
+#: ..\commands\chat_commands.py:771
 msgid "List of all commands, prefix - {0}"
 msgstr "Список всех команд, префикс - {0}"
 
-#: ..\commands\chat_commands.py:774
+#: ..\commands\chat_commands.py:786
 msgid ""
 "Values in [square brackets] are optional.\n"
 "Values in <angle brackets> have to be provided by you.\n"
@@ -2061,11 +2057,11 @@ msgstr ""
 "Для получения дополнительной информации используйте команду '{prefix}help'.\n"
 "Или для удобства - '{prefix}команда {arg_list}'."
 
-#: ..\commands\chat_commands.py:828
+#: ..\commands\chat_commands.py:840
 msgid "You didn't provide reply in your message!"
 msgstr "Вы не прикрепили ответ к вашему сообщению!"
 
-#: ..\commands\chat_commands.py:838
+#: ..\commands\chat_commands.py:850
 msgid "Starting RSS feed check"
 msgstr "Запускаем проверку RSS-канала"
 
@@ -2633,7 +2629,7 @@ msgstr ""
 "Список команд для взаимодействия с майнкрафт сервером с помощью кнопок и "
 "выпадающего списка для выбора сервера"
 
-#: ..\commands\minecraft_commands.py:1358
+#: ..\commands\minecraft_commands.py:1360
 msgid ""
 "List of bot features for interaction via buttons and dropdown for selecting "
 "bot language"
@@ -2641,7 +2637,7 @@ msgstr ""
 "Список функций бота для взаимодействия с помощью кнопок и выпадающего списка "
 "для выбора языка бота"
 
-#: ..\commands\minecraft_commands.py:1373
+#: ..\commands\minecraft_commands.py:1377
 msgid "Starting Minecraft server check-ups"
 msgstr "Запускаем проверки майнкрафт сервера"
 
@@ -3284,8 +3280,8 @@ msgid "Auto shutdown"
 msgstr "Автоотключение"
 
 #: ..\components\additional_funcs.py:2443
-msgid "C/p chat"
-msgstr "К/п чат"
+msgid "Game chat"
+msgstr "Игровой чат"
 
 #: ..\components\additional_funcs.py:2447
 msgid "Image preview"
@@ -3536,8 +3532,8 @@ msgid "Ignoring exception in internal event '{0}':"
 msgstr "Игнорируем исключение во внутреннем событии '{0}':"
 
 #: ..\components\additional_funcs.py:2992
-msgid "this chat can't work! Cross-platform chat disabled!"
-msgstr "этот чат не может работать! Кроссплатформенный чат выключен!"
+msgid "this chat can't work! Game chat disabled!"
+msgstr "этот чат не может работать! Игровой чат выключен!"
 
 #: ..\components\additional_funcs.py:2998
 msgid "server is restarting!"
@@ -3547,26 +3543,26 @@ msgstr "сервер перезагружается!"
 msgid "No players on server!"
 msgstr "На сервере нет игроков!"
 
-#: ..\components\additional_funcs.py:3596
-#: ..\components\additional_funcs.py:3655
+#: ..\components\additional_funcs.py:3593
+#: ..\components\additional_funcs.py:3652
 msgid "Entity"
 msgstr "Сущность"
 
-#: ..\components\additional_funcs.py:3598
+#: ..\components\additional_funcs.py:3595
 msgid "Player"
 msgstr "Игрок"
 
-#: ..\components\additional_funcs.py:3599
-#: ..\components\additional_funcs.py:3655
+#: ..\components\additional_funcs.py:3596
+#: ..\components\additional_funcs.py:3652
 msgid "Type: {0}"
 msgstr "Тип: {0}"
 
-#: ..\components\additional_funcs.py:3878
+#: ..\components\additional_funcs.py:3873
 msgid "Minecraft server is not in release state! Proceed with caution!"
 msgstr ""
 "Майнкрафт сервер не находится в состоянии релиза! Действуйте с осторожностью!"
 
-#: ..\components\additional_funcs.py:3954
+#: ..\components\additional_funcs.py:3949
 msgid "Bot couldn't shorten the URL \"{0}\" using link shortening services."
 msgstr ""
 "Бот не смог сократить url \"{0}\" с помощью сервисов сокращения ссылок."
@@ -3608,12 +3604,12 @@ msgid "Watcher Unhandled Error: {0}"
 msgstr "Необработанная ошибка наблюдателя: {0}"
 
 #: ..\components\watcher_handle.py:140
-msgid "Cross-platform chat webhook"
-msgstr "Вебхук для кроссплатформенного чата"
+msgid "Game chat webhook"
+msgstr "Вебхук для игрового чата"
 
 #: ..\components\watcher_handle.py:383
-msgid "Bot Error: Couldn't find channel for cross-platform chat!"
-msgstr "Ошибка бота: Не удалось найти канал для кроссплатформенного чата!"
+msgid "Bot Error: Couldn't find channel for game chat!"
+msgstr "Ошибка бота: Не удалось найти канал для игрового чата!"
 
 #: ..\components\watcher_handle.py:453
 msgid ""
@@ -4285,19 +4281,16 @@ msgid "Set number of lines to check"
 msgstr "Установите количество строк для проверки"
 
 #: ..\config\init_config.py:1659
-msgid "Would you like to enable cross-platform chat?"
-msgstr "Вы хотите включить кроссплатформенный чат?"
+msgid "Would you like to enable game chat?"
+msgstr "Вы хотите включить игровой чат?"
 
 #: ..\config\init_config.py:1664
-msgid ""
-"Webhook URL for cross-platform chat not found. Would you like to enter it?"
-msgstr ""
-"URL-адрес вебхука для кроссплатформенного чата не найден. Вы хотите его "
-"ввести?"
+msgid "Webhook URL for game chat not found. Would you like to enter it?"
+msgstr "URL-адрес вебхука для игрового чата не найден. Вы хотите его ввести?"
 
 #: ..\config\init_config.py:1667
-msgid "Enter webhook URL for cross-platform chat"
-msgstr "Введите URL-адрес вебхука для кроссплатформенного чата"
+msgid "Enter webhook URL for game chat"
+msgstr "Введите URL-адрес вебхука для игрового чата"
 
 #: ..\config\init_config.py:1670 ..\config\init_config.py:1809
 msgid ""
@@ -4341,26 +4334,25 @@ msgstr ""
 "умолчанию - 5, целое число)"
 
 #: ..\config\init_config.py:1718
-msgid "Would you like to enable image preview in cross-platform chat?"
+msgid "Would you like to enable image preview in game chat?"
 msgstr ""
-"Вы хотите включить предварительный просмотр изображения в кроссплатформенном "
-"чате?"
+"Вы хотите включить предварительный просмотр изображения в игровом чате?"
 
 #: ..\config\init_config.py:1732
 msgid ""
-"Enter the maximum image width that will be displayed in cross-platform chat "
-"(default - 160 pixels, int)"
+"Enter the maximum image width that will be displayed in game chat (default - "
+"160 pixels, int)"
 msgstr ""
 "Введите максимальную ширину изображения, которое будет отображаться в "
-"кроссплатформенном чате (по умолчанию - 160 пикселей, целое число)"
+"игровом чате (по умолчанию - 160 пикселей, целое число)"
 
 #: ..\config\init_config.py:1742
 msgid ""
-"Enter the maximum image height that will be displayed in cross-platform chat "
-"(default - 30 pixels, int)"
+"Enter the maximum image height that will be displayed in game chat (default "
+"- 30 pixels, int)"
 msgstr ""
 "Введите максимальную высоту изображения, которое будет отображаться в "
-"кроссплатформенном чате (по умолчанию - 30 пикселей, целое число)"
+"игровом чате (по умолчанию - 30 пикселей, целое число)"
 
 #: ..\config\init_config.py:1749
 msgid "Would you like to enable authorization security?"

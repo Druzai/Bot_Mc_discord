@@ -98,8 +98,8 @@ class Image_preview:
 
 
 @dataclass
-class Cross_platform_chat:
-    enable_cross_platform_chat: Optional[bool] = None
+class Game_chat:
+    enable_game_chat: Optional[bool] = None
     webhook_url: Optional[str] = None
     avatar_url_for_death_messages: Optional[str] = None
     max_words_in_mention: Optional[int] = None
@@ -165,7 +165,7 @@ class Server_watcher:
     refresh_delay_of_console_log: float = -1.0
     number_of_lines_to_check_in_console_log: int = 0
     secure_auth: Secure_authorization = Secure_authorization()
-    cross_platform_chat: Cross_platform_chat = Cross_platform_chat()
+    game_chat: Game_chat = Game_chat()
 
 
 @dataclass
@@ -721,8 +721,8 @@ class Config:
         cls.get_auth_users().remove([i for i in cls.get_auth_users() if i.nick == user_nick][0])
 
     @classmethod
-    def get_cross_platform_chat_settings(cls) -> Cross_platform_chat:
-        return cls._settings_instance.bot_settings.server_watcher.cross_platform_chat
+    def get_game_chat_settings(cls) -> Game_chat:
+        return cls._settings_instance.bot_settings.server_watcher.game_chat
 
     @classmethod
     def get_rss_feed_settings(cls) -> Rss_feed:
@@ -1653,54 +1653,54 @@ class Config:
                 cls._ask_for_data(get_translation("Set number of lines to check") + "\n> ",
                                   try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=100)
 
-        # Cross-platform chat
-        if cls.get_cross_platform_chat_settings().enable_cross_platform_chat is None:
+        # Game chat
+        if cls.get_game_chat_settings().enable_game_chat is None:
             cls._need_to_rewrite = True
-            if cls._ask_for_data(get_translation("Would you like to enable cross-platform chat?") + " Y/n\n> ", "y"):
-                cls.get_cross_platform_chat_settings().enable_cross_platform_chat = True
-                print(get_translation("Cross-platform chat enabled") + ".")
+            if cls._ask_for_data(get_translation("Would you like to enable game chat?") + " Y/n\n> ", "y"):
+                cls.get_game_chat_settings().enable_game_chat = True
+                print(get_translation("Game chat enabled") + ".")
 
-                if cls.get_cross_platform_chat_settings().webhook_url is None:
-                    if cls._ask_for_data(get_translation("Webhook URL for cross-platform chat not found. "
+                if cls.get_game_chat_settings().webhook_url is None:
+                    if cls._ask_for_data(get_translation("Webhook URL for game chat not found. "
                                                          "Would you like to enter it?") + " Y/n\n> ", "y"):
-                        cls.get_cross_platform_chat_settings().webhook_url = \
-                            cls._ask_for_data(get_translation("Enter webhook URL for cross-platform chat") + "\n> ",
+                        cls.get_game_chat_settings().webhook_url = \
+                            cls._ask_for_data(get_translation("Enter webhook URL for game chat") + "\n> ",
                                               try_link=True)
                     else:
                         print(get_translation(
                             "Bot will fetch disowned webhook or create a new one! "
                             "You can change it via '{0}{1} webhook'."
                         ).format(Config.get_settings().bot_settings.prefix, "chat"))
-                if cls.get_cross_platform_chat_settings().avatar_url_for_death_messages is None:
+                if cls.get_game_chat_settings().avatar_url_for_death_messages is None:
                     if cls._ask_for_data(get_translation("Avatar URL for death messages chat not found. "
                                                          "Would you like to enter it?") + " Y/n\n> ", "y"):
-                        cls.get_cross_platform_chat_settings().avatar_url_for_death_messages = \
+                        cls.get_game_chat_settings().avatar_url_for_death_messages = \
                             cls._ask_for_data(get_translation("Enter URL for avatar image") + "\n> ", try_link=True)
                     else:
                         print(get_translation("Avatar URL for death messages would be taken from bot's avatar."))
             else:
-                cls.get_cross_platform_chat_settings().enable_cross_platform_chat = False
-                print(get_translation("Cross-platform chat disabled") + ".")
+                cls.get_game_chat_settings().enable_game_chat = False
+                print(get_translation("Game chat disabled") + ".")
         else:
-            if cls.get_cross_platform_chat_settings().enable_cross_platform_chat:
-                print(get_translation("Cross-platform chat enabled") + ".")
+            if cls.get_game_chat_settings().enable_game_chat:
+                print(get_translation("Game chat enabled") + ".")
             else:
-                print(get_translation("Cross-platform chat disabled") + ".")
+                print(get_translation("Game chat disabled") + ".")
 
-        if cls.get_cross_platform_chat_settings().max_words_in_mention is None or \
-                cls.get_cross_platform_chat_settings().max_words_in_mention < 1 or \
-                cls.get_cross_platform_chat_settings().max_words_in_mention > 20:
+        if cls.get_game_chat_settings().max_words_in_mention is None or \
+                cls.get_game_chat_settings().max_words_in_mention < 1 or \
+                cls.get_game_chat_settings().max_words_in_mention > 20:
             cls._need_to_rewrite = True
-            cls.get_cross_platform_chat_settings().max_words_in_mention = \
+            cls.get_game_chat_settings().max_words_in_mention = \
                 cls._ask_for_data(
                     get_translation("Enter how many words in mention from Minecraft chat bot can parse "
                                     "(0 - handle only mentions with one word) (default - 5, int)") + "\n> ",
                     try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=20)
-        if cls.get_cross_platform_chat_settings().max_wrong_symbols_in_mention_from_right is None or \
-                cls.get_cross_platform_chat_settings().max_wrong_symbols_in_mention_from_right < 1 or \
-                cls.get_cross_platform_chat_settings().max_wrong_symbols_in_mention_from_right > 20:
+        if cls.get_game_chat_settings().max_wrong_symbols_in_mention_from_right is None or \
+                cls.get_game_chat_settings().max_wrong_symbols_in_mention_from_right < 1 or \
+                cls.get_game_chat_settings().max_wrong_symbols_in_mention_from_right > 20:
             cls._need_to_rewrite = True
-            cls.get_cross_platform_chat_settings().max_wrong_symbols_in_mention_from_right = \
+            cls.get_game_chat_settings().max_wrong_symbols_in_mention_from_right = \
                 cls._ask_for_data(
                     get_translation("Enter how many characters from right side of mention "
                                     "bot can remove to find similar mention in Discord"
@@ -1708,38 +1708,38 @@ class Config:
                     try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=20)
 
         # Images preview
-        if cls.get_cross_platform_chat_settings().image_preview.enable_images_preview is None and \
-                not cls.get_cross_platform_chat_settings().enable_cross_platform_chat:
-            cls.get_cross_platform_chat_settings().image_preview.enable_images_preview = False
-            cls.get_cross_platform_chat_settings().image_preview.max_width = 160
-            cls.get_cross_platform_chat_settings().image_preview.max_height = 30
-        elif cls.get_cross_platform_chat_settings().image_preview.enable_images_preview is None:
+        if cls.get_game_chat_settings().image_preview.enable_images_preview is None and \
+                not cls.get_game_chat_settings().enable_game_chat:
+            cls.get_game_chat_settings().image_preview.enable_images_preview = False
+            cls.get_game_chat_settings().image_preview.max_width = 160
+            cls.get_game_chat_settings().image_preview.max_height = 30
+        elif cls.get_game_chat_settings().image_preview.enable_images_preview is None:
             cls._need_to_rewrite = True
-            if cls._ask_for_data(get_translation("Would you like to enable image preview in cross-platform chat?") +
+            if cls._ask_for_data(get_translation("Would you like to enable image preview in game chat?") +
                                  " Y/n\n> ", "y"):
-                cls.get_cross_platform_chat_settings().image_preview.enable_images_preview = True
+                cls.get_game_chat_settings().image_preview.enable_images_preview = True
                 print(get_translation("Image preview enabled") + ".")
             else:
-                cls.get_cross_platform_chat_settings().image_preview.enable_images_preview = False
+                cls.get_game_chat_settings().image_preview.enable_images_preview = False
                 print(get_translation("Image preview disabled") + ".")
 
-        if cls.get_cross_platform_chat_settings().image_preview.max_width is None or \
-                cls.get_cross_platform_chat_settings().image_preview.max_width < 1 or \
-                cls.get_cross_platform_chat_settings().image_preview.max_width > 160:
+        if cls.get_game_chat_settings().image_preview.max_width is None or \
+                cls.get_game_chat_settings().image_preview.max_width < 1 or \
+                cls.get_game_chat_settings().image_preview.max_width > 160:
             cls._need_to_rewrite = True
-            cls.get_cross_platform_chat_settings().image_preview.max_width = \
+            cls.get_game_chat_settings().image_preview.max_width = \
                 cls._ask_for_data(
-                    get_translation("Enter the maximum image width that will be displayed in cross-platform chat"
+                    get_translation("Enter the maximum image width that will be displayed in game chat"
                                     " (default - 160 pixels, int)") + "\n> ",
                     try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=160)
 
-        if cls.get_cross_platform_chat_settings().image_preview.max_height is None or \
-                cls.get_cross_platform_chat_settings().image_preview.max_height < 1 or \
-                cls.get_cross_platform_chat_settings().image_preview.max_height > 36:
+        if cls.get_game_chat_settings().image_preview.max_height is None or \
+                cls.get_game_chat_settings().image_preview.max_height < 1 or \
+                cls.get_game_chat_settings().image_preview.max_height > 36:
             cls._need_to_rewrite = True
-            cls.get_cross_platform_chat_settings().image_preview.max_height = \
+            cls.get_game_chat_settings().image_preview.max_height = \
                 cls._ask_for_data(
-                    get_translation("Enter the maximum image height that will be displayed in cross-platform chat"
+                    get_translation("Enter the maximum image height that will be displayed in game chat"
                                     " (default - 30 pixels, int)") + "\n> ",
                     try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=36)
 

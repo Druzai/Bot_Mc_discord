@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
-"POT-Creation-Date: 2022-11-02 23:20+0300\n"
-"PO-Revision-Date: 2022-11-02 23:21+0300\n"
+"POT-Creation-Date: 2022-11-03 20:33+0300\n"
+"PO-Revision-Date: 2022-11-03 20:35+0300\n"
 "Last-Translator: Druzai\n"
 "Language-Team: \n"
 "Language: en\n"
@@ -998,18 +998,18 @@ msgstr "Channel mention, like '#channel' or channel id if you're developer"
 
 #: ..\_frozen_translations.py:223
 msgid "help_brief_chat"
-msgstr "Manages settings for cross-platform chat"
+msgstr "Manages settings for game chat"
 
 #: ..\_frozen_translations.py:224
 msgid "help_chat"
 msgstr ""
-"Manages settings for cross-platform chat\n"
-"Returns information about cross-platform chat settings"
+"Manages settings for game chat\n"
+"Returns information about game chat settings"
 
 #: ..\_frozen_translations.py:225
 msgid "help_chat_edit"
 msgstr ""
-"Changes the message (if you sent it) in cross-platform chat\n"
+"Changes the message (if you sent it) in game chat\n"
 "Authorship is determined by links (nickname in Minecraft - user in Discord) "
 "specified via '{prefix}associate add'!\n"
 "If the command is sent in reply to a message, the bot will edit that "
@@ -1022,14 +1022,12 @@ msgstr "New content of the edited message"
 #: ..\_frozen_translations.py:227
 msgid "help_chat_images"
 msgstr ""
-"Manages image settings when previewing in cross-platform chat\n"
+"Manages image settings when previewing in game chat\n"
 "Returns information about image preview settings"
 
 #: ..\_frozen_translations.py:228
 msgid "help_chat_images_height"
-msgstr ""
-"Updates the maximum image height that will be displayed in cross-platform "
-"chat"
+msgstr "Updates the maximum image height that will be displayed in game chat"
 
 #: ..\_frozen_translations.py:229
 msgid "help_chat_images_height_pixels"
@@ -1045,8 +1043,7 @@ msgstr "Enables image preview"
 
 #: ..\_frozen_translations.py:232
 msgid "help_chat_images_width"
-msgstr ""
-"Updates the maximum image width that will be displayed in cross-platform chat"
+msgstr "Updates the maximum image width that will be displayed in game chat"
 
 #: ..\_frozen_translations.py:233
 msgid "help_chat_images_width_pixels"
@@ -1064,22 +1061,22 @@ msgstr "URL to search"
 
 #: ..\_frozen_translations.py:236
 msgid "help_chat_off"
-msgstr "Disables cross-platform chat"
+msgstr "Disables game chat"
 
 #: ..\_frozen_translations.py:237
 msgid "help_chat_on"
-msgstr "Enables cross-platform chat"
+msgstr "Enables game chat"
 
 #: ..\_frozen_translations.py:238
 msgid "help_chat_webhook"
 msgstr ""
-"Manages settings for cross-platform chat webhook\n"
+"Manages settings for game chat webhook\n"
 "Returns settings' information for that webhook"
 
 #: ..\_frozen_translations.py:239
 msgid "help_chat_webhook_avatar"
 msgstr ""
-"Updates avatar for cross-platform chat webhook\n"
+"Updates avatar for game chat webhook\n"
 "The bot searches for an image either by a URL or in message attachments"
 
 #: ..\_frozen_translations.py:240
@@ -1088,7 +1085,7 @@ msgstr "URL to search"
 
 #: ..\_frozen_translations.py:241
 msgid "help_chat_webhook_channel"
-msgstr "Updates default channel for cross-platform chat webhook"
+msgstr "Updates default channel for game chat webhook"
 
 #: ..\_frozen_translations.py:242
 msgid "help_chat_webhook_channel_channel"
@@ -1096,7 +1093,7 @@ msgstr "Channel mention, like '#channel' or channel id if you're developer"
 
 #: ..\_frozen_translations.py:243
 msgid "help_chat_webhook_name"
-msgstr "Updates name for cross-platform chat webhook"
+msgstr "Updates name for game chat webhook"
 
 #: ..\_frozen_translations.py:244
 msgid "help_chat_webhook_name_name"
@@ -1105,7 +1102,7 @@ msgstr "New webhook name"
 #: ..\_frozen_translations.py:245
 msgid "help_chat_webhook_reload"
 msgstr ""
-"Reloads cross-platform chat webhook for bot\n"
+"Reloads game chat webhook for bot\n"
 "If bot can't find a linked webhook it will create a new one"
 
 #: ..\_frozen_translations.py:246
@@ -1413,7 +1410,7 @@ msgstr "Channel mention, like '#channel' or channel id if you're developer"
 
 #: ..\_frozen_translations.py:305
 msgid "help_rss_webhook_name"
-msgstr "Updates name for cross-platform chat webhook"
+msgstr "Updates name for game chat webhook"
 
 #: ..\_frozen_translations.py:306
 msgid "help_rss_webhook_name_name"
@@ -1756,112 +1753,110 @@ msgstr "View Channels"
 msgid "View Server Insights"
 msgstr "View Server Insights"
 
-#: ..\commands\chat_commands.py:47
+#: ..\commands\chat_commands.py:48
 msgid "Logged in Discord as"
 msgstr "Logged in Discord as"
 
-#: ..\commands\chat_commands.py:49
+#: ..\commands\chat_commands.py:50
 msgid "Version of discord.py"
 msgstr "Version of discord.py"
 
-#: ..\commands\chat_commands.py:78
+#: ..\commands\chat_commands.py:90
 msgid "Bot is ready!"
 msgstr "Bot is ready!"
 
-#: ..\commands\chat_commands.py:79
+#: ..\commands\chat_commands.py:91
 msgid "To stop the bot press Ctrl + C"
 msgstr "To stop the bot press Ctrl + C"
 
-#: ..\commands\chat_commands.py:89 ..\commands\chat_commands.py:103
+#: ..\commands\chat_commands.py:101 ..\commands\chat_commands.py:115
 msgid "Channel {0} set as commands' channel for bot"
 msgstr "Channel {0} set as commands' channel for bot"
 
-#: ..\commands\chat_commands.py:91
+#: ..\commands\chat_commands.py:103
 msgid "Channel for bot commands is not found or unreachable!"
 msgstr "Channel for bot commands is not found or unreachable!"
 
-#: ..\commands\chat_commands.py:114 ..\commands\chat_commands.py:136
+#: ..\commands\chat_commands.py:126 ..\commands\chat_commands.py:148
 msgid "Role {0} set as role for commands that manage Minecraft server"
 msgstr "Role {0} set as role for commands that manage Minecraft server"
 
-#: ..\commands\chat_commands.py:117
+#: ..\commands\chat_commands.py:129
 msgid "Role for commands that manage Minecraft server not stated"
 msgstr "Role for commands that manage Minecraft server not stated"
 
-#: ..\commands\chat_commands.py:124 ..\commands\chat_commands.py:157
+#: ..\commands\chat_commands.py:136 ..\commands\chat_commands.py:169
 msgid "Role {0} set as admin role for bot"
 msgstr "Role {0} set as admin role for bot"
 
-#: ..\commands\chat_commands.py:126
+#: ..\commands\chat_commands.py:138
 msgid "Admin role not stated"
 msgstr "Admin role not stated"
 
-#: ..\commands\chat_commands.py:147
+#: ..\commands\chat_commands.py:159
 msgid "Role for commands that manage Minecraft server has been cleared"
 msgstr "Role for commands that manage Minecraft server has been cleared"
 
-#: ..\commands\chat_commands.py:166
+#: ..\commands\chat_commands.py:178
 msgid "Admin role has been cleared"
 msgstr "Admin role has been cleared"
 
-#: ..\commands\chat_commands.py:174 ..\commands\chat_commands.py:216
+#: ..\commands\chat_commands.py:186 ..\commands\chat_commands.py:228
 #: ..\components\additional_funcs.py:2552 ..\config\init_config.py:1661
 #: ..\config\init_config.py:1686
-msgid "Cross-platform chat enabled"
-msgstr "Cross-platform chat enabled"
+msgid "Game chat enabled"
+msgstr "Game chat enabled"
 
-#: ..\commands\chat_commands.py:176 ..\commands\chat_commands.py:397
-msgid ""
-"Webhook for cross-platform chat set to `{0}` owned by {1} and to channel {2}"
-msgstr ""
-"Webhook for cross-platform chat set to `{0}` owned by {1} and to channel {2}"
+#: ..\commands\chat_commands.py:188 ..\commands\chat_commands.py:409
+msgid "Webhook for game chat set to `{0}` owned by {1} and to channel {2}"
+msgstr "Webhook for game chat set to `{0}` owned by {1} and to channel {2}"
 
-#: ..\commands\chat_commands.py:186
-msgid "Channel {0} set to Minecraft cross-platform chat"
-msgstr "Channel {0} set to Minecraft cross-platform chat"
+#: ..\commands\chat_commands.py:198
+msgid "Channel {0} set to Minecraft game chat"
+msgstr "Channel {0} set to Minecraft game chat"
 
-#: ..\commands\chat_commands.py:188
-msgid "Channel for Minecraft cross-platform chat is not found or unreachable!"
-msgstr "Channel for Minecraft cross-platform chat is not found or unreachable!"
+#: ..\commands\chat_commands.py:200
+msgid "Channel for Minecraft game chat is not found or unreachable!"
+msgstr "Channel for Minecraft game chat is not found or unreachable!"
 
-#: ..\commands\chat_commands.py:190 ..\commands\chat_commands.py:404
-msgid "Webhook for cross-platform chat not set!"
-msgstr "Webhook for cross-platform chat not set!"
+#: ..\commands\chat_commands.py:202 ..\commands\chat_commands.py:416
+msgid "Webhook for game chat not set!"
+msgstr "Webhook for game chat not set!"
 
-#: ..\commands\chat_commands.py:193 ..\commands\chat_commands.py:247
+#: ..\commands\chat_commands.py:205 ..\commands\chat_commands.py:259
 msgid "Avatar URL for death messages set to {0}"
 msgstr "Avatar URL for death messages set to {0}"
 
-#: ..\commands\chat_commands.py:197
+#: ..\commands\chat_commands.py:209
 msgid "Avatar URL for death messages not set!"
 msgstr "Avatar URL for death messages not set!"
 
-#: ..\commands\chat_commands.py:199 ..\commands\chat_commands.py:228
-#: ..\commands\chat_commands.py:236 ..\commands\chat_commands.py:254
-#: ..\commands\chat_commands.py:422 ..\commands\chat_commands.py:434
-#: ..\commands\chat_commands.py:450 ..\components\additional_funcs.py:2556
+#: ..\commands\chat_commands.py:211 ..\commands\chat_commands.py:240
+#: ..\commands\chat_commands.py:248 ..\commands\chat_commands.py:266
+#: ..\commands\chat_commands.py:434 ..\commands\chat_commands.py:446
+#: ..\commands\chat_commands.py:462 ..\components\additional_funcs.py:2556
 #: ..\config\init_config.py:1683 ..\config\init_config.py:1688
-msgid "Cross-platform chat disabled"
-msgstr "Cross-platform chat disabled"
+msgid "Game chat disabled"
+msgstr "Game chat disabled"
 
-#: ..\commands\chat_commands.py:241 ..\commands\chat_commands.py:442
-#: ..\commands\chat_commands.py:588
+#: ..\commands\chat_commands.py:253 ..\commands\chat_commands.py:454
+#: ..\commands\chat_commands.py:600
 msgid "Unsupported image type was given!"
 msgstr "Unsupported image type was given!"
 
-#: ..\commands\chat_commands.py:246
+#: ..\commands\chat_commands.py:258
 msgid "Do not delete this message or attachment(s)!"
 msgstr "Do not delete this message or attachment(s)!"
 
-#: ..\commands\chat_commands.py:256
+#: ..\commands\chat_commands.py:268
 msgid "You can't edit messages from other members with this command!"
 msgstr "You can't edit messages from other members with this command!"
 
-#: ..\commands\chat_commands.py:267 ..\commands\minecraft_commands.py:121
+#: ..\commands\chat_commands.py:279 ..\commands\minecraft_commands.py:121
 msgid "{0}, this nick isn't bound to you, use `{1}associate add` first..."
 msgstr "{0}, this nick isn't bound to you, use `{1}associate add` first..."
 
-#: ..\commands\chat_commands.py:279
+#: ..\commands\chat_commands.py:291
 msgid ""
 "The bot couldn't find any messages sent by your bound Minecraft accounts in "
 "the last 100 messages!"
@@ -1869,169 +1864,166 @@ msgstr ""
 "The bot couldn't find any messages sent by your bound Minecraft accounts in "
 "the last 100 messages!"
 
-#: ..\commands\chat_commands.py:282 ..\components\additional_funcs.py:1584
+#: ..\commands\chat_commands.py:294 ..\components\additional_funcs.py:1584
 msgid "{0}, you have no bound nicks"
 msgstr "{0}, you have no bound nicks"
 
-#: ..\commands\chat_commands.py:302
-msgid "Can't edit this message, it's not owned by cross-platform chat webhook!"
-msgstr ""
-"Can't edit this message, it's not owned by cross-platform chat webhook!"
+#: ..\commands\chat_commands.py:314
+msgid "Can't edit this message, it's not owned by game chat webhook!"
+msgstr "Can't edit this message, it's not owned by game chat webhook!"
 
-#: ..\commands\chat_commands.py:308 ..\commands\chat_commands.py:315
+#: ..\commands\chat_commands.py:320 ..\commands\chat_commands.py:327
 msgid "Owner: "
 msgstr "Owner: "
 
-#: ..\commands\chat_commands.py:309
+#: ..\commands\chat_commands.py:321
 msgid "webhook {0} owned by {1}"
 msgstr "webhook {0} owned by {1}"
 
-#: ..\commands\chat_commands.py:321
-msgid "You're not in channel for Minecraft cross-platform chat!"
-msgstr "You're not in channel for Minecraft cross-platform chat!"
+#: ..\commands\chat_commands.py:333
+msgid "You're not in channel for Minecraft game chat!"
+msgstr "You're not in channel for Minecraft game chat!"
 
-#: ..\commands\chat_commands.py:331 ..\commands\chat_commands.py:348
+#: ..\commands\chat_commands.py:343 ..\commands\chat_commands.py:360
 #: ..\components\additional_funcs.py:2568 ..\config\init_config.py:1721
 msgid "Image preview enabled"
 msgstr "Image preview enabled"
 
-#: ..\commands\chat_commands.py:332 ..\commands\chat_commands.py:374
+#: ..\commands\chat_commands.py:344 ..\commands\chat_commands.py:386
 msgid "The maximum image width set to {0}"
 msgstr "The maximum image width set to {0}"
 
-#: ..\commands\chat_commands.py:334 ..\commands\chat_commands.py:390
+#: ..\commands\chat_commands.py:346 ..\commands\chat_commands.py:402
 msgid "The maximum image height set to {0}"
 msgstr "The maximum image height set to {0}"
 
-#: ..\commands\chat_commands.py:337 ..\commands\chat_commands.py:358
+#: ..\commands\chat_commands.py:349 ..\commands\chat_commands.py:370
 #: ..\components\additional_funcs.py:2570 ..\config\init_config.py:1724
 msgid "Image preview disabled"
 msgstr "Image preview disabled"
 
-#: ..\commands\chat_commands.py:366 ..\commands\chat_commands.py:369
-#: ..\commands\chat_commands.py:382 ..\commands\chat_commands.py:385
+#: ..\commands\chat_commands.py:378 ..\commands\chat_commands.py:381
+#: ..\commands\chat_commands.py:394 ..\commands\chat_commands.py:397
 #: ..\commands\minecraft_commands.py:258 ..\commands\minecraft_commands.py:312
 #: ..\commands\minecraft_commands.py:315 ..\commands\minecraft_commands.py:739
 #: ..\commands\minecraft_commands.py:742
 msgid "Wrong 1-st argument used!"
 msgstr "Wrong 1-st argument used!"
 
-#: ..\commands\chat_commands.py:367 ..\commands\chat_commands.py:383
+#: ..\commands\chat_commands.py:379 ..\commands\chat_commands.py:395
 #: ..\commands\minecraft_commands.py:313 ..\commands\minecraft_commands.py:740
 msgid "Integer must be above or equal {0}!"
 msgstr "Integer must be above or equal {0}!"
 
-#: ..\commands\chat_commands.py:370 ..\commands\chat_commands.py:386
+#: ..\commands\chat_commands.py:382 ..\commands\chat_commands.py:398
 #: ..\commands\minecraft_commands.py:316 ..\commands\minecraft_commands.py:743
 msgid "Integer must be below or equal {0}!"
 msgstr "Integer must be below or equal {0}!"
 
-#: ..\commands\chat_commands.py:414
-msgid "Reloaded webhook for cross-platform chat!"
-msgstr "Reloaded webhook for cross-platform chat!"
+#: ..\commands\chat_commands.py:426
+msgid "Reloaded webhook for game chat!"
+msgstr "Reloaded webhook for game chat!"
 
-#: ..\commands\chat_commands.py:426 ..\commands\chat_commands.py:572
+#: ..\commands\chat_commands.py:438 ..\commands\chat_commands.py:584
 msgid "Updated webhook name to `{0}`!"
 msgstr "Updated webhook name to `{0}`!"
 
-#: ..\commands\chat_commands.py:440 ..\commands\chat_commands.py:586
+#: ..\commands\chat_commands.py:452 ..\commands\chat_commands.py:598
 msgid "Updated webhook avatar!"
 msgstr "Updated webhook avatar!"
 
-#: ..\commands\chat_commands.py:457
+#: ..\commands\chat_commands.py:469
 msgid ""
-"Channel {0} set to Minecraft cross-platform chat and as default channel for "
-"its webhook"
+"Channel {0} set to Minecraft game chat and as default channel for its webhook"
 msgstr ""
-"Channel {0} set to Minecraft cross-platform chat and as default channel for "
-"its webhook"
+"Channel {0} set to Minecraft game chat and as default channel for its webhook"
 
-#: ..\commands\chat_commands.py:466 ..\commands\chat_commands.py:505
+#: ..\commands\chat_commands.py:478 ..\commands\chat_commands.py:517
 #: ..\components\additional_funcs.py:2588 ..\config\init_config.py:1801
 #: ..\config\init_config.py:1837
 msgid "RSS enabled"
 msgstr "RSS enabled"
 
-#: ..\commands\chat_commands.py:468 ..\commands\chat_commands.py:544
+#: ..\commands\chat_commands.py:480 ..\commands\chat_commands.py:556
 msgid "Webhook for RSS set to `{0}` owned by {1} and to channel {2}"
 msgstr "Webhook for RSS set to `{0}` owned by {1} and to channel {2}"
 
-#: ..\commands\chat_commands.py:474 ..\commands\chat_commands.py:550
+#: ..\commands\chat_commands.py:486 ..\commands\chat_commands.py:562
 msgid "Webhook for RSS not set!"
 msgstr "Webhook for RSS not set!"
 
-#: ..\commands\chat_commands.py:477 ..\commands\chat_commands.py:526
+#: ..\commands\chat_commands.py:489 ..\commands\chat_commands.py:538
 msgid "URL for RSS set to {0}"
 msgstr "URL for RSS set to {0}"
 
-#: ..\commands\chat_commands.py:479
+#: ..\commands\chat_commands.py:491
 msgid "URL for RSS not set!"
 msgstr "URL for RSS not set!"
 
-#: ..\commands\chat_commands.py:482 ..\commands\chat_commands.py:536
+#: ..\commands\chat_commands.py:494 ..\commands\chat_commands.py:548
 msgid "Scan interval for RSS feed set to `{0}`"
 msgstr "Scan interval for RSS feed set to `{0}`"
 
-#: ..\commands\chat_commands.py:486 ..\config\init_config.py:1825
+#: ..\commands\chat_commands.py:498 ..\config\init_config.py:1825
 msgid "Scan interval for RSS feed not set"
 msgstr "Scan interval for RSS feed not set"
 
-#: ..\commands\chat_commands.py:488 ..\commands\chat_commands.py:517
-#: ..\commands\chat_commands.py:568 ..\commands\chat_commands.py:580
-#: ..\commands\chat_commands.py:596 ..\components\additional_funcs.py:2592
+#: ..\commands\chat_commands.py:500 ..\commands\chat_commands.py:529
+#: ..\commands\chat_commands.py:580 ..\commands\chat_commands.py:592
+#: ..\commands\chat_commands.py:608 ..\components\additional_funcs.py:2592
 #: ..\config\init_config.py:1834 ..\config\init_config.py:1839
 msgid "RSS disabled"
 msgstr "RSS disabled"
 
-#: ..\commands\chat_commands.py:560
+#: ..\commands\chat_commands.py:572
 msgid "Reloaded webhook for RSS!"
 msgstr "Reloaded webhook for RSS!"
 
-#: ..\commands\chat_commands.py:602
+#: ..\commands\chat_commands.py:614
 msgid "Channel {0} set to RSS webhook as default channel"
 msgstr "Channel {0} set to RSS webhook as default channel"
 
-#: ..\commands\chat_commands.py:624
+#: ..\commands\chat_commands.py:636
 msgid "Failed to parse data of edited message with exception - "
 msgstr "Failed to parse data of edited message with exception - "
 
-#: ..\commands\chat_commands.py:627
+#: ..\commands\chat_commands.py:639
 msgid "Fetching message with id '{0}'..."
 msgstr "Fetching message with id '{0}'..."
 
-#: ..\commands\chat_commands.py:650
+#: ..\commands\chat_commands.py:662
 msgid "Available languages:"
 msgstr "Available languages:"
 
-#: ..\commands\chat_commands.py:685
+#: ..\commands\chat_commands.py:697
 msgid "Select bot language:"
 msgstr "Select bot language:"
 
-#: ..\commands\chat_commands.py:694
+#: ..\commands\chat_commands.py:706
 msgid "Current prefix - '{0}'."
 msgstr "Current prefix - '{0}'."
 
-#: ..\commands\chat_commands.py:705
+#: ..\commands\chat_commands.py:717
 msgid "Prefix can't have spaces!"
 msgstr "Prefix can't have spaces!"
 
-#: ..\commands\chat_commands.py:710
+#: ..\commands\chat_commands.py:722
 msgid "Changed prefix to '{0}'."
 msgstr "Changed prefix to '{0}'."
 
-#: ..\commands\chat_commands.py:730 ..\commands\chat_commands.py:750
+#: ..\commands\chat_commands.py:742 ..\commands\chat_commands.py:762
 msgid "Bot doesn't have such subcommand!"
 msgstr "Bot doesn't have such subcommand!"
 
-#: ..\commands\chat_commands.py:752
+#: ..\commands\chat_commands.py:764
 msgid "Bot doesn't have such command!"
 msgstr "Bot doesn't have such command!"
 
-#: ..\commands\chat_commands.py:759
+#: ..\commands\chat_commands.py:771
 msgid "List of all commands, prefix - {0}"
 msgstr "List of all commands, prefix - {0}"
 
-#: ..\commands\chat_commands.py:774
+#: ..\commands\chat_commands.py:786
 msgid ""
 "Values in [square brackets] are optional.\n"
 "Values in <angle brackets> have to be provided by you.\n"
@@ -2045,11 +2037,11 @@ msgstr ""
 "Use '{prefix}help' command for more info.\n"
 "Or '{prefix}command {arg_list}' for short."
 
-#: ..\commands\chat_commands.py:828
+#: ..\commands\chat_commands.py:840
 msgid "You didn't provide reply in your message!"
 msgstr "You didn't provide reply in your message!"
 
-#: ..\commands\chat_commands.py:838
+#: ..\commands\chat_commands.py:850
 msgid "Starting RSS feed check"
 msgstr "Starting RSS feed check"
 
@@ -2610,7 +2602,7 @@ msgstr ""
 "List of commands for interacting with Minecraft server via buttons and "
 "dropdown for selecting server"
 
-#: ..\commands\minecraft_commands.py:1358
+#: ..\commands\minecraft_commands.py:1360
 msgid ""
 "List of bot features for interaction via buttons and dropdown for selecting "
 "bot language"
@@ -2618,7 +2610,7 @@ msgstr ""
 "List of bot features for interaction via buttons and dropdown for selecting "
 "bot language"
 
-#: ..\commands\minecraft_commands.py:1373
+#: ..\commands\minecraft_commands.py:1377
 msgid "Starting Minecraft server check-ups"
 msgstr "Starting Minecraft server check-ups"
 
@@ -3250,8 +3242,8 @@ msgid "Auto shutdown"
 msgstr "Auto shutdown"
 
 #: ..\components\additional_funcs.py:2443
-msgid "C/p chat"
-msgstr "C/p chat"
+msgid "Game chat"
+msgstr "Game chat"
 
 #: ..\components\additional_funcs.py:2447
 msgid "Image preview"
@@ -3497,8 +3489,8 @@ msgid "Ignoring exception in internal event '{0}':"
 msgstr "Ignoring exception in internal event '{0}':"
 
 #: ..\components\additional_funcs.py:2992
-msgid "this chat can't work! Cross-platform chat disabled!"
-msgstr "this chat can't work! Cross-platform chat disabled!"
+msgid "this chat can't work! Game chat disabled!"
+msgstr "this chat can't work! Game chat disabled!"
 
 #: ..\components\additional_funcs.py:2998
 msgid "server is restarting!"
@@ -3508,25 +3500,25 @@ msgstr "server is restarting!"
 msgid "No players on server!"
 msgstr "No players on server!"
 
-#: ..\components\additional_funcs.py:3596
-#: ..\components\additional_funcs.py:3655
+#: ..\components\additional_funcs.py:3593
+#: ..\components\additional_funcs.py:3652
 msgid "Entity"
 msgstr "Entity"
 
-#: ..\components\additional_funcs.py:3598
+#: ..\components\additional_funcs.py:3595
 msgid "Player"
 msgstr "Player"
 
-#: ..\components\additional_funcs.py:3599
-#: ..\components\additional_funcs.py:3655
+#: ..\components\additional_funcs.py:3596
+#: ..\components\additional_funcs.py:3652
 msgid "Type: {0}"
 msgstr "Type: {0}"
 
-#: ..\components\additional_funcs.py:3878
+#: ..\components\additional_funcs.py:3873
 msgid "Minecraft server is not in release state! Proceed with caution!"
 msgstr "Minecraft server is not in release state! Proceed with caution!"
 
-#: ..\components\additional_funcs.py:3954
+#: ..\components\additional_funcs.py:3949
 msgid "Bot couldn't shorten the URL \"{0}\" using link shortening services."
 msgstr "Bot couldn't shorten the URL \"{0}\" using link shortening services."
 
@@ -3567,12 +3559,12 @@ msgid "Watcher Unhandled Error: {0}"
 msgstr "Watcher Unhandled Error: {0}"
 
 #: ..\components\watcher_handle.py:140
-msgid "Cross-platform chat webhook"
-msgstr "Cross-platform chat webhook"
+msgid "Game chat webhook"
+msgstr "Game chat webhook"
 
 #: ..\components\watcher_handle.py:383
-msgid "Bot Error: Couldn't find channel for cross-platform chat!"
-msgstr "Bot Error: Couldn't find channel for cross-platform chat!"
+msgid "Bot Error: Couldn't find channel for game chat!"
+msgstr "Bot Error: Couldn't find channel for game chat!"
 
 #: ..\components\watcher_handle.py:453
 msgid ""
@@ -4216,18 +4208,16 @@ msgid "Set number of lines to check"
 msgstr "Set number of lines to check"
 
 #: ..\config\init_config.py:1659
-msgid "Would you like to enable cross-platform chat?"
-msgstr "Would you like to enable cross-platform chat?"
+msgid "Would you like to enable game chat?"
+msgstr "Would you like to enable game chat?"
 
 #: ..\config\init_config.py:1664
-msgid ""
-"Webhook URL for cross-platform chat not found. Would you like to enter it?"
-msgstr ""
-"Webhook URL for cross-platform chat not found. Would you like to enter it?"
+msgid "Webhook URL for game chat not found. Would you like to enter it?"
+msgstr "Webhook URL for game chat not found. Would you like to enter it?"
 
 #: ..\config\init_config.py:1667
-msgid "Enter webhook URL for cross-platform chat"
-msgstr "Enter webhook URL for cross-platform chat"
+msgid "Enter webhook URL for game chat"
+msgstr "Enter webhook URL for game chat"
 
 #: ..\config\init_config.py:1670 ..\config\init_config.py:1809
 msgid ""
@@ -4270,24 +4260,24 @@ msgstr ""
 "5, int)"
 
 #: ..\config\init_config.py:1718
-msgid "Would you like to enable image preview in cross-platform chat?"
-msgstr "Would you like to enable image preview in cross-platform chat?"
+msgid "Would you like to enable image preview in game chat?"
+msgstr "Would you like to enable image preview in game chat?"
 
 #: ..\config\init_config.py:1732
 msgid ""
-"Enter the maximum image width that will be displayed in cross-platform chat "
-"(default - 160 pixels, int)"
+"Enter the maximum image width that will be displayed in game chat (default - "
+"160 pixels, int)"
 msgstr ""
-"Enter the maximum image width that will be displayed in cross-platform chat "
-"(default - 160 pixels, int)"
+"Enter the maximum image width that will be displayed in game chat (default - "
+"160 pixels, int)"
 
 #: ..\config\init_config.py:1742
 msgid ""
-"Enter the maximum image height that will be displayed in cross-platform chat "
-"(default - 30 pixels, int)"
+"Enter the maximum image height that will be displayed in game chat (default "
+"- 30 pixels, int)"
 msgstr ""
-"Enter the maximum image height that will be displayed in cross-platform chat "
-"(default - 30 pixels, int)"
+"Enter the maximum image height that will be displayed in game chat (default "
+"- 30 pixels, int)"
 
 #: ..\config\init_config.py:1749
 msgid "Would you like to enable authorization security?"

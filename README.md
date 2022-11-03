@@ -40,7 +40,7 @@
   role from the member
 * Setting an optional admin role in Discord. If set then commands that interacts with Minecraft server commands will
   execute if member has admin role. Otherwise, member must have `Administrator` permission.
-* Creating optional cross-platform chat between Discord text channel and Minecraft server via bot and webhook
+* Creating optional game chat between Discord text channel and Minecraft server via bot and webhook
     * **Players' nicks for Minecraft chat mustn't contain `>` character!**
     * Supported mentions in Discord and Minecraft
         * Also, for better recognition you can create list of associations between Discord member and Minecraft nick
@@ -72,7 +72,7 @@
     * Some features may not work in versions lower than `1.7.2`!
 * Setting up optional rss feed. Bot will send new items from feed to Discord text channel via webhook
 
-**How bot converts mentions from Minecraft chat to Discord for cross-platform chat:**
+**How bot converts mentions from Minecraft chat to Discord for game chat:**
 
 | Minecraft               | Discord                  |
 |-------------------------|--------------------------|
@@ -97,7 +97,7 @@ If you want to see help on all bot's commands use `help` command when bot is run
 
 > **Note**
 >
-> Some commands will require optional role or/and admin role if you set them in bot config.
+> Some commands will require an optional role or/and an admin role if you set them in bot config.
 
 ## Languages
 
@@ -154,7 +154,7 @@ this [article](https://www.minecraft.net/en-us/article/important-message--securi
 >
 > **Or check if your modded server already has a patch for it!**
 
-For Minecraft server lower than version `1.17.0` for cross-platform chat to work properly you have to have
+For Minecraft server lower than version `1.17.0` for game chat to work properly you have to have
 argument `-Dfile.encoding=UTF-8` when you're executing `*.bat`, `*.cmd`, shortcut, `*.sh` or `*.command` script (
 necessary for Windows).
 

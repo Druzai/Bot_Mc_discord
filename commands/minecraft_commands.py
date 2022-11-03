@@ -392,7 +392,7 @@ class MinecraftCommands(commands.Cog):
         if Config.get_secure_auth().enable_secure_auth:
             Config.get_secure_auth().enable_secure_auth = False
             Config.save_config()
-        if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
+        if not Config.get_game_chat_settings().enable_game_chat and \
                 BotVars.watcher_of_log_file is not None:
             BotVars.watcher_of_log_file.stop()
         await ctx.send(add_quotes(get_translation("Secure authorization off")))

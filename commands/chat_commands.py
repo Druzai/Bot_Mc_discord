@@ -182,10 +182,10 @@ class ChatCommands(commands.Cog):
     @commands.guild_only()
     async def chat(self, ctx: commands.Context):
         msg = ""
-        if Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
-            msg += get_translation("Cross-platform chat enabled") + "\n"
+        if Config.get_game_chat_settings().enable_game_chat:
+            msg += get_translation("Game chat enabled") + "\n"
             if BotVars.webhook_chat:
-                msg += get_translation("Webhook for cross-platform chat set to "
+                msg += get_translation("Webhook for game chat set to "
                                        "`{0}` owned by {1} and to channel {2}").format(
                     BotVars.webhook_chat.name,
                     BotVars.webhook_chat.user.mention,
@@ -195,20 +195,20 @@ class ChatCommands(commands.Cog):
                     channel = self._bot.get_channel(BotVars.webhook_chat.channel_id)
                     if channel is None:
                         channel = await self._bot.fetch_channel(BotVars.webhook_chat.channel_id)
-                    msg += get_translation("Channel {0} set to Minecraft cross-platform chat").format(channel.mention)
+                    msg += get_translation("Channel {0} set to Minecraft game chat").format(channel.mention)
                 except (InvalidData, HTTPException, NotFound, Forbidden):
-                    msg += get_translation("Channel for Minecraft cross-platform chat is not found or unreachable!")
+                    msg += get_translation("Channel for Minecraft game chat is not found or unreachable!")
             else:
-                msg += get_translation("Webhook for cross-platform chat not set!")
+                msg += get_translation("Webhook for game chat not set!")
             msg += "\n"
-            if Config.get_cross_platform_chat_settings().avatar_url_for_death_messages is not None:
+            if Config.get_game_chat_settings().avatar_url_for_death_messages is not None:
                 msg += get_translation("Avatar URL for death messages set to {0}").format(
-                    f"<{Config.get_cross_platform_chat_settings().avatar_url_for_death_messages}>"
+                    f"<{Config.get_game_chat_settings().avatar_url_for_death_messages}>"
                 )
             else:
                 msg += get_translation("Avatar URL for death messages not set!")
         else:
-            msg += get_translation("Cross-platform chat disabled")
+            msg += get_translation("Game chat disabled")
         await ctx.send(msg)
 
     @chat.command(pass_context=True, name="on")
@@ -216,8 +216,8 @@ class ChatCommands(commands.Cog):
     @decorators.has_admin_role()
     @commands.guild_only()
     async def c_on(self, ctx: commands.Context):
-        if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
-            Config.get_cross_platform_chat_settings().enable_cross_platform_chat = True
+        if not Config.get_game_chat_settings().enable_game_chat:
+            Config.get_game_chat_settings().enable_game_chat = True
             Config.save_config()
         BotVars.webhook_chat = None
         await create_webhooks(self._bot)
@@ -225,34 +225,34 @@ class ChatCommands(commands.Cog):
             if BotVars.watcher_of_log_file is None:
                 BotVars.watcher_of_log_file = create_watcher(BotVars.watcher_of_log_file, get_server_version())
             BotVars.watcher_of_log_file.start()
-        await ctx.send(get_translation("Cross-platform chat enabled") + "!")
+        await ctx.send(get_translation("Game chat enabled") + "!")
 
     @chat.command(pass_context=True, name="off")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @decorators.has_admin_role()
     @commands.guild_only()
     async def c_off(self, ctx: commands.Context):
-        if Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
-            Config.get_cross_platform_chat_settings().enable_cross_platform_chat = False
+        if Config.get_game_chat_settings().enable_game_chat:
+            Config.get_game_chat_settings().enable_game_chat = False
             Config.save_config()
         if not Config.get_secure_auth().enable_secure_auth and BotVars.watcher_of_log_file is not None:
             BotVars.watcher_of_log_file.stop()
-        await ctx.send(get_translation("Cross-platform chat disabled") + "!")
+        await ctx.send(get_translation("Game chat disabled") + "!")
 
     @chat.command(pass_context=True, name="obituary", ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.has_permissions(manage_webhooks=True)
     @commands.guild_only()
     async def c_obituary(self, ctx: commands.Context, avatar_url: URLAddress = None):
-        if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
-            await ctx.send(get_translation("Cross-platform chat disabled") + "!")
+        if not Config.get_game_chat_settings().enable_game_chat:
+            await ctx.send(get_translation("Game chat disabled") + "!")
             return
 
         avatar_blob, url = await get_avatar_info(ctx, avatar_url)
         if avatar_blob is None:
             await ctx.send(get_translation("Unsupported image type was given!"))
             return
-        Config.get_cross_platform_chat_settings().avatar_url_for_death_messages = url
+        Config.get_game_chat_settings().avatar_url_for_death_messages = url
         Config.save_config()
         if avatar_url is None:
             await ctx.message.reply(get_translation("Do not delete this message or attachment(s)!"))
@@ -262,8 +262,8 @@ class ChatCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     async def c_edit(self, ctx: commands.Context, *, edited_message: str):
-        if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
-            await send_msg(ctx, add_quotes(get_translation("Cross-platform chat disabled") + "!"), True)
+        if not Config.get_game_chat_settings().enable_game_chat:
+            await send_msg(ctx, add_quotes(get_translation("Game chat disabled") + "!"), True)
         elif ctx.message.reference is not None and ctx.message.reference.resolved.author.discriminator != "0000":
             await send_msg(ctx, add_quotes(get_translation("You can't edit messages from "
                                                            "other members with this command!")), True)
@@ -312,7 +312,7 @@ class ChatCommands(commands.Cog):
                     )
                 except Forbidden:
                     error_msg = get_translation("Can't edit this message, it's not owned "
-                                                "by cross-platform chat webhook!")
+                                                "by game chat webhook!")
                     webhook_found = False
                     for webhook in await self._bot.guilds[0].webhooks():
                         if webhook.id == last_message.author.id:
@@ -330,7 +330,7 @@ class ChatCommands(commands.Cog):
         else:
             await send_msg(
                 ctx,
-                add_quotes(get_translation("You're not in channel for Minecraft cross-platform chat!")),
+                add_quotes(get_translation("You're not in channel for Minecraft game chat!")),
                 True
             )
         await delete_after_by_msg(ctx.message)
@@ -339,12 +339,12 @@ class ChatCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     async def c_images(self, ctx: commands.Context):
-        if Config.get_cross_platform_chat_settings().image_preview.enable_images_preview:
+        if Config.get_game_chat_settings().image_preview.enable_images_preview:
             msg = get_translation("Image preview enabled") + "\n" + \
                   get_translation("The maximum image width set to {0}") \
-                      .format(f"{Config.get_cross_platform_chat_settings().image_preview.max_width}px") + "\n" + \
+                      .format(f"{Config.get_game_chat_settings().image_preview.max_width}px") + "\n" + \
                   get_translation("The maximum image height set to {0}") \
-                      .format(f"{Config.get_cross_platform_chat_settings().image_preview.max_height}px")
+                      .format(f"{Config.get_game_chat_settings().image_preview.max_height}px")
         else:
             msg = get_translation("Image preview disabled")
         await ctx.send(add_quotes(msg))
@@ -354,8 +354,8 @@ class ChatCommands(commands.Cog):
     @decorators.has_role_or_default()
     @commands.guild_only()
     async def c_i_on(self, ctx: commands.Context):
-        if not Config.get_cross_platform_chat_settings().image_preview.enable_images_preview:
-            Config.get_cross_platform_chat_settings().image_preview.enable_images_preview = True
+        if not Config.get_game_chat_settings().image_preview.enable_images_preview:
+            Config.get_game_chat_settings().image_preview.enable_images_preview = True
             Config.save_config()
         await ctx.send(get_translation("Image preview enabled") + "!")
 
@@ -364,8 +364,8 @@ class ChatCommands(commands.Cog):
     @decorators.has_role_or_default()
     @commands.guild_only()
     async def c_i_off(self, ctx: commands.Context):
-        if Config.get_cross_platform_chat_settings().image_preview.enable_images_preview:
-            Config.get_cross_platform_chat_settings().image_preview.enable_images_preview = False
+        if Config.get_game_chat_settings().image_preview.enable_images_preview:
+            Config.get_game_chat_settings().image_preview.enable_images_preview = False
             Config.save_config()
         await ctx.send(get_translation("Image preview disabled") + "!")
 
@@ -381,7 +381,7 @@ class ChatCommands(commands.Cog):
             await ctx.send(add_quotes(get_translation("Wrong 1-st argument used!") + "\n" +
                                       get_translation("Integer must be below or equal {0}!").format(160)))
         else:
-            Config.get_cross_platform_chat_settings().image_preview.max_width = pixels
+            Config.get_game_chat_settings().image_preview.max_width = pixels
             Config.save_config()
             await ctx.send(get_translation("The maximum image width set to {0}").format(f"{pixels}px") + "!")
 
@@ -397,7 +397,7 @@ class ChatCommands(commands.Cog):
             await ctx.send(add_quotes(get_translation("Wrong 1-st argument used!") + "\n" +
                                       get_translation("Integer must be below or equal {0}!").format(36)))
         else:
-            Config.get_cross_platform_chat_settings().image_preview.max_height = pixels
+            Config.get_game_chat_settings().image_preview.max_height = pixels
             Config.save_config()
             await ctx.send(get_translation("The maximum image height set to {0}").format(f"{pixels}px") + "!")
 
@@ -406,14 +406,14 @@ class ChatCommands(commands.Cog):
     @commands.guild_only()
     async def c_webhook(self, ctx: commands.Context):
         if BotVars.webhook_chat:
-            msg = get_translation("Webhook for cross-platform chat set to "
+            msg = get_translation("Webhook for game chat set to "
                                   "`{0}` owned by {1} and to channel {2}").format(
                 BotVars.webhook_chat.name,
                 BotVars.webhook_chat.user.mention,
                 await get_channel_string(self._bot, BotVars.webhook_chat.channel_id, mention=True)
             ) + "."
         else:
-            msg = get_translation("Webhook for cross-platform chat not set!")
+            msg = get_translation("Webhook for game chat not set!")
         await ctx.send(msg)
 
     @c_webhook.command(pass_context=True, name="reload")
@@ -423,15 +423,15 @@ class ChatCommands(commands.Cog):
     async def c_w_reload(self, ctx: commands.Context):
         BotVars.webhook_chat = None
         await create_webhooks(self._bot)
-        await ctx.send(get_translation("Reloaded webhook for cross-platform chat!"))
+        await ctx.send(get_translation("Reloaded webhook for game chat!"))
 
     @c_webhook.command(pass_context=True, name="name", ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True, manage_webhooks=True)
     @commands.has_permissions(manage_webhooks=True)
     @commands.guild_only()
     async def c_w_name(self, ctx: commands.Context, name: str):
-        if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
-            await ctx.send(get_translation("Cross-platform chat disabled") + "!")
+        if not Config.get_game_chat_settings().enable_game_chat:
+            await ctx.send(get_translation("Game chat disabled") + "!")
             return
 
         BotVars.webhook_chat = BotVars.webhook_chat.edit(name=name)
@@ -442,8 +442,8 @@ class ChatCommands(commands.Cog):
     @commands.has_permissions(manage_webhooks=True)
     @commands.guild_only()
     async def c_w_avatar(self, ctx: commands.Context, avatar_url: URLAddress = None):
-        if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
-            await ctx.send(get_translation("Cross-platform chat disabled") + "!")
+        if not Config.get_game_chat_settings().enable_game_chat:
+            await ctx.send(get_translation("Game chat disabled") + "!")
             return
 
         avatar_blob, _ = await get_avatar_info(ctx, avatar_url)
@@ -458,15 +458,15 @@ class ChatCommands(commands.Cog):
     @commands.has_permissions(manage_webhooks=True)
     @commands.guild_only()
     async def c_w_channel(self, ctx: commands.Context, channel: TextChannel = None):
-        if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
-            await ctx.send(get_translation("Cross-platform chat disabled") + "!")
+        if not Config.get_game_chat_settings().enable_game_chat:
+            await ctx.send(get_translation("Game chat disabled") + "!")
             return
 
         if channel is None:
             channel = ctx.channel
         BotVars.webhook_chat = BotVars.webhook_chat.edit(channel=channel)
         Config.save_config()
-        await ctx.send(get_translation("Channel {0} set to Minecraft cross-platform chat "
+        await ctx.send(get_translation("Channel {0} set to Minecraft game chat "
                                        "and as default channel for its webhook").format(channel.mention))
 
     @commands.group(pass_context=True, name="rss", invoke_without_command=True)
@@ -474,7 +474,7 @@ class ChatCommands(commands.Cog):
     @commands.guild_only()
     async def rss(self, ctx: commands.Context):
         msg = ""
-        if Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
+        if Config.get_game_chat_settings().enable_game_chat:
             msg += get_translation("RSS enabled") + "\n"
             if BotVars.webhook_chat:
                 msg += get_translation("Webhook for RSS set to `{0}` owned by {1} and to channel {2}").format(
@@ -616,7 +616,7 @@ class ChatCommands(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: Message):
         with handle_unhandled_error_in_events():
-            if Config.get_cross_platform_chat_settings().enable_cross_platform_chat \
+            if Config.get_game_chat_settings().enable_game_chat \
                     and BotVars.webhook_chat is not None \
                     and message.channel.id == BotVars.webhook_chat.channel_id:
                 await handle_message_for_chat(message, self._bot)
@@ -624,7 +624,7 @@ class ChatCommands(commands.Cog):
     @commands.Cog.listener()
     async def on_raw_message_edit(self, payload: RawMessageUpdateEvent):
         with handle_unhandled_error_in_events():
-            if Config.get_cross_platform_chat_settings().enable_cross_platform_chat \
+            if Config.get_game_chat_settings().enable_game_chat \
                     and BotVars.webhook_chat is not None \
                     and payload.channel_id == BotVars.webhook_chat.channel_id:
                 after_channel = self._bot.get_channel(payload.channel_id)

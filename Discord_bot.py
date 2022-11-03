@@ -76,7 +76,7 @@ def main():
         bot = commands.Bot(command_prefix=get_prefix, intents=Intents.all(), help_command=None)
 
         async def add_cogs(bot: commands.Bot):
-            for i in [Poll, ChatCommands, MinecraftCommands]:
+            for i in [Poll, MinecraftCommands, ChatCommands]:
                 await bot.add_cog(i(bot))
             return bot
 

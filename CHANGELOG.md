@@ -45,11 +45,14 @@ All important changes to this project will be documented in this file.
       * `authorize unban`
       * `backups remove`
       * `backups resore`
+* Changed naming:
+    * Renamed `Cross-platform chat` to `Game chat` in all bot messages
 
 #### Breaking changes:
 
 * Changed date format for logging (`bot.log` and `op.log`)
     * From `DD/MM/YYYY` to `YYYY-MM-DD`
+* Renamed setting `cross_platform_chat` to `game_chat` and subsetting `enable_cross_platform_chat` to `enable_game_chat`
 
 ### [1.3.2](https://github.com/Druzai/Bot_Mc_discord/compare/1.3.1...1.3.2) (2022-07-28)
 

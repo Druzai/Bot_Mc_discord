@@ -334,7 +334,7 @@ async def start_server(
             with connect_query() as cl_q:
                 _ = cl_q.basic_stats
             break
-    if Config.get_cross_platform_chat_settings().enable_cross_platform_chat or \
+    if Config.get_game_chat_settings().enable_game_chat or \
             Config.get_secure_auth().enable_secure_auth:
         BotVars.watcher_of_log_file = create_watcher(BotVars.watcher_of_log_file, get_server_version())
         BotVars.watcher_of_log_file.start()
@@ -1059,7 +1059,7 @@ async def server_checkups(bot: commands.Bot, backups_thread: BackupsThread, poll
                 BotVars.is_auto_backup_disable = False
         if not BotVars.is_server_on:
             BotVars.is_server_on = True
-        if Config.get_cross_platform_chat_settings().enable_cross_platform_chat or \
+        if Config.get_game_chat_settings().enable_game_chat or \
                 Config.get_secure_auth().enable_secure_auth:
             if BotVars.watcher_of_log_file is None:
                 BotVars.watcher_of_log_file = create_watcher(BotVars.watcher_of_log_file, get_server_version())
@@ -1716,7 +1716,7 @@ def remove_owned_webhooks(webhooks: List[Webhook]):
         int(search(r"https?://discord\.com/api/webhooks/(?P<id>\d+)?/.*", bot_w).group("id"))
         for bot_w in [
             Config.get_rss_feed_settings().webhook_url,
-            Config.get_cross_platform_chat_settings().webhook_url
+            Config.get_game_chat_settings().webhook_url
         ] if bot_w
     ]
     return sorted([w for w in webhooks if w.id not in bot_webhooks], key=lambda w: w.created_at)
@@ -1735,12 +1735,12 @@ async def create_webhooks(bot: commands.Bot):
         except NotFound:
             Config.get_rss_feed_settings().webhook_url = None
             await get_feed_webhook(channel, free_webhooks)
-    if Config.get_cross_platform_chat_settings().enable_cross_platform_chat and BotVars.webhook_chat is None:
+    if Config.get_game_chat_settings().enable_game_chat and BotVars.webhook_chat is None:
         free_webhooks = remove_owned_webhooks(webhooks)
         try:
             await get_chat_webhook(channel, free_webhooks)
         except NotFound:
-            Config.get_cross_platform_chat_settings().webhook_url = None
+            Config.get_game_chat_settings().webhook_url = None
             await get_chat_webhook(channel, free_webhooks)
 
 
@@ -2439,11 +2439,11 @@ class MenuBotView(TemplateSelectView):
         self.b_a_shutdown.label = get_translation("Auto shutdown")
 
         self.b_chat.style = ButtonStyle.green \
-            if Config.get_cross_platform_chat_settings().enable_cross_platform_chat else ButtonStyle.red
-        self.b_chat.label = get_translation("C/p chat")
+            if Config.get_game_chat_settings().enable_game_chat else ButtonStyle.red
+        self.b_chat.label = get_translation("Game chat")
 
         self.b_c_p_images.style = ButtonStyle.green \
-            if Config.get_cross_platform_chat_settings().image_preview.enable_images_preview else ButtonStyle.red
+            if Config.get_game_chat_settings().image_preview.enable_images_preview else ButtonStyle.red
         self.b_c_p_images.label = get_translation("Image preview")
 
         self.b_rss_news.style = ButtonStyle.green if Config.get_rss_feed_settings().enable_rss_feed else ButtonStyle.red
@@ -2470,7 +2470,7 @@ class MenuBotView(TemplateSelectView):
                     BotVars.watcher_of_log_file.start()
                 msg = add_quotes(get_translation("Secure authorization on"))
             else:
-                if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
+                if not Config.get_game_chat_settings().enable_game_chat and \
                         BotVars.watcher_of_log_file is not None:
                     BotVars.watcher_of_log_file.stop()
                 msg = add_quotes(get_translation("Secure authorization off"))
@@ -2537,34 +2537,34 @@ class MenuBotView(TemplateSelectView):
     @button(custom_id="menu_bot_view:chat", emoji="💬", row=2)
     async def b_chat(self, interaction: Interaction, button: Button):
         if is_admin(interaction):
-            Config.get_cross_platform_chat_settings().enable_cross_platform_chat = \
-                not Config.get_cross_platform_chat_settings().enable_cross_platform_chat
+            Config.get_game_chat_settings().enable_game_chat = \
+                not Config.get_game_chat_settings().enable_game_chat
             Config.save_config()
             button.style = ButtonStyle.red if button.style == ButtonStyle.green else ButtonStyle.green
             await edit_interaction(interaction, self, self.message_id)
-            if Config.get_cross_platform_chat_settings().enable_cross_platform_chat:
+            if Config.get_game_chat_settings().enable_game_chat:
                 BotVars.webhook_chat = None
                 await create_webhooks(self.bot)
                 with suppress(ConnectionError, socket.error):
                     if BotVars.watcher_of_log_file is None:
                         BotVars.watcher_of_log_file = create_watcher(BotVars.watcher_of_log_file, get_server_version())
                     BotVars.watcher_of_log_file.start()
-                msg = get_translation("Cross-platform chat enabled") + "!"
+                msg = get_translation("Game chat enabled") + "!"
             else:
                 if not Config.get_secure_auth().enable_secure_auth and BotVars.watcher_of_log_file is not None:
                     BotVars.watcher_of_log_file.stop()
-                msg = get_translation("Cross-platform chat disabled") + "!"
+                msg = get_translation("Game chat disabled") + "!"
             await send_interaction(interaction, msg, is_reaction=True)
 
     @button(custom_id="menu_bot_view:chat_preview_images", emoji="🖼", row=2)
     async def b_c_p_images(self, interaction: Interaction, button: Button):
         if is_minecrafter(interaction):
-            Config.get_cross_platform_chat_settings().image_preview.enable_images_preview = \
-                not Config.get_cross_platform_chat_settings().image_preview.enable_images_preview
+            Config.get_game_chat_settings().image_preview.enable_images_preview = \
+                not Config.get_game_chat_settings().image_preview.enable_images_preview
             Config.save_config()
             button.style = ButtonStyle.red if button.style == ButtonStyle.green else ButtonStyle.green
             await edit_interaction(interaction, self, self.message_id)
-            if Config.get_cross_platform_chat_settings().image_preview.enable_images_preview:
+            if Config.get_game_chat_settings().image_preview.enable_images_preview:
                 msg = get_translation("Image preview enabled") + "!"
             else:
                 msg = get_translation("Image preview disabled") + "!"
@@ -2987,9 +2987,9 @@ async def handle_message_for_chat(
 
     author_mention = get_author_and_mention(message, bot, False)[1]
 
-    if not Config.get_cross_platform_chat_settings().webhook_url or not BotVars.webhook_chat:
+    if not Config.get_game_chat_settings().webhook_url or not BotVars.webhook_chat:
         await send_msg(message.channel, f"{author_mention}, " +
-                       get_translation("this chat can't work! Cross-platform chat disabled!"), True)
+                       get_translation("this chat can't work! Game chat disabled!"), True)
     elif not BotVars.is_server_on:
         await send_msg(message.channel, f"{author_mention}\n" +
                        add_quotes(get_translation("server offline").capitalize() + "!"), True)
@@ -3089,7 +3089,7 @@ async def handle_message_for_chat(
                 result_msg,
                 message, bot,
                 store_images_for_preview=server_version.minor >= 16 and
-                                         Config.get_cross_platform_chat_settings().image_preview.enable_images_preview
+                                         Config.get_game_chat_settings().image_preview.enable_images_preview
             )
             # Building object for tellraw
             res_obj = [""]
@@ -3753,16 +3753,16 @@ def send_image_to_chat(url: str, image_name: str, required_width: int = None, re
     img = Image.open(image_data["bytes"], "r")
 
     if required_height is not None and \
-            required_height < Config.get_cross_platform_chat_settings().image_preview.max_height:
+            required_height < Config.get_game_chat_settings().image_preview.max_height:
         max_height = required_height
     else:
-        max_height = Config.get_cross_platform_chat_settings().image_preview.max_height
+        max_height = Config.get_game_chat_settings().image_preview.max_height
 
     if required_width is not None and \
-            required_width < Config.get_cross_platform_chat_settings().image_preview.max_width:
+            required_width < Config.get_game_chat_settings().image_preview.max_width:
         calc_width = required_height
     else:
-        calc_width = Config.get_cross_platform_chat_settings().image_preview.max_width
+        calc_width = Config.get_game_chat_settings().image_preview.max_width
 
     calc_height = int(round((img.height * 2) / (img.width / calc_width), 0) / 9)
     if calc_height > max_height:

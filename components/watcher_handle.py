@@ -128,21 +128,21 @@ def create_watcher(watcher: Optional[Watcher], server_version: 'ServerVersion'):
 
 async def get_chat_webhook(channel: Optional[TextChannel], webhooks: Optional[List[Webhook]]):
     need_to_save = False
-    if Config.get_cross_platform_chat_settings().webhook_url:
+    if Config.get_game_chat_settings().webhook_url:
         BotVars.webhook_chat = SyncWebhook.from_url(
-            url=Config.get_cross_platform_chat_settings().webhook_url,
+            url=Config.get_game_chat_settings().webhook_url,
             bot_token=Config.get_settings().bot_settings.token
         ).fetch()
     elif (webhooks is not None and len(webhooks) > 0) or channel is not None:
         if webhooks is not None and len(webhooks) > 0:
             webhook = webhooks[0]
         else:
-            webhook = await channel.create_webhook(name=get_translation("Cross-platform chat webhook"))
+            webhook = await channel.create_webhook(name=get_translation("Game chat webhook"))
         BotVars.webhook_chat = SyncWebhook.from_url(
             url=webhook.url,
             bot_token=Config.get_settings().bot_settings.token
         ).fetch()
-        Config.get_cross_platform_chat_settings().webhook_url = webhook.url
+        Config.get_game_chat_settings().webhook_url = webhook.url
         need_to_save = True
     else:
         raise ValueError("'channel' and 'webhooks' are not declared!")
@@ -158,7 +158,7 @@ def _check_log_file(
         last_line: Optional[str] = None,
         poll: Optional['Poll'] = None
 ):
-    if not Config.get_cross_platform_chat_settings().enable_cross_platform_chat and \
+    if not Config.get_game_chat_settings().enable_game_chat and \
             not Config.get_secure_auth().enable_secure_auth:
         return None, None
 
@@ -189,13 +189,13 @@ def _check_log_file(
                     split_arr = split(r"@\S+", player_message)
                     mentions = [[i[1:]] for i in findall(r"@\S+", player_message)]
                     for i_mention in range(len(mentions)):
-                        for words_number in range(Config.get_cross_platform_chat_settings().max_words_in_mention + 1):
+                        for words_number in range(Config.get_game_chat_settings().max_words_in_mention + 1):
                             if len(split_arr[1 + i_mention]) < words_number:
                                 break
                             found = False
                             add_string = " ".join(split_arr[1 + i_mention].lstrip(" ").split(" ")[:words_number]) \
                                 if words_number > 0 else ""
-                            for symbols_number in range(Config.get_cross_platform_chat_settings().
+                            for symbols_number in range(Config.get_game_chat_settings().
                                                                 max_wrong_symbols_in_mention_from_right + 1):
                                 mention = f"{mentions[i_mention][0]} {add_string}".lower() \
                                     if len(add_string) > 0 else mentions[i_mention][0].lower()
@@ -380,7 +380,7 @@ def _check_log_file(
                 if search(r"^\*[^*].*", player_message):
                     chn = BotVars.bot_for_webhooks.get_channel(BotVars.webhook_chat.channel_id)
                     if chn is None:
-                        print(get_translation("Bot Error: Couldn't find channel for cross-platform chat!"))
+                        print(get_translation("Bot Error: Couldn't find channel for game chat!"))
                     else:
                         async def get_last_message(channel: TextChannel):
                             last_msg = None
@@ -675,7 +675,7 @@ def _check_log_file(
 
 
 def send_death_message(death_message: str, count: int, date: datetime):
-    avatar_url = Config.get_cross_platform_chat_settings().avatar_url_for_death_messages
+    avatar_url = Config.get_game_chat_settings().avatar_url_for_death_messages
     if avatar_url is None:
         avatar_url = BotVars.bot_for_webhooks.user.avatar.url
 
