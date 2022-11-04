@@ -41,7 +41,6 @@
 * Setting an optional admin role in Discord. If set then commands that interacts with Minecraft server commands will
   execute if member has admin role. Otherwise, member must have `Administrator` permission.
 * Creating optional game chat between Discord text channel and Minecraft server via bot and webhook
-    * **Players' nicks from Minecraft chat mustn't contain `>` character!**
     * Supported mentions in Discord and Minecraft
         * Also, for better recognition you can create list of associations between Discord member and Minecraft nick
     * Supported edited messages from Discord and editing messages from Minecraft

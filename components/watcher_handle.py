@@ -178,14 +178,47 @@ def _check_log_file(
 
     for line in last_lines:
         if not search(rf"{date_line} {INFO_line}", line) or \
-                search(rf"{date_line} {INFO_line}( \[Not Secure])? \* ", line):
+                search(rf"{date_line} {INFO_line}(?: \[Not Secure])? \* ", line):
             continue
 
         if BotVars.webhook_chat is not None:
-            match = search(rf"{date_line} {INFO_line}( \[Not Secure])? <(?P<nick>[^>]+)> (?P<message>.+)", line)
+            if server_version.minor < 17 or (server_version.minor == 17 and server_version.patch < 1):
+                nick_regex = r".+"
+            else:
+                nick_regex = r"[^>]+"
+            match = search(
+                rf"{date_line} {INFO_line}(?: \[Not Secure])? <(?P<nick>{nick_regex})> (?P<message>.+)",
+                line
+            )
             if match is not None:
                 player_nick = match.group("nick")
                 player_message = match.group("message")
+
+                if "> " in player_nick:
+                    from components.additional_funcs import get_server_players
+
+                    splits = player_nick.split("> ")
+                    try:
+                        players = get_server_players()["players"]
+                        indexes = list(range(len(splits), 0, -1))
+                    except (ConnectionError, socket.error):
+                        players = []
+                        indexes = []
+
+                    for i in indexes:
+                        possible_nick = "> ".join(splits[:i])
+                        if possible_nick in players:
+                            player_nick = possible_nick
+                            message_part = "> ".join(splits[i:])
+                            if len(message_part) > 0:
+                                message_part += "> "
+                            player_message = f"{message_part}{player_message}"
+                            break
+                    else:
+                        nick_part, message_part = player_nick.split("> ", maxsplit=1)
+                        player_nick = nick_part
+                        player_message = f"{message_part}> {player_message}"
+
                 if search(r"@\S+", player_message):
                     split_arr = split(r"@\S+", player_message)
                     mentions = [[i[1:]] for i in findall(r"@\S+", player_message)]

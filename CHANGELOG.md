@@ -28,6 +28,7 @@ All important changes to this project will be documented in this file.
 * Improved parsing death messages for duplicates
 * Removed requirement for logging players with secure authorization that players' nicks mustn't contain these characters: `[`,`]`,`<`,`>`
 * Added check if some other Minecraft server is running on the same port
+* Removed requirement for game chat that player's nick mustn't contain `>` character
 
 #### Changed:
 
