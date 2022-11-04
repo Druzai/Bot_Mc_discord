@@ -340,7 +340,7 @@ class ChatCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     async def c_images(self, ctx: commands.Context):
-        if Config.get_game_chat_settings().image_preview.enable_images_preview:
+        if Config.get_game_chat_settings().image_preview.enable_image_preview:
             msg = get_translation("Image preview enabled") + "\n" + \
                   get_translation("The maximum image width set to {0}") \
                       .format(f"{Config.get_game_chat_settings().image_preview.max_width}px") + "\n" + \
@@ -355,8 +355,8 @@ class ChatCommands(commands.Cog):
     @decorators.has_role_or_default()
     @commands.guild_only()
     async def c_i_on(self, ctx: commands.Context):
-        if not Config.get_game_chat_settings().image_preview.enable_images_preview:
-            Config.get_game_chat_settings().image_preview.enable_images_preview = True
+        if not Config.get_game_chat_settings().image_preview.enable_image_preview:
+            Config.get_game_chat_settings().image_preview.enable_image_preview = True
             Config.save_config()
         await ctx.send(get_translation("Image preview enabled") + "!")
 
@@ -365,8 +365,8 @@ class ChatCommands(commands.Cog):
     @decorators.has_role_or_default()
     @commands.guild_only()
     async def c_i_off(self, ctx: commands.Context):
-        if Config.get_game_chat_settings().image_preview.enable_images_preview:
-            Config.get_game_chat_settings().image_preview.enable_images_preview = False
+        if Config.get_game_chat_settings().image_preview.enable_image_preview:
+            Config.get_game_chat_settings().image_preview.enable_image_preview = False
             Config.save_config()
         await ctx.send(get_translation("Image preview disabled") + "!")
 

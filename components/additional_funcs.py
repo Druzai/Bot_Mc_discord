@@ -2771,7 +2771,7 @@ class MenuBotView(TemplateSelectView):
         self.b_chat.label = get_translation("Game chat")
 
         self.b_c_p_images.style = ButtonStyle.green \
-            if Config.get_game_chat_settings().image_preview.enable_images_preview else ButtonStyle.red
+            if Config.get_game_chat_settings().image_preview.enable_image_preview else ButtonStyle.red
         self.b_c_p_images.label = get_translation("Image preview")
 
         self.b_rss_news.style = ButtonStyle.green if Config.get_rss_feed_settings().enable_rss_feed else ButtonStyle.red
@@ -2887,12 +2887,12 @@ class MenuBotView(TemplateSelectView):
     @button(custom_id="menu_bot_view:chat_preview_images", emoji="🖼", row=2)
     async def b_c_p_images(self, interaction: Interaction, button: Button):
         if is_minecrafter(interaction):
-            Config.get_game_chat_settings().image_preview.enable_images_preview = \
-                not Config.get_game_chat_settings().image_preview.enable_images_preview
+            Config.get_game_chat_settings().image_preview.enable_image_preview = \
+                not Config.get_game_chat_settings().image_preview.enable_image_preview
             Config.save_config()
             button.style = ButtonStyle.red if button.style == ButtonStyle.green else ButtonStyle.green
             await edit_interaction(interaction, self, self.message_id)
-            if Config.get_game_chat_settings().image_preview.enable_images_preview:
+            if Config.get_game_chat_settings().image_preview.enable_image_preview:
                 msg = get_translation("Image preview enabled") + "!"
             else:
                 msg = get_translation("Image preview disabled") + "!"
@@ -3422,7 +3422,7 @@ async def handle_message_for_chat(
                 result_msg,
                 message, bot,
                 store_images_for_preview=server_version.minor >= 16 and
-                                         Config.get_game_chat_settings().image_preview.enable_images_preview
+                                         Config.get_game_chat_settings().image_preview.enable_image_preview
             )
             # Building object for tellraw
             res_obj = [""]

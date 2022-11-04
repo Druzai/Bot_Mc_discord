@@ -92,7 +92,7 @@ class OS(Enum):
 
 @dataclass
 class Image_preview:
-    enable_images_preview: Optional[bool] = None
+    enable_image_preview: Optional[bool] = None
     max_width: Optional[int] = None
     max_height: Optional[int] = None
 
@@ -1708,19 +1708,19 @@ class Config:
                     try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=20)
 
         # Images preview
-        if cls.get_game_chat_settings().image_preview.enable_images_preview is None and \
+        if cls.get_game_chat_settings().image_preview.enable_image_preview is None and \
                 not cls.get_game_chat_settings().enable_game_chat:
-            cls.get_game_chat_settings().image_preview.enable_images_preview = False
+            cls.get_game_chat_settings().image_preview.enable_image_preview = False
             cls.get_game_chat_settings().image_preview.max_width = 160
             cls.get_game_chat_settings().image_preview.max_height = 30
-        elif cls.get_game_chat_settings().image_preview.enable_images_preview is None:
+        elif cls.get_game_chat_settings().image_preview.enable_image_preview is None:
             cls._need_to_rewrite = True
             if cls._ask_for_data(get_translation("Would you like to enable image preview in game chat?") +
                                  " Y/n\n> ", "y"):
-                cls.get_game_chat_settings().image_preview.enable_images_preview = True
+                cls.get_game_chat_settings().image_preview.enable_image_preview = True
                 print(get_translation("Image preview enabled") + ".")
             else:
-                cls.get_game_chat_settings().image_preview.enable_images_preview = False
+                cls.get_game_chat_settings().image_preview.enable_image_preview = False
                 print(get_translation("Image preview disabled") + ".")
 
         if cls.get_game_chat_settings().image_preview.max_width is None or \
