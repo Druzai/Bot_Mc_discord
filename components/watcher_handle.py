@@ -177,7 +177,8 @@ def _check_log_file(
     date = datetime.now()
 
     for line in last_lines:
-        if not search(rf"{date_line} {INFO_line}", line) or search(rf"{date_line} {INFO_line} \* ", line):
+        if not search(rf"{date_line} {INFO_line}", line) or \
+                search(rf"{date_line} {INFO_line}( \[Not Secure])? \* ", line):
             continue
 
         if BotVars.webhook_chat is not None:
@@ -652,7 +653,7 @@ def _check_log_file(
                         break
                 continue
 
-    if BotVars.webhook_chat is not None and\
+    if BotVars.webhook_chat is not None and \
             last_death_message is not None and last_death_message.count > last_death_message.last_count:
         date = datetime.now()
         if (date - last_death_message.last_used_date).seconds > 60:
@@ -711,17 +712,24 @@ def _get_members_nicks_of_the_role(role: Role, mention_nicks: list):
 
 
 def check_if_player_logged_out(line: str, INFO_line: str):
+    nick = None
+    reason = None
     match = search(rf"{INFO_line} (?P<nick>.+) lost connection:", line)
     if match:
         nick = match.group("nick").strip()
         reason = split(r"lost connection:", line, maxsplit=1)[-1].strip()
-    else:
-        nick = None
-        reason = None
+        valid = nick in [p.player_minecraft_nick for p in Config.get_server_config().seen_players]
+        if not valid:
+            nick = None
+            reason = None
     return nick, reason
 
 
 def check_if_player_logged_in(line: str, INFO_line: str):
+    from components.additional_funcs import get_server_players
+
+    nick = None
+    ip_address = None
     match = search(
         rf"{INFO_line} (?P<nick>.+)\[/(?P<ip>\d+\.\d+\.\d+\.\d+):\d+] logged in with entity id \d+ at",
         line
@@ -729,9 +737,14 @@ def check_if_player_logged_in(line: str, INFO_line: str):
     if match:
         nick = match.group("nick").strip()
         ip_address = match.group("ip").strip()
-    else:
-        nick = None
-        ip_address = None
+        try:
+            data = get_server_players()
+            valid = nick in data["players"]
+        except (ConnectionError, socket.error):
+            valid = nick in [p.player_minecraft_nick for p in Config.get_server_config().seen_players]
+        if not valid:
+            nick = None
+            ip_address = None
     return nick, ip_address
 
 

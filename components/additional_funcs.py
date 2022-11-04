@@ -2319,7 +2319,7 @@ class MenuServerView(TemplateSelectView):
         BotVars.react_auth = interaction.user
         await bot_list(interaction, interaction.client, is_reaction=True)
 
-    @button(label="backup", style=ButtonStyle.secondary, custom_id="menu_server_view:backup", emoji="💾", row=0)
+    @button(label="backup", style=ButtonStyle.secondary, custom_id="menu_server_view:backup", emoji="📇", row=0)
     async def c_backup(self, interaction: Interaction, button: Button):
         BotVars.react_auth = interaction.user
         await bot_backup(interaction, interaction.client, is_reaction=True)
