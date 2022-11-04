@@ -637,17 +637,25 @@ class MinecraftCommands(commands.Cog):
                        add_quotes(get_translation("These nicks were revoked with this IP-address:") +
                                   "\n- " + "\n- ".join(possible_matches)))
         if len(available_players_to_kick) > 0:
+            server_version = None
             kicked_nicks = []
+            reason = get_translation("One of the sessions for this nick has been ended")
             with suppress(ConnectionError, socket.error):
                 with connect_rcon() as cl_r:
                     for player in available_players_to_kick:
-                        reason = get_translation("One of the sessions for this nick has been ended")
                         response = cl_r.kick(
                             player if get_server_version().minor < 14 else f"'{player}'",
                             reason
                         )
-                        if search(reason, response):
-                            kicked_nicks.append(player)
+                        if not search(reason, response):
+                            if server_version is None:
+                                server_version = get_server_version()
+                            if server_version.minor > 2:
+                                cl_r.run(f"ban-ip {ip} {reason}")
+                            else:
+                                cl_r.run(f"ban-ip {ip}")
+                            cl_r.run(f"pardon-ip {ip}")
+                        kicked_nicks.append(player)
             await ctx.send(f"{ctx.author.mention}\n" + add_quotes(get_translation("These nicks bound this IP-address "
                                                                                   "were kicked from Minecraft server:")
                                                                   + "\n- " + "\n- ".join(kicked_nicks)))
@@ -678,17 +686,26 @@ class MinecraftCommands(commands.Cog):
         await ctx.send(f"{ctx.author.mention}\n" + add_quotes(get_translation("All these nicks were revoked:") +
                                                               "\n- " + "\n- ".join(nicks_to_revoke)))
         if len(available_players_to_kick) > 0:
+            server_version = None
             kicked_nicks = []
+            reason = get_translation("All sessions for this nick have been ended")
             with suppress(ConnectionError, socket.error):
                 with connect_rcon() as cl_r:
                     for player in available_players_to_kick:
-                        reason = get_translation("All sessions for this nick have been ended")
                         response = cl_r.kick(
                             player if get_server_version().minor < 14 else f"'{player}'",
                             reason
                         )
-                        if search(reason, response):
-                            kicked_nicks.append(player)
+                        if not search(reason, response):
+                            if server_version is None:
+                                server_version = get_server_version()
+                            for ip in Config.get_known_user_ips(player):
+                                if server_version.minor > 2:
+                                    cl_r.run(f"ban-ip {ip} {reason}")
+                                else:
+                                    cl_r.run(f"ban-ip {ip}")
+                                cl_r.run(f"pardon-ip {ip}")
+                        kicked_nicks.append(player)
             await ctx.send(f"{ctx.author.mention}\n" +
                            add_quotes(get_translation("These nicks were kicked from Minecraft server:")
                                       + "\n- " + "\n- ".join(kicked_nicks)))

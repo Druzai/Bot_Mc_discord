@@ -631,14 +631,7 @@ class ChatCommands(commands.Cog):
                 after_channel = self._bot.get_channel(payload.channel_id)
                 if after_channel is None:
                     after_channel = await self._bot.fetch_channel(payload.channel_id)
-                try:
-                    after_message = Message(state=after_channel._state, channel=after_channel, data=payload.data)
-                except BaseException as e:
-                    print(get_translation("Failed to parse data of edited message with exception - ") +
-                          e.__class__.__name__ + (": " + ", ".join([str(a) for a in e.args])
-                                                  if len(e.args) > 0 else ""))
-                    print(get_translation("Fetching message with id '{0}'...").format(payload.message_id))
-                    after_message = await after_channel.fetch_message(payload.message_id)
+                after_message = await after_channel.fetch_message(payload.message_id)
 
                 if payload.cached_message is not None and after_message.content == payload.cached_message.content and \
                         after_message.attachments == payload.cached_message.attachments:

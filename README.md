@@ -21,8 +21,6 @@
     * Get info about players on the server
     * Work with server whitelist
     * Secure authorization
-        * **Can't guarantee security when nick has spaces on versions lower than `1.14.0`!** (Bot can't kick these
-          players because of Minecraft server)
         * Has options to ban and unban IP-address regardless of whether secure authorization is enabled or not
     * Autoload if the Minecraft server crashes
     * Auto stop if the Minecraft server online during certain period of time without players
@@ -30,8 +28,7 @@
         * Auto deleting backup(s) if backup's limit or space exceeded
         * **If there are files in backups directory that not in server config, they will be deleted! And vice versa!**
     * Make yourself an operator for limited amount of time if your Discord account has association with Minecraft nick
-        * **Bot can't do it when nick has spaces!**
-            * This applies to servers from `1.0.0` to `1.19.0`!
+        * **Bot can't do it when nick has spaces!** (this applies to servers from `1.0.0` to `1.19.0`!)
 * Changing Minecraft servers on the go while server is down
 * Creating menus for quick bot and Minecraft server managing
     * Creating a server menu with buttons and a dropdown to quickly execute common commands
