@@ -29,11 +29,11 @@ from colorama import Style, Fore
 from discord import (
     Activity, ActivityType, Message, Status, Member, Role, MessageType, NotFound, HTTPException, Forbidden, Emoji,
     ChannelType, TextChannel, VoiceChannel, Thread as ChannelThread, GroupChannel, Webhook, InvalidData, SelectOption,
-    Interaction, Client, ButtonStyle
+    Interaction, Client, ButtonStyle, TextStyle
 )
 from discord.abc import Messageable
 from discord.ext import commands
-from discord.ui import View, Select, Item, Button, button
+from discord.ui import View, Select, Item, Button, button, Modal, TextInput
 from discord.utils import get as utils_get, _get_mime_type_for_image, MISSING
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r, WrongPassword
@@ -112,45 +112,51 @@ REGEX_DEATH_MESSAGES = [sub(r"\{\d}", r"(.+)", m) for m in DEATH_MESSAGES]
 MASS_REGEX_DEATH_MESSAGES = "|".join(REGEX_DEATH_MESSAGES)
 
 
-async def send_msg(ctx: Union[Messageable, Interaction], msg: str, is_reaction=False):
+async def send_msg(ctx: Union[Messageable, Interaction], msg: str, view: View = MISSING, is_reaction=False):
     if isinstance(ctx, Interaction):
-        await send_interaction(ctx, msg, is_reaction=is_reaction)
+        message = await send_interaction(ctx, msg, view=view, is_reaction=is_reaction)
     else:
-        await ctx.send(
+        message = await ctx.send(
             content=msg,
+            view=view,
             delete_after=(Config.get_timeouts_settings().await_seconds_before_message_deletion
                           if is_reaction else None)
         )
+    return message
 
 
 async def send_interaction(
         interaction: Optional[Interaction],
         msg: str,
+        view: View = MISSING,
         ctx: Messageable = None,
         ephemeral=False,
         is_reaction=False
 ):
+    message = None
     try:
         if interaction is None or interaction.is_expired():
             raise ValueError()
 
         if interaction.response.is_done():
-            msg = await interaction.followup.send(msg, ephemeral=ephemeral, wait=True)
+            message = await interaction.followup.send(msg, view=view, ephemeral=ephemeral, wait=True)
         else:
-            await interaction.response.send_message(msg, ephemeral=ephemeral)
-            msg = await interaction.original_response()
+            await interaction.response.send_message(msg, view=view, ephemeral=ephemeral)
+            message = await interaction.original_response()
 
         if is_reaction:
-            await msg.delete(delay=Config.get_timeouts_settings().await_seconds_before_message_deletion)
+            await message.delete(delay=Config.get_timeouts_settings().await_seconds_before_message_deletion)
     except (NotFound, HTTPException, ValueError):
         if ctx is None and interaction is not None:
-            ctx = interaction.channel()
+            ctx = interaction.channel
         if ctx is not None:
-            await ctx.send(
+            message = await ctx.send(
                 content=msg,
+                view=view,
                 delete_after=(Config.get_timeouts_settings().await_seconds_before_message_deletion
                               if is_reaction else None)
             )
+    return message
 
 
 async def edit_interaction(interaction: Optional[Interaction], view: View, message_id: int):
@@ -167,56 +173,62 @@ def add_quotes(msg: str) -> str:
     return f"```{msg}```"
 
 
-async def delete_after_by_msg(message: Union[Message, int], ctx: commands.Context = None, without_delay=False):
+async def delete_after_by_msg(
+        message: Union[Message, int],
+        ctx: Union[commands.Context, Interaction] = None,
+        without_delay: bool = False
+):
     if isinstance(message, Message):
         await message.delete(
             delay=Config.get_timeouts_settings().await_seconds_before_message_deletion if not without_delay else None
         )
-    elif isinstance(message, int):
-        await (await ctx.channel.fetch_message(message)).delete(
-            delay=Config.get_timeouts_settings().await_seconds_before_message_deletion if not without_delay else None
-        )
+    elif isinstance(message, int) and ctx is not None:
+        channel = ctx.channel
+        if channel is not None:
+            await (await channel.fetch_message(message)).delete(
+                delay=(Config.get_timeouts_settings().await_seconds_before_message_deletion
+                       if not without_delay else None)
+            )
 
 
-def get_author_and_mention(
+def get_author(
         ctx: Union[commands.Context, Message, TextChannel, VoiceChannel, ChannelThread, GroupChannel, Interaction],
         bot: Union[commands.Bot, Client],
         is_reaction=False
 ):
     if is_reaction:
-        author_mention = BotVars.react_auth.mention
         author = BotVars.react_auth
     else:
         if hasattr(ctx, "author"):
-            author_mention = ctx.author.mention
             author = ctx.author
         elif hasattr(ctx, "user"):
-            author_mention = ctx.user.mention
             author = ctx.user
         else:
-            author_mention = bot.user.mention
             author = bot.user
-    return author, author_mention
+    return author
 
 
 async def send_status(ctx: Union[commands.Context, Interaction], is_reaction=False):
     if BotVars.is_server_on:
         if BotVars.is_backing_up:
-            await send_msg(ctx, add_quotes(get_translation("Bot is backing up server!")), is_reaction)
+            await send_msg(ctx, add_quotes(get_translation("Bot is backing up server!")), is_reaction=is_reaction)
         else:
-            await send_msg(ctx, add_quotes(get_translation("server have already started!").capitalize()), is_reaction)
+            await send_msg(ctx, add_quotes(get_translation("server have already started!").capitalize()),
+                           is_reaction=is_reaction)
     else:
         if BotVars.is_backing_up:
-            await send_msg(ctx, add_quotes(get_translation("Bot is backing up server!")), is_reaction)
+            await send_msg(ctx, add_quotes(get_translation("Bot is backing up server!")), is_reaction=is_reaction)
         elif BotVars.is_restoring:
-            await send_msg(ctx, add_quotes(get_translation("Bot is restoring server from backup!")), is_reaction)
+            await send_msg(ctx, add_quotes(get_translation("Bot is restoring server from backup!")),
+                           is_reaction=is_reaction)
         elif BotVars.is_loading:
-            await send_msg(ctx, add_quotes(get_translation("server is loading!").capitalize()), is_reaction)
+            await send_msg(ctx, add_quotes(get_translation("server is loading!").capitalize()), is_reaction=is_reaction)
         elif BotVars.is_stopping:
-            await send_msg(ctx, add_quotes(get_translation("server is stopping!").capitalize()), is_reaction)
+            await send_msg(ctx, add_quotes(get_translation("server is stopping!").capitalize()),
+                           is_reaction=is_reaction)
         else:
             await send_msg(ctx, add_quotes(get_translation("server have already been stopped!").capitalize()),
-                           is_reaction)
+                           is_reaction=is_reaction)
 
 
 def _ignore_some_tasks_errors(task: Task):
@@ -232,10 +244,10 @@ async def start_server(
         is_reaction=False
 ):
     BotVars.is_loading = True
-    author, author_mention = get_author_and_mention(ctx, bot, is_reaction)
+    author = get_author(ctx, bot, is_reaction)
     print(get_translation("Loading server by request of {0}").format(author))
     if ctx and not shut_up:
-        await send_msg(ctx, add_quotes(get_translation("Loading server.......\nPlease wait)")), is_reaction)
+        await send_msg(ctx, add_quotes(get_translation("Loading server.......\nPlease wait)")), is_reaction=is_reaction)
     chdir(Config.get_selected_server_from_list().working_directory)
     try:
         if not isfile(Config.get_selected_server_from_list().start_file_name):
@@ -275,29 +287,30 @@ async def start_server(
                       .format(Config.get_selected_server_from_list().start_file_name))
                 await send_msg(ctx, add_quotes(get_translation("Couldn't open script because it "
                                                                "doesn't exists! Retreating...")),
-                               is_reaction)
+                               is_reaction=is_reaction)
             else:
                 print(get_translation("Target script of this shortcut '{0}' doesn't exists.")
                       .format(Config.get_selected_server_from_list().start_file_name))
                 await send_msg(ctx, add_quotes(get_translation("Couldn't open shortcut because target script "
                                                                "doesn't exists! Retreating...")),
-                               is_reaction)
+                               is_reaction=is_reaction)
         elif ex.__class__ is not ReferenceError:
             print(get_translation("Couldn't open script! Check naming and extension of the script!"))
             await send_msg(ctx, add_quotes(get_translation("Couldn't open script because of naming! Retreating...")),
-                           is_reaction)
+                           is_reaction=is_reaction)
         else:
             if len(ex.args) == 0:
                 print(get_translation("Couldn't open script because there is no command 'screen'! "
                                       "Install it via packet manager!"))
                 await send_msg(ctx, add_quotes(get_translation("Couldn't open script because command 'screen' "
-                                                               "wasn't installed! Retreating...")), is_reaction)
+                                                               "wasn't installed! Retreating...")),
+                               is_reaction=is_reaction)
             else:
                 print(get_translation("Target of this shortcut '{0}' isn't '*.bat' file or '*.cmd' file.")
                       .format(Config.get_selected_server_from_list().start_file_name))
                 await send_msg(ctx, add_quotes(get_translation("Couldn't open shortcut because target file "
                                                                "isn't a script! Retreating...")),
-                               is_reaction)
+                               is_reaction=is_reaction)
         BotVars.is_loading = False
         if BotVars.is_restarting:
             BotVars.is_restarting = False
@@ -310,7 +323,7 @@ async def start_server(
         if len(get_list_of_processes()) == 0 and timedelta_secs > 5:
             print(get_translation("Error while loading server! Retreating..."))
             await send_msg(ctx, add_quotes(get_translation("Error while loading server! Retreating...")),
-                           is_reaction)
+                           is_reaction=is_reaction)
             task = bot.loop.create_task(
                 bot.change_presence(activity=Activity(type=ActivityType.listening,
                                                       name=Config.get_settings().bot_settings.idle_status)))
@@ -352,9 +365,10 @@ async def start_server(
         Config.save_config()
     print(get_translation("Server on!"))
     if ctx and not shut_up:
-        await send_msg(ctx, author_mention + "\n" + add_quotes(get_translation("Server's on now")), is_reaction)
+        await send_msg(ctx, author.mention + "\n" + add_quotes(get_translation("Server's on now")),
+                       is_reaction=is_reaction)
         if randint(0, 8) == 0:
-            await send_msg(ctx, get_translation("Kept you waiting, huh?"), is_reaction)
+            await send_msg(ctx, get_translation("Kept you waiting, huh?"), is_reaction=is_reaction)
     if backups_thread is not None:
         backups_thread.skip()
     BotVars.players_login_dict.clear()
@@ -382,14 +396,14 @@ async def stop_server(
 ):
     no_connection = False
     players_info = None
-    author, author_mention = get_author_and_mention(ctx, bot, is_reaction)
+    author = get_author(ctx, bot, is_reaction)
 
     if "stop" in [p.command for p in poll.get_polls().values()]:
         if not is_reaction:
             await delete_after_by_msg(ctx.message)
         if not shut_up:
             await ctx.send(get_translation("{0}, bot already has poll on `stop`/`restart` command!")
-                           .format(author_mention),
+                           .format(author.mention),
                            delete_after=Config.get_timeouts_settings().await_seconds_before_message_deletion)
         return
 
@@ -400,7 +414,7 @@ async def stop_server(
             print(get_translation("Bot Exception: Couldn't connect to server, because it's stopped"))
             if not shut_up:
                 await send_msg(ctx, add_quotes(get_translation("Couldn't connect to server to shut it down! "
-                                                               "Server stopped...")), is_reaction)
+                                                               "Server stopped...")), is_reaction=is_reaction)
             BotVars.is_stopping = False
             BotVars.is_server_on = False
             return
@@ -420,11 +434,11 @@ async def stop_server(
                         logged_only_author_accounts = False
                         break
 
-            if not logged_only_author_accounts and await poll.timer(ctx, 5, "stop"):
+            if not logged_only_author_accounts and await poll.timer(ctx, ctx.author, 5, "stop"):
                 if not await poll.run(channel=ctx.channel if hasattr(ctx, 'channel') else ctx,
                                       message=get_translation("this man {0} trying to stop the server with {1} "
                                                               "player(s) on it. Will you let that happen?")
-                                              .format(author_mention, players_info["current"]),
+                                              .format(author.mention, players_info["current"]),
                                       command="stop",
                                       needed_role=Config.get_settings().bot_settings.managing_commands_role_id,
                                       remove_logs_after=5):
@@ -439,7 +453,7 @@ async def stop_server(
         if not shut_up:
             await send_msg(ctx, add_quotes(get_translation("Stopping server") + "......." +
                                            ("\n" + get_translation("Please wait {0} sec.").format(str(how_many_sec))
-                                            if how_many_sec > 0 else "")), is_reaction)
+                                            if how_many_sec > 0 else "")), is_reaction=is_reaction)
 
         with suppress(ConnectionError, socket.error):
             server_version = get_server_version()
@@ -491,7 +505,7 @@ async def stop_server(
         if not shut_up:
             await send_msg(ctx,
                            add_quotes(get_translation("Couldn't connect to server to shut it down! Killing it now...")),
-                           is_reaction)
+                           is_reaction=is_reaction)
     kill_server()
     BotVars.players_login_dict.clear()
     BotVars.auto_shutdown_start_date = None
@@ -499,7 +513,8 @@ async def stop_server(
     BotVars.is_server_on = False
     print(get_translation("Server's off now"))
     if not shut_up:
-        await send_msg(ctx, author_mention + "\n" + add_quotes(get_translation("Server's off now")), is_reaction)
+        await send_msg(ctx, author.mention + "\n" + add_quotes(get_translation("Server's off now")),
+                       is_reaction=is_reaction)
     Config.get_server_config().states.stopped_info.set_state_info(author.id, datetime.now(), bot=author == bot.user)
     Config.save_server_config()
     task = bot.loop.create_task(
@@ -1189,10 +1204,10 @@ async def bot_status(
             server_version_str = get_translation("Server version: {0}").format(server_version.version_string)
             server_info = f"{server_info_splits[0]}\n{server_version_str}\n{server_info_splits[-1]}"
             bot_message += server_info + states
-            await send_msg(ctx, add_quotes(bot_message), is_reaction)
+            await send_msg(ctx, add_quotes(bot_message), is_reaction=is_reaction)
         except (ConnectionError, socket.error):
             bot_message += get_translation("Server thinking...") + "\n" + server_info + states
-            await send_msg(ctx, add_quotes(bot_message), is_reaction)
+            await send_msg(ctx, add_quotes(bot_message), is_reaction=is_reaction)
             print(get_translation("Server's down via rcon"))
     else:
         if BotVars.is_loading:
@@ -1202,7 +1217,7 @@ async def bot_status(
         else:
             bot_message = get_translation("server offline").capitalize() + "\n" + bot_message
         bot_message += server_info + states
-        await send_msg(ctx, add_quotes(bot_message), is_reaction)
+        await send_msg(ctx, add_quotes(bot_message), is_reaction=is_reaction)
 
 
 async def bot_list(
@@ -1213,7 +1228,8 @@ async def bot_list(
     try:
         info = get_server_players()
         if info.get("current") == 0:
-            await send_msg(ctx, add_quotes(get_translation("There are no players on the server")), is_reaction)
+            await send_msg(ctx, add_quotes(get_translation("There are no players on the server")),
+                           is_reaction=is_reaction)
         else:
             players_dict = {p: None for p in info.get("players")}
             if Config.get_secure_auth().enable_secure_auth:
@@ -1242,10 +1258,10 @@ async def bot_list(
             await send_msg(ctx, add_quotes(get_translation("Players online: {0} / {1}").format(info.get("current"),
                                                                                                info.get("max")) +
                                            "\n- " + "\n- ".join(players_list)),
-                           is_reaction)
+                           is_reaction=is_reaction)
     except (ConnectionError, socket.error):
-        author_mention = get_author_and_mention(ctx, bot, is_reaction)[1]
-        await send_msg(ctx, f"{author_mention}, " + get_translation("server offline"), is_reaction)
+        author = get_author(ctx, bot, is_reaction)
+        await send_msg(ctx, f"{author.mention}, " + get_translation("server offline"), is_reaction=is_reaction)
 
 
 async def bot_start(
@@ -1272,7 +1288,7 @@ async def bot_stop(
             not BotVars.is_backing_up and not BotVars.is_restoring:
         if BotVars.is_doing_op:
             await send_msg(ctx, add_quotes(get_translation("Some player(s) still have an operator, waiting for them")),
-                           is_reaction)
+                           is_reaction=is_reaction)
             return
         if Config.get_settings().bot_settings.forceload:
             Config.get_settings().bot_settings.forceload = False
@@ -1294,7 +1310,7 @@ async def bot_restart(
             not BotVars.is_backing_up and not BotVars.is_restoring:
         if BotVars.is_doing_op:
             await send_msg(ctx, add_quotes(get_translation("Some player(s) still have an operator, waiting for them")),
-                           is_reaction)
+                           is_reaction=is_reaction)
             return
         BotVars.is_restarting = True
         print(get_translation("Restarting server"))
@@ -1346,7 +1362,7 @@ async def bot_clear(
                 await clear_with_none_limit(ctx, check_condition=check_condition, after_message=message_created)
                 return
         else:
-            await send_msg(ctx, get_translation("Nothing's done!"), True)
+            await send_msg(ctx, get_translation("Nothing's done!"), is_reaction=True)
             return
     elif subcommand == "all":
         if delete_limit == 0 or len([m async for m in ctx.channel.history(limit=delete_limit + 1)]) <= delete_limit:
@@ -1361,7 +1377,7 @@ async def bot_clear(
             await ctx.message.delete()
             await clear_with_none_limit(ctx, check_condition=check_condition, after_message=message_created)
             return
-    if await poll.timer(ctx, 5, "clear"):
+    if await poll.timer(ctx, ctx.author, 5, "clear"):
         if ctx.channel in [p.channel for p in poll.get_polls().values() if p.command == "clear"]:
             await delete_after_by_msg(ctx.message)
             await ctx.send(get_translation("{0}, bot already has poll on `clear` command for this channel!")
@@ -1425,7 +1441,7 @@ async def bot_dm_clear(ctx: commands.Context, bot: commands.Bot, subcommand: str
                 ctx.channel.history(limit=-count, oldest_first=True)
             )
         elif count == 0:
-            await send_msg(ctx, get_translation("Nothing's done!"), True)
+            await send_msg(ctx, get_translation("Nothing's done!"), is_reaction=True)
             return
     elif subcommand == "reply":
         message_created = ctx.message.reference.resolved
@@ -1487,7 +1503,7 @@ async def bot_backup(
             bot_message += "\n" + get_translation("Initiator: ") + await get_member_string(bot, backup.initiator)
         if backup.restored_from:
             bot_message += "\n" + get_translation("The world of the server was restored from this backup")
-    await send_msg(ctx, add_quotes(bot_message), is_reaction)
+    await send_msg(ctx, add_quotes(bot_message), is_reaction=is_reaction)
 
 
 async def on_backups_select_option(i: int, bot: commands.Bot):
@@ -2162,7 +2178,7 @@ class SelectChoice(Enum):
 
 
 async def send_select_view(
-        ctx: commands.Context,
+        ctx: Union[commands.Context, Interaction],
         raw_options: List,
         pivot_index: Optional[int],
         make_select_option: Callable[[int, Optional[commands.Bot]], Awaitable[SelectOption]],
@@ -2178,7 +2194,7 @@ async def send_select_view(
         raw_options,
         pivot_index,
         make_select_option,
-        ctx=ctx,
+        ctx=ctx if isinstance(ctx, commands.Context) else None,
         min_values=min_values,
         max_values=max_values,
         bot=bot,
@@ -2192,7 +2208,8 @@ async def send_select_view(
 
         view.interaction_check = interaction_check
 
-    msg = await ctx.send(content=message, view=view)
+    assert view is not None
+    msg = await send_msg(ctx, message, view)
 
     async def on_timeout():
         view.stop()
@@ -2255,7 +2272,7 @@ async def on_server_select_callback(
 
 
 class MenuServerView(TemplateSelectView):
-    def __init__(self, commands_cog: 'MinecraftCommands'):
+    def __init__(self, bot: commands.Bot, commands_cog: 'MinecraftCommands'):
         super().__init__(
             options_raw=Config.get_settings().servers_list,
             raw_content="List of commands for interacting with Minecraft server via buttons"
@@ -2264,9 +2281,10 @@ class MenuServerView(TemplateSelectView):
             name="MenuServerView",
             message_id=Config.get_menu_settings().server_menu_message_id,
             channel_id=Config.get_menu_settings().server_menu_channel_id,
-            start_row=2,
+            start_row=3,
             is_reaction=True
         )
+        self.bot = bot
         self.commands_cog = commands_cog
 
     async def update_select_options(self, page: Optional[int] = None):
@@ -2347,10 +2365,317 @@ class MenuServerView(TemplateSelectView):
                 is_reaction=True
             )
 
+    @button(
+        label="backup force",
+        style=ButtonStyle.secondary,
+        custom_id="menu_server_view:backup_force",
+        emoji="💽",
+        row=2
+    )
+    async def c_b_force(self, interaction: Interaction, button: Button):
+        BotVars.react_auth = interaction.user
+        if await self.interaction_check_select(interaction):
+            backup_reason_modal = Modal(title=get_translation("Backup reason"))
+            reason = TextInput(
+                label=get_translation("What is the reason for creating this backup?"),
+                style=TextStyle.long,
+                placeholder=get_translation("Type here... (you can leave this blank)"),
+                required=False,
+                max_length=300,
+            )
+            backup_reason_modal.add_item(reason)
+
+            async def on_submit(interaction: Interaction):
+                if await backup_force_checking(interaction, self.bot):
+                    await on_backup_force_callback(
+                        interaction,
+                        self.bot,
+                        self.commands_cog.backups_thread,
+                        reason=reason.value if len(reason.value) > 0 else None,
+                        is_reaction=True
+                    )
+
+            async def on_error(interaction: Interaction, error: Exception) -> None:
+                await send_error_on_interaction("BackupReasonModal", interaction, None, error, True)
+
+            backup_reason_modal.on_submit = on_submit
+            backup_reason_modal.on_error = on_error
+            await interaction.response.send_modal(backup_reason_modal)
+
+    @button(
+        label="backup restore",
+        style=ButtonStyle.secondary,
+        custom_id="menu_server_view:backup_restore",
+        emoji="♻",
+        row=2
+    )
+    async def c_b_restore(self, interaction: Interaction, button: Button):
+        BotVars.react_auth = interaction.user
+        if await self.interaction_check_select(interaction):
+            await send_backup_restore_select(interaction, self.bot, self.commands_cog.backups_thread, is_reaction=True)
+
+    @button(
+        label="backup remove",
+        style=ButtonStyle.secondary,
+        custom_id="menu_server_view:backup_remove",
+        emoji="🗑",
+        row=2
+    )
+    async def c_b_remove(self, interaction: Interaction, button: Button):
+        BotVars.react_auth = interaction.user
+        if await self.interaction_check_select(interaction):
+            await send_backup_remove_select(
+                interaction,
+                self.bot,
+                self.commands_cog._IndPoll,
+                self.commands_cog.backups_thread,
+                is_reaction=True
+            )
+
     async def v_select_callback(self, interaction: Interaction):
         if await self.interaction_check_select(interaction):
             await on_server_select_callback(interaction, is_reaction=True)
             await self.update_view()
+
+
+async def backup_force_checking(
+        ctx: Union[commands.Context, Interaction],
+        bot: commands.Bot
+) -> bool:
+    if not BotVars.is_loading and not BotVars.is_stopping and \
+            not BotVars.is_restarting and not BotVars.is_restoring and not BotVars.is_backing_up:
+        b_reason = handle_backups_limit_and_size(bot)
+        if b_reason:
+            await ctx.send(add_quotes(get_translation("Can't create backup because of {0}\n"
+                                                      "Delete some backups to proceed!").format(b_reason)))
+            return False
+        await warn_about_auto_backups(ctx, bot)
+        return True
+    else:
+        await send_status(ctx)
+        return False
+
+
+async def on_backup_force_callback(
+        ctx: Union[commands.Context, Interaction],
+        bot: commands.Bot,
+        backups_thread: BackupsThread,
+        reason: Optional[str] = None,
+        is_reaction: bool = False
+):
+    author = get_author(ctx, bot, is_reaction=is_reaction)
+    print(get_translation("Starting backup triggered by {0}").format(f"{author.display_name}#{author.discriminator}"))
+    msg = await send_msg(ctx, add_quotes(get_translation("Starting backup...")))
+    file_name = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
+    list_obj = None
+    level_name = ServerProperties().level_name
+    try:
+        for obj in create_zip_archive(bot, file_name,
+                                      Path(Config.get_selected_server_from_list().working_directory,
+                                           Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
+                                      Path(Config.get_selected_server_from_list().working_directory,
+                                           level_name).as_posix(),
+                                      Config.get_backups_settings().compression_method, forced=True,
+                                      user=author):
+            if isinstance(obj, str):
+                if msg is not None:
+                    await msg.edit(content=obj)
+                else:
+                    msg = await send_msg(ctx, obj)
+            elif isinstance(obj, list):
+                list_obj = obj
+        Config.add_backup_info(file_name=file_name, reason=reason, initiator=author.id)
+        Config.save_server_config()
+        backups_thread.skip()
+        if is_reaction:
+            await delete_after_by_msg(msg, ctx)
+        print(get_translation("Backup completed!"))
+        if isinstance(list_obj, list):
+            await send_msg(ctx, add_quotes(get_translation("Bot couldn't archive some files to this backup!")),
+                           is_reaction=is_reaction)
+            print(get_translation("Bot couldn't archive some files to this backup, they located in path '{0}'")
+                  .format(Path(Config.get_selected_server_from_list().working_directory,
+                               ServerProperties().level_name).as_posix()))
+            print(get_translation("List of these files:"))
+            print(", ".join(list_obj))
+    except FileNotFoundError:
+        exception_reason = add_quotes(get_translation("Backup cancelled!") + "\n" +
+                                      get_translation("The world folder '{0}' doesn't exist or is empty!")
+                                      .format(level_name))
+        if msg is not None:
+            await msg.edit(content=exception_reason)
+            await delete_after_by_msg(msg, ctx)
+        else:
+            await send_msg(ctx, exception_reason, is_reaction=is_reaction)
+        print(get_translation("The world folder in path '{0}' doesn't exist or is empty!")
+              .format(Path(Config.get_selected_server_from_list().working_directory, level_name).as_posix()))
+        print(get_translation("Backup cancelled!"))
+
+
+async def backup_restore_checking(ctx: Union[commands.Context, Interaction]) -> bool:
+    if len(Config.get_server_config().backups) == 0:
+        await ctx.send(add_quotes(get_translation("There are no backups for '{0}' server!")
+                                  .format(Config.get_selected_server_from_list().server_name)))
+        return False
+
+    if not BotVars.is_server_on and not BotVars.is_loading and not BotVars.is_stopping and \
+            not BotVars.is_restarting and not BotVars.is_backing_up and not BotVars.is_restoring:
+        return True
+    else:
+        await send_status(ctx)
+        return False
+
+
+async def send_backup_restore_select(
+        ctx: Union[commands.Context, Interaction],
+        bot: commands.Bot,
+        backups_thread: BackupsThread,
+        is_reaction: bool = False
+):
+    async def on_callback(interaction: Interaction):
+        backup_number = int(interaction.data.get("values", [None])[0])
+
+        level_name = ServerProperties().level_name
+        free_space = disk_usage(Config.get_selected_server_from_list().working_directory).free
+        bc_folder_bytes = get_folder_size(Config.get_selected_server_from_list().working_directory,
+                                          level_name)
+        uncompressed_size = get_archive_uncompressed_size(
+            Config.get_selected_server_from_list().working_directory,
+            Config.get_backups_settings().name_of_the_backups_folder,
+            f"{Config.get_server_config().backups[backup_number].file_name}.zip")
+        if free_space + bc_folder_bytes <= uncompressed_size:
+            await send_msg(
+                ctx if isinstance(ctx, commands.Context) else interaction,
+                add_quotes(get_translation("There are not enough space on disk to restore from backup!"
+                                           "\nFree - {0}\nRequired at least - {1}"
+                                           "\nDelete some backups to proceed!")
+                           .format(get_human_readable_size(free_space + bc_folder_bytes),
+                                   get_human_readable_size(uncompressed_size))),
+                is_reaction=is_reaction
+            )
+            return SelectChoice.DELETE_SELECT
+        await send_interaction(
+            interaction,
+            add_quotes(get_translation("Starting restore from backup...")),
+            ctx=ctx if isinstance(ctx, commands.Context) else None,
+            is_reaction=is_reaction
+        )
+        restore_from_zip_archive(Config.get_server_config().backups[backup_number].file_name,
+                                 Path(Config.get_selected_server_from_list().working_directory,
+                                      Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
+                                 Path(Config.get_selected_server_from_list().working_directory,
+                                      level_name).as_posix())
+        for backup in Config.get_server_config().backups:
+            if backup.restored_from:
+                backup.restored_from = False
+        Config.get_server_config().backups[backup_number].restored_from = True
+        Config.save_server_config()
+        backups_thread.skip()
+        await send_interaction(
+            interaction,
+            add_quotes(get_translation("Done!")),
+            ctx=ctx if isinstance(ctx, commands.Context) else None,
+            is_reaction=is_reaction
+        )
+        return SelectChoice.DELETE_SELECT if is_reaction else SelectChoice.STOP_VIEW
+
+    await send_select_view(
+        ctx=ctx,
+        raw_options=Config.get_server_config().backups,
+        pivot_index=None,
+        make_select_option=on_backups_select_option,
+        on_callback=on_callback,
+        on_interaction_check=is_minecrafter,
+        message=get_translation("Select backup:"),
+        bot=bot,
+        timeout=180
+    )
+
+
+async def send_backup_remove_select(
+        ctx: Union[commands.Context, Interaction],
+        bot: commands.Bot,
+        IndPoll: 'Poll',
+        backups_thread: BackupsThread,
+        is_reaction: bool = False
+):
+    if len(Config.get_server_config().backups) == 0:
+        await ctx.send(add_quotes(get_translation("There are no backups for '{0}' server!")
+                                  .format(Config.get_selected_server_from_list().server_name)))
+        return
+
+    author = get_author(ctx, bot, is_reaction=is_reaction)
+
+    async def on_callback(interaction: Interaction):
+        backup_number = int(interaction.data.get("values", [None])[0])
+
+        if Config.get_server_config().backups[backup_number].initiator is not None:
+            if "backup_remove" in [p.command for p in IndPoll.get_polls().values()]:
+                if isinstance(ctx, commands.Context):
+                    await delete_after_by_msg(ctx.message, ctx)
+                await send_msg(
+                    ctx if isinstance(ctx, commands.Context) else interaction,
+                    get_translation("{0}, bot already has poll on `backup remove` command!").format(author.mention),
+                    is_reaction=True
+                )
+                return SelectChoice.DELETE_SELECT
+
+            if await IndPoll.timer(ctx, get_author(ctx, bot, is_reaction), 5, "backup_remove"):
+                member = await get_member_string(
+                    bot, Config.get_server_config().backups[backup_number].initiator
+                )
+                if not await IndPoll.run(
+                        channel=ctx.channel,
+                        message=get_translation(
+                            "this man {0} trying to delete {1} backup by {2} of '{3}' "
+                            "server. Will you let that happen?"
+                        ).format(author.mention,
+                                 Config.get_server_config().backups[backup_number].file_name + ".zip",
+                                 member,
+                                 Config.get_selected_server_from_list().server_name),
+                        command="backup_remove",
+                        needed_role=Config.get_settings().bot_settings.managing_commands_role_id,
+                        need_for_voting=get_half_members_count_with_role(
+                            ctx.channel,
+                            Config.get_settings().bot_settings.managing_commands_role_id
+                        ),
+                        remove_logs_after=5
+                ):
+                    return SelectChoice.DELETE_SELECT
+            else:
+                if isinstance(ctx, commands.Context):
+                    await delete_after_by_msg(ctx.message, ctx)
+                return SelectChoice.DELETE_SELECT
+
+        backup = Config.get_server_config().backups[backup_number]
+        remove(Path(Config.get_selected_server_from_list().working_directory,
+                    Config.get_backups_settings().name_of_the_backups_folder, f"{backup.file_name}.zip"))
+        send_message_of_deleted_backup(bot, f"{author.display_name}#{author.discriminator}",
+                                       backup,
+                                       member_name=await get_member_string(bot, backup.initiator))
+        Config.get_server_config().backups.remove(backup)
+        Config.save_server_config()
+        backups_thread.skip()
+        await send_interaction(
+            interaction,
+            add_quotes(get_translation("Deleted backup {0}.zip of '{1}' server")
+                       .format(backup.file_name, Config.get_selected_server_from_list().server_name)),
+            ctx=ctx if isinstance(ctx, commands.Context) else None,
+            is_reaction=is_reaction
+        )
+        return SelectChoice.DELETE_SELECT if is_reaction else SelectChoice.STOP_VIEW
+
+    await send_select_view(
+        ctx=ctx,
+        raw_options=Config.get_server_config().backups,
+        pivot_index=None,
+        make_select_option=on_backups_select_option,
+        on_callback=on_callback,
+        on_interaction_check=is_minecrafter,
+        message=get_translation("Select backup:"),
+        bot=bot,
+        timeout=180
+    )
 
 
 async def on_language_select_callback(
@@ -2679,7 +3004,7 @@ async def send_error(
         error: Union[commands.CommandError, commands.CommandInvokeError],
         is_reaction=False
 ):
-    author, author_mention = get_author_and_mention(ctx, bot, is_reaction)
+    author = get_author(ctx, bot, is_reaction)
     parsed_input = None
     if hasattr(error, "param"):
         error_param_type = get_param_type(error.param)
@@ -2697,66 +3022,71 @@ async def send_error(
         print(get_translation("{0} didn't input the argument '{1}' of type '{2}' in command '{3}'")
               .format(author, error_param_name, error_param_type,
                       f"{Config.get_settings().bot_settings.prefix}{ctx.command}"))
-        await send_msg(ctx, f"{author_mention}\n" +
+        await send_msg(ctx, f"{author.mention}\n" +
                        add_quotes(get_translation("Required argument '{0}' of type '{1}' is missing!")
                                   .format(error_param_name, error_param_type)),
-                       is_reaction)
+                       is_reaction=is_reaction)
     elif isinstance(error, commands.TooManyArguments):
         print(get_translation("{0} passed too many arguments to command '{1}'")
               .format(author, f"{Config.get_settings().bot_settings.prefix}{ctx.command}"))
-        await send_msg(ctx, f"{author_mention}\n" +
+        await send_msg(ctx, f"{author.mention}\n" +
                        add_quotes(get_translation("You passed too many arguments to this command!")),
-                       is_reaction)
+                       is_reaction=is_reaction)
     elif isinstance(error, commands.MemberNotFound):
         print(get_translation("{0} passed member mention '{1}' that can't be found").format(author, parsed_input))
-        await send_msg(ctx, f"{author_mention}\n" +
-                       add_quotes(get_translation("Member '{0}' not found!").format(parsed_input)), is_reaction)
+        await send_msg(ctx, f"{author.mention}\n" +
+                       add_quotes(get_translation("Member '{0}' not found!").format(parsed_input)),
+                       is_reaction=is_reaction)
     elif isinstance(error, commands.UserNotFound):
         print(get_translation("{0} passed user mention '{1}' that can't be found").format(author, parsed_input))
-        await send_msg(ctx, f"{author_mention}\n" +
-                       add_quotes(get_translation("User '{0}' not found!").format(parsed_input)), is_reaction)
+        await send_msg(ctx, f"{author.mention}\n" +
+                       add_quotes(get_translation("User '{0}' not found!").format(parsed_input)),
+                       is_reaction=is_reaction)
     elif isinstance(error, commands.RoleNotFound):
         print(get_translation("{0} passed role mention '{1}' that can't be found"))
-        await send_msg(ctx, f"{author_mention}\n" +
-                       add_quotes(get_translation("Role '{0}' not found!").format(parsed_input)), is_reaction)
+        await send_msg(ctx, f"{author.mention}\n" +
+                       add_quotes(get_translation("Role '{0}' not found!").format(parsed_input)),
+                       is_reaction=is_reaction)
     elif isinstance(error, commands.ChannelNotReadable):
         print(get_translation("Bot can't read messages in channel '{0}'").format(error.argument))
-        await send_msg(ctx, f"{author_mention}\n" +
+        await send_msg(ctx, f"{author.mention}\n" +
                        add_quotes(get_translation("Bot can't read messages in channel '{0}'")
                                   .format(error.argument) + "!"),
-                       is_reaction)
+                       is_reaction=is_reaction)
     elif isinstance(error, commands.ChannelNotFound):
         print(get_translation("{0} passed channel mention '{1}' that can't be found").format(author, parsed_input))
-        await send_msg(ctx, f"{author_mention}\n" +
-                       add_quotes(get_translation("Channel '{0}' not found!").format(parsed_input)), is_reaction)
+        await send_msg(ctx, f"{author.mention}\n" +
+                       add_quotes(get_translation("Channel '{0}' not found!").format(parsed_input)),
+                       is_reaction=is_reaction)
     elif isinstance(error, commands.ThreadNotFound):
         print(get_translation("{0} passed thread mention '{1}' that can't be found").format(author, parsed_input))
-        await send_msg(ctx, f"{author_mention}\n" +
-                       add_quotes(get_translation("Thread '{0}' not found!").format(parsed_input)), is_reaction)
+        await send_msg(ctx, f"{author.mention}\n" +
+                       add_quotes(get_translation("Thread '{0}' not found!").format(parsed_input)),
+                       is_reaction=is_reaction)
     elif isinstance(error, commands.BadBoolArgument):
         print(get_translation("{0} passed bad bool argument '{1}'").format(author, parsed_input))
-        await send_msg(ctx, f"{author_mention}\n" +
+        await send_msg(ctx, f"{author.mention}\n" +
                        add_quotes(get_translation("Bot couldn't convert bool argument '{0}'!").format(parsed_input)),
-                       is_reaction)
+                       is_reaction=is_reaction)
     elif isinstance(error, commands.BadLiteralArgument):
         print(get_translation("{0} passed bad literal '{1}'").format(author, parsed_input))
-        await send_msg(ctx, f"{author_mention}\n" +
+        await send_msg(ctx, f"{author.mention}\n" +
                        add_quotes(get_translation(
                            "Bot couldn't find argument '{0}' in any of these values: {1}!"
                        ).format(parsed_input, str(error.literals).strip("()"))),
-                       is_reaction)
+                       is_reaction=is_reaction)
     elif isinstance(error, BadIPv4Address):
         print(get_translation("{0} passed an invalid IPv4 address as argument '{1}'").format(author, parsed_input))
-        await send_msg(ctx, f"{author_mention}\n" +
+        await send_msg(ctx, f"{author.mention}\n" +
                        add_quotes(get_translation("Bot couldn't convert argument '{0}' "
                                                   "to an IPv4 address!").format(parsed_input)),
-                       is_reaction)
+                       is_reaction=is_reaction)
     elif isinstance(error, BadURLAddress):
         print(get_translation("{0} passed an invalid URL as argument '{1}'").format(author, parsed_input))
-        await send_msg(ctx, f"{author_mention}\n" +
+        await send_msg(ctx, f"{author.mention}\n" +
                        add_quotes(get_translation("Bot couldn't convert argument '{0}' "
                                                   "to a URL!").format(parsed_input)),
-                       is_reaction)
+                       is_reaction=is_reaction)
     elif isinstance(error, (commands.BadArgument, commands.ArgumentParsingError)):
         conv_args = findall(r"Converting to \".+\" failed for parameter \".+\"\.", "".join(error.args))
         if len(conv_args) > 0:
@@ -2766,62 +3096,62 @@ async def send_error(
                                   "convert to type '{1}' in command '{4}'")
                   .format(author, *conv_args, parsed_input,
                           f"{Config.get_settings().bot_settings.prefix}{ctx.command}"))
-            await send_msg(ctx, f"{author_mention}\n" +
+            await send_msg(ctx, f"{author.mention}\n" +
                            add_quotes(get_translation("Bot didn't recognized parameter '{1}'\n"
                                                       "Received: '{2}'\n"
                                                       "Expected: value of type '{0}'"))
                            .format(*conv_args, parsed_input),
-                           is_reaction)
+                           is_reaction=is_reaction)
         else:
             print(get_translation("{0} passed string \"{1}\" that can't be parsed in command '{2}'")
                   .format(author, parsed_input, f"{Config.get_settings().bot_settings.prefix}{ctx.command}"))
-            await send_msg(ctx, f"{author_mention}\n" +
+            await send_msg(ctx, f"{author.mention}\n" +
                            add_quotes(get_translation("Bot couldn't parse user "
                                                       "string '{0}' in this command!").format(parsed_input)),
-                           is_reaction)
+                           is_reaction=is_reaction)
     elif isinstance(error, commands.MissingPermissions):
-        await send_msg(ctx, f"{author_mention}\n" + add_quotes(await get_missing_permissions_message(error, author)),
-                       is_reaction)
+        await send_msg(ctx, f"{author.mention}\n" + add_quotes(await get_missing_permissions_message(error, author)),
+                       is_reaction=is_reaction)
     elif isinstance(error, commands.BotMissingPermissions):
         print(get_translation("Bot doesn't have some permissions"))
         missing_perms = [get_translation(perm.replace("_", " ").replace("guild", "server").title())
                          for perm in error.missing_permissions]
-        await send_msg(ctx, f"{author_mention}\n" +
+        await send_msg(ctx, f"{author.mention}\n" +
                        add_quotes(get_translation("Bot don't have these permissions to run this command:")
-                                  .capitalize() + "\n- " + "\n- ".join(missing_perms)), is_reaction)
+                                  .capitalize() + "\n- " + "\n- ".join(missing_perms)), is_reaction=is_reaction)
     elif isinstance(error, commands.MissingRole):
-        await send_msg(ctx, f"{author_mention}\n" + add_quotes(await get_missing_role_message(error, bot, author)),
-                       is_reaction)
+        await send_msg(ctx, f"{author.mention}\n" + add_quotes(await get_missing_role_message(error, bot, author)),
+                       is_reaction=is_reaction)
     elif isinstance(error, commands.CommandNotFound):
         print(get_translation("{0} entered non-existent command").format(author))
-        await send_msg(ctx, f"{author_mention}\n" +
-                       add_quotes(get_translation("You entered non-existent command!")), is_reaction)
+        await send_msg(ctx, f"{author.mention}\n" +
+                       add_quotes(get_translation("You entered non-existent command!")), is_reaction=is_reaction)
     elif isinstance(error, commands.UserInputError):
         print(get_translation("{0} entered wrong argument(s) of command '{1}'")
               .format(author, f"{Config.get_settings().bot_settings.prefix}{ctx.command}"))
-        await send_msg(ctx, f"{author_mention}\n" +
+        await send_msg(ctx, f"{author.mention}\n" +
                        add_quotes(get_translation("You entered wrong argument(s) of this command!")),
-                       is_reaction)
+                       is_reaction=is_reaction)
     elif isinstance(error, commands.DisabledCommand):
         print(get_translation("{0} entered disabled command").format(author))
-        await send_msg(ctx, f"{author_mention}\n" +
-                       add_quotes(get_translation("You entered disabled command!")), is_reaction)
+        await send_msg(ctx, f"{author.mention}\n" +
+                       add_quotes(get_translation("You entered disabled command!")), is_reaction=is_reaction)
     elif isinstance(error, commands.NoPrivateMessage):
         print(get_translation("{0} entered a command that only works in the guild").format(author))
-        await send_msg(ctx, f"{author_mention}\n" +
-                       add_quotes(get_translation("This command only works on server!")), is_reaction)
+        await send_msg(ctx, f"{author.mention}\n" +
+                       add_quotes(get_translation("This command only works on server!")), is_reaction=is_reaction)
     elif isinstance(error, commands.CommandOnCooldown):
         cooldown_retry = round(error.retry_after, 1) if error.retry_after < 1 else int(error.retry_after)
         if isinstance(cooldown_retry, float) and cooldown_retry.is_integer():
             cooldown_retry = int(cooldown_retry)
         print(get_translation("{0} triggered a command more than {1} time(s) per {2} sec")
               .format(author, error.cooldown.rate, int(error.cooldown.per)))
-        await send_msg(ctx, f"{author_mention}\n" +
+        await send_msg(ctx, f"{author.mention}\n" +
                        add_quotes(get_translation("You triggered this command more than {0} time(s) per {1} sec.\n"
                                                   "Try again in {2} sec...").format(error.cooldown.rate,
                                                                                     int(error.cooldown.per),
                                                                                     cooldown_retry)),
-                       is_reaction)
+                       is_reaction=is_reaction)
     elif isinstance(error, HelpCommandArgument):
         pass
     elif isinstance(error, MissingAdminPermissions):
@@ -2833,14 +3163,14 @@ async def send_error(
                 author
             ) + "\n\n"
         msg += await get_missing_permissions_message(commands.MissingPermissions(['administrator']), author)
-        await send_msg(ctx, f"{author_mention}\n" + add_quotes(msg), is_reaction)
+        await send_msg(ctx, f"{author.mention}\n" + add_quotes(msg), is_reaction=is_reaction)
     else:
         print_unhandled_error(error.original, get_translation("Ignoring exception in command '{0}{1}':")
                               .format(Config.get_settings().bot_settings.prefix, ctx.command))
-        await send_msg(ctx, f"{author_mention}\n" +
+        await send_msg(ctx, f"{author.mention}\n" +
                        add_quotes(error.original.__class__.__name__ +
                                   (": " + ", ".join([str(a) for a in error.original.args])
-                                   if len(error.original.args) > 0 else "")), is_reaction)
+                                   if len(error.original.args) > 0 else "")), is_reaction=is_reaction)
 
 
 def print_unhandled_error(error, error_title: str):
@@ -2888,12 +3218,12 @@ async def send_error_on_interaction(
         error: Union[commands.CommandError, Exception],
         is_reaction=False
 ):
-    author, author_mention = interaction.user, interaction.user.mention
+    author = interaction.user
 
     if isinstance(error, commands.MissingPermissions):
         await send_interaction(
             interaction,
-            f"{author_mention}\n" + add_quotes(await get_missing_permissions_message(error, author, interaction=True)),
+            f"{author.mention}\n" + add_quotes(await get_missing_permissions_message(error, author, interaction=True)),
             ephemeral=True,
             ctx=ctx,
             is_reaction=is_reaction
@@ -2901,7 +3231,7 @@ async def send_error_on_interaction(
     elif isinstance(error, commands.MissingRole):
         await send_interaction(
             interaction,
-            f"{author_mention}\n" +
+            f"{author.mention}\n" +
             add_quotes(await get_missing_role_message(error, interaction.client, author, interaction=True)),
             ephemeral=True,
             ctx=ctx,
@@ -2923,7 +3253,7 @@ async def send_error_on_interaction(
         )
         await send_interaction(
             interaction,
-            f"{author_mention}\n" + add_quotes(msg),
+            f"{author.mention}\n" + add_quotes(msg),
             ephemeral=True,
             ctx=ctx,
             is_reaction=is_reaction
@@ -2931,7 +3261,7 @@ async def send_error_on_interaction(
     else:
         await send_interaction(
             interaction,
-            f"{author_mention}\n" + get_translation("This interaction failed! Try again!") + \
+            f"{author.mention}\n" + get_translation("This interaction failed! Try again!") + \
             add_quotes(error.__class__.__name__ +
                        (": " + ", ".join([str(a) for a in error.args]) if len(error.args) > 0 else "")),
             ctx=ctx,
@@ -2985,27 +3315,27 @@ async def handle_message_for_chat(
             (len(message.content) == 0 and len(message.attachments) == 0 and len(message.stickers) == 0):
         return
 
-    author_mention = get_author_and_mention(message, bot, False)[1]
+    author = get_author(message, bot, False)
 
     if not Config.get_game_chat_settings().webhook_url or not BotVars.webhook_chat:
-        await send_msg(message.channel, f"{author_mention}, " +
-                       get_translation("this chat can't work! Game chat disabled!"), True)
+        await send_msg(message.channel, f"{author.mention}, " +
+                       get_translation("this chat can't work! Game chat disabled!"), is_reaction=True)
     elif not BotVars.is_server_on:
-        await send_msg(message.channel, f"{author_mention}\n" +
-                       add_quotes(get_translation("server offline").capitalize() + "!"), True)
+        await send_msg(message.channel, f"{author.mention}\n" +
+                       add_quotes(get_translation("server offline").capitalize() + "!"), is_reaction=True)
     elif BotVars.is_restarting:
-        await send_msg(message.channel, f"{author_mention}\n" +
-                       add_quotes(get_translation("server is restarting!").capitalize()), True)
+        await send_msg(message.channel, f"{author.mention}\n" +
+                       add_quotes(get_translation("server is restarting!").capitalize()), is_reaction=True)
     elif BotVars.is_stopping and BotVars.watcher_of_log_file is None:
-        await send_msg(message.channel, f"{author_mention}\n" +
-                       add_quotes(get_translation("server is stopping!").capitalize()), True)
+        await send_msg(message.channel, f"{author.mention}\n" +
+                       add_quotes(get_translation("server is stopping!").capitalize()), is_reaction=True)
     elif BotVars.is_loading:
-        await send_msg(message.channel, f"{author_mention}\n" +
-                       add_quotes(get_translation("server is loading!").capitalize()), True)
+        await send_msg(message.channel, f"{author.mention}\n" +
+                       add_quotes(get_translation("server is loading!").capitalize()), is_reaction=True)
     else:
         if get_server_players().get("current") == 0:
-            await send_msg(message.channel, f"{author_mention}, " +
-                           get_translation("No players on server!").lower(), True)
+            await send_msg(message.channel, f"{author.mention}, " +
+                           get_translation("No players on server!").lower(), is_reaction=True)
             return
 
         server_version = get_server_version()

@@ -6,14 +6,14 @@ from typing import Union
 
 from discord import (
     Color, Embed, Status, Role, NotFound, Forbidden, HTTPException, DMChannel, Member, InvalidData, TextChannel,
-    GroupChannel, RawReactionActionEvent, Thread
+    GroupChannel, RawReactionActionEvent, Thread, Interaction, User
 )
 from discord.abc import Messageable
 from discord.ext import commands
+from discord.ext.commands import Context
 
-from components.additional_funcs import handle_unhandled_error_in_events
+from components.additional_funcs import handle_unhandled_error_in_events, send_msg
 from components.localization import get_translation
-from config.init_config import Config
 
 
 class Poll(commands.Cog):
@@ -154,15 +154,18 @@ class Poll(commands.Cog):
             if payload.message_id in self.get_polls().keys():
                 self.get_polls()[payload.message_id].cancel()
 
-    async def timer(self, ctx, seconds: int, command: str):
+    async def timer(self, ctx: Union[Context, Interaction], author: Union[Member, User], seconds: int, command: str):
         if (datetime.now() - self._await_date[command]).seconds > seconds:  # Starting a poll
             self._await_date[command] = datetime.now()
             return True
         else:
-            await ctx.send(f"{ctx.author.mention}, " +
-                           get_translation("what are you doing? Time hasn't passed yet. Waiting {0} sec...")
-                           .format((datetime.now() - self._await_date[command]).seconds),
-                           delete_after=Config.get_timeouts_settings().await_seconds_before_message_deletion)
+            await send_msg(
+                ctx,
+                f"{author.mention}, " +
+                get_translation("what are you doing? Time hasn't passed yet. Waiting {0} sec...")
+                .format((datetime.now() - self._await_date[command]).seconds),
+                is_reaction=True
+            )
             return False
 
     def get_polls(self):

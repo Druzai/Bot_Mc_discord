@@ -11,20 +11,19 @@ from typing import TYPE_CHECKING, Literal, Optional
 
 from discord import DMChannel, Member, SelectOption, Interaction
 from discord.ext import commands, tasks
-from psutil import disk_usage
 
 from components import decorators
 from components.additional_funcs import (
     server_checkups, send_status, get_server_players, add_quotes, bot_status, bot_list, bot_start, bot_stop,
-    bot_restart, connect_rcon, make_underscored_line, get_human_readable_size, create_zip_archive,
-    restore_from_zip_archive, get_file_size, BackupsThread, get_folder_size, send_message_of_deleted_backup,
-    handle_backups_limit_and_size, bot_backup, delete_after_by_msg, get_half_members_count_with_role,
-    warn_about_auto_backups, get_archive_uncompressed_size, get_bot_display_name, get_server_version,
-    DISCORD_SYMBOLS_IN_MESSAGE_LIMIT, get_number_of_digits, bot_associate, bot_associate_info, get_time_string,
-    bot_shutdown_info, bot_forceload_info, get_member_string, handle_rcon_error, IPv4Address,
-    handle_unhandled_error_in_task, check_if_string_in_all_translations, build_nickname_tellraw_for_bot,
-    send_select_view, shorten_string, SelectChoice, send_interaction, on_backups_select_option,
-    DISCORD_SELECT_FIELD_MAX_LENGTH, MenuServerView, on_server_select_callback, MenuBotView, get_message_and_channel
+    bot_restart, connect_rcon, make_underscored_line, get_human_readable_size, get_file_size, BackupsThread,
+    send_message_of_deleted_backup, bot_backup, delete_after_by_msg, get_half_members_count_with_role,
+    warn_about_auto_backups, get_bot_display_name, get_server_version, DISCORD_SYMBOLS_IN_MESSAGE_LIMIT,
+    get_number_of_digits, bot_associate, bot_associate_info, get_time_string, bot_shutdown_info, bot_forceload_info,
+    get_member_string, handle_rcon_error, IPv4Address, handle_unhandled_error_in_task,
+    check_if_string_in_all_translations, build_nickname_tellraw_for_bot, send_select_view, shorten_string, SelectChoice,
+    send_interaction, DISCORD_SELECT_FIELD_MAX_LENGTH, MenuServerView, on_server_select_callback, MenuBotView,
+    get_message_and_channel, backup_force_checking, on_backup_force_callback, backup_restore_checking,
+    send_backup_restore_select, send_backup_remove_select
 )
 from components.localization import get_translation
 from components.watcher_handle import create_watcher
@@ -42,7 +41,7 @@ class MinecraftCommands(commands.Cog):
             raise RuntimeError("Cog 'Poll' not found!")
         self.backups_thread = BackupsThread(self._bot)
         if Config.get_menu_settings().server_menu_message_id is not None:
-            self.menu_server_view: Optional[MenuServerView] = MenuServerView(self)
+            self.menu_server_view: Optional[MenuServerView] = MenuServerView(self._bot, self)
         else:
             self.menu_server_view: Optional[MenuServerView] = None
         if Config.get_menu_settings().bot_menu_message_id is not None:
@@ -1018,194 +1017,25 @@ class MinecraftCommands(commands.Cog):
     @decorators.has_role_or_default()
     @commands.guild_only()
     async def b_force(self, ctx: commands.Context, *, reason: str = None):
-        if not BotVars.is_loading and not BotVars.is_stopping and \
-                not BotVars.is_restarting and not BotVars.is_restoring and not BotVars.is_backing_up:
-            b_reason = handle_backups_limit_and_size(self._bot)
-            if b_reason:
-                await ctx.send(add_quotes(get_translation("Can't create backup because of {0}\n"
-                                                          "Delete some backups to proceed!").format(b_reason)))
-                return
-            await warn_about_auto_backups(ctx, self._bot)
-
-            print(get_translation("Starting backup triggered by {0}")
-                  .format(f"{ctx.author.display_name}#{ctx.author.discriminator}"))
-            msg = await ctx.send(add_quotes(get_translation("Starting backup...")))
-            file_name = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
-            list_obj = None
-            level_name = ServerProperties().level_name
-            try:
-                for obj in create_zip_archive(self._bot, file_name,
-                                              Path(Config.get_selected_server_from_list().working_directory,
-                                                   Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
-                                              Path(Config.get_selected_server_from_list().working_directory,
-                                                   level_name).as_posix(),
-                                              Config.get_backups_settings().compression_method, forced=True,
-                                              user=ctx.author):
-                    if isinstance(obj, str):
-                        await msg.edit(content=obj)
-                    elif isinstance(obj, list):
-                        list_obj = obj
-                Config.add_backup_info(file_name=file_name, reason=reason, initiator=ctx.author.id)
-                Config.save_server_config()
-                self.backups_thread.skip()
-                print(get_translation("Backup completed!"))
-                if isinstance(list_obj, list):
-                    await ctx.send(add_quotes(get_translation("Bot couldn't archive some files to this backup!")))
-                    print(get_translation("Bot couldn't archive some files to this backup, they located in path '{0}'")
-                          .format(Path(Config.get_selected_server_from_list().working_directory,
-                                       ServerProperties().level_name).as_posix()))
-                    print(get_translation("List of these files:"))
-                    print(", ".join(list_obj))
-            except FileNotFoundError:
-                await msg.edit(content=add_quotes(get_translation("Backup cancelled!") + "\n" +
-                                                  get_translation("The world folder '{0}' doesn't exist or is empty!")
-                                                  .format(level_name)))
-                print(get_translation("The world folder in path '{0}' doesn't exist or is empty!")
-                      .format(Path(Config.get_selected_server_from_list().working_directory, level_name).as_posix()))
-                print(get_translation("Backup cancelled!"))
-        else:
-            await send_status(ctx)
+        if backup_force_checking(ctx, self._bot):
+            await on_backup_force_callback(ctx, self._bot, self.backups_thread, reason)
 
     @backup.command(pass_context=True, name="restore")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @decorators.has_role_or_default()
     @commands.guild_only()
     async def b_restore(self, ctx: commands.Context):
-        async def on_callback(interaction: Interaction):
-            backup_number = int(interaction.data.get("values", [None])[0])
+        if not (await backup_restore_checking(ctx)):
+            return
 
-            if not BotVars.is_server_on and not BotVars.is_loading and not BotVars.is_stopping and \
-                    not BotVars.is_restarting and not BotVars.is_backing_up and not BotVars.is_restoring:
-                level_name = ServerProperties().level_name
-                free_space = disk_usage(Config.get_selected_server_from_list().working_directory).free
-                bc_folder_bytes = get_folder_size(Config.get_selected_server_from_list().working_directory,
-                                                  level_name)
-                uncompressed_size = get_archive_uncompressed_size(
-                    Config.get_selected_server_from_list().working_directory,
-                    Config.get_backups_settings().name_of_the_backups_folder,
-                    f"{Config.get_server_config().backups[backup_number].file_name}.zip")
-                if free_space + bc_folder_bytes <= uncompressed_size:
-                    await ctx.send(
-                        add_quotes(get_translation("There are not enough space on disk to restore from backup!"
-                                                   "\nFree - {0}\nRequired at least - {1}"
-                                                   "\nDelete some backups to proceed!")
-                                   .format(get_human_readable_size(free_space + bc_folder_bytes),
-                                           get_human_readable_size(uncompressed_size)))
-                    )
-                    return SelectChoice.DELETE_SELECT
-                await send_interaction(
-                    interaction,
-                    add_quotes(get_translation("Starting restore from backup...")),
-                    ctx=ctx
-                )
-                restore_from_zip_archive(Config.get_server_config().backups[backup_number].file_name,
-                                         Path(Config.get_selected_server_from_list().working_directory,
-                                              Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
-                                         Path(Config.get_selected_server_from_list().working_directory,
-                                              level_name).as_posix())
-                for backup in Config.get_server_config().backups:
-                    if backup.restored_from:
-                        backup.restored_from = False
-                Config.get_server_config().backups[backup_number].restored_from = True
-                Config.save_server_config()
-                self.backups_thread.skip()
-                await send_interaction(
-                    interaction,
-                    add_quotes(get_translation("Done!")),
-                    ctx=ctx
-                )
-                return SelectChoice.STOP_VIEW
-            else:
-                await send_status(ctx)
-                return SelectChoice.DELETE_SELECT
-
-        await send_select_view(
-            ctx=ctx,
-            raw_options=Config.get_server_config().backups,
-            pivot_index=None,
-            make_select_option=on_backups_select_option,
-            on_callback=on_callback,
-            on_interaction_check=decorators.is_minecrafter,
-            message=get_translation("Select backup:"),
-            bot=self._bot,
-            timeout=180
-        )
+        await send_backup_restore_select(ctx, self._bot, self.backups_thread)
 
     @backup.group(pass_context=True, name="remove", aliases=["del"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @decorators.has_role_or_default()
     @commands.guild_only()
     async def b_remove(self, ctx: commands.Context):
-        if len(Config.get_server_config().backups) == 0:
-            await ctx.send(add_quotes(get_translation("There are no backups for '{0}' server!")
-                                      .format(Config.get_selected_server_from_list().server_name)))
-            return
-
-        async def on_callback(interaction: Interaction):
-            backup_number = int(interaction.data.get("values", [None])[0])
-
-            if Config.get_server_config().backups[backup_number].initiator is not None:
-                if "backup_remove" in [p.command for p in self._IndPoll.get_polls().values()]:
-                    await delete_after_by_msg(ctx.message)
-                    await ctx.send(get_translation("{0}, bot already has poll on `backup remove` command!")
-                                   .format(ctx.author.mention),
-                                   delete_after=Config.get_timeouts_settings().await_seconds_before_message_deletion)
-                    return SelectChoice.DELETE_SELECT
-
-                if await self._IndPoll.timer(ctx, 5, "backup_remove"):
-                    member = await get_member_string(
-                        self._bot, Config.get_server_config().backups[backup_number].initiator
-                    )
-                    if not await self._IndPoll.run(
-                            channel=ctx.channel,
-                            message=get_translation(
-                                "this man {0} trying to delete {1} backup by {2} of '{3}' "
-                                "server. Will you let that happen?"
-                            ).format(ctx.author.mention,
-                                     Config.get_server_config().backups[backup_number].file_name + ".zip",
-                                     member,
-                                     Config.get_selected_server_from_list().server_name),
-                            command="backup_remove",
-                            needed_role=Config.get_settings().bot_settings.managing_commands_role_id,
-                            need_for_voting=get_half_members_count_with_role(
-                                ctx.channel,
-                                Config.get_settings().bot_settings.managing_commands_role_id
-                            ),
-                            remove_logs_after=5
-                    ):
-                        return SelectChoice.DELETE_SELECT
-                else:
-                    await delete_after_by_msg(ctx.message)
-                    return SelectChoice.DELETE_SELECT
-
-            backup = Config.get_server_config().backups[backup_number]
-            remove(Path(Config.get_selected_server_from_list().working_directory,
-                        Config.get_backups_settings().name_of_the_backups_folder, f"{backup.file_name}.zip"))
-            send_message_of_deleted_backup(self._bot, f"{ctx.author.display_name}#{ctx.author.discriminator}",
-                                           backup,
-                                           member_name=await get_member_string(self._bot, backup.initiator))
-            Config.get_server_config().backups.remove(backup)
-            Config.save_server_config()
-            self.backups_thread.skip()
-            await send_interaction(
-                interaction,
-                add_quotes(get_translation("Deleted backup {0}.zip of '{1}' server")
-                           .format(backup.file_name, Config.get_selected_server_from_list().server_name)),
-                ctx=ctx
-            )
-            return SelectChoice.STOP_VIEW
-
-        await send_select_view(
-            ctx=ctx,
-            raw_options=Config.get_server_config().backups,
-            pivot_index=None,
-            make_select_option=on_backups_select_option,
-            on_callback=on_callback,
-            on_interaction_check=decorators.is_minecrafter,
-            message=get_translation("Select backup:"),
-            bot=self._bot,
-            timeout=180
-        )
+        await send_backup_remove_select(ctx, self._bot, self._IndPoll, self.backups_thread)
 
     @b_remove.command(pass_context=True, name="all")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -1224,7 +1054,7 @@ class MinecraftCommands(commands.Cog):
                            delete_after=Config.get_timeouts_settings().await_seconds_before_message_deletion)
             return
 
-        if await self._IndPoll.timer(ctx, 5, "backup_remove_all"):
+        if await self._IndPoll.timer(ctx, ctx.author, 5, "backup_remove_all"):
             if not await self._IndPoll.run(
                     channel=ctx.channel,
                     message=get_translation(

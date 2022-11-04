@@ -16,7 +16,7 @@ All important changes to this project will be documented in this file.
     * More easy setting up a webhook via bot commands
 * Added fetching image from links, attachments, stickers and emojis in Discord message and showing its preview in Minecraft chat
 * Added parameters timeout and `User-Agent` header to requests
-* Changed menu for server to using buttons and a dropdown and added menu for bot
+* Changed menu for server to using buttons and a dropdown and added menu for bot main features
 
 #### Fixed:
 
@@ -28,11 +28,11 @@ All important changes to this project will be documented in this file.
 * Improved parsing death messages for duplicates
 * Removed requirement for logging players with secure authorization that players' nicks mustn't contain these characters: `[`,`]`,`<`,`>`
 
-#### Changes in bot commands
+#### Changed:
 
 * Created commands:
-    * `chat`
-    * `rss`
+    * `chat` and its subcommands
+    * `rss` and its subcommands
     * `language select`
     * `menu server` and `menu bot`
 * Changed commands:
@@ -44,13 +44,13 @@ All important changes to this project will be documented in this file.
       * `language select`
       * `authorize unban`
       * `backups remove`
-      * `backups resore`
+      * `backups restore`
 * Changed naming:
     * Renamed `Cross-platform chat` to `Game chat` in all bot messages
 
 #### Breaking changes:
 
-* Changed date format for logging (`bot.log` and `op.log`)
+* Changed date format for logging in console and in files: `bot.log` and `op.log`
     * From `DD/MM/YYYY` to `YYYY-MM-DD`
 * Renamed setting `cross_platform_chat` to `game_chat` and subsetting `enable_cross_platform_chat` to `enable_game_chat`
 

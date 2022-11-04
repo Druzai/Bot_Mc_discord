@@ -263,10 +263,10 @@ class ChatCommands(commands.Cog):
     @commands.guild_only()
     async def c_edit(self, ctx: commands.Context, *, edited_message: str):
         if not Config.get_game_chat_settings().enable_game_chat:
-            await send_msg(ctx, add_quotes(get_translation("Game chat disabled") + "!"), True)
+            await send_msg(ctx, add_quotes(get_translation("Game chat disabled") + "!"), is_reaction=True)
         elif ctx.message.reference is not None and ctx.message.reference.resolved.author.discriminator != "0000":
             await send_msg(ctx, add_quotes(get_translation("You can't edit messages from "
-                                                           "other members with this command!")), True)
+                                                           "other members with this command!")), is_reaction=True)
         elif BotVars.webhook_chat is not None and ctx.channel.id == BotVars.webhook_chat.channel_id:
             last_message = None
             if ctx.message.reference is not None:
@@ -277,7 +277,8 @@ class ChatCommands(commands.Cog):
                 else:
                     await send_msg(ctx,
                                    get_translation("{0}, this nick isn't bound to you, use `{1}associate add` first...")
-                                   .format(ctx.author.mention, Config.get_settings().bot_settings.prefix), True)
+                                   .format(ctx.author.mention, Config.get_settings().bot_settings.prefix),
+                                   is_reaction=True)
             else:
                 associated_nicks = [u.user_minecraft_nick for u in Config.get_known_users_list()
                                     if u.user_discord_id == ctx.author.id]
@@ -289,10 +290,10 @@ class ChatCommands(commands.Cog):
                     if last_message is None:
                         await send_msg(ctx, add_quotes(
                             get_translation("The bot couldn't find any messages sent by your "
-                                            "bound Minecraft accounts in the last 100 messages!")), True)
+                                            "bound Minecraft accounts in the last 100 messages!")), is_reaction=True)
                 else:
                     await send_msg(ctx, get_translation("{0}, you have no bound nicks").format(ctx.author.mention),
-                                   True)
+                                   is_reaction=True)
 
             if last_message is not None:
                 try:
@@ -326,12 +327,12 @@ class ChatCommands(commands.Cog):
                     if not webhook_found:
                         error_msg += "\n" + get_translation("Owner: ") + last_message.author.mention
 
-                    await send_msg(ctx, error_msg, True)
+                    await send_msg(ctx, error_msg, is_reaction=True)
         else:
             await send_msg(
                 ctx,
                 add_quotes(get_translation("You're not in channel for Minecraft game chat!")),
-                True
+                is_reaction=True
             )
         await delete_after_by_msg(ctx.message)
 
