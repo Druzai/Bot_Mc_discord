@@ -21,6 +21,7 @@ from threading import Thread, Event
 from time import sleep
 from traceback import format_exception
 from typing import Tuple, List, Dict, Optional, Union, TYPE_CHECKING, AsyncIterator, Callable, Awaitable, Any
+from urllib.parse import unquote
 from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 
 from PIL import Image, UnidentifiedImageError
@@ -4072,6 +4073,7 @@ def get_image_data(url: str):
             filename = match.group("name")
         else:
             filename = url.split("/")[-1].split("?", maxsplit=1)[0]
+        filename = unquote(filename)
         with suppress(Timeout):
             return dict(
                 bytes=BytesIO(req_get(url, timeout=(4, 8), headers={"User-Agent": UserAgent.get_header()}).content),
