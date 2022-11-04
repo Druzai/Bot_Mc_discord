@@ -1057,8 +1057,11 @@ def get_time_string(seconds: int, use_colon=False):
 
 
 async def server_checkups(bot: commands.Bot, backups_thread: BackupsThread, poll: 'Poll'):
+    java_processes = get_list_of_processes()
     try:
         info = get_server_players()
+        if len(java_processes) == 0:
+            raise ConnectionError()
         if info.get("current") != 0:
             to_save = False
             BotVars.players_login_dict = {k: v for k, v in BotVars.players_login_dict.items()
@@ -1110,7 +1113,6 @@ async def server_checkups(bot: commands.Bot, backups_thread: BackupsThread, poll
                                    is_reaction=True)
                     await stop_server(ctx=channel, bot=bot, poll=poll, shut_up=True)
     except (ConnectionError, socket.error):
-        java_processes = get_list_of_processes()
         if len(java_processes) == 0:
             if BotVars.is_server_on:
                 BotVars.is_server_on = False
