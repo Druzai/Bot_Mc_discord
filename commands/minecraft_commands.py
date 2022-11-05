@@ -545,6 +545,15 @@ class MinecraftCommands(commands.Cog):
             async def on_callback(interaction: Optional[Interaction]):
                 set_ip = interaction.data.get("values", [None])[0] if interaction is not None else ip
 
+                if set_ip is None:
+                    await send_interaction(
+                        interaction,
+                        add_quotes(get_translation("You provided wrong IP-address in chosen option! Try again")),
+                        ctx=ctx,
+                        is_reaction=True
+                    )
+                    return SelectChoice.DO_NOTHING
+
                 async with handle_rcon_error(ctx):
                     with connect_rcon() as cl_r:
                         cl_r.run(f"pardon-ip {set_ip}")
@@ -1075,7 +1084,7 @@ class MinecraftCommands(commands.Cog):
             if not await self._IndPoll.run(
                     channel=ctx.channel,
                     message=get_translation(
-                        "this man {0} trying to delete all backups of '{1}' server. "
+                        "this man {0} trying to delete all backups of `{1}` server. "
                         "Will you let that happen?"
                     ).format(ctx.author.mention,
                              Config.get_selected_server_from_list().server_name),

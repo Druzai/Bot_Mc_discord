@@ -364,9 +364,9 @@ async def start_server(
         to_save = True
     if to_save:
         Config.save_config()
-    print(get_translation("Server on!"))
+    print(get_translation("Server is running"))
     if ctx and not shut_up:
-        await send_msg(ctx, author.mention + "\n" + add_quotes(get_translation("Server's on now")),
+        await send_msg(ctx, author.mention + "\n" + add_quotes(get_translation("Server is up!")),
                        is_reaction=is_reaction)
         if randint(0, 8) == 0:
             await send_msg(ctx, get_translation("Kept you waiting, huh?"), is_reaction=is_reaction)
@@ -470,10 +470,10 @@ async def stop_server(
                                 how_many_sec += 1
                                 w = 1
                     if not is_restart:
-                        bot_message = get_translation("Server\'s shutting down in {0} seconds") \
+                        bot_message = get_translation("Server will shut down in {0} seconds") \
                             .format(str(how_many_sec))
                     else:
-                        bot_message = get_translation("Server\'s restarting in {0} seconds").format(str(how_many_sec))
+                        bot_message = get_translation("Server will restart in {0} seconds").format(str(how_many_sec))
 
                     if server_version.minor < 7:
                         cl_r.say(bot_message)
@@ -512,9 +512,9 @@ async def stop_server(
     BotVars.auto_shutdown_start_date = None
     BotVars.is_stopping = False
     BotVars.is_server_on = False
-    print(get_translation("Server's off now"))
+    print(get_translation("Server is down"))
     if not shut_up:
-        await send_msg(ctx, author.mention + "\n" + add_quotes(get_translation("Server's off now")),
+        await send_msg(ctx, author.mention + "\n" + add_quotes(get_translation("Server has been shut down!")),
                        is_reaction=is_reaction)
     Config.get_server_config().states.stopped_info.set_state_info(author.id, datetime.now(), bot=author == bot.user)
     Config.save_server_config()
@@ -1020,7 +1020,7 @@ async def warn_about_auto_backups(ctx: Union[commands.Context, Interaction], bot
                 and all([b.initiator for b in Config.get_server_config().backups]):
             await send_msg(
                 ctx,
-                get_translation("Bot has backups only from members for '{0}' server, "
+                get_translation("Bot has backups only from members for `{0}` server, "
                                 "so keep in mind, that bot will delete oldest backup "
                                 "on next auto backup!").format(Config.get_selected_server_from_list().server_name),
                 is_reaction=is_reaction
@@ -1133,10 +1133,10 @@ async def server_checkups(bot: commands.Bot, backups_thread: BackupsThread, poll
             channel = bot.guilds[0].get_channel(Config.get_settings().bot_settings.commands_channel_id)
             if channel is None:
                 channel = utils_get(bot.guilds[0].channels, type=ChannelType.text)
-            print(get_translation("Bot detected: Server's offline! Starting up server again!"))
+            print(get_translation("Bot detected: Server offline! Starting up server again!"))
             await send_msg(ctx=channel,
                            msg=add_quotes(get_translation(
-                               "Bot detected: Server's offline!\n"
+                               "Bot detected: Server offline!\n"
                                "Time: {0}\n"
                                "Starting up server again!"
                            ).format(datetime.now().strftime(get_translation("%H:%M:%S %d/%m/%Y")))),
@@ -1211,7 +1211,7 @@ async def bot_status(
         except (ConnectionError, socket.error):
             bot_message += get_translation("Server thinking...") + "\n" + server_info + states
             await send_msg(ctx, add_quotes(bot_message), is_reaction=is_reaction)
-            print(get_translation("Server's down via rcon"))
+            print(get_translation("Server isn't available via RCON"))
     else:
         if BotVars.is_loading:
             bot_message = get_translation("server is loading!").capitalize()[:-1] + "\n" + bot_message
@@ -1531,7 +1531,7 @@ async def on_backups_select_option(i: int, bot: commands.Bot):
             ),
             DISCORD_SELECT_FIELD_MAX_LENGTH
         ),
-        value=str(i),
+        value=backup.file_name,
         description=description_str
     )
 
@@ -1671,7 +1671,7 @@ def bot_shutdown_info(with_timeout=False, only_timeout=False):
                                     Config.get_timeouts_settings().await_seconds_in_check_ups != 0 else "") + \
                    f"{get_time_string(Config.get_timeouts_settings().calc_before_shutdown)})"
         if Config.get_timeouts_settings().calc_before_shutdown == 0:
-            msg += "\n" + get_translation("Server will be stopped immediately.").strip(".")
+            msg += "\n" + get_translation("Server will be stopped immediately.").rstrip(".")
     return msg
 
 
@@ -2536,7 +2536,19 @@ async def send_backup_restore_select(
         is_reaction: bool = False
 ):
     async def on_callback(interaction: Interaction):
-        backup_number = int(interaction.data.get("values", [None])[0])
+        backup_name = interaction.data.get("values", [""])[0]
+
+        for i in range(len(Config.get_server_config().backups)):
+            if Config.get_server_config().backups[i].file_name == backup_name:
+                backup_number = i
+                break
+        else:
+            await send_msg(
+                ctx if isinstance(ctx, commands.Context) else interaction,
+                add_quotes(get_translation("Bot couldn't find backup by provided name '{0}'").format(backup_name)),
+                is_reaction=is_reaction
+            )
+            return SelectChoice.DELETE_SELECT
 
         level_name = ServerProperties().level_name
         free_space = disk_usage(Config.get_selected_server_from_list().working_directory).free
@@ -2545,7 +2557,8 @@ async def send_backup_restore_select(
         uncompressed_size = get_archive_uncompressed_size(
             Config.get_selected_server_from_list().working_directory,
             Config.get_backups_settings().name_of_the_backups_folder,
-            f"{Config.get_server_config().backups[backup_number].file_name}.zip")
+            f"{backup_name}.zip"
+        )
         if free_space + bc_folder_bytes <= uncompressed_size:
             await send_msg(
                 ctx if isinstance(ctx, commands.Context) else interaction,
@@ -2563,11 +2576,14 @@ async def send_backup_restore_select(
             ctx=ctx if isinstance(ctx, commands.Context) else None,
             is_reaction=is_reaction
         )
-        restore_from_zip_archive(Config.get_server_config().backups[backup_number].file_name,
-                                 Path(Config.get_selected_server_from_list().working_directory,
-                                      Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
-                                 Path(Config.get_selected_server_from_list().working_directory,
-                                      level_name).as_posix())
+        restore_from_zip_archive(
+            backup_name,
+            Path(
+                Config.get_selected_server_from_list().working_directory,
+                Config.get_backups_settings().name_of_the_backups_folder
+            ).as_posix(),
+            Path(Config.get_selected_server_from_list().working_directory, level_name).as_posix()
+        )
         for backup in Config.get_server_config().backups:
             if backup.restored_from:
                 backup.restored_from = False
@@ -2610,9 +2626,21 @@ async def send_backup_remove_select(
     author = get_author(ctx, bot, is_reaction=is_reaction)
 
     async def on_callback(interaction: Interaction):
-        backup_number = int(interaction.data.get("values", [None])[0])
+        backup_name = interaction.data.get("values", [""])[0]
 
-        if Config.get_server_config().backups[backup_number].initiator is not None:
+        for backup in Config.get_server_config().backups:
+            if backup.file_name == backup_name:
+                selected_backup = backup
+                break
+        else:
+            await send_msg(
+                ctx if isinstance(ctx, commands.Context) else interaction,
+                add_quotes(get_translation("Bot couldn't find backup by provided name '{0}'").format(backup_name)),
+                is_reaction=is_reaction
+            )
+            return SelectChoice.DELETE_SELECT
+
+        if selected_backup.initiator is not None:
             if "backup_remove" in [p.command for p in IndPoll.get_polls().values()]:
                 if isinstance(ctx, commands.Context):
                     await delete_after_by_msg(ctx.message, ctx)
@@ -2624,18 +2652,18 @@ async def send_backup_remove_select(
                 return SelectChoice.DELETE_SELECT
 
             if await IndPoll.timer(ctx, get_author(ctx, bot, is_reaction), 5, "backup_remove"):
-                member = await get_member_string(
-                    bot, Config.get_server_config().backups[backup_number].initiator
-                )
+                member = await get_member_string(bot, selected_backup.initiator)
                 if not await IndPoll.run(
                         channel=ctx.channel,
                         message=get_translation(
-                            "this man {0} trying to delete {1} backup by {2} of '{3}' "
+                            "this man {0} trying to delete {1} backup by {2} of `{3}` "
                             "server. Will you let that happen?"
-                        ).format(author.mention,
-                                 Config.get_server_config().backups[backup_number].file_name + ".zip",
-                                 member,
-                                 Config.get_selected_server_from_list().server_name),
+                        ).format(
+                            author.mention,
+                            f"{selected_backup.file_name}.zip",
+                            member,
+                            Config.get_selected_server_from_list().server_name
+                        ),
                         command="backup_remove",
                         needed_role=Config.get_settings().bot_settings.managing_commands_role_id,
                         need_for_voting=get_half_members_count_with_role(
@@ -2650,19 +2678,21 @@ async def send_backup_remove_select(
                     await delete_after_by_msg(ctx.message, ctx)
                 return SelectChoice.DELETE_SELECT
 
-        backup = Config.get_server_config().backups[backup_number]
         remove(Path(Config.get_selected_server_from_list().working_directory,
-                    Config.get_backups_settings().name_of_the_backups_folder, f"{backup.file_name}.zip"))
-        send_message_of_deleted_backup(bot, f"{author.display_name}#{author.discriminator}",
-                                       backup,
-                                       member_name=await get_member_string(bot, backup.initiator))
-        Config.get_server_config().backups.remove(backup)
+                    Config.get_backups_settings().name_of_the_backups_folder, f"{selected_backup.file_name}.zip"))
+        send_message_of_deleted_backup(
+            bot,
+            f"{author.display_name}#{author.discriminator}",
+            selected_backup,
+            member_name=await get_member_string(bot, selected_backup.initiator)
+        )
+        Config.get_server_config().backups.remove(selected_backup)
         Config.save_server_config()
         backups_thread.skip()
         await send_interaction(
             interaction,
             add_quotes(get_translation("Deleted backup {0}.zip of '{1}' server")
-                       .format(backup.file_name, Config.get_selected_server_from_list().server_name)),
+                       .format(selected_backup.file_name, Config.get_selected_server_from_list().server_name)),
             ctx=ctx if isinstance(ctx, commands.Context) else None,
             is_reaction=is_reaction
         )
@@ -2935,7 +2965,7 @@ def connect_rcon(timeout=1):
             yield cl_r
     except WrongPassword:
         print(get_translation("Bot Error: {0}")
-              .format(get_translation("Rcon password '{0}' doesn't match with its value in '{1}'!")
+              .format(get_translation("RCON password '{0}' doesn't match with its value in '{1}'!")
                       .format(Config.get_server_config().rcon_password,
                               Path(Config.get_selected_server_from_list().working_directory + "/server.properties")
                               .as_posix())))
@@ -2957,7 +2987,7 @@ async def handle_rcon_error(ctx: Optional[commands.Context], interaction: Intera
         if BotVars.is_server_on:
             await send_interaction(
                 interaction,
-                add_quotes(get_translation("Couldn't connect to server, try again(")),
+                add_quotes(get_translation("Couldn't connect to server. Try again.")),
                 ctx=ctx,
                 is_reaction=is_reaction
             )

@@ -663,8 +663,8 @@ class ChatCommands(commands.Cog):
             result = await on_language_select_callback(interaction, set_language, ctx=ctx)
             if self._commands_cog.menu_bot_view is not None:
                 await self._commands_cog.menu_bot_view.update_view(update_content=True)
-                if self._commands_cog.menu_server_view is not None:
-                    await self._commands_cog.menu_server_view.update_view(update_content=True)
+            if self._commands_cog.menu_server_view is not None:
+                await self._commands_cog.menu_server_view.update_view(update_content=True)
             return result
 
         if set_language is not None:
@@ -697,7 +697,7 @@ class ChatCommands(commands.Cog):
     @commands.guild_only()
     async def prefix(self, ctx: commands.Context, *, new_prefix: str = ""):
         if not new_prefix:
-            await ctx.send(add_quotes(get_translation("Current prefix - '{0}'.")
+            await ctx.send(add_quotes(get_translation("Current prefix - '{0}'")
                                       .format(Config.get_settings().bot_settings.prefix)))
         else:
             if Config.get_settings().bot_settings.managing_commands_role_id is not None and \
