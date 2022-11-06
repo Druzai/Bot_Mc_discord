@@ -3703,7 +3703,7 @@ async def _handle_components_in_message(
     emoji_regex = r"<a?:\w+:\d+>"
     tenor_regex = r"https?://tenor\.com/view"
 
-    async def repl_emoji(match: str):
+    async def repl_emoji(match: str, is_reply: bool):
         obj = search(r"<a?:(?P<name>\w+):(?P<id>\d+)>", match)
         emoji_name = f":{obj.group('name')}:"
         if only_replace_links:
@@ -3717,7 +3717,7 @@ async def _handle_components_in_message(
                 with suppress(NotFound, HTTPException):
                     emoji = await bot.guilds[0].fetch_emoji(emoji_id)
             if isinstance(emoji, Emoji):
-                if store_images_for_preview:
+                if store_images_for_preview and not is_reply:
                     images_for_preview.append({
                         "type": "emoji",
                         "url": emoji.url,
@@ -3728,9 +3728,9 @@ async def _handle_components_in_message(
             else:
                 return emoji_name
 
-    def repl_url(link: str):
+    def repl_url(link: str, is_reply: bool):
         is_tenor = bool(search(tenor_regex, link))
-        if store_images_for_preview:
+        if store_images_for_preview and not is_reply:
             if is_tenor:
                 images_for_preview.append({
                     "type": "link",
@@ -3773,12 +3773,12 @@ async def _handle_components_in_message(
     }
     mass_regex = "|".join(transformations.keys())
 
-    async def repl(obj):
+    async def repl(obj, is_reply: bool):
         match = obj.group(0)
         if search(URL_REGEX, match):
-            return transformations.get(URL_REGEX)(match)
+            return transformations.get(URL_REGEX)(match, is_reply)
         else:
-            return await transformations.get(emoji_regex)(match)
+            return await transformations.get(emoji_regex)(match, is_reply)
 
     for key, ms in result_msg.items():
         if isinstance(ms, list):
@@ -3792,7 +3792,7 @@ async def _handle_components_in_message(
             temp_split = split(mass_regex, msg)
             i = 1
             for m in compile(mass_regex).finditer(msg):
-                temp_split.insert(i, (await repl(m)))
+                temp_split.insert(i, (await repl(m, key == "reply")))
                 i += 2
         else:
             temp_split.append(msg)
@@ -3997,7 +3997,8 @@ def _build_nickname_tellraw_for_discord_member(
     hover_string = ["", {"text": f"{author.display_name}\n"
                                  f"{author.name}#{author.discriminator}"}]
     if server_version.minor > 11:
-        hover_string += [{"text": "\nShift + "}, {"keybind": "key.attack"}]
+        hover_string[-1]["text"] += "\nShift + "
+        hover_string += [{"keybind": "key.attack"}]
     tellraw_obj = [
         {"text": left_bracket},
         {"text": author.display_name,
