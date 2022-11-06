@@ -83,7 +83,7 @@
 `@Minecrafters` - an optional role in Discord for managing the Minecraft server. If not stated then bot will
 mention `@everyone`.
 
-> **Note**
+> **Warning**
 >
 > Mentions from Minecraft mustn't contain `@` in them!
 
@@ -134,7 +134,7 @@ For macOS you have to update certificates by running script `/Applications/Pytho
 
 ### Build with pyinstaller
 
-Firstly, you have to install pyinstaller via `pip install pyinstaller==5.1`.
+Firstly, you have to install pyinstaller via `pip install pyinstaller==5.6.2`.
 
 Type in command prompt `make` in root directory of the project to build it.
 

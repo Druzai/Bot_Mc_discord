@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
-      tag: ${{ steps.commit.outputs.SOURCE_TAG }}
+      tag: ${{ steps.commit.outputs.source_tag }}
     steps:
       - name: Clone repository
         uses: actions/checkout@v3
@@ -25,17 +25,25 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install flake8
+
+      - name: Lint with flake8
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
       - name: Get commit tag
         id: commit
-        run: echo "::set-output name=SOURCE_TAG::$(python3 Discord_bot.py -v)"
+        run: echo "source_tag=$(python3 Discord_bot.py -v)" >> $GITHUB_OUTPUT
 
       - name: Get release notes
         uses: yashanand1910/standard-release-notes@v1.2.1
         id: release_notes
         with:
           changelog_path: ./CHANGELOG.md
-          version: ${{ steps.commit.outputs.SOURCE_TAG }}
+          version: ${{ steps.commit.outputs.source_tag }}
 
       - name: Create release
         id: create_release
@@ -43,20 +51,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          tag_name: ${{ steps.commit.outputs.SOURCE_TAG }}
-          release_name: ${{ steps.commit.outputs.SOURCE_TAG }}
+          tag_name: ${{ steps.commit.outputs.source_tag }}
+          release_name: ${{ steps.commit.outputs.source_tag }}
           body: ${{ steps.release_notes.outputs.release_notes }}
           draft: false
           prerelease: false
 
-  release_built_assets:
-    name: Release built assets
+  release_built_assets_for_windows:
+    name: Release built assets for Windows
     needs: create_release
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-2019
     strategy:
       matrix:
-        python-version: [ 3.8 ]
-        os: [ ubuntu-latest, windows-2019 ] # macos-latest
+        python-version: [ 3.8, "3.10" ]
     steps:
       - name: Clone repository
         uses: actions/checkout@v3
@@ -69,8 +76,56 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 pyinstaller==5.1
           pip install -r requirements.txt
+          pip install pyinstaller==5.6.2
+
+      - name: Build with pyinstaller
+        run: make
+
+      - name: Upload release asset for Windows 7
+        if: matrix.version == '3.8'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: ./dist_build/Discord_bot.exe
+          asset_name: Discord_bot_windows_x64_v${{ needs.create_release.outputs.tag }}_win7.exe
+          asset_content_type: application/vnd.microsoft.portable-executable
+
+      - name: Upload release asset for Windows 8 and higher
+        if: matrix.version != '3.8'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: ./dist_build/Discord_bot.exe
+          asset_name: Discord_bot_windows_x64_v${{ needs.create_release.outputs.tag }}.exe
+          asset_content_type: application/vnd.microsoft.portable-executable
+
+  release_built_assets_for_unix:
+    name: Release built assets
+    needs: create_release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [ "3.10" ]
+        os: [ ubuntu-latest ] # macos-latest
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller==5.6.2
 
       - name: Install gettext for Linux
         if: matrix.os == 'ubuntu-latest'
@@ -88,13 +143,6 @@ jobs:
 #          brew update
 #          brew install gettext
 
-      - name: Lint with flake8
-        run: |
-          # stop the build if there are Python syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-
       - name: Build with pyinstaller
         run: make
 
@@ -108,17 +156,6 @@ jobs:
           asset_path: ./dist_build/Discord_bot
           asset_name: Discord_bot_linux_x64_v${{ needs.create_release.outputs.tag }}
           asset_content_type: application/x-executable
-
-      - name: Upload release asset with Windows
-        if: matrix.os == 'windows-2019'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          upload_url: ${{ needs.create_release.outputs.upload_url }}
-          asset_path: ./dist_build/Discord_bot.exe
-          asset_name: Discord_bot_windows_x64_v${{ needs.create_release.outputs.tag }}.exe
-          asset_content_type: application/vnd.microsoft.portable-executable
 
 #      - name: Upload release asset with macOS
 #        if: matrix.os == 'macos-latest'
