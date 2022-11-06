@@ -915,14 +915,17 @@ def delete_oldest_auto_backup_if_exists(reason: str, bot: commands.Bot):
 def send_message_of_deleted_backup(bot: commands.Bot, reason: str, backup=None, member_name: str = None):
     if backup is not None:
         if backup.initiator is None:
-            msg = get_translation("Deleted auto backup '{0}.zip' because of {1}").format(backup.file_name, reason)
+            msg = get_translation(
+                "Deleted auto backup dated {0} because of {1}"
+            ).format(backup.file_creation_date.strftime(get_translation("%H:%M:%S %d/%m/%Y")), reason)
         else:
             if member_name is not None:
                 member = member_name
             else:
                 member = get_member_string(bot, backup.initiator)
-            msg = get_translation("Deleted backup '{0}.zip' made by {1} because of {2}").format(backup.file_name,
-                                                                                                member, reason)
+            msg = get_translation(
+                "Deleted backup dated {0} made by {1} because of {2}"
+            ).format(backup.file_creation_date.strftime(get_translation("%H:%M:%S %d/%m/%Y")), member, reason)
     else:
         msg = get_translation("Deleted all backups because of {0}").format(reason)
     with suppress(ConnectionError, socket.error):
@@ -2545,7 +2548,8 @@ async def send_backup_restore_select(
         else:
             await send_msg(
                 ctx if isinstance(ctx, commands.Context) else interaction,
-                add_quotes(get_translation("Bot couldn't find backup by provided name '{0}'").format(backup_name)),
+                add_quotes(get_translation("Bot couldn't find backup by provided date '{0}'")
+                           .format(backup_name.strftime(get_translation("%H:%M:%S %d/%m/%Y")))),
                 is_reaction=is_reaction
             )
             return SelectChoice.DELETE_SELECT
@@ -2635,7 +2639,8 @@ async def send_backup_remove_select(
         else:
             await send_msg(
                 ctx if isinstance(ctx, commands.Context) else interaction,
-                add_quotes(get_translation("Bot couldn't find backup by provided name '{0}'").format(backup_name)),
+                add_quotes(get_translation("Bot couldn't find backup by provided date '{0}'")
+                           .format(backup_name.strftime(get_translation("%H:%M:%S %d/%m/%Y")))),
                 is_reaction=is_reaction
             )
             return SelectChoice.DELETE_SELECT
@@ -2656,11 +2661,11 @@ async def send_backup_remove_select(
                 if not await IndPoll.run(
                         channel=ctx.channel,
                         message=get_translation(
-                            "this man {0} trying to delete {1} backup by {2} of `{3}` "
+                            "this man {0} trying to delete backup dated `{1}` made by {2} of `{3}` "
                             "server. Will you let that happen?"
                         ).format(
                             author.mention,
-                            f"{selected_backup.file_name}.zip",
+                            selected_backup.file_creation_date.strftime(get_translation("%H:%M:%S %d/%m/%Y")),
                             member,
                             Config.get_selected_server_from_list().server_name
                         ),
@@ -2691,8 +2696,10 @@ async def send_backup_remove_select(
         backups_thread.skip()
         await send_interaction(
             interaction,
-            add_quotes(get_translation("Deleted backup {0}.zip of '{1}' server")
-                       .format(selected_backup.file_name, Config.get_selected_server_from_list().server_name)),
+            add_quotes(get_translation(
+                "Deleted backup dated {0} of '{1}' server"
+            ).format(selected_backup.file_creation_date.strftime(get_translation("%H:%M:%S %d/%m/%Y")),
+                     Config.get_selected_server_from_list().server_name)),
             ctx=ctx if isinstance(ctx, commands.Context) else None,
             is_reaction=is_reaction
         )
