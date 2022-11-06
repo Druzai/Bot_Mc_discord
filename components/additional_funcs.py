@@ -151,6 +151,8 @@ async def send_interaction(
         if ctx is None and interaction is not None:
             ctx = interaction.channel
         if ctx is not None:
+            if view == MISSING:
+                view = None
             message = await ctx.send(
                 content=msg,
                 view=view,
@@ -2418,6 +2420,9 @@ class MenuServerView(TemplateSelectView):
     async def c_b_restore(self, interaction: Interaction, button: Button):
         BotVars.react_auth = interaction.user
         if await self.interaction_check_select(interaction):
+            if not (await backup_restore_checking(interaction, is_reaction=True)):
+                return
+
             await send_backup_restore_select(interaction, self.bot, self.commands_cog.backups_thread, is_reaction=True)
 
     @button(
@@ -2518,17 +2523,19 @@ async def on_backup_force_callback(
         print(get_translation("Backup cancelled!"))
 
 
-async def backup_restore_checking(ctx: Union[commands.Context, Interaction]) -> bool:
+async def backup_restore_checking(ctx: Union[commands.Context, Interaction], is_reaction: bool = False) -> bool:
     if len(Config.get_server_config().backups) == 0:
-        await ctx.send(add_quotes(get_translation("There are no backups for '{0}' server!")
-                                  .format(Config.get_selected_server_from_list().server_name)))
+        await send_msg(ctx,
+                       add_quotes(get_translation("There are no backups for '{0}' server!")
+                                  .format(Config.get_selected_server_from_list().server_name)),
+                       is_reaction=is_reaction)
         return False
 
     if not BotVars.is_server_on and not BotVars.is_loading and not BotVars.is_stopping and \
             not BotVars.is_restarting and not BotVars.is_backing_up and not BotVars.is_restoring:
         return True
     else:
-        await send_status(ctx)
+        await send_status(ctx, is_reaction=is_reaction)
         return False
 
 
@@ -2623,8 +2630,10 @@ async def send_backup_remove_select(
         is_reaction: bool = False
 ):
     if len(Config.get_server_config().backups) == 0:
-        await ctx.send(add_quotes(get_translation("There are no backups for '{0}' server!")
-                                  .format(Config.get_selected_server_from_list().server_name)))
+        await send_msg(ctx,
+                       add_quotes(get_translation("There are no backups for '{0}' server!")
+                                  .format(Config.get_selected_server_from_list().server_name)),
+                       is_reaction=is_reaction)
         return
 
     author = get_author(ctx, bot, is_reaction=is_reaction)
