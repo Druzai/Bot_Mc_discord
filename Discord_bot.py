@@ -13,11 +13,11 @@ from sshkeyboard import listen_keyboard, stop_listening
 from yaml.parser import ParserError
 from yaml.scanner import ScannerError
 
-from commands.chat_commands import ChatCommands
-from commands.minecraft_commands import MinecraftCommands
-from commands.poll import Poll
-from components.additional_funcs import setup_print_handlers
+from cogs.chat_cog import ChatCommands
+from cogs.minecraft_cog import MinecraftCommands
+from cogs.poll_cog import Poll
 from components.localization import get_translation, RuntimeTextHandler
+from components.utils import setup_print_handlers
 from config.init_config import Config, BotVars, OS
 
 if Config.get_os() == OS.Windows:

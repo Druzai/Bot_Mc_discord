@@ -12,25 +12,34 @@ from typing import TYPE_CHECKING, Literal, Optional
 from discord import DMChannel, Member, SelectOption, Interaction
 from discord.ext import commands, tasks
 
-from components import decorators
-from components.additional_funcs import (
-    server_checkups, send_status, get_server_players, add_quotes, bot_status, bot_list, bot_start, bot_stop,
-    bot_restart, connect_rcon, make_underscored_line, get_human_readable_size, get_file_size, BackupsThread,
-    send_message_of_deleted_backup, bot_backup, delete_after_by_msg, get_half_members_count_with_role,
-    warn_about_auto_backups, get_bot_display_name, get_server_version, DISCORD_SYMBOLS_IN_MESSAGE_LIMIT,
-    get_number_of_digits, bot_associate, bot_associate_info, get_time_string, bot_shutdown_info, bot_forceload_info,
-    get_member_string, handle_rcon_error, IPv4Address, handle_unhandled_error_in_task,
-    check_if_string_in_all_translations, build_nickname_tellraw_for_bot, send_select_view, shorten_string, SelectChoice,
-    send_interaction, DISCORD_SELECT_FIELD_MAX_LENGTH, MenuServerView, on_server_select_callback, MenuBotView,
-    get_message_and_channel, backup_force_checking, on_backup_force_callback, backup_restore_checking,
-    send_backup_restore_select, send_backup_remove_select
+from cogs.functions.server import (
+    bot_status, bot_list, bot_start, bot_stop, bot_restart, bot_associate_info, bot_associate, bot_shutdown_info,
+    bot_forceload_info, bot_backup
 )
-from components.localization import get_translation
-from components.watcher_handle import create_watcher
+from components import decorators
+from components.backups import BackupsThread, warn_about_auto_backups, send_message_of_deleted_backup
+from components.constants import DISCORD_SYMBOLS_IN_MESSAGE_LIMIT, DISCORD_SELECT_FIELD_MAX_LENGTH
+from components.error_handlers import handle_rcon_error, IPv4Address, handle_unhandled_error_in_task
+from components.interactions.data import SelectChoice
+from components.interactions.utils import send_select_view, send_backup_restore_select, send_backup_remove_select
+from components.interactions.views_functions import (
+    on_server_select_callback, backup_force_checking, on_backup_force_callback, backup_restore_checking
+)
+from components.interactions.views import MenuServerView, MenuBotView
+from components.localization import get_translation, check_if_string_in_all_translations
+from components.minecraft.connect import get_server_players, get_server_version, connect_rcon
+from components.minecraft.game_chat import build_nickname_tellraw_for_bot
+from components.minecraft.server_checks import server_checkups
+from components.utils import (
+    get_bot_display_name, get_time_string, add_quotes, send_status, delete_after_by_msg, send_interaction,
+    shorten_string, get_number_of_digits, make_underscored_line, get_half_members_count_with_role,
+    get_human_readable_size, get_file_size, get_member_string, get_message_and_channel
+)
+from components.logs.utils import create_watcher
 from config.init_config import BotVars, Config, ServerProperties
 
 if TYPE_CHECKING:
-    from commands.poll import Poll
+    from cogs.poll_cog import Poll
 
 
 class MinecraftCommands(commands.Cog):

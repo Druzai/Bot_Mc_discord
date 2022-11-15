@@ -12,8 +12,9 @@ from discord.abc import Messageable
 from discord.ext import commands
 from discord.ext.commands import Context
 
-from components.additional_funcs import handle_unhandled_error_in_events, send_msg
+from components.error_handlers import handle_unhandled_error_in_events
 from components.localization import get_translation
+from components.utils import send_msg
 
 
 class Poll(commands.Cog):

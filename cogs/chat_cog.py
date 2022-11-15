@@ -10,23 +10,31 @@ from discord import (
 )
 from discord.ext import commands, tasks
 
+from cogs.functions.help import find_subcommand, get_command_help, parse_params_for_help, parse_subcommands_for_help
+from cogs.functions.server import bot_clear, bot_dm_clear
 from components import decorators
-from components.additional_funcs import (
-    handle_message_for_chat, send_error, bot_clear, add_quotes, parse_params_for_help, send_help_of_command,
-    parse_subcommands_for_help, find_subcommand, make_underscored_line, create_webhooks, bot_dm_clear, send_msg,
-    delete_after_by_msg, HelpCommandArgument, handle_unhandled_error_in_task, handle_unhandled_error_in_events,
-    get_avatar_info, URLAddress, get_server_version, get_time_string, get_channel_string, send_select_view,
-    shorten_string, DISCORD_SELECT_FIELD_MAX_LENGTH, on_language_select_callback, get_message_and_channel,
-    MenuServerView, MenuBotView
+from components.constants import DISCORD_SELECT_FIELD_MAX_LENGTH
+from components.discord_set_up import create_webhooks
+from components.error_handlers import (
+    handle_unhandled_error_in_events, URLAddress, send_error, HelpCommandArgument, handle_unhandled_error_in_task
 )
+from components.interactions.utils import send_select_view
+from components.interactions.views import MenuServerView, MenuBotView
+from components.interactions.views_functions import on_language_select_callback
 from components.localization import get_translation, get_locales, get_current_locale
-from components.rss_feed_handle import check_on_rss_feed
-from components.watcher_handle import create_watcher
+from components.minecraft.connect import get_server_version
+from components.minecraft.game_chat import handle_message_for_chat
+from components.rss_feed import check_on_rss_feed
+from components.utils import (
+    get_message_and_channel, add_quotes, get_channel_string, get_avatar_info, send_msg,
+    delete_after_by_msg, get_time_string, make_underscored_line, shorten_string
+)
+from components.logs.utils import create_watcher
 from config.init_config import Config, BotVars
 
 if TYPE_CHECKING:
-    from commands.poll import Poll
-    from commands.minecraft_commands import MinecraftCommands
+    from cogs.poll_cog import Poll
+    from cogs.minecraft_cog import MinecraftCommands
 
 
 class ChatCommands(commands.Cog):
@@ -731,7 +739,7 @@ class ChatCommands(commands.Cog):
                         command = c
                     break
             if command == ctx.command:
-                await send_help_of_command(ctx, ctx.command)
+                await ctx.send(get_command_help(ctx.command))
             else:
                 await ctx.send(add_quotes(get_translation("Bot doesn't have such subcommand!")))
             raise HelpCommandArgument()
@@ -758,7 +766,7 @@ class ChatCommands(commands.Cog):
                     await ctx.send(add_quotes(get_translation("Bot doesn't have such command!")))
                 return
 
-            await send_help_of_command(ctx, command)
+            await ctx.send(get_command_help(command))
         else:
             await delete_after_by_msg(ctx.message, without_delay=True)
             emb = discord.Embed(

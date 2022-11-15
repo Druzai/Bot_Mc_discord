@@ -26,15 +26,14 @@ from jsons import load as sload, DeserializationError
 from omegaconf import OmegaConf as Conf
 from psutil import Process
 
+from components.constants import URL_REGEX, CODE_LETTERS
 from components.localization import get_translation, get_locales, set_locale
 from config.crypt_wrapper import encrypt_string, decrypt_string
 
 if TYPE_CHECKING:
-    from components.additional_funcs import ServerVersion, IPv4Address
-    from components.watcher_handle import Watcher
-
-CODE_LETTERS = "WERTYUPASFGHKZXCVBNM23456789$%&+="
-URL_REGEX = r"https?://(?:[a-zA-Z]|[0-9]|[#-_@.&+]|[!*(),]|%[0-9a-fA-F][0-9a-fA-F])+"
+    from components.error_handlers import IPv4Address
+    from components.minecraft.connect import ServerVersion
+    from components.logs.utils import Watcher
 
 
 class BotVars:

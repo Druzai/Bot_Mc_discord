@@ -4,6 +4,8 @@ from os import path, listdir, getcwd
 from pathlib import Path
 from sys import argv
 
+from components.constants import UNITS, DEATH_MESSAGES, ENTITIES
+
 _locales_path = getcwd()
 if getattr(sys, 'frozen', False) and getattr(sys, '_MEIPASS', False):
     _locales_path = sys._MEIPASS
@@ -38,6 +40,21 @@ def get_current_locale():
     return _current_locale
 
 
+def check_if_string_in_all_translations(translate_text: str, match_text: str):
+    current_locale = get_current_locale()
+    list_of_locales = get_locales()
+    list_of_locales.remove(current_locale)
+    list_of_locales.append(current_locale)
+    if match_text == get_translation(translate_text):
+        return True
+
+    for locale in list_of_locales:
+        set_locale(locale)
+        if locale != current_locale and match_text == get_translation(translate_text):
+            return True
+    return False
+
+
 class RuntimeTextHandler:
     _file_py = "_frozen_translations.py"
     _translations = []
@@ -55,3 +72,10 @@ class RuntimeTextHandler:
 if len(argv) > 1 and argv[1] == "-g":
     for lang in _locales:
         RuntimeTextHandler.add_translation(lang)
+
+    for un in UNITS:
+        RuntimeTextHandler.add_translation(un)
+    for msg in DEATH_MESSAGES:
+        RuntimeTextHandler.add_translation(msg)
+    for entity in ENTITIES:
+        RuntimeTextHandler.add_translation(entity)
