@@ -426,7 +426,7 @@ async def stop_server(
     if not no_connection:
         if players_info["current"] > 0:
             logged_only_author_accounts = None
-            author_id = ctx.author.id if not is_reaction else BotVars.react_auth.id
+            author_id = get_author(ctx, bot, is_reaction).id
             if len(Config.get_known_users_list()) > 0:
                 for player in players_info["players"]:
                     possible_player = [u.user_discord_id for u in Config.get_known_users_list()
@@ -437,7 +437,7 @@ async def stop_server(
                         logged_only_author_accounts = False
                         break
 
-            if not logged_only_author_accounts and await poll.timer(ctx, ctx.author, 5, "stop"):
+            if not logged_only_author_accounts and await poll.timer(ctx, get_author(ctx, bot, is_reaction), 5, "stop"):
                 if not await poll.run(channel=ctx.channel if hasattr(ctx, 'channel') else ctx,
                                       message=get_translation("this man {0} trying to stop the server with {1} "
                                                               "player(s) on it. Will you let that happen?")
