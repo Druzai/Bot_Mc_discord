@@ -1,7 +1,7 @@
 cryptography==38.0.3
-discord.py==2.0.1
+discord.py==2.1.0
 mcipc==1.5.4
-psutil==5.9.3
+psutil==5.9.4
 feedparser==6.0.10
 jsons==1.6.3
 omegaconf==2.2.3
