@@ -248,5 +248,6 @@ On Linux or macOS you may need to install `gettext`:
 ## Tested platforms
 
 * Windows 7 or higher (64 bit)
+  * For Windows 7 you have to use executable file built with Python 3.8! (It has the string `p3.8` in its name)
 * Linux (Debian-based) (64 bit)
 * macOS 11 or higher (64 bit)
