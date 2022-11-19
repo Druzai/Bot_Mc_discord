@@ -2309,6 +2309,21 @@ class MenuServerView(TemplateSelectView):
             ) for i in range(*indexes)
         ]
 
+    async def update_view_components(self):
+        self.c_status.label = get_translation("Status")
+        self.c_list.label = get_translation("Players online")
+        self.c_s_update.label = get_translation("Update")
+
+        self.c_server.label = get_translation("Server")
+        self.c_start.label = get_translation("Start")
+        self.c_stop.label = get_translation("Stop")
+        self.c_restart.label = get_translation("Restart")
+
+        self.c_backup.label = get_translation("Backups")
+        self.c_b_force.label = get_translation("Create")
+        self.c_b_restore.label = get_translation("Restore")
+        self.c_b_remove.label = get_translation("Delete")
+
     async def do_after_sending_message(self):
         if self.channel_id is not None and Config.get_menu_settings().server_menu_channel_id is None:
             Config.get_menu_settings().server_menu_channel_id = self.channel_id
@@ -2317,69 +2332,28 @@ class MenuServerView(TemplateSelectView):
     async def interaction_check_select(self, interaction: Interaction, /) -> bool:
         return is_minecrafter(interaction)
 
-    @button(label="status", style=ButtonStyle.secondary, custom_id="menu_server_view:status", emoji="⚠", row=0)
+    @button(style=ButtonStyle.secondary, custom_id="menu_server_view:status", emoji="⚠", row=0)
     async def c_status(self, interaction: Interaction, button: Button):
         BotVars.react_auth = interaction.user
         await bot_status(interaction, interaction.client, is_reaction=True)
 
-    @button(label="list", style=ButtonStyle.secondary, custom_id="menu_server_view:list", emoji="📋", row=0)
+    @button(style=ButtonStyle.secondary, custom_id="menu_server_view:list", emoji="📋", row=0)
     async def c_list(self, interaction: Interaction, button: Button):
         BotVars.react_auth = interaction.user
         await bot_list(interaction, interaction.client, is_reaction=True)
 
-    @button(label="backup", style=ButtonStyle.secondary, custom_id="menu_server_view:backup", emoji="📇", row=0)
+    @button(style=ButtonStyle.secondary, custom_id="menu_server_view:status_update", emoji="📶", row=0)
+    async def c_s_update(self, interaction: Interaction, button: Button):
+        if await self.interaction_check_select(interaction):
+            self.commands_cog.checkups_task.restart()
+            await send_interaction(interaction, add_quotes(get_translation("Updated bot status!")), is_reaction=True)
+
+    @button(style=ButtonStyle.secondary, custom_id="menu_server_view:backup", emoji="📇", row=1)
     async def c_backup(self, interaction: Interaction, button: Button):
         BotVars.react_auth = interaction.user
         await bot_backup(interaction, interaction.client, is_reaction=True)
 
-    @button(label="update", style=ButtonStyle.secondary, custom_id="menu_server_view:update", emoji="📶", row=0)
-    async def c_update(self, interaction: Interaction, button: Button):
-        self.commands_cog.checkups_task.restart()
-        await send_interaction(interaction, get_translation("Updated bot status!"), is_reaction=True)
-
-    @button(label="start", style=ButtonStyle.secondary, custom_id="menu_server_view:start", emoji="⏯", row=1)
-    async def c_start(self, interaction: Interaction, button: Button):
-        BotVars.react_auth = interaction.user
-        if await self.interaction_check_select(interaction):
-            await bot_start(
-                interaction,
-                interaction.client,
-                self.commands_cog.backups_thread,
-                is_reaction=True
-            )
-
-    @button(label="stop 10", style=ButtonStyle.secondary, custom_id="menu_server_view:stop_10", emoji="⏹", row=1)
-    async def c_stop(self, interaction: Interaction, button: Button):
-        BotVars.react_auth = interaction.user
-        if await self.interaction_check_select(interaction):
-            await bot_stop(
-                interaction,
-                command=10,
-                bot=interaction.client,
-                poll=self.commands_cog._IndPoll,
-                is_reaction=True
-            )
-
-    @button(label="restart 10", style=ButtonStyle.secondary, custom_id="menu_server_view:restart_10", emoji="🔄", row=1)
-    async def c_restart(self, interaction: Interaction, button: Button):
-        BotVars.react_auth = interaction.user
-        if await self.interaction_check_select(interaction):
-            await bot_restart(
-                interaction,
-                command=10,
-                bot=interaction.client,
-                poll=self.commands_cog._IndPoll,
-                backups_thread=self.commands_cog.backups_thread,
-                is_reaction=True
-            )
-
-    @button(
-        label="backup force",
-        style=ButtonStyle.secondary,
-        custom_id="menu_server_view:backup_force",
-        emoji="💽",
-        row=2
-    )
+    @button(style=ButtonStyle.secondary, custom_id="menu_server_view:backup_force", emoji="💽", row=1)
     async def c_b_force(self, interaction: Interaction, button: Button):
         BotVars.react_auth = interaction.user
         if await self.interaction_check_select(interaction):
@@ -2410,13 +2384,7 @@ class MenuServerView(TemplateSelectView):
             backup_reason_modal.on_error = on_error
             await interaction.response.send_modal(backup_reason_modal)
 
-    @button(
-        label="backup restore",
-        style=ButtonStyle.secondary,
-        custom_id="menu_server_view:backup_restore",
-        emoji="♻",
-        row=2
-    )
+    @button(style=ButtonStyle.secondary, custom_id="menu_server_view:backup_restore", emoji="♻", row=1)
     async def c_b_restore(self, interaction: Interaction, button: Button):
         BotVars.react_auth = interaction.user
         if await self.interaction_check_select(interaction):
@@ -2425,13 +2393,7 @@ class MenuServerView(TemplateSelectView):
 
             await send_backup_restore_select(interaction, self.bot, self.commands_cog.backups_thread, is_reaction=True)
 
-    @button(
-        label="backup remove",
-        style=ButtonStyle.secondary,
-        custom_id="menu_server_view:backup_remove",
-        emoji="🗑",
-        row=2
-    )
+    @button(style=ButtonStyle.secondary, custom_id="menu_server_view:backup_remove", emoji="🗑", row=1)
     async def c_b_remove(self, interaction: Interaction, button: Button):
         BotVars.react_auth = interaction.user
         if await self.interaction_check_select(interaction):
@@ -2440,6 +2402,52 @@ class MenuServerView(TemplateSelectView):
                 self.bot,
                 self.commands_cog._IndPoll,
                 self.commands_cog.backups_thread,
+                is_reaction=True
+            )
+
+    @button(style=ButtonStyle.secondary, custom_id="menu_server_view:server", emoji="🪪", row=2)
+    async def c_server(self, interaction: Interaction, button: Button):
+        await send_interaction(
+            interaction,
+            add_quotes(get_translation("Selected server") + ": " +
+                       Config.get_selected_server_from_list().server_name +
+                       f" [{str(Config.get_settings().selected_server_number)}]"),
+            is_reaction=True
+        )
+
+    @button(style=ButtonStyle.secondary, custom_id="menu_server_view:start", emoji="⏯", row=2)
+    async def c_start(self, interaction: Interaction, button: Button):
+        BotVars.react_auth = interaction.user
+        if await self.interaction_check_select(interaction):
+            await bot_start(
+                interaction,
+                interaction.client,
+                self.commands_cog.backups_thread,
+                is_reaction=True
+            )
+
+    @button(style=ButtonStyle.secondary, custom_id="menu_server_view:stop_10", emoji="⏹", row=2)
+    async def c_stop(self, interaction: Interaction, button: Button):
+        BotVars.react_auth = interaction.user
+        if await self.interaction_check_select(interaction):
+            await bot_stop(
+                interaction,
+                command=10,
+                bot=interaction.client,
+                poll=self.commands_cog._IndPoll,
+                is_reaction=True
+            )
+
+    @button(style=ButtonStyle.secondary, custom_id="menu_server_view:restart_10", emoji="🔄", row=2)
+    async def c_restart(self, interaction: Interaction, button: Button):
+        BotVars.react_auth = interaction.user
+        if await self.interaction_check_select(interaction):
+            await bot_restart(
+                interaction,
+                command=10,
+                bot=interaction.client,
+                poll=self.commands_cog._IndPoll,
+                backups_thread=self.commands_cog.backups_thread,
                 is_reaction=True
             )
 

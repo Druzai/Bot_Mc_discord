@@ -37,6 +37,7 @@ All important changes to this project will be documented in this file.
     * `rss` and its subcommands
     * `language select`
     * `menu server` and `menu bot`
+    * `status update`
 * Changed commands:
     * Moved logic:
         * From `edit` to `chat edit`

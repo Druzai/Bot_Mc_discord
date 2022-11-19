@@ -52,22 +52,30 @@ class MinecraftCommands(commands.Cog):
             self.backups_thread.start()
             self.checkups_task.change_interval(seconds=Config.get_timeouts_settings().await_seconds_in_check_ups)
 
-    @commands.command(pass_context=True)
-    @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
+    @commands.group(pass_context=True, invoke_without_command=True)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
     async def status(self, ctx: commands.Context):
         """Shows server status"""
         await bot_status(ctx, self._bot)
 
+    @status.command(pass_context=True, name="update")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @decorators.has_role_or_default()
+    @commands.guild_only()
+    async def s_update(self, ctx: commands.Context):
+        self.checkups_task.restart()
+        await ctx.send(add_quotes(get_translation("Updated bot status!")))
+
     @commands.command(pass_context=True, aliases=["ls"])
-    @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
     async def list(self, ctx: commands.Context):
         """Shows list of players"""
         await bot_list(ctx, self._bot)
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
-    @commands.guild_only()
     @decorators.has_role_or_default()
+    @commands.guild_only()
     async def start(self, ctx: commands.Context):
         """Start server"""
         await bot_start(ctx, self._bot, self.backups_thread)
@@ -77,8 +85,8 @@ class MinecraftCommands(commands.Cog):
         manage_messages=True, send_messages=True, mention_everyone=True, add_reactions=True, embed_links=True,
         view_channel=True
     )
-    @commands.guild_only()
     @decorators.has_role_or_default()
+    @commands.guild_only()
     async def stop(self, ctx: commands.Context, timeout: int = 0):
         """Stop server"""
         await bot_stop(ctx, timeout, self._bot, self._IndPoll)
@@ -88,16 +96,16 @@ class MinecraftCommands(commands.Cog):
         manage_messages=True, send_messages=True, mention_everyone=True, add_reactions=True, embed_links=True,
         view_channel=True
     )
-    @commands.guild_only()
     @decorators.has_role_or_default()
+    @commands.guild_only()
     async def restart(self, ctx: commands.Context, timeout: int = 0):
         """Restart server"""
         await bot_restart(ctx, timeout, self._bot, self._IndPoll, self.backups_thread)
 
     @commands.group(pass_context=True, invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @commands.guild_only()
     @decorators.has_role_or_default()
+    @commands.guild_only()
     async def op(self, ctx: commands.Context, minecraft_nick: str, *, reasons: str = ""):
         doing_opping = BotVars.is_doing_op
         BotVars.is_doing_op = True
@@ -250,8 +258,8 @@ class MinecraftCommands(commands.Cog):
 
     @op.command(pass_context=True, name="history", aliases=["hist"], ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @commands.guild_only()
     @decorators.has_role_or_default()
+    @commands.guild_only()
     async def o_history(self, ctx: commands.Context, messages_from_end: int = 0):
         if messages_from_end < 0:
             await ctx.send(add_quotes(get_translation("Wrong 1-st argument used!") + "\n" +
@@ -918,7 +926,6 @@ class MinecraftCommands(commands.Cog):
 
     @commands.group(pass_context=True, aliases=["serv"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
     @commands.guild_only()
     async def server(self, ctx: commands.Context):
         await ctx.send(add_quotes(get_translation("Selected server") + ": " +
@@ -1191,7 +1198,7 @@ class MinecraftCommands(commands.Cog):
         for v in self._bot.persistent_views:
             if isinstance(v, MenuServerView):
                 v.stop()
-        self.menu_server_view = MenuServerView(self)
+        self.menu_server_view = MenuServerView(self._bot, self)
         await self.menu_server_view.update_view(send=False)
         menu_msg = await ctx.send(get_translation("List of commands for interacting with Minecraft server via buttons"
                                                   " and dropdown for selecting server"),
