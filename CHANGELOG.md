@@ -38,6 +38,7 @@ All important changes to this project will be documented in this file.
     * `language select`
     * `menu server` and `menu bot`
     * `status update`
+    * `op on/off`
 * Changed commands:
     * Moved logic:
         * From `edit` to `chat edit`
@@ -56,6 +57,7 @@ All important changes to this project will be documented in this file.
 * Changed date format for logging in console and in files: `bot.log` and `op.log`
     * From `DD/MM/YYYY` to `YYYY-MM-DD`
 * Renamed setting `cross_platform_chat` to `game_chat` and subsetting `enable_cross_platform_chat` to `enable_game_chat`
+* Moved setting `default_number_of_times_to_op` to new setting `op`
 
 ### [1.3.2](https://github.com/Druzai/Bot_Mc_discord/compare/1.3.1...1.3.2) (2022-07-28)
 

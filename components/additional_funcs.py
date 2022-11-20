@@ -2811,6 +2811,10 @@ class MenuBotView(TemplateSelectView):
         self.b_whitelist.style = ButtonStyle.green if ServerProperties().white_list else ButtonStyle.red
         self.b_whitelist.label = get_translation("White list")
 
+        self.b_op.style = ButtonStyle.green if Config.get_op_settings().enable_op else ButtonStyle.red
+        self.b_op.emoji = "🗿" if Config.get_op_settings().enable_op else "🥽"
+        self.b_op.label = get_translation("Temporary operator")
+
         self.b_forceload.style = ButtonStyle.green if Config.get_settings().bot_settings.forceload else ButtonStyle.red
         self.b_forceload.emoji = "♾" if Config.get_settings().bot_settings.forceload else "🇽"
         self.b_forceload.label = get_translation("Forceload")
@@ -2891,6 +2895,20 @@ class MenuBotView(TemplateSelectView):
                 await edit_interaction(interaction, self, self.message_id)
                 if msg is not None:
                     await send_interaction(interaction, msg, is_reaction=True)
+
+    @button(custom_id="menu_bot_view:op", row=0)
+    async def b_op(self, interaction: Interaction, button: Button):
+        if is_admin(interaction):
+            Config.get_op_settings().enable_op = not Config.get_op_settings().enable_op
+            Config.save_config()
+            button.emoji = "🥽" if button.style == ButtonStyle.green else "🗿"
+            button.style = ButtonStyle.red if button.style == ButtonStyle.green else ButtonStyle.green
+            await edit_interaction(interaction, self, self.message_id)
+            if Config.get_op_settings().enable_op:
+                msg = get_translation("Getting an operator to Minecraft players is enabled")
+            else:
+                msg = get_translation("Getting an operator to Minecraft players is disabled")
+            await send_interaction(interaction, add_quotes(msg), is_reaction=True)
 
     @button(custom_id="menu_bot_view:forceload", row=1)
     async def b_forceload(self, interaction: Interaction, button: Button):

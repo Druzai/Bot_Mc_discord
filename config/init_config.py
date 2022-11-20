@@ -228,6 +228,12 @@ class Menu:
 
 
 @dataclass
+class Op:
+    enable_op: bool = False
+    default_number_of_times_to_op: int = -1
+
+
+@dataclass
 class Bot_settings:
     language: Optional[str] = None
     _token = None
@@ -256,7 +262,7 @@ class Bot_settings:
     commands_channel_id: Optional[int] = None
     forceload: bool = False
     auto_shutdown: bool = False
-    default_number_of_times_to_op: int = -1
+    op: Op = Op()
     server_watcher: Server_watcher = Server_watcher()
     rss_feed: Rss_feed = Rss_feed()
     backups: Backups = Backups()
@@ -741,6 +747,10 @@ class Config:
         return cls._settings_instance.bot_settings.menu
 
     @classmethod
+    def get_op_settings(cls) -> Op:
+        return cls._settings_instance.bot_settings.op
+
+    @classmethod
     def get_selected_server_from_list(cls) -> Server_settings:
         return cls._settings_instance.servers_list[cls._settings_instance.selected_server_number - 1]
 
@@ -1121,7 +1131,7 @@ class Config:
         cls._setup_clear_delete_limit_without_poll()
         cls._setup_menu()
         cls._setup_commands_channel_id()
-        cls._setup_default_number_of_times_to_op()
+        cls._setup_op()
         cls._setup_server_watcher()
         cls._setup_rss_feed()
         cls._setup_timeouts()
@@ -1343,10 +1353,15 @@ class Config:
                 get_translation("Set idle status") + "\n> ")
 
     @classmethod
-    def _setup_default_number_of_times_to_op(cls):
-        if cls._settings_instance.bot_settings.default_number_of_times_to_op < 1 or \
-                cls._settings_instance.bot_settings.default_number_of_times_to_op > 1000:
-            cls._settings_instance.bot_settings.default_number_of_times_to_op = \
+    def _setup_op(cls):
+        if cls.get_op_settings().enable_op:
+            print(get_translation("Getting an operator to Minecraft players is enabled") + ".")
+        else:
+            print(get_translation("Getting an operator to Minecraft players is disabled") + ".")
+
+        if cls.get_op_settings().default_number_of_times_to_op < 1 or \
+                cls.get_op_settings().default_number_of_times_to_op > 1000:
+            cls.get_op_settings().default_number_of_times_to_op = \
                 cls._ask_for_data(get_translation("Set default number of times to give an operator "
                                                   "for every player (int):") + "\n> ",
                                   try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=1000)

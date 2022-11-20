@@ -107,6 +107,11 @@ class MinecraftCommands(commands.Cog):
     @decorators.has_role_or_default()
     @commands.guild_only()
     async def op(self, ctx: commands.Context, minecraft_nick: str, *, reasons: str = ""):
+        if not Config.get_op_settings().enable_op:
+            await ctx.send(f"{ctx.author.mention}, " +
+                           get_translation("Getting an operator to Minecraft players is disabled") + "!")
+            return
+
         doing_opping = BotVars.is_doing_op
         BotVars.is_doing_op = True
         if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and not BotVars.is_restarting:
@@ -255,6 +260,26 @@ class MinecraftCommands(commands.Cog):
                 BotVars.is_doing_op = False
         else:
             await send_status(ctx)
+
+    @op.command(pass_context=True, name="on")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @decorators.has_admin_role()
+    @commands.guild_only()
+    async def o_on(self, ctx: commands.Context):
+        if not Config.get_op_settings().enable_op:
+            Config.get_op_settings().enable_op = True
+            Config.save_config()
+        await ctx.send(add_quotes(get_translation("Getting an operator to Minecraft players is enabled")))
+
+    @op.command(pass_context=True, name="off")
+    @commands.bot_has_permissions(send_messages=True, view_channel=True)
+    @decorators.has_admin_role()
+    @commands.guild_only()
+    async def o_off(self, ctx: commands.Context):
+        if Config.get_op_settings().enable_op:
+            Config.get_op_settings().enable_op = False
+            Config.save_config()
+        await ctx.send(add_quotes(get_translation("Getting an operator to Minecraft players is disabled")))
 
     @op.command(pass_context=True, name="history", aliases=["hist"], ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
