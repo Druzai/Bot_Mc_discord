@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
-"POT-Creation-Date: 2022-11-20 16:01+0300\n"
-"PO-Revision-Date: 2022-11-20 16:09+0300\n"
+"POT-Creation-Date: 2022-11-20 20:52+0300\n"
+"PO-Revision-Date: 2022-11-20 20:52+0300\n"
 "Last-Translator: Druzai\n"
 "Language-Team: \n"
 "Language: en\n"
@@ -660,276 +660,284 @@ msgid "Strider"
 msgstr "Strider"
 
 #: ..\_frozen_translations.py:149
+msgid "Primed TNT"
+msgstr "Primed TNT"
+
+#: ..\_frozen_translations.py:150
+msgid "Minecart with TNT"
+msgstr "Minecart with TNT"
+
+#: ..\_frozen_translations.py:151
 msgid "Trader Llama"
 msgstr "Trader Llama"
 
-#: ..\_frozen_translations.py:150
+#: ..\_frozen_translations.py:152
 msgid "Vex"
 msgstr "Vex"
 
-#: ..\_frozen_translations.py:151
+#: ..\_frozen_translations.py:153
 msgid "Butcher"
 msgstr "Butcher"
 
-#: ..\_frozen_translations.py:152
+#: ..\_frozen_translations.py:154
 msgid "Cartographer"
 msgstr "Cartographer"
 
-#: ..\_frozen_translations.py:153
+#: ..\_frozen_translations.py:155
 msgid "Cleric"
 msgstr "Cleric"
 
-#: ..\_frozen_translations.py:154
+#: ..\_frozen_translations.py:156
 msgid "Farmer"
 msgstr "Farmer"
 
-#: ..\_frozen_translations.py:155
+#: ..\_frozen_translations.py:157
 msgid "Fisherman"
 msgstr "Fisherman"
 
-#: ..\_frozen_translations.py:156
+#: ..\_frozen_translations.py:158
 msgid "Fletcher"
 msgstr "Fletcher"
 
-#: ..\_frozen_translations.py:157
+#: ..\_frozen_translations.py:159
 msgid "Leatherworker"
 msgstr "Leatherworker"
 
-#: ..\_frozen_translations.py:158
+#: ..\_frozen_translations.py:160
 msgid "Librarian"
 msgstr "Librarian"
 
-#: ..\_frozen_translations.py:159
+#: ..\_frozen_translations.py:161
 msgid "Mason"
 msgstr "Mason"
 
-#: ..\_frozen_translations.py:160
+#: ..\_frozen_translations.py:162
 msgid "Nitwit"
 msgstr "Nitwit"
 
-#: ..\_frozen_translations.py:161
+#: ..\_frozen_translations.py:163
 msgid "Shepherd"
 msgstr "Shepherd"
 
-#: ..\_frozen_translations.py:162
+#: ..\_frozen_translations.py:164
 msgid "Toolsmith"
 msgstr "Toolsmith"
 
-#: ..\_frozen_translations.py:163
+#: ..\_frozen_translations.py:165
 msgid "Weaponsmith"
 msgstr "Weaponsmith"
 
-#: ..\_frozen_translations.py:164
+#: ..\_frozen_translations.py:166
 msgid "Villager"
 msgstr "Villager"
 
-#: ..\_frozen_translations.py:165
+#: ..\_frozen_translations.py:167
 msgid "Iron Golem"
 msgstr "Iron Golem"
 
-#: ..\_frozen_translations.py:166
+#: ..\_frozen_translations.py:168
 msgid "Vindicator"
 msgstr "Vindicator"
 
-#: ..\_frozen_translations.py:167
+#: ..\_frozen_translations.py:169
 msgid "Warden"
 msgstr "Warden"
 
-#: ..\_frozen_translations.py:168
+#: ..\_frozen_translations.py:170
 msgid "Witch"
 msgstr "Witch"
 
-#: ..\_frozen_translations.py:169
+#: ..\_frozen_translations.py:171
 msgid "Wither"
 msgstr "Wither"
 
-#: ..\_frozen_translations.py:170
+#: ..\_frozen_translations.py:172
 msgid "Wither Skeleton"
 msgstr "Wither Skeleton"
 
-#: ..\_frozen_translations.py:171
+#: ..\_frozen_translations.py:173
 msgid "Wolf"
 msgstr "Wolf"
 
-#: ..\_frozen_translations.py:172
+#: ..\_frozen_translations.py:174
 msgid "Zoglin"
 msgstr "Zoglin"
 
-#: ..\_frozen_translations.py:173
+#: ..\_frozen_translations.py:175
 msgid "Zombie"
 msgstr "Zombie"
 
-#: ..\_frozen_translations.py:174
+#: ..\_frozen_translations.py:176
 msgid "Zombified Piglin"
 msgstr "Zombified Piglin"
 
-#: ..\_frozen_translations.py:175
+#: ..\_frozen_translations.py:177
 msgid "Zombie Villager"
 msgstr "Zombie Villager"
 
-#: ..\_frozen_translations.py:176
+#: ..\_frozen_translations.py:178
 msgid "[Intentional Game Design]"
 msgstr "[Intentional Game Design]"
 
-#: ..\_frozen_translations.py:177
+#: ..\_frozen_translations.py:179
 msgid "Zombie Pigman"
 msgstr "Zombie Pigman"
 
-#: ..\_frozen_translations.py:178
+#: ..\_frozen_translations.py:180
 msgid "help_brief_associate"
 msgstr "Manages links from Discord to Minecraft"
 
-#: ..\_frozen_translations.py:179
+#: ..\_frozen_translations.py:181
 msgid "help_associate"
 msgstr ""
 "Returns info about linked Minecraft nicks\n"
 "Requires links that creates '{prefix}associate add' command!"
 
-#: ..\_frozen_translations.py:180
+#: ..\_frozen_translations.py:182
 msgid "help_associate_for_who"
 msgstr ""
 "Get info about your nicks - 'me'\n"
 "Or get info about all nicks - 'everyone'"
 
-#: ..\_frozen_translations.py:181
+#: ..\_frozen_translations.py:183
 msgid "help_associate_add"
 msgstr ""
 "**For admin only!**\n"
 "Links user in Discord with nick in Minecraft\n"
 "For more correct work of other commands, it's better to set it up!"
 
-#: ..\_frozen_translations.py:182
+#: ..\_frozen_translations.py:184
 msgid "help_associate_add_discord_mention"
 msgstr "Discord mention of user, example: '@User'"
 
-#: ..\_frozen_translations.py:183
+#: ..\_frozen_translations.py:185
 msgid "help_associate_add_minecraft_nick"
 msgstr "Nick in Minecraft that you want to link to"
 
-#: ..\_frozen_translations.py:184
+#: ..\_frozen_translations.py:186
 msgid "help_associate_remove"
 msgstr ""
 "**For admin only!**\n"
 "Unlinks user in Discord with nick in Minecraft"
 
-#: ..\_frozen_translations.py:185
+#: ..\_frozen_translations.py:187
 msgid "help_associate_remove_discord_mention"
 msgstr "Discord mention of user, example: '@User'"
 
-#: ..\_frozen_translations.py:186
+#: ..\_frozen_translations.py:188
 msgid "help_associate_remove_minecraft_nick"
 msgstr "Nick in Minecraft that you want to unlink to"
 
-#: ..\_frozen_translations.py:187
+#: ..\_frozen_translations.py:189
 msgid "help_brief_authorize"
 msgstr "Handles secure authorization in Minecraft 🔑"
 
-#: ..\_frozen_translations.py:188
+#: ..\_frozen_translations.py:190
 msgid "help_authorize"
 msgstr ""
 "Returns information about secure authorization configuration and authorized "
 "players"
 
-#: ..\_frozen_translations.py:189
+#: ..\_frozen_translations.py:191
 msgid "help_authorize_ban"
 msgstr "Bans specified IP-address"
 
-#: ..\_frozen_translations.py:190
+#: ..\_frozen_translations.py:192
 msgid "help_authorize_ban_ip"
 msgstr "IP-address to search"
 
-#: ..\_frozen_translations.py:191
+#: ..\_frozen_translations.py:193
 msgid "help_authorize_ban_reason"
 msgstr "Reason for ban"
 
-#: ..\_frozen_translations.py:192
+#: ..\_frozen_translations.py:194
 msgid "help_authorize_banlist"
 msgstr "Returns list of bans by IP-address on selected Minecraft server"
 
-#: ..\_frozen_translations.py:193
+#: ..\_frozen_translations.py:195
 msgid "help_authorize_login"
 msgstr ""
 "Confirms and gives access to the user by nick using code\n"
 "Works only if user logged into the Minecraft server at least once"
 
-#: ..\_frozen_translations.py:194
+#: ..\_frozen_translations.py:196
 msgid "help_authorize_login_code"
 msgstr "{code_length}-digit code, not case sensitive"
 
-#: ..\_frozen_translations.py:195
+#: ..\_frozen_translations.py:197
 msgid "help_authorize_login_nick"
 msgstr ""
 "Nick of Minecraft player\n"
 "Note: if nick has spaces, you must enter it in quotes, for example: \"Nick\""
 
-#: ..\_frozen_translations.py:196
+#: ..\_frozen_translations.py:198
 msgid "help_authorize_off"
 msgstr "Disables secure authorization"
 
-#: ..\_frozen_translations.py:197
+#: ..\_frozen_translations.py:199
 msgid "help_authorize_on"
 msgstr "Enables secure authorization"
 
-#: ..\_frozen_translations.py:198
+#: ..\_frozen_translations.py:200
 msgid "help_authorize_revoke"
 msgstr ""
 "Prematurely revokes permission to access by IP-address for nicks in "
 "Minecraft available to you"
 
-#: ..\_frozen_translations.py:199
+#: ..\_frozen_translations.py:201
 msgid "help_authorize_revoke_ip"
 msgstr "IP-address to search"
 
-#: ..\_frozen_translations.py:200
+#: ..\_frozen_translations.py:202
 msgid "help_authorize_revoke_nick"
 msgstr ""
 "Minecraft nick to search\n"
 "If provided only IP-address from this nick will be revoked!"
 
-#: ..\_frozen_translations.py:201
+#: ..\_frozen_translations.py:203
 msgid "help_authorize_revoke_all"
 msgstr "Revokes all logged nicks"
 
-#: ..\_frozen_translations.py:202
+#: ..\_frozen_translations.py:204
 msgid "help_authorize_unban"
 msgstr ""
 "Unbans IP-address with provided argument\n"
 "Without arguments returns a dropdown menu with the list of banned IP-address "
 "from selected Minecraft server ban list for unban"
 
-#: ..\_frozen_translations.py:203
+#: ..\_frozen_translations.py:205
 msgid "help_authorize_unban_ip"
 msgstr "IP-address to unban"
 
-#: ..\_frozen_translations.py:204
+#: ..\_frozen_translations.py:206
 msgid "help_brief_backup"
 msgstr "Makes/manages backups 💾"
 
-#: ..\_frozen_translations.py:205
+#: ..\_frozen_translations.py:207
 msgid "help_backup"
 msgstr "Returns info about backups"
 
-#: ..\_frozen_translations.py:206
+#: ..\_frozen_translations.py:208
 msgid "help_backup_force"
 msgstr "Makes bot to create a user's backup"
 
-#: ..\_frozen_translations.py:207
+#: ..\_frozen_translations.py:209
 msgid "help_backup_force_reason"
 msgstr "Reason for user's backup"
 
-#: ..\_frozen_translations.py:208
+#: ..\_frozen_translations.py:210
 msgid "help_backup_list"
 msgstr "Shows list of current backups for selected Minecraft server"
 
-#: ..\_frozen_translations.py:209
+#: ..\_frozen_translations.py:211
 msgid "help_backup_method"
 msgstr "Sets provided compression method"
 
-#: ..\_frozen_translations.py:210
+#: ..\_frozen_translations.py:212
 msgid "help_backup_method_compression_method"
 msgstr "Compression method from '{prefix}backup method list'"
 
-#: ..\_frozen_translations.py:211
+#: ..\_frozen_translations.py:213
 msgid "help_backup_method_list"
 msgstr ""
 "Shows list of supported methods\n"
@@ -939,23 +947,23 @@ msgstr ""
 "LZMA - compresses with the highest compression level (most effective, but "
 "slow)"
 
-#: ..\_frozen_translations.py:212
+#: ..\_frozen_translations.py:214
 msgid "help_backup_off"
 msgstr "Disables auto backups"
 
-#: ..\_frozen_translations.py:213
+#: ..\_frozen_translations.py:215
 msgid "help_backup_on"
 msgstr "Enables auto backups"
 
-#: ..\_frozen_translations.py:214
+#: ..\_frozen_translations.py:216
 msgid "help_backup_period"
 msgstr "Sets new auto backups period in minutes"
 
-#: ..\_frozen_translations.py:215
+#: ..\_frozen_translations.py:217
 msgid "help_backup_period_minutes"
 msgstr "Auto backups period in minutes"
 
-#: ..\_frozen_translations.py:216
+#: ..\_frozen_translations.py:218
 msgid "help_backup_remove"
 msgstr ""
 "Deletes backup for selected Minecraft server\n"
@@ -963,50 +971,50 @@ msgstr ""
 "Minecraft server for deletion\n"
 "Might create a poll to prove your intentions"
 
-#: ..\_frozen_translations.py:217
+#: ..\_frozen_translations.py:219
 msgid "help_backup_remove_all"
 msgstr ""
 "Deletes all backups for selected Minecraft server\n"
 "Creates a poll to prove your intentions"
 
-#: ..\_frozen_translations.py:218
+#: ..\_frozen_translations.py:220
 msgid "help_backup_restore"
 msgstr ""
 "Restores backup for selected Minecraft server\n"
 "Returns a dropdown menu with the list of current backups for selected "
 "Minecraft server for restore"
 
-#: ..\_frozen_translations.py:219
+#: ..\_frozen_translations.py:221
 msgid "help_brief_channel"
 msgstr "Manages text channels for some bot's functions"
 
-#: ..\_frozen_translations.py:220
+#: ..\_frozen_translations.py:222
 msgid "help_channel"
 msgstr ""
 "Manages text channels for some bot's functions\n"
 "Without subcommand returns information about bound channels"
 
-#: ..\_frozen_translations.py:221
+#: ..\_frozen_translations.py:223
 msgid "help_channel_commands"
 msgstr ""
 "Saves text channel as commands' channel\n"
 "Without arguments saves text channel from which it was launched"
 
-#: ..\_frozen_translations.py:222
+#: ..\_frozen_translations.py:224
 msgid "help_channel_commands_channel"
 msgstr "Channel mention, like '#channel' or channel id if you're developer"
 
-#: ..\_frozen_translations.py:223
+#: ..\_frozen_translations.py:225
 msgid "help_brief_chat"
 msgstr "Manages settings for game chat"
 
-#: ..\_frozen_translations.py:224
+#: ..\_frozen_translations.py:226
 msgid "help_chat"
 msgstr ""
 "Manages settings for game chat\n"
 "Returns information about game chat settings"
 
-#: ..\_frozen_translations.py:225
+#: ..\_frozen_translations.py:227
 msgid "help_chat_edit"
 msgstr ""
 "Changes the message (if you sent it) in game chat\n"
@@ -1015,107 +1023,107 @@ msgstr ""
 "If the command is sent in reply to a message, the bot will edit that "
 "message, otherwise the bot will try to find your last message and edit it"
 
-#: ..\_frozen_translations.py:226
+#: ..\_frozen_translations.py:228
 msgid "help_chat_edit_edited_message"
 msgstr "New content of the edited message"
 
-#: ..\_frozen_translations.py:227
+#: ..\_frozen_translations.py:229
 msgid "help_chat_images"
 msgstr ""
 "Manages image settings when previewing in game chat\n"
 "Returns information about image preview settings"
 
-#: ..\_frozen_translations.py:228
+#: ..\_frozen_translations.py:230
 msgid "help_chat_images_height"
 msgstr "Updates the maximum image height that will be displayed in game chat"
 
-#: ..\_frozen_translations.py:229
+#: ..\_frozen_translations.py:231
 msgid "help_chat_images_height_pixels"
 msgstr "Integer number of pixels"
 
-#: ..\_frozen_translations.py:230
+#: ..\_frozen_translations.py:232
 msgid "help_chat_images_off"
 msgstr "Disables image preview"
 
-#: ..\_frozen_translations.py:231
+#: ..\_frozen_translations.py:233
 msgid "help_chat_images_on"
 msgstr "Enables image preview"
 
-#: ..\_frozen_translations.py:232
+#: ..\_frozen_translations.py:234
 msgid "help_chat_images_width"
 msgstr "Updates the maximum image width that will be displayed in game chat"
 
-#: ..\_frozen_translations.py:233
+#: ..\_frozen_translations.py:235
 msgid "help_chat_images_width_pixels"
 msgstr "Integer number of pixels"
 
-#: ..\_frozen_translations.py:234
+#: ..\_frozen_translations.py:236
 msgid "help_chat_obituary"
 msgstr ""
 "Updates death avatar for obituary\n"
 "The bot searches for an image either by a URL or in message attachments"
 
-#: ..\_frozen_translations.py:235
+#: ..\_frozen_translations.py:237
 msgid "help_chat_obituary_avatar_url"
 msgstr "URL to search"
 
-#: ..\_frozen_translations.py:236
+#: ..\_frozen_translations.py:238
 msgid "help_chat_off"
 msgstr "Disables game chat"
 
-#: ..\_frozen_translations.py:237
+#: ..\_frozen_translations.py:239
 msgid "help_chat_on"
 msgstr "Enables game chat"
 
-#: ..\_frozen_translations.py:238
+#: ..\_frozen_translations.py:240
 msgid "help_chat_webhook"
 msgstr ""
 "Manages settings for game chat webhook\n"
 "Returns settings' information for that webhook"
 
-#: ..\_frozen_translations.py:239
+#: ..\_frozen_translations.py:241
 msgid "help_chat_webhook_avatar"
 msgstr ""
 "Updates avatar for game chat webhook\n"
 "The bot searches for an image either by a URL or in message attachments"
 
-#: ..\_frozen_translations.py:240
+#: ..\_frozen_translations.py:242
 msgid "help_chat_webhook_avatar_avatar_url"
 msgstr "URL to search"
 
-#: ..\_frozen_translations.py:241
+#: ..\_frozen_translations.py:243
 msgid "help_chat_webhook_channel"
 msgstr "Updates default channel for game chat webhook"
 
-#: ..\_frozen_translations.py:242
+#: ..\_frozen_translations.py:244
 msgid "help_chat_webhook_channel_channel"
 msgstr "Channel mention, like '#channel' or channel id if you're developer"
 
-#: ..\_frozen_translations.py:243
+#: ..\_frozen_translations.py:245
 msgid "help_chat_webhook_name"
 msgstr "Updates name for game chat webhook"
 
-#: ..\_frozen_translations.py:244
+#: ..\_frozen_translations.py:246
 msgid "help_chat_webhook_name_name"
 msgstr "New webhook name"
 
-#: ..\_frozen_translations.py:245
+#: ..\_frozen_translations.py:247
 msgid "help_chat_webhook_reload"
 msgstr ""
 "Reloads game chat webhook for bot\n"
 "If bot can't find a linked webhook it will create a new one"
 
-#: ..\_frozen_translations.py:246
+#: ..\_frozen_translations.py:248
 msgid "help_brief_clear"
 msgstr "Deletes messages (ಠ ͜ʖಠ)︻╦╤─  ֎"
 
-#: ..\_frozen_translations.py:247
+#: ..\_frozen_translations.py:249
 msgid "help_clear"
 msgstr ""
 "Deletes specified amount of messages\n"
 "Can be dangerous in bad hands..."
 
-#: ..\_frozen_translations.py:248
+#: ..\_frozen_translations.py:250
 msgid "help_clear_count"
 msgstr ""
 "If positive - the number of messages to delete from the bottom of the "
@@ -1123,40 +1131,40 @@ msgstr ""
 "If negative - the number of messages that shouldn't be deleted at the top of "
 "the channel, the rest should be deleted"
 
-#: ..\_frozen_translations.py:249
+#: ..\_frozen_translations.py:251
 msgid "help_clear_mentions"
 msgstr ""
 "Mention of a user/role\n"
 "Indicates whose messages you want to delete (otherwise, it deletes "
 "indiscriminately)"
 
-#: ..\_frozen_translations.py:250
+#: ..\_frozen_translations.py:252
 msgid "help_clear_all"
 msgstr "Deletes all messages in channel"
 
-#: ..\_frozen_translations.py:251
+#: ..\_frozen_translations.py:253
 msgid "help_clear_all_mentions"
 msgstr ""
 "Mention of a user/role\n"
 "Indicates whose messages you want to delete (otherwise, it deletes "
 "indiscriminately)"
 
-#: ..\_frozen_translations.py:252
+#: ..\_frozen_translations.py:254
 msgid "help_clear_reply"
 msgstr "Deletes all messages up to reply message (reply message isn't deleted)"
 
-#: ..\_frozen_translations.py:253
+#: ..\_frozen_translations.py:255
 msgid "help_clear_reply_mentions"
 msgstr ""
 "Mention of a user/role\n"
 "Indicates whose messages you want to delete (otherwise, it deletes "
 "indiscriminately)"
 
-#: ..\_frozen_translations.py:254
+#: ..\_frozen_translations.py:256
 msgid "help_brief_help"
 msgstr "Shows help of command/subcommand (͡° ͜ʖ ͡°)"
 
-#: ..\_frozen_translations.py:255
+#: ..\_frozen_translations.py:257
 msgid "help_help"
 msgstr ""
 "🥚 You have found an easter egg! 🥚\n"
@@ -1164,51 +1172,51 @@ msgstr ""
 "If argument(s) provided returns help for command or subcommand\n"
 "Example: '{prefix}help command' or '{prefix}help command subcommand...'"
 
-#: ..\_frozen_translations.py:256
+#: ..\_frozen_translations.py:258
 msgid "help_help_commands"
 msgstr "Bot command or subcommand for which you want to see full help"
 
-#: ..\_frozen_translations.py:257
+#: ..\_frozen_translations.py:259
 msgid "help_brief_language"
 msgstr "Manages bot's languages"
 
-#: ..\_frozen_translations.py:258
+#: ..\_frozen_translations.py:260
 msgid "help_language"
 msgstr ""
 "Returns bot's list of available languages:\n"
 "Two-letter language code and its full name"
 
-#: ..\_frozen_translations.py:259
+#: ..\_frozen_translations.py:261
 msgid "help_language_select"
 msgstr ""
 "Changes bot's language with provided argument\n"
 "Without arguments returns a dropdown menu with bot's list of available "
 "languages"
 
-#: ..\_frozen_translations.py:260
+#: ..\_frozen_translations.py:262
 msgid "help_language_select_set_language"
 msgstr ""
 "Two-letter language code of the new language you want to set from bot's list "
 "of available languages"
 
-#: ..\_frozen_translations.py:261
+#: ..\_frozen_translations.py:263
 msgid "help_brief_list"
 msgstr "Returns info about players on server"
 
-#: ..\_frozen_translations.py:262
+#: ..\_frozen_translations.py:264
 msgid "help_list"
 msgstr ""
 "Returns number of players on server and they're nicks if the server online"
 
-#: ..\_frozen_translations.py:263
+#: ..\_frozen_translations.py:265
 msgid "help_brief_menu"
 msgstr "Creates a menu for Minecraft server and bot t(^ᴗ^t)"
 
-#: ..\_frozen_translations.py:264
+#: ..\_frozen_translations.py:266
 msgid "help_menu"
 msgstr "Shows availability of menus"
 
-#: ..\_frozen_translations.py:265
+#: ..\_frozen_translations.py:267
 msgid "help_menu_bot"
 msgstr ""
 "Creates a bot management menu for commands:\n"
@@ -1223,7 +1231,7 @@ msgstr ""
 "- {prefix}rss on/off\n"
 "- {prefix}language select"
 
-#: ..\_frozen_translations.py:266
+#: ..\_frozen_translations.py:268
 msgid "help_menu_server"
 msgstr ""
 "Creates a server management menu for commands:\n"
@@ -1239,321 +1247,321 @@ msgstr ""
 "- {prefix}backup restore\n"
 "- {prefix}backup remove"
 
-#: ..\_frozen_translations.py:267
+#: ..\_frozen_translations.py:269
 msgid "help_brief_op"
 msgstr "Gives/shows player an operator (͠≖ ͜ʖ͠≖)👌"
 
-#: ..\_frozen_translations.py:268
+#: ..\_frozen_translations.py:270
 msgid "help_op"
 msgstr ""
 "Gives player an operator in Minecraft for limited amount of time\n"
 "Requires link that creates '{prefix}associate add' command!\n"
 "Can be dangerous in bad hands..."
 
-#: ..\_frozen_translations.py:269
+#: ..\_frozen_translations.py:271
 msgid "help_op_minecraft_nick"
 msgstr ""
 "Nick of player you want to give an operator\n"
 "Note: if nick has spaces, you must enter it in quotes, for example: \"Nick\""
 
-#: ..\_frozen_translations.py:270
+#: ..\_frozen_translations.py:272
 msgid "help_op_reasons"
 msgstr ""
 "Reasons for giving an operator\n"
 "Only for logs, can be seen via '{prefix}op history'"
 
-#: ..\_frozen_translations.py:271
+#: ..\_frozen_translations.py:273
 msgid "help_op_history"
 msgstr "Shows info about history of giving operators"
 
-#: ..\_frozen_translations.py:272
+#: ..\_frozen_translations.py:274
 msgid "help_op_history_messages_from_end"
 msgstr "Number of messages to show from the end of history of giving operators"
 
-#: ..\_frozen_translations.py:273
+#: ..\_frozen_translations.py:275
 msgid "help_op_info"
 msgstr ""
 "Returns info about linked Minecraft nicks and their number of remaining uses "
 "for giving an operator\n"
 "Requires links that creates '{prefix}associate add' command!"
 
-#: ..\_frozen_translations.py:274
+#: ..\_frozen_translations.py:276
 msgid "help_op_info_for_who"
 msgstr ""
 "Get info about your nicks - 'me'\n"
 "Or get info about all nicks - 'everyone'"
 
-#: ..\_frozen_translations.py:275
+#: ..\_frozen_translations.py:277
 msgid "help_op_info_show"
 msgstr ""
 "Show info about only seen on server Minecraft nicks - 'seen'\n"
 "Or show info about all Minecraft nicks - 'all'"
 
-#: ..\_frozen_translations.py:276
+#: ..\_frozen_translations.py:278
 msgid "help_op_off"
 msgstr "Disables getting an operator to Minecraft players"
 
-#: ..\_frozen_translations.py:277
+#: ..\_frozen_translations.py:279
 msgid "help_op_on"
 msgstr "Enables getting an operator to Minecraft players"
 
-#: ..\_frozen_translations.py:278
+#: ..\_frozen_translations.py:280
 msgid "help_op_timeout"
 msgstr ""
 "Changes timeout for being operator in Minecraft\n"
 "Without arguments shows current timeout"
 
-#: ..\_frozen_translations.py:279
+#: ..\_frozen_translations.py:281
 msgid "help_op_timeout_new_value"
 msgstr ""
 "Timeout for being operator in Minecraft, in seconds\n"
 "0 for unlimited timeout"
 
-#: ..\_frozen_translations.py:280
+#: ..\_frozen_translations.py:282
 msgid "help_brief_prefix"
 msgstr "Returns/changes prefix"
 
-#: ..\_frozen_translations.py:281
+#: ..\_frozen_translations.py:283
 msgid "help_prefix"
 msgstr ""
 "Without arguments returns current prefix\n"
 "With argument - changes prefix to a new one"
 
-#: ..\_frozen_translations.py:282
+#: ..\_frozen_translations.py:284
 msgid "help_prefix_new_prefix"
 msgstr "New prefix for bot"
 
-#: ..\_frozen_translations.py:283
+#: ..\_frozen_translations.py:285
 msgid "help_brief_restart"
 msgstr "Restarts server"
 
-#: ..\_frozen_translations.py:284
+#: ..\_frozen_translations.py:286
 msgid "help_restart"
 msgstr ""
 "Restarts the selected server after number of seconds provided from argument\n"
 "Without arguments starts restarting immediately"
 
-#: ..\_frozen_translations.py:285
+#: ..\_frozen_translations.py:287
 msgid "help_restart_timeout"
 msgstr "Timeout before restarting, in seconds"
 
-#: ..\_frozen_translations.py:286
+#: ..\_frozen_translations.py:288
 msgid "help_brief_role"
 msgstr "Manages roles for some bot's functions"
 
-#: ..\_frozen_translations.py:287
+#: ..\_frozen_translations.py:289
 msgid "help_role"
 msgstr ""
 "Manages roles for some bot's functions\n"
 "Without subcommand returns information about bound roles"
 
-#: ..\_frozen_translations.py:288
+#: ..\_frozen_translations.py:290
 msgid "help_role_admin"
 msgstr "Saves admin role for bot"
 
-#: ..\_frozen_translations.py:289
+#: ..\_frozen_translations.py:291
 msgid "help_role_admin_role"
 msgstr "Role mention, like '@Role' or role id if you're developer"
 
-#: ..\_frozen_translations.py:290
+#: ..\_frozen_translations.py:292
 msgid "help_role_admin_clear"
 msgstr "Unbinds admin role for bot"
 
-#: ..\_frozen_translations.py:291
+#: ..\_frozen_translations.py:293
 msgid "help_role_command"
 msgstr "Saves role for commands that manage Minecraft server"
 
-#: ..\_frozen_translations.py:292
+#: ..\_frozen_translations.py:294
 msgid "help_role_command_role"
 msgstr "Role mention, like '@Role' or role id if you're developer"
 
-#: ..\_frozen_translations.py:293
+#: ..\_frozen_translations.py:295
 msgid "help_role_command_clear"
 msgstr "Unbinds role for commands that manage Minecraft server"
 
-#: ..\_frozen_translations.py:294
+#: ..\_frozen_translations.py:296
 msgid "help_brief_rss"
 msgstr "Manages settings for RSS"
 
-#: ..\_frozen_translations.py:295
+#: ..\_frozen_translations.py:297
 msgid "help_rss"
 msgstr ""
 "Manages settings for RSS\n"
 "Returns information about RSS settings"
 
-#: ..\_frozen_translations.py:296
+#: ..\_frozen_translations.py:298
 msgid "help_rss_interval"
 msgstr "Updates scan interval for RSS feed"
 
-#: ..\_frozen_translations.py:297
+#: ..\_frozen_translations.py:299
 msgid "help_rss_interval_seconds"
 msgstr "Integer number of seconds"
 
-#: ..\_frozen_translations.py:298
+#: ..\_frozen_translations.py:300
 msgid "help_rss_off"
 msgstr "Disables RSS"
 
-#: ..\_frozen_translations.py:299
+#: ..\_frozen_translations.py:301
 msgid "help_rss_on"
 msgstr "Enables RSS"
 
-#: ..\_frozen_translations.py:300
+#: ..\_frozen_translations.py:302
 msgid "help_rss_url"
 msgstr "Updates URL of RSS feed"
 
-#: ..\_frozen_translations.py:301
+#: ..\_frozen_translations.py:303
 msgid "help_rss_url_url"
 msgstr "URL of RSS feed"
 
-#: ..\_frozen_translations.py:302
+#: ..\_frozen_translations.py:304
 msgid "help_rss_webhook"
 msgstr ""
 "Manages settings for RSS webhook\n"
 "Returns settings' information for that webhook"
 
-#: ..\_frozen_translations.py:303
+#: ..\_frozen_translations.py:305
 msgid "help_rss_webhook_avatar"
 msgstr ""
 "Updates avatar for RSS webhook\n"
 "The bot searches for an image either by a URL or in message attachments"
 
-#: ..\_frozen_translations.py:304
+#: ..\_frozen_translations.py:306
 msgid "help_rss_webhook_avatar_avatar_url"
 msgstr "URL to search"
 
-#: ..\_frozen_translations.py:305
+#: ..\_frozen_translations.py:307
 msgid "help_rss_webhook_channel"
 msgstr "Updates default channel for RSS webhook"
 
-#: ..\_frozen_translations.py:306
+#: ..\_frozen_translations.py:308
 msgid "help_rss_webhook_channel_channel"
 msgstr "Channel mention, like '#channel' or channel id if you're developer"
 
-#: ..\_frozen_translations.py:307
+#: ..\_frozen_translations.py:309
 msgid "help_rss_webhook_name"
 msgstr "Updates name for game chat webhook"
 
-#: ..\_frozen_translations.py:308
+#: ..\_frozen_translations.py:310
 msgid "help_rss_webhook_name_name"
 msgstr "New webhook name"
 
-#: ..\_frozen_translations.py:309
+#: ..\_frozen_translations.py:311
 msgid "help_rss_webhook_reload"
 msgstr ""
 "Reloads RSS webhook for bot\n"
 "If bot can't find a linked webhook it will create a new one"
 
-#: ..\_frozen_translations.py:310
+#: ..\_frozen_translations.py:312
 msgid "help_brief_schedule"
 msgstr "Shows info about scheduled tasks"
 
-#: ..\_frozen_translations.py:311
+#: ..\_frozen_translations.py:313
 msgid "help_schedule"
 msgstr ""
 "Shows the current status of tasks:\n"
 "- Scheduled shutdown\n"
 "- Permanent start up (forceload)"
 
-#: ..\_frozen_translations.py:312
+#: ..\_frozen_translations.py:314
 msgid "help_schedule_forceload"
 msgstr ""
 "Allows you to configure/display the current state of the task \"Autoload if "
 "server crashes\""
 
-#: ..\_frozen_translations.py:313
+#: ..\_frozen_translations.py:315
 msgid "help_schedule_forceload_off"
 msgstr "Disables task \"Autoload if server crashes\""
 
-#: ..\_frozen_translations.py:314
+#: ..\_frozen_translations.py:316
 msgid "help_schedule_forceload_on"
 msgstr "Enables task \"Autoload if server crashes\""
 
-#: ..\_frozen_translations.py:315
+#: ..\_frozen_translations.py:317
 msgid "help_schedule_shutdown"
 msgstr ""
 "Allows you to configure/display the current state of the task \"Server "
 "shutdown when idle (no players online)\""
 
-#: ..\_frozen_translations.py:316
+#: ..\_frozen_translations.py:318
 msgid "help_schedule_shutdown_off"
 msgstr "Disables task \"Shutdown of Minecraft server when idle\""
 
-#: ..\_frozen_translations.py:317
+#: ..\_frozen_translations.py:319
 msgid "help_schedule_shutdown_on"
 msgstr "Enables task \"Shutdown of Minecraft server when idle\""
 
-#: ..\_frozen_translations.py:318
+#: ..\_frozen_translations.py:320
 msgid "help_schedule_shutdown_timeout"
 msgstr ""
 "Changes timeout for task \"Shutdown of Minecraft server when idle\"\n"
 "Without arguments shows current timeout"
 
-#: ..\_frozen_translations.py:319
+#: ..\_frozen_translations.py:321
 msgid "help_schedule_shutdown_timeout_new_value"
 msgstr "Timeout before stopping the server, in seconds"
 
-#: ..\_frozen_translations.py:320
+#: ..\_frozen_translations.py:322
 msgid "help_brief_server"
 msgstr "Manages bot's Minecraft servers (͠◉_◉᷅ )"
 
-#: ..\_frozen_translations.py:321
+#: ..\_frozen_translations.py:323
 msgid "help_server"
 msgstr ""
 "Manages bot's available Minecraft servers\n"
 "Returns selected server name"
 
-#: ..\_frozen_translations.py:322
+#: ..\_frozen_translations.py:324
 msgid "help_server_list"
 msgstr "Returns list of bot's available Minecraft servers"
 
-#: ..\_frozen_translations.py:323
+#: ..\_frozen_translations.py:325
 msgid "help_server_select"
 msgstr ""
 "Selects server from bot's available Minecraft servers\n"
 "Returns a dropdown menu with the list of bot's available Minecraft servers "
 "to select"
 
-#: ..\_frozen_translations.py:324
+#: ..\_frozen_translations.py:326
 msgid "help_brief_start"
 msgstr "Starts server"
 
-#: ..\_frozen_translations.py:325
+#: ..\_frozen_translations.py:327
 msgid "help_start"
 msgstr "Starts the selected server"
 
-#: ..\_frozen_translations.py:326
+#: ..\_frozen_translations.py:328
 msgid "help_brief_status"
 msgstr "Returns status of server"
 
-#: ..\_frozen_translations.py:327
+#: ..\_frozen_translations.py:329
 msgid "help_status"
 msgstr ""
 "Returns status of the selected server, name of the selected server, info "
 "when server was started and stopped if it happened"
 
-#: ..\_frozen_translations.py:328
+#: ..\_frozen_translations.py:330
 msgid "help_status_update"
 msgstr "Updates status of the selected server"
 
-#: ..\_frozen_translations.py:329
+#: ..\_frozen_translations.py:331
 msgid "help_brief_stop"
 msgstr "Stops server"
 
-#: ..\_frozen_translations.py:330
+#: ..\_frozen_translations.py:332
 msgid "help_stop"
 msgstr ""
 "Stops the selected server after number of seconds provided from argument\n"
 "Without arguments starts stopping immediately"
 
-#: ..\_frozen_translations.py:331
+#: ..\_frozen_translations.py:333
 msgid "help_stop_timeout"
 msgstr "Timeout before stopping, in seconds"
 
-#: ..\_frozen_translations.py:332
+#: ..\_frozen_translations.py:334
 msgid "help_brief_whitelist"
 msgstr "'Whitelist' command from Minecraft"
 
-#: ..\_frozen_translations.py:333
+#: ..\_frozen_translations.py:335
 msgid "help_whitelist"
 msgstr ""
 "Implements all functionality of the 'whitelist' command from Minecraft\n"
@@ -1561,220 +1569,220 @@ msgstr ""
 "can login\n"
 "Shows if the restriction is enabled"
 
-#: ..\_frozen_translations.py:334
+#: ..\_frozen_translations.py:336
 msgid "help_whitelist_add"
 msgstr "Adds a Minecraft nick to the list of allowed nicks"
 
-#: ..\_frozen_translations.py:335
+#: ..\_frozen_translations.py:337
 msgid "help_whitelist_add_minecraft_nick"
 msgstr "Nick of the Minecraft player"
 
-#: ..\_frozen_translations.py:336
+#: ..\_frozen_translations.py:338
 msgid "help_whitelist_list"
 msgstr "Returns list allowed nicks"
 
-#: ..\_frozen_translations.py:337
+#: ..\_frozen_translations.py:339
 msgid "help_whitelist_off"
 msgstr ""
 "Allows the server to let any players regardless of the list of allowed nicks"
 
-#: ..\_frozen_translations.py:338
+#: ..\_frozen_translations.py:340
 msgid "help_whitelist_on"
 msgstr "Forbids the server to let players not from the list of allowed nicks"
 
-#: ..\_frozen_translations.py:339
+#: ..\_frozen_translations.py:341
 msgid "help_whitelist_reload"
 msgstr "Reloads the list of allowed nicks"
 
-#: ..\_frozen_translations.py:340
+#: ..\_frozen_translations.py:342
 msgid "help_whitelist_remove"
 msgstr "Deletes a Minecraft nick from the list of allowed nicks"
 
-#: ..\_frozen_translations.py:341
+#: ..\_frozen_translations.py:343
 msgid "help_whitelist_remove_minecraft_nick"
 msgstr "Nick of the Minecraft player"
 
-#: ..\_frozen_translations.py:342
+#: ..\_frozen_translations.py:344
 msgid "Add Reactions"
 msgstr "Add Reactions"
 
-#: ..\_frozen_translations.py:343
+#: ..\_frozen_translations.py:345
 msgid "Administrator"
 msgstr "Administrator"
 
-#: ..\_frozen_translations.py:344
+#: ..\_frozen_translations.py:346
 msgid "Attach Files"
 msgstr "Attach Files"
 
-#: ..\_frozen_translations.py:345
+#: ..\_frozen_translations.py:347
 msgid "Ban Members"
 msgstr "Ban Members"
 
-#: ..\_frozen_translations.py:346
+#: ..\_frozen_translations.py:348
 msgid "Change Nickname"
 msgstr "Change Nickname"
 
-#: ..\_frozen_translations.py:347
+#: ..\_frozen_translations.py:349
 msgid "Connect"
 msgstr "Connect"
 
-#: ..\_frozen_translations.py:348
+#: ..\_frozen_translations.py:350
 msgid "Create Instant Invite"
 msgstr "Create Instant Invite"
 
-#: ..\_frozen_translations.py:349
+#: ..\_frozen_translations.py:351
 msgid "Create Private Threads"
 msgstr "Create Private Threads"
 
-#: ..\_frozen_translations.py:350
+#: ..\_frozen_translations.py:352
 msgid "Create Public Threads"
 msgstr "Create Public Threads"
 
-#: ..\_frozen_translations.py:351
+#: ..\_frozen_translations.py:353
 msgid "Deafen Members"
 msgstr "Deafen Members"
 
-#: ..\_frozen_translations.py:352
+#: ..\_frozen_translations.py:354
 msgid "Embed Links"
 msgstr "Embed Links"
 
-#: ..\_frozen_translations.py:353
+#: ..\_frozen_translations.py:355
 msgid "External Emojis"
 msgstr "External Emojis"
 
-#: ..\_frozen_translations.py:354
+#: ..\_frozen_translations.py:356
 msgid "External Stickers"
 msgstr "External Stickers"
 
-#: ..\_frozen_translations.py:355
+#: ..\_frozen_translations.py:357
 msgid "Kick Members"
 msgstr "Kick Members"
 
-#: ..\_frozen_translations.py:356
+#: ..\_frozen_translations.py:358
 msgid "Manage Channels"
 msgstr "Manage Channels"
 
-#: ..\_frozen_translations.py:357
+#: ..\_frozen_translations.py:359
 msgid "Manage Emojis"
 msgstr "Manage Emojis"
 
-#: ..\_frozen_translations.py:358
+#: ..\_frozen_translations.py:360
 msgid "Manage Emojis And Stickers"
 msgstr "Manage Emojis And Stickers"
 
-#: ..\_frozen_translations.py:359
+#: ..\_frozen_translations.py:361
 msgid "Manage Events"
 msgstr "Manage Events"
 
-#: ..\_frozen_translations.py:360
+#: ..\_frozen_translations.py:362
 msgid "Manage Server"
 msgstr "Manage Server"
 
-#: ..\_frozen_translations.py:361
+#: ..\_frozen_translations.py:363
 msgid "Manage Messages"
 msgstr "Manage Messages"
 
-#: ..\_frozen_translations.py:362
+#: ..\_frozen_translations.py:364
 msgid "Manage Nicknames"
 msgstr "Manage Nicknames"
 
-#: ..\_frozen_translations.py:363
+#: ..\_frozen_translations.py:365
 msgid "Manage Permissions"
 msgstr "Manage Permissions"
 
-#: ..\_frozen_translations.py:364
+#: ..\_frozen_translations.py:366
 msgid "Manage Roles"
 msgstr "Manage Roles"
 
-#: ..\_frozen_translations.py:365
+#: ..\_frozen_translations.py:367
 msgid "Manage Threads"
 msgstr "Manage Threads"
 
-#: ..\_frozen_translations.py:366
+#: ..\_frozen_translations.py:368
 msgid "Manage Webhooks"
 msgstr "Manage Webhooks"
 
-#: ..\_frozen_translations.py:367
+#: ..\_frozen_translations.py:369
 msgid "Mention Everyone"
 msgstr "Mention @everyone, @here and all roles"
 
-#: ..\_frozen_translations.py:368
+#: ..\_frozen_translations.py:370
 msgid "Moderate Members"
 msgstr "Moderate Members"
 
-#: ..\_frozen_translations.py:369
+#: ..\_frozen_translations.py:371
 msgid "Move Members"
 msgstr "Move Members"
 
-#: ..\_frozen_translations.py:370
+#: ..\_frozen_translations.py:372
 msgid "Mute Members"
 msgstr "Mute Members"
 
-#: ..\_frozen_translations.py:371
+#: ..\_frozen_translations.py:373
 msgid "Priority Speaker"
 msgstr "Priority Speaker"
 
-#: ..\_frozen_translations.py:372
+#: ..\_frozen_translations.py:374
 msgid "Read Message History"
 msgstr "Read Message History"
 
-#: ..\_frozen_translations.py:373
+#: ..\_frozen_translations.py:375
 msgid "Read Messages"
 msgstr "Read Messages"
 
-#: ..\_frozen_translations.py:374
+#: ..\_frozen_translations.py:376
 msgid "Request To Speak"
 msgstr "Request To Speak"
 
-#: ..\_frozen_translations.py:375
+#: ..\_frozen_translations.py:377
 msgid "Send Messages"
 msgstr "Send Messages"
 
-#: ..\_frozen_translations.py:376
+#: ..\_frozen_translations.py:378
 msgid "Send Messages In Threads"
 msgstr "Send Messages In Threads"
 
-#: ..\_frozen_translations.py:377
+#: ..\_frozen_translations.py:379
 msgid "Send Tts Messages"
 msgstr "Send text-to-speech messages"
 
-#: ..\_frozen_translations.py:378
+#: ..\_frozen_translations.py:380
 msgid "Speak"
 msgstr "Speak"
 
-#: ..\_frozen_translations.py:379
+#: ..\_frozen_translations.py:381
 msgid "Stream"
 msgstr "Stream"
 
-#: ..\_frozen_translations.py:380
+#: ..\_frozen_translations.py:382
 msgid "Use Application Commands"
 msgstr "Use Application Commands"
 
-#: ..\_frozen_translations.py:381
+#: ..\_frozen_translations.py:383
 msgid "Use Embedded Activities"
 msgstr "Use Activities"
 
-#: ..\_frozen_translations.py:382
+#: ..\_frozen_translations.py:384
 msgid "Use External Emojis"
 msgstr "Use External Emojis"
 
-#: ..\_frozen_translations.py:383
+#: ..\_frozen_translations.py:385
 msgid "Use External Stickers"
 msgstr "Use External Stickers"
 
-#: ..\_frozen_translations.py:384
+#: ..\_frozen_translations.py:386
 msgid "Use Voice Activation"
 msgstr "Use Voice Activation"
 
-#: ..\_frozen_translations.py:385
+#: ..\_frozen_translations.py:387
 msgid "View Audit Log"
 msgstr "View Audit Log"
 
-#: ..\_frozen_translations.py:386
+#: ..\_frozen_translations.py:388
 msgid "View Channel"
 msgstr "View Channels"
 
-#: ..\_frozen_translations.py:387
+#: ..\_frozen_translations.py:389
 msgid "View Server Insights"
 msgstr "View Server Insights"
 
