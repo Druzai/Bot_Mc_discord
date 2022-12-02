@@ -98,10 +98,23 @@ class Image_preview:
 
 
 @dataclass
+class Obituary:
+    enable_obituary: Optional[bool] = None
+    name_for_death_messages: Optional[str] = None
+    avatar_url_for_death_messages: Optional[str] = None
+
+    @property
+    def get_webhook_name_for_death_messages(self):
+        if self.name_for_death_messages is not None:
+            return self.name_for_death_messages
+        return get_translation("☠ Obituary ☠")
+
+
+@dataclass
 class Game_chat:
     enable_game_chat: Optional[bool] = None
     webhook_url: Optional[str] = None
-    avatar_url_for_death_messages: Optional[str] = None
+    obituary: Obituary = Obituary()
     max_words_in_mention: Optional[int] = None
     max_wrong_symbols_in_mention_from_right: Optional[int] = None
     image_preview: Image_preview = Image_preview()
@@ -731,6 +744,14 @@ class Config:
         return cls._settings_instance.bot_settings.server_watcher.game_chat
 
     @classmethod
+    def get_obituary_settings(cls) -> Obituary:
+        return cls._settings_instance.bot_settings.server_watcher.game_chat.obituary
+
+    @classmethod
+    def get_image_preview_settings(cls) -> Image_preview:
+        return cls._settings_instance.bot_settings.server_watcher.game_chat.image_preview
+
+    @classmethod
     def get_rss_feed_settings(cls) -> Rss_feed:
         return cls._settings_instance.bot_settings.rss_feed
 
@@ -1080,7 +1101,7 @@ class Config:
                     else:
                         return answer.lower() == match_str
                 if try_link:
-                    if search(URL_REGEX, answer):
+                    if search(rf"^{URL_REGEX}", answer):
                         return answer
                     else:
                         continue
@@ -1684,12 +1705,12 @@ class Config:
                     else:
                         print(get_translation(
                             "Bot will fetch disowned webhook or create a new one! "
-                            "You can change it via '{0}{1} webhook'."
-                        ).format(Config.get_settings().bot_settings.prefix, "chat"))
-                if cls.get_game_chat_settings().avatar_url_for_death_messages is None:
+                            "You can change it via '{0}{1}'."
+                        ).format(Config.get_settings().bot_settings.prefix, "chat webhook"))
+                if cls.get_obituary_settings().avatar_url_for_death_messages is None:
                     if cls._ask_for_data(get_translation("Avatar URL for death messages chat not found. "
                                                          "Would you like to enter it?") + " Y/n\n> ", "y"):
-                        cls.get_game_chat_settings().avatar_url_for_death_messages = \
+                        cls.get_obituary_settings().avatar_url_for_death_messages = \
                             cls._ask_for_data(get_translation("Enter URL for avatar image") + "\n> ", try_link=True)
                     else:
                         print(get_translation("Avatar URL for death messages would be taken from bot's avatar."))
@@ -1723,40 +1744,73 @@ class Config:
                     try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=20)
 
         # Images preview
-        if cls.get_game_chat_settings().image_preview.enable_image_preview is None and \
+        if cls.get_image_preview_settings().enable_image_preview is None and \
                 not cls.get_game_chat_settings().enable_game_chat:
-            cls.get_game_chat_settings().image_preview.enable_image_preview = False
-            cls.get_game_chat_settings().image_preview.max_width = 160
-            cls.get_game_chat_settings().image_preview.max_height = 30
-        elif cls.get_game_chat_settings().image_preview.enable_image_preview is None:
+            cls.get_image_preview_settings().enable_image_preview = False
+            cls.get_image_preview_settings().max_width = 160
+            cls.get_image_preview_settings().max_height = 30
+        elif cls.get_image_preview_settings().enable_image_preview is None:
             cls._need_to_rewrite = True
             if cls._ask_for_data(get_translation("Would you like to enable image preview in game chat?") +
                                  " Y/n\n> ", "y"):
-                cls.get_game_chat_settings().image_preview.enable_image_preview = True
+                cls.get_image_preview_settings().enable_image_preview = True
                 print(get_translation("Image preview enabled") + ".")
             else:
-                cls.get_game_chat_settings().image_preview.enable_image_preview = False
+                cls.get_image_preview_settings().enable_image_preview = False
                 print(get_translation("Image preview disabled") + ".")
 
-        if cls.get_game_chat_settings().image_preview.max_width is None or \
-                cls.get_game_chat_settings().image_preview.max_width < 1 or \
-                cls.get_game_chat_settings().image_preview.max_width > 160:
+        if cls.get_image_preview_settings().max_width is None or \
+                cls.get_image_preview_settings().max_width < 1 or \
+                cls.get_image_preview_settings().max_width > 160:
             cls._need_to_rewrite = True
-            cls.get_game_chat_settings().image_preview.max_width = \
+            cls.get_image_preview_settings().max_width = \
                 cls._ask_for_data(
                     get_translation("Enter the maximum image width that will be displayed in game chat"
                                     " (default - 160 pixels, int)") + "\n> ",
                     try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=160)
 
-        if cls.get_game_chat_settings().image_preview.max_height is None or \
-                cls.get_game_chat_settings().image_preview.max_height < 1 or \
-                cls.get_game_chat_settings().image_preview.max_height > 36:
+        if cls.get_image_preview_settings().max_height is None or \
+                cls.get_image_preview_settings().max_height < 1 or \
+                cls.get_image_preview_settings().max_height > 36:
             cls._need_to_rewrite = True
-            cls.get_game_chat_settings().image_preview.max_height = \
+            cls.get_image_preview_settings().max_height = \
                 cls._ask_for_data(
                     get_translation("Enter the maximum image height that will be displayed in game chat"
                                     " (default - 30 pixels, int)") + "\n> ",
                     try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=36)
+
+        # Obituary
+        if cls.get_obituary_settings().enable_obituary is None:
+            cls._need_to_rewrite = True
+            if cls._ask_for_data(get_translation("Would you like to enable obituary?") + " Y/n\n> ", "y"):
+                cls.get_obituary_settings().enable_obituary = True
+                print(get_translation("Obituary enabled") + ".")
+
+                if cls.get_obituary_settings().name_for_death_messages is None:
+                    if cls._ask_for_data(get_translation("Webhook name for death messages not found. "
+                                                         "Would you like to enter it?") + " Y/n\n> ", "y"):
+                        cls.get_obituary_settings().name_for_death_messages = \
+                            cls._ask_for_data(get_translation("Enter webhook name for death messages") + "\n> ")
+                    else:
+                        print(get_translation(
+                            "Bot will use default name for death messages! "
+                            "You can change it via '{0}{1}'."
+                        ).format(Config.get_settings().bot_settings.prefix, "chat obituary name"))
+
+                if cls.get_obituary_settings().avatar_url_for_death_messages is None:
+                    if cls._ask_for_data(get_translation("Avatar URL for death messages not found. "
+                                                         "Would you like to enter it?") + " Y/n\n> ", "y"):
+                        cls.get_obituary_settings().avatar_url_for_death_messages = \
+                            cls._ask_for_data(get_translation("Enter avatar URL for death messages") + "\n> ",
+                                              try_link=True)
+                    else:
+                        print(get_translation(
+                            "Bot will use default webhook's avatar for death messages! "
+                            "You can change it via '{0}{1}'."
+                        ).format(Config.get_settings().bot_settings.prefix, "chat obituary avatar"))
+            else:
+                cls.get_obituary_settings().enable_obituary = False
+                print(get_translation("Obituary disabled") + ".")
 
         # Secure auth
         if cls.get_secure_auth().enable_secure_auth is None:
@@ -1823,8 +1877,8 @@ class Config:
                     else:
                         print(get_translation(
                             "Bot will fetch disowned webhook or create a new one! "
-                            "You can change it via '{0}{1} webhook'."
-                        ).format(Config.get_settings().bot_settings.prefix, "rss"))
+                            "You can change it via '{0}{1}'."
+                        ).format(Config.get_settings().bot_settings.prefix, "rss webhook"))
 
                 if cls.get_rss_feed_settings().rss_url is None:
                     if cls._ask_for_data(

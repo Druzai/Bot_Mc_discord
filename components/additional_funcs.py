@@ -1551,9 +1551,32 @@ def check_if_string_in_all_translations(translate_text: str, match_text: str):
 
     for locale in list_of_locales:
         set_locale(locale)
-        if locale != current_locale and match_text == get_translation(translate_text):
+        if match_text == get_translation(translate_text):
+            if locale != current_locale:
+                set_locale(current_locale)
             return True
     return False
+
+
+def check_if_obituary_webhook(name: str, for_game_chat=False):
+    if Config.get_obituary_settings().name_for_death_messages is None:
+        is_found = "☠" in name and check_if_string_in_all_translations(
+            translate_text="☠ Obituary ☠", match_text=name
+        )
+    else:
+        is_found = name == Config.get_obituary_settings().name_for_death_messages
+        if not for_game_chat and not is_found:
+            is_found = "☠" in name and check_if_string_in_all_translations(
+                translate_text="☠ Obituary ☠", match_text=name
+            )
+    result = False
+
+    if is_found:
+        if for_game_chat:
+            result = name not in [u.user_minecraft_nick for u in Config.get_known_users_list()]
+        else:
+            result = True
+    return result
 
 
 async def bot_associate(
@@ -1565,8 +1588,7 @@ async def bot_associate(
 ):
     need_to_save = False
 
-    if "☠ " in minecraft_nick and \
-            check_if_string_in_all_translations(translate_text="☠ Obituary ☠", match_text=minecraft_nick):
+    if check_if_obituary_webhook(minecraft_nick):
         await ctx.send(get_translation("{0}, you don't have permission to control fates! "
                                        "Not in this life at least...").format(discord_mention.mention))
         return
@@ -1575,9 +1597,8 @@ async def bot_associate(
         if minecraft_nick in [u.user_minecraft_nick for u in Config.get_known_users_list()]:
             associated_member = [u.user_discord_id for u in Config.get_known_users_list()
                                  if u.user_minecraft_nick == minecraft_nick][0]
-            associated_member = await bot.guilds[0].fetch_member(associated_member)
             await ctx.send(get_translation("This nick is already associated with member {0}.")
-                           .format(associated_member.mention))
+                           .format(await get_member_string(bot, associated_member, True)))
         else:
             need_to_save = True
             Config.add_to_known_users_list(minecraft_nick, discord_mention.id)
@@ -2829,8 +2850,13 @@ class MenuBotView(TemplateSelectView):
         self.b_chat.label = get_translation("Game chat")
 
         self.b_c_p_images.style = ButtonStyle.green \
-            if Config.get_game_chat_settings().image_preview.enable_image_preview else ButtonStyle.red
+            if Config.get_image_preview_settings().enable_image_preview else ButtonStyle.red
         self.b_c_p_images.label = get_translation("Image preview")
+
+        self.b_c_obituary.style = ButtonStyle.green \
+            if Config.get_obituary_settings().enable_obituary else ButtonStyle.red
+        self.b_c_obituary.emoji = "👻" if Config.get_obituary_settings().enable_obituary else "☠"
+        self.b_c_obituary.label = get_translation("Obituary")
 
         self.b_rss_news.style = ButtonStyle.green if Config.get_rss_feed_settings().enable_rss_feed else ButtonStyle.red
         self.b_rss_news.emoji = "🔔" if Config.get_rss_feed_settings().enable_rss_feed else "🔕"
@@ -2959,15 +2985,29 @@ class MenuBotView(TemplateSelectView):
     @button(custom_id="menu_bot_view:chat_preview_images", emoji="🖼", row=2)
     async def b_c_p_images(self, interaction: Interaction, button: Button):
         if is_minecrafter(interaction):
-            Config.get_game_chat_settings().image_preview.enable_image_preview = \
-                not Config.get_game_chat_settings().image_preview.enable_image_preview
+            Config.get_image_preview_settings().enable_image_preview = \
+                not Config.get_image_preview_settings().enable_image_preview
             Config.save_config()
             button.style = ButtonStyle.red if button.style == ButtonStyle.green else ButtonStyle.green
             await edit_interaction(interaction, self, self.message_id)
-            if Config.get_game_chat_settings().image_preview.enable_image_preview:
+            if Config.get_image_preview_settings().enable_image_preview:
                 msg = get_translation("Image preview enabled") + "!"
             else:
                 msg = get_translation("Image preview disabled") + "!"
+            await send_interaction(interaction, msg, is_reaction=True)
+
+    @button(custom_id="menu_bot_view:chat_obituary", row=2)
+    async def b_c_obituary(self, interaction: Interaction, button: Button):
+        if is_minecrafter(interaction):
+            Config.get_obituary_settings().enable_obituary = not Config.get_obituary_settings().enable_obituary
+            Config.save_config()
+            button.emoji = "☠" if button.style == ButtonStyle.green else "👻"
+            button.style = ButtonStyle.red if button.style == ButtonStyle.green else ButtonStyle.green
+            await edit_interaction(interaction, self, self.message_id)
+            if Config.get_obituary_settings().enable_obituary:
+                msg = get_translation("Obituary enabled") + "!"
+            else:
+                msg = get_translation("Obituary disabled") + "!"
             await send_interaction(interaction, msg, is_reaction=True)
 
     @button(custom_id="menu_bot_view:rss_news", row=2)
@@ -3494,7 +3534,7 @@ async def handle_message_for_chat(
                 result_msg,
                 message, bot,
                 store_images_for_preview=server_version.minor >= 16 and
-                                         Config.get_game_chat_settings().image_preview.enable_image_preview
+                                         Config.get_image_preview_settings().enable_image_preview
             )
             # Building object for tellraw
             res_obj = [""]
@@ -3997,21 +4037,20 @@ def _build_nickname_tellraw_for_minecraft_player(
     if server_version.minor > 7 and len(nick.split()) == 1 and nick in get_server_players().get("players"):
         tellraw_obj += [{"selector": f"@p[name={nick}]"}]
     elif server_version.minor > 7:
-        if "☠ " in nick and \
-                check_if_string_in_all_translations(translate_text="☠ Obituary ☠", match_text=nick):
+        if check_if_obituary_webhook(nick, for_game_chat=True):
             entity = get_translation("Entity")
         else:
             entity = get_translation("Player")
         hover_string = f"{nick}\n" + get_translation("Type: {0}").format(entity) + f"\n{Config.get_offline_uuid(nick)}"
         tellraw_obj += [{
             "text": nick,
-            "clickEvent": {"action": "suggest_command", "value": f"/tell {nick} "},
+            "clickEvent": {"action": "suggest_command", "value": f"tell {nick} "},
             "hoverEvent": {"action": "show_text", content_name: hover_string}
         }]
     else:
         tellraw_obj += [{
             "text": nick,
-            "clickEvent": {"action": "suggest_command", "value": f"/tell {nick} "},
+            "clickEvent": {"action": "suggest_command", "value": f"tell {nick} "},
             "hoverEvent": {"action": "show_text", content_name: f"{nick}\n{Config.get_offline_uuid(nick)}"}
         }]
     tellraw_obj += [{"text": right_bracket}]
@@ -4164,16 +4203,16 @@ def send_image_to_chat(url: str, image_name: str, required_width: int = None, re
     img = Image.open(image_data["bytes"], "r")
 
     if required_height is not None and \
-            required_height < Config.get_game_chat_settings().image_preview.max_height:
+            required_height < Config.get_image_preview_settings().max_height:
         max_height = required_height
     else:
-        max_height = Config.get_game_chat_settings().image_preview.max_height
+        max_height = Config.get_image_preview_settings().max_height
 
     if required_width is not None and \
-            required_width < Config.get_game_chat_settings().image_preview.max_width:
+            required_width < Config.get_image_preview_settings().max_width:
         calc_width = required_height
     else:
-        calc_width = Config.get_game_chat_settings().image_preview.max_width
+        calc_width = Config.get_image_preview_settings().max_width
 
     calc_height = int(round((img.height * 2) / (img.width / calc_width), 0) / 9)
     if calc_height > max_height:

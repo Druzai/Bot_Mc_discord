@@ -23,7 +23,7 @@ from components.additional_funcs import (
     check_if_string_in_all_translations, build_nickname_tellraw_for_bot, send_select_view, shorten_string, SelectChoice,
     send_interaction, DISCORD_SELECT_FIELD_MAX_LENGTH, MenuServerView, on_server_select_callback, MenuBotView,
     get_message_and_channel, backup_force_checking, on_backup_force_callback, backup_restore_checking,
-    send_backup_restore_select, send_backup_remove_select
+    send_backup_restore_select, send_backup_remove_select, check_if_obituary_webhook
 )
 from components.localization import get_translation
 from components.watcher_handle import create_watcher
@@ -60,7 +60,7 @@ class MinecraftCommands(commands.Cog):
 
     @status.command(pass_context=True, name="update")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def s_update(self, ctx: commands.Context):
         self.checkups_task.restart()
@@ -74,7 +74,7 @@ class MinecraftCommands(commands.Cog):
 
     @commands.command(pass_context=True)
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def start(self, ctx: commands.Context):
         """Start server"""
@@ -85,7 +85,7 @@ class MinecraftCommands(commands.Cog):
         manage_messages=True, send_messages=True, mention_everyone=True, add_reactions=True, embed_links=True,
         view_channel=True
     )
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def stop(self, ctx: commands.Context, timeout: int = 0):
         """Stop server"""
@@ -96,7 +96,7 @@ class MinecraftCommands(commands.Cog):
         manage_messages=True, send_messages=True, mention_everyone=True, add_reactions=True, embed_links=True,
         view_channel=True
     )
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def restart(self, ctx: commands.Context, timeout: int = 0):
         """Restart server"""
@@ -104,7 +104,7 @@ class MinecraftCommands(commands.Cog):
 
     @commands.group(pass_context=True, invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def op(self, ctx: commands.Context, minecraft_nick: str, *, reasons: str = ""):
         if not Config.get_op_settings().enable_op:
@@ -283,7 +283,7 @@ class MinecraftCommands(commands.Cog):
 
     @op.command(pass_context=True, name="history", aliases=["hist"], ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def o_history(self, ctx: commands.Context, messages_from_end: int = 0):
         if messages_from_end < 0:
@@ -321,7 +321,7 @@ class MinecraftCommands(commands.Cog):
 
     @op.command(pass_context=True, name="info", ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def o_info(self, ctx: commands.Context, for_who: Literal['me', 'everyone'], show: Literal['seen', 'all']):
         """Get info about ops"""
@@ -431,7 +431,7 @@ class MinecraftCommands(commands.Cog):
 
     @authorize.command(pass_context=True, name="login", ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     async def a_login(self, ctx: commands.Context, nick: str, code: str):
         if not Config.get_secure_auth().enable_secure_auth:
             await ctx.send(add_quotes(get_translation("Secure authorization is disabled. Enable it to proceed!")))
@@ -476,6 +476,10 @@ class MinecraftCommands(commands.Cog):
                                                admin_needed=True,
                                                remove_logs_after=5):
                     return
+                if check_if_obituary_webhook(nick):
+                    await ctx.send(get_translation("{0}, you don't have permission to control fates! "
+                                                   "Not in this life at least...").format(ctx.author.mention))
+                    return
                 # Associate member with this nick
                 Config.add_to_known_users_list(nick, ctx.author.id)
                 Config.save_config()
@@ -494,7 +498,7 @@ class MinecraftCommands(commands.Cog):
 
     @authorize.command(pass_context=True, name="banlist")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     async def a_banlist(self, ctx: commands.Context):
         async with handle_rcon_error(ctx):
             banned_ips = Config.get_list_of_banned_ips_and_reasons(get_server_version())
@@ -513,7 +517,7 @@ class MinecraftCommands(commands.Cog):
 
     @authorize.command(pass_context=True, name="ban")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     async def a_ban(self, ctx: commands.Context, ip: IPv4Address, *, reason: str = None):
         has_admin_rights = False
         if not isinstance(ctx.channel, DMChannel):
@@ -623,7 +627,7 @@ class MinecraftCommands(commands.Cog):
 
     @authorize.group(pass_context=True, name="revoke", invoke_without_command=True, ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def a_revoke(self, ctx: commands.Context, ip: IPv4Address, nick: str = None):
         if not Config.get_secure_auth().enable_secure_auth:
@@ -768,7 +772,7 @@ class MinecraftCommands(commands.Cog):
 
     @s_shutdown.command(pass_context=True, name="on")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def s_s_on(self, ctx: commands.Context):
         if not Config.get_settings().bot_settings.auto_shutdown:
@@ -778,7 +782,7 @@ class MinecraftCommands(commands.Cog):
 
     @s_shutdown.command(pass_context=True, name="off")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def s_s_off(self, ctx: commands.Context):
         if Config.get_settings().bot_settings.auto_shutdown:
@@ -788,7 +792,7 @@ class MinecraftCommands(commands.Cog):
 
     @s_shutdown.command(pass_context=True, name="timeout", ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def s_s_timeout(self, ctx: commands.Context, new_value: int = None):
         if new_value is None:
@@ -812,7 +816,7 @@ class MinecraftCommands(commands.Cog):
 
     @s_forceload.command(pass_context=True, name="on")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def s_f_on(self, ctx: commands.Context):
         if not Config.get_settings().bot_settings.forceload:
@@ -822,7 +826,7 @@ class MinecraftCommands(commands.Cog):
 
     @s_forceload.command(pass_context=True, name="off")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def s_f_off(self, ctx: commands.Context):
         if Config.get_settings().bot_settings.forceload:
@@ -832,7 +836,7 @@ class MinecraftCommands(commands.Cog):
 
     @commands.group(pass_context=True, aliases=["wl"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def whitelist(self, ctx: commands.Context):
         if ServerProperties().white_list:
@@ -842,7 +846,7 @@ class MinecraftCommands(commands.Cog):
 
     @whitelist.command(pass_context=True, name="add", ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def w_add(self, ctx: commands.Context, *, minecraft_nick: str):
         async with handle_rcon_error(ctx):
@@ -874,7 +878,7 @@ class MinecraftCommands(commands.Cog):
 
     @whitelist.command(pass_context=True, name="remove", aliases=["del"], ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def w_remove(self, ctx: commands.Context, *, minecraft_nick: str):
         async with handle_rcon_error(ctx):
@@ -901,7 +905,7 @@ class MinecraftCommands(commands.Cog):
 
     @whitelist.command(pass_context=True, name="list", aliases=["ls"])
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def w_list(self, ctx: commands.Context):
         async with handle_rcon_error(ctx):
@@ -919,7 +923,7 @@ class MinecraftCommands(commands.Cog):
 
     @whitelist.command(pass_context=True, name="on")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def w_on(self, ctx: commands.Context):
         async with handle_rcon_error(ctx):
@@ -930,7 +934,7 @@ class MinecraftCommands(commands.Cog):
 
     @whitelist.command(pass_context=True, name="off")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def w_off(self, ctx: commands.Context):
         async with handle_rcon_error(ctx):
@@ -941,7 +945,7 @@ class MinecraftCommands(commands.Cog):
 
     @whitelist.command(pass_context=True, name="reload")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def w_reload(self, ctx: commands.Context):
         async with handle_rcon_error(ctx):
@@ -959,7 +963,7 @@ class MinecraftCommands(commands.Cog):
 
     @server.command(pass_context=True, name="select")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def s_select(self, ctx: commands.Context):
         async def on_callback(interaction: Interaction):
@@ -990,7 +994,7 @@ class MinecraftCommands(commands.Cog):
 
     @server.command(pass_context=True, name="list", aliases=["ls"])
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def s_list(self, ctx: commands.Context):
         total_numb = get_number_of_digits(len(Config.get_settings().servers_list))
@@ -1011,7 +1015,7 @@ class MinecraftCommands(commands.Cog):
 
     @backup.command(pass_context=True, name="on")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def b_on(self, ctx: commands.Context):
         if not Config.get_backups_settings().automatic_backup:
@@ -1022,7 +1026,7 @@ class MinecraftCommands(commands.Cog):
 
     @backup.command(pass_context=True, name="off")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def b_off(self, ctx: commands.Context):
         if Config.get_backups_settings().automatic_backup:
@@ -1032,7 +1036,7 @@ class MinecraftCommands(commands.Cog):
 
     @backup.command(pass_context=True, name="period", ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def b_period(self, ctx: commands.Context, minutes: int = None):
         if minutes is not None and minutes > 0:
@@ -1047,7 +1051,7 @@ class MinecraftCommands(commands.Cog):
 
     @backup.group(pass_context=True, name="method", invoke_without_command=True, ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def b_method(self, ctx: commands.Context, compression_method: str = None):
         if compression_method is not None and \
@@ -1072,7 +1076,7 @@ class MinecraftCommands(commands.Cog):
     @backup.command(pass_context=True, name="force")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.cooldown(rate=1, per=15)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def b_force(self, ctx: commands.Context, *, reason: str = None):
         if backup_force_checking(ctx, self._bot):
@@ -1080,7 +1084,7 @@ class MinecraftCommands(commands.Cog):
 
     @backup.command(pass_context=True, name="restore")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def b_restore(self, ctx: commands.Context):
         if not (await backup_restore_checking(ctx)):
@@ -1090,14 +1094,14 @@ class MinecraftCommands(commands.Cog):
 
     @backup.group(pass_context=True, name="remove", aliases=["del"], invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def b_remove(self, ctx: commands.Context):
         await send_backup_remove_select(ctx, self._bot, self._IndPoll, self.backups_thread)
 
     @b_remove.command(pass_context=True, name="all")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def b_r_all(self, ctx: commands.Context):
         if len(Config.get_server_config().backups) == 0:
@@ -1216,7 +1220,7 @@ class MinecraftCommands(commands.Cog):
 
     @menu.command(pass_context=True, name="server", aliases=["serv"])
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def m_server(self, ctx: commands.Context):
         await delete_after_by_msg(ctx.message, without_delay=True)
@@ -1236,7 +1240,7 @@ class MinecraftCommands(commands.Cog):
 
     @menu.command(pass_context=True, name="bot")
     @commands.bot_has_permissions(manage_messages=True, send_messages=True, view_channel=True)
-    @decorators.has_role_or_default()
+    @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def m_bot(self, ctx: commands.Context):
         await delete_after_by_msg(ctx.message, without_delay=True)

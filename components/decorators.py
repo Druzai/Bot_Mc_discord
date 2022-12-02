@@ -29,7 +29,7 @@ def is_minecrafter(ctx: Union[Context[BotT], Interaction]) -> bool:
     return True
 
 
-def has_role_or_default() -> Check[Any]:
+def has_minecrafter_role_or_default() -> Check[Any]:
     return check(is_minecrafter)
 
 

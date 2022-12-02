@@ -17,6 +17,8 @@ All important changes to this project will be documented in this file.
 * Added fetching image from links, attachments, stickers and emojis in Discord message and showing its preview in Minecraft chat
 * Added parameters timeout and `User-Agent` header to requests
 * Changed menu for server to using buttons and a dropdown and added menu for bot main features
+* Added options to enable/disable `op`
+* Added options to enable/disable `obituary` and set custom name for it
 
 #### Fixed:
 
@@ -29,6 +31,7 @@ All important changes to this project will be documented in this file.
 * Removed requirement for logging players with secure authorization that players' nicks mustn't contain these characters: `[`,`]`,`<`,`>`
 * Added check if some other Minecraft server is running on the same port
 * Removed requirement for game chat that player's nick mustn't contain `>` character
+* Added 2 translation strings for death messages: `Primed TNT` and `Minecart with TNT`
 
 #### Changed:
 
@@ -57,7 +60,8 @@ All important changes to this project will be documented in this file.
 * Changed date format for logging in console and in files: `bot.log` and `op.log`
     * From `DD/MM/YYYY` to `YYYY-MM-DD`
 * Renamed setting `cross_platform_chat` to `game_chat` and subsetting `enable_cross_platform_chat` to `enable_game_chat`
-* Moved setting `default_number_of_times_to_op` to new setting `op`
+* Moved setting `default_number_of_times_to_op` to a new setting `op`
+* Moved setting `avatar_url_for_death_messages` to a new setting `obituary`
 
 ### [1.3.2](https://github.com/Druzai/Bot_Mc_discord/compare/1.3.1...1.3.2) (2022-07-28)
 

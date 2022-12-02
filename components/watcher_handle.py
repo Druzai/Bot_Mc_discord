@@ -632,7 +632,7 @@ def _check_log_file(
                 BotVars.add_player_login(logged_in_nick)
                 continue
 
-        if BotVars.webhook_chat is not None:
+        if Config.get_obituary_settings().enable_obituary and BotVars.webhook_chat is not None:
             from components.additional_funcs import DEATH_MESSAGES, REGEX_DEATH_MESSAGES, MASS_REGEX_DEATH_MESSAGES
 
             if search(f"{INFO_line} {MASS_REGEX_DEATH_MESSAGES}", line):
@@ -686,7 +686,7 @@ def _check_log_file(
                         break
                 continue
 
-    if BotVars.webhook_chat is not None and \
+    if Config.get_obituary_settings().enable_obituary and BotVars.webhook_chat is not None and \
             last_death_message is not None and last_death_message.count > last_death_message.last_count:
         date = datetime.now()
         if (date - last_death_message.last_used_date).seconds > 60:
@@ -709,7 +709,7 @@ def _check_log_file(
 
 
 def send_death_message(death_message: str, count: int, date: datetime):
-    avatar_url = Config.get_game_chat_settings().avatar_url_for_death_messages
+    avatar_url = Config.get_obituary_settings().avatar_url_for_death_messages
     if avatar_url is None:
         avatar_url = BotVars.bot_for_webhooks.user.avatar.url
 
@@ -717,7 +717,7 @@ def send_death_message(death_message: str, count: int, date: datetime):
         death_message=death_message,
         discord_message=BotVars.webhook_chat.send(
             death_message + (f" *(x{count})*" if count > 1 else ""),
-            username=get_translation("☠ Obituary ☠"),
+            username=Config.get_obituary_settings().get_webhook_name_for_death_messages,
             avatar_url=avatar_url,
             wait=True
         ),
