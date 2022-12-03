@@ -23,7 +23,7 @@ from config.init_config import Config, BotVars, OS
 if Config.get_os() == OS.Windows:
     from colorama import init
 
-VERSION = "1.4.0"
+VERSION = "1.4.1a"
 
 
 def _create_pot_lines_for_subcommands(command: Union[commands.Command, commands.Group], find_str: str):
