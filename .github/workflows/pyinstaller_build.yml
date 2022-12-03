@@ -39,7 +39,7 @@ jobs:
         run: echo "source_tag=$(python3 Discord_bot.py -v)" >> $GITHUB_OUTPUT
 
       - name: Get release notes
-        uses: yashanand1910/standard-release-notes@v1.2.1
+        uses: yashanand1910/standard-release-notes@v1.3.0
         id: release_notes
         with:
           changelog_path: ./CHANGELOG.md
@@ -64,7 +64,7 @@ jobs:
     strategy:
       matrix:
         python-version: [ 3.8, "3.10", "3.11" ]
-        os: [ ubuntu-latest, windows-2019 ] # macos-latest
+        os: [ "ubuntu-20.04", "windows-2019" ] # "macos-11"
     steps:
       - name: Clone repository
         uses: actions/checkout@v3
