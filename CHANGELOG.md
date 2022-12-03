@@ -2,12 +2,16 @@
 
 All important changes to this project will be documented in this file.
 
-### [1.4.0 Unreleased](https://github.com/Druzai/Bot_Mc_discord/compare/1.3.2...1.4.0) (2022-xx-xx)
+### [1.4.0](https://github.com/Druzai/Bot_Mc_discord/compare/1.3.2...1.4.0) (2022-12-03)
 
-**Updated bot to use Discord features such as: dropdown lists, buttons, modals, threads.**
+#### Main features:
 
-**Improved bot menu to use Discord features and divided it into server menu and bot menu.
-Recommended to generate new menu message(s) instead of editing the old menu message.**
+Updated bot to use Discord features such as: dropdown lists, buttons, modals, threads.
+
+Improved bot menu to use Discord features and divided it into server menu and bot menu.
+Recommended to generate new menu message(s) instead of editing the old menu message!
+
+Added support for Python 3.11.
 
 #### Improvements:
 
