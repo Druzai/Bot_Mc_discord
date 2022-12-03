@@ -1,5 +1,6 @@
 import socket
 from contextlib import suppress
+from platform import python_version
 from sys import argv
 from typing import TYPE_CHECKING, Union, Optional
 
@@ -48,6 +49,7 @@ class ChatCommands(commands.Cog):
             print(get_translation("Logged in Discord as"))
             print(f"{self._bot.user.name}#{self._bot.user.discriminator}")
             print(get_translation("Version of discord.py") + " - " + discord.__version__)
+            print(get_translation("Version of Python") + " - " + python_version())
             print("------")
             await create_webhooks(self._bot)
             if Config.get_rss_feed_settings().enable_rss_feed and not self.rss_feed_task.is_running():

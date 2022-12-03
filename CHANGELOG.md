@@ -36,7 +36,6 @@ Recommended to generate new menu message(s) instead of editing the old menu mess
 * Removed requirement for logging players with secure authorization that players' nicks mustn't contain these characters: `[`,`]`,`<`,`>`
 * Added check if some other Minecraft server is running on the same port
 * Removed requirement for game chat that player's nick mustn't contain `>` character
-* Added 2 translation strings for death messages: `Primed TNT` and `Minecart with TNT`
 * Added handling of unknown OS when starting Minecraft server
 
 #### Changed:

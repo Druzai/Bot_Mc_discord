@@ -114,10 +114,10 @@ class Obituary:
 class Game_chat:
     enable_game_chat: Optional[bool] = None
     webhook_url: Optional[str] = None
-    obituary: Obituary = Obituary()
+    obituary: Obituary = field(default_factory=Obituary)
     max_words_in_mention: Optional[int] = None
     max_wrong_symbols_in_mention_from_right: Optional[int] = None
-    image_preview: Image_preview = Image_preview()
+    image_preview: Image_preview = field(default_factory=Image_preview)
 
 
 @dataclass
@@ -177,8 +177,8 @@ class Secure_authorization:
 class Server_watcher:
     refresh_delay_of_console_log: float = -1.0
     number_of_lines_to_check_in_console_log: int = 0
-    secure_auth: Secure_authorization = Secure_authorization()
-    game_chat: Game_chat = Game_chat()
+    secure_auth: Secure_authorization = field(default_factory=Secure_authorization)
+    game_chat: Game_chat = field(default_factory=Game_chat)
 
 
 @dataclass
@@ -271,15 +271,15 @@ class Bot_settings:
     local_address: str = ""
     log_bot_messages: bool = None
     deletion_messages_limit_without_poll: int = -1
-    menu: Menu = Menu()
+    menu: Menu = field(default_factory=Menu)
     commands_channel_id: Optional[int] = None
     forceload: bool = False
     auto_shutdown: bool = False
-    op: Op = Op()
-    server_watcher: Server_watcher = Server_watcher()
-    rss_feed: Rss_feed = Rss_feed()
-    backups: Backups = Backups()
-    timeouts: Timeouts = Timeouts()
+    op: Op = field(default_factory=Op)
+    server_watcher: Server_watcher = field(default_factory=Server_watcher)
+    rss_feed: Rss_feed = field(default_factory=Rss_feed)
+    backups: Backups = field(default_factory=Backups)
+    timeouts: Timeouts = field(default_factory=Timeouts)
 
     def __post_init__(self):
         if self.token_encrypted:
@@ -304,7 +304,7 @@ class User:
 
 @dataclass
 class Settings:
-    bot_settings: Bot_settings = Bot_settings()
+    bot_settings: Bot_settings = field(default_factory=Bot_settings)
     ask_to_change_servers_list: bool = True
     selected_server_number: int = 1
     servers_list: List[Server_settings] = field(default_factory=list)
@@ -330,8 +330,8 @@ class State_info:
 
 @dataclass
 class States:
-    started_info: State_info = State_info()
-    stopped_info: State_info = State_info()
+    started_info: State_info = field(default_factory=State_info)
+    stopped_info: State_info = field(default_factory=State_info)
 
 
 @dataclass
@@ -354,7 +354,7 @@ class Backup_info:
 
 @dataclass
 class Server_config:
-    states: States = States()
+    states: States = field(default_factory=States)
     backups: List[Backup_info] = field(default_factory=list)
     seen_players: List[Player] = field(default_factory=list)
     query_port = 0
