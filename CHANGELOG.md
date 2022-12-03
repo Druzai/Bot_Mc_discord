@@ -4,6 +4,11 @@ All important changes to this project will be documented in this file.
 
 ### [1.4.0 Unreleased](https://github.com/Druzai/Bot_Mc_discord/compare/1.3.2...1.4.0) (2022-xx-xx)
 
+**Updated bot to use Discord features such as: dropdown lists, buttons, modals, threads.**
+
+**Improved bot menu to use Discord features and divided it into server menu and bot menu.
+Recommended to generate new menu message(s) instead of editing the old menu message.**
+
 #### Improvements:
 
 * **Updated discord.py from `1.7.3` to `2.1.0`**
@@ -14,7 +19,7 @@ All important changes to this project will be documented in this file.
 * Improved working with webhooks:
     * Bot can fetch given webhook or create a new one if it doesn't find anything
     * More easy setting up a webhook via bot commands
-* Added fetching image from links, attachments, stickers and emojis in Discord message and showing its preview in Minecraft chat
+* Added fetching image from links, attachments, stickers and emojis in Discord message and showing its preview in Minecraft chat if server version is `1.16.0` or higher
 * Added parameters timeout and `User-Agent` header to requests
 * Changed menu for server to using buttons and a dropdown and added menu for bot main features
 * Added options to enable/disable `op`
@@ -32,12 +37,13 @@ All important changes to this project will be documented in this file.
 * Added check if some other Minecraft server is running on the same port
 * Removed requirement for game chat that player's nick mustn't contain `>` character
 * Added 2 translation strings for death messages: `Primed TNT` and `Minecart with TNT`
+* Added handling of unknown OS when starting Minecraft server
 
 #### Changed:
 
 * Created commands:
-    * `chat` and its subcommands
-    * `rss` and its subcommands
+    * `chat` and its subcommands (obituary, image preview, webhook settings)
+    * `rss` and its subcommands (webhook settings)
     * `language select`
     * `menu server` and `menu bot`
     * `status update`

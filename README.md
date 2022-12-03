@@ -1,5 +1,5 @@
 <p align="center">
-   <img src="images/bot.ico">
+   <img src="images/bot.ico" alt="bot icon">
 </p>
 
 <h1 align="center">
@@ -30,7 +30,7 @@
     * Make yourself an operator for limited amount of time if your Discord account has association with Minecraft nick
         * **Bot can't do it when nick has spaces!** (this applies to servers from `1.0.0` to `1.19.0`!)
 * Changing Minecraft servers on the go while server is down
-* Creating menus for quick bot and Minecraft server managing
+* Creating menus for quick bot and Minecraft server management
     * Creating a server menu with buttons and a dropdown to quickly execute common commands
     * Creating a bot menu with buttons and a dropdown to quickly toggle bot features
 * Setting an optional role in Discord. If set then the bot commands for managing the Minecraft server will require this
@@ -107,8 +107,8 @@ Supported 2 languages:
 
 * [Python 3.8-3.10](https://www.python.org/downloads/)
 * For Linux and macOS
-    * Required installed screen command [(Linux)](https://linuxize.com/post/how-to-use-linux-screen/)
-      [(macOS)](https://brewinstall.org/install-screen-mac-osx/)
+    * Required installed screen command ([Linux](https://linuxize.com/post/how-to-use-linux-screen/)
+      [macOS](https://brewinstall.org/install-screen-mac-osx/))
 * Minecraft server not lower than version `1.0.0`
     * Run server 1 or 2 times to accept `eula` and generate `server.properties`
 
@@ -219,7 +219,7 @@ via `screen -r %your_session_name%`. You can find server name in list of virtual
 ### macOS
 
 On macOS you should start bot executable file from terminal `%path_to_bot%/bot_executable_file`. Because if you just
-double click on executable file, current working directory will be set as your home directory (`~`) and bot couldn't
+double click on executable file, current working directory will be set as your home directory (`~`) and bot won't
 find config and key.
 
 For the bot to properly start the Minecraft server you have to have `*.command` or `*.sh` script (in bot setting you can

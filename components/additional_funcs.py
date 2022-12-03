@@ -282,9 +282,11 @@ async def start_server(
             if not is_file_exists:
                 raise NameError()
             startfile(Config.get_selected_server_from_list().start_file_name)
-    except (NameError, ValueError, FileNotFoundError, ReferenceError) as ex:
+        else:
+            raise EnvironmentError()
+    except Exception as ex:
         chdir(Config.get_bot_config_path())
-        if ex.__class__ is FileNotFoundError:
+        if isinstance(ex, FileNotFoundError):
             if len(ex.args) == 0:
                 print(get_translation("Script '{0}' doesn't exist.")
                       .format(Config.get_selected_server_from_list().start_file_name))
@@ -297,11 +299,15 @@ async def start_server(
                 await send_msg(ctx, add_quotes(get_translation("Couldn't open shortcut because target script "
                                                                "doesn't exists! Retreating...")),
                                is_reaction=is_reaction)
-        elif ex.__class__ is not ReferenceError:
+        elif isinstance(ex, NameError):
             print(get_translation("Couldn't open script! Check naming and extension of the script!"))
             await send_msg(ctx, add_quotes(get_translation("Couldn't open script because of naming! Retreating...")),
                            is_reaction=is_reaction)
-        else:
+        elif isinstance(ex, EnvironmentError):
+            print(get_translation("Couldn't find a way to start the server! Use supported operation systems!"))
+            await send_msg(ctx, add_quotes(get_translation("Couldn't find a way to start the server! Retreating...")),
+                           is_reaction=is_reaction)
+        elif isinstance(ex, ReferenceError):
             if len(ex.args) == 0:
                 print(get_translation("Couldn't open script because there is no command 'screen'! "
                                       "Install it via packet manager!"))
@@ -309,11 +315,17 @@ async def start_server(
                                                                "wasn't installed! Retreating...")),
                                is_reaction=is_reaction)
             else:
-                print(get_translation("Target of this shortcut '{0}' isn't '*.bat' file or '*.cmd' file.")
+                print(get_translation("Couldn't open shortcut because target of this shortcut '{0}' "
+                                      "isn't '*.bat' file or '*.cmd' file.")
                       .format(Config.get_selected_server_from_list().start_file_name))
                 await send_msg(ctx, add_quotes(get_translation("Couldn't open shortcut because target file "
                                                                "isn't a script! Retreating...")),
                                is_reaction=is_reaction)
+        else:
+            if isinstance(ctx, Interaction):
+                await send_error_on_interaction("MenuServerView", ctx, None, ex, is_reaction)
+            else:
+                await send_error(ctx, bot, ex, is_reaction)
         BotVars.is_loading = False
         if BotVars.is_restarting:
             BotVars.is_restarting = False
@@ -3116,7 +3128,7 @@ class URLAddress(commands.Converter):
 async def send_error(
         ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel],
         bot: commands.Bot,
-        error: Union[commands.CommandError, commands.CommandInvokeError],
+        error: Union[commands.CommandError, commands.CommandInvokeError, Exception],
         is_reaction=False
 ):
     author = get_author(ctx, bot, is_reaction)
@@ -3280,12 +3292,14 @@ async def send_error(
         msg += await get_missing_permissions_message(commands.MissingPermissions(['administrator']), author)
         await send_msg(ctx, f"{author.mention}\n" + add_quotes(msg), is_reaction=is_reaction)
     else:
-        print_unhandled_error(error.original, get_translation("Ignoring exception in command '{0}{1}':")
+        if hasattr(error, "original"):
+            error = error.original
+        print_unhandled_error(error, get_translation("Ignoring exception in command '{0}{1}':")
                               .format(Config.get_settings().bot_settings.prefix, ctx.command))
         await send_msg(ctx, f"{author.mention}\n" +
-                       add_quotes(error.original.__class__.__name__ +
-                                  (": " + ", ".join([str(a) for a in error.original.args])
-                                   if len(error.original.args) > 0 else "")), is_reaction=is_reaction)
+                       add_quotes(error.__class__.__name__ +
+                                  (": " + ", ".join([str(a) for a in error.args])
+                                   if len(error.args) > 0 else "")), is_reaction=is_reaction)
 
 
 def print_unhandled_error(error, error_title: str):

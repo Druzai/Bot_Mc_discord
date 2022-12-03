@@ -794,7 +794,8 @@ class Config:
     @classmethod
     def add_to_seen_players_list(cls, player_minecraft_nick: str):
         cls._server_config_instance.seen_players.append(
-            Player(player_minecraft_nick, cls._settings_instance.bot_settings.default_number_of_times_to_op))
+            Player(player_minecraft_nick, cls.get_op_settings().default_number_of_times_to_op)
+        )
 
     @classmethod
     def decrease_number_to_op_for_player(cls, player_minecraft_nick: str):
