@@ -6,7 +6,7 @@ All important changes to this project will be documented in this file.
 
 #### Improvements:
 
-* --
+* Added handling chat line on spigot, paper or bukkit
 
 #### Fixed:
 

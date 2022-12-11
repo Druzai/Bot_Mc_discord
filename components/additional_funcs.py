@@ -4377,7 +4377,10 @@ def parse_snapshot(version: str) -> Optional[str]:
             },
             timeout=(3, 6),
             headers={"User-Agent": UserAgent.get_header()}
-        ).json()
+        )
+        if not answer.ok and len(answer.content) == 0:
+            return
+        answer = answer.json()
         if answer.get("parse", None) is not None and answer["parse"].get("categories", None) is not None:
             for category in answer["parse"]["categories"]:
                 if all(i in category["*"].lower() for i in ["java_edition", "snapshots"]) and \
@@ -4408,7 +4411,7 @@ def get_shortened_url(url: str):
                 timeout=(3, 6),
                 headers={"User-Agent": UserAgent.get_header()}
             )
-            if response.ok and response.text != "":
+            if response.ok and len(response.text) > 0:
                 return response.text
     print(get_translation("Bot couldn't shorten the URL \"{0}\" using link shortening services.").format(url))
     return url[:256]
