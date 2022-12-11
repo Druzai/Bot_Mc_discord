@@ -168,7 +168,8 @@ def _check_log_file(
 
     date_line = r"^\[(?:\d{2}\w{3}\d{4} )?\d+:\d+:\d+(\.\d+)?]" if server_version.minor > 6 \
         else r"^\d+-\d+-\d+ \d+:\d+:\d+"
-    INFO_line = r"\[Server thread/INFO][^\*<>]*:" if server_version.minor > 6 else r"\[INFO]"
+    INFO_line = r"\[(?:Server thread|Async Chat Thread - #\d+)/INFO][^\*<>]*:" if server_version.minor > 6 \
+        else r"\[INFO]"
 
     if last_line is None:
         last_lines = last_lines[-min(50, Config.get_server_watcher().number_of_lines_to_check_in_console_log):]
