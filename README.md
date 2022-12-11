@@ -105,11 +105,11 @@ Supported 2 languages:
 
 ## Requirements
 
-* [Python 3.8-3.10](https://www.python.org/downloads/)
+* [Python 3.8-3.11](https://www.python.org/downloads/)
 * For Linux and macOS
     * Required installed screen command ([Linux](https://linuxize.com/post/how-to-use-linux-screen/)
       [macOS](https://brewinstall.org/install-screen-mac-osx/))
-* Minecraft server not lower than version `1.0.0`
+* Minecraft server not lower than version `1.0.0` (vanilla or a modded one)
     * Run server 1 or 2 times to accept `eula` and generate `server.properties`
 
 Bot can automatically enable `query` and `rcon` in `server.properties` if file exists, but you can enable and enter them
@@ -125,7 +125,7 @@ manually if you want.
 
 ### Lib installation
 
-Type in command prompt, you must have [requirements.txt](requirements.txt) in root folder of the project.
+Type in command prompt: (you must have [requirements.txt](requirements.txt) in root folder of the project)
 
 ```
 pip install -r requirements.txt
