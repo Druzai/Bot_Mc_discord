@@ -64,7 +64,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [ 3.8, "3.10", "3.11" ]
+        python-version: [ 3.8 ] # , "3.10", "3.11"
         os: [ "macos-11" ]
         # os: [ "ubuntu-20.04", "windows-2019" ] # "macos-11"
     steps:
@@ -91,12 +91,12 @@ jobs:
       - name: Install gettext for macOS
         if: matrix.os == 'macos-11'
         run: |
+          pip install --upgrade certifi
+          CERT_PATH=$(python -m certifi)
+          export SSL_CERT_FILE=${CERT_PATH}
+          export REQUESTS_CA_BUNDLE=${CERT_PATH}
           brew update
           brew install gettext
-#          pip install --upgrade certifi
-#          CERT_PATH=$(python -m certifi)
-#          export SSL_CERT_FILE=${CERT_PATH}
-#          export REQUESTS_CA_BUNDLE=${CERT_PATH}
 
       - name: Build with pyinstaller
         run: make

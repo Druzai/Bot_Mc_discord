@@ -37,5 +37,6 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           upx_exclude=[],
+          target_arch='x86_64',
           runtime_tmpdir=None,
           console=True, icon='images\\bot.ico')
