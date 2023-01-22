@@ -2,9 +2,9 @@ name: Build with pyinstaller and release
 
 on:
   push:
-    branches:
-      - master
-      - add-macos-to-ci
+#    branches:
+#      - master
+#      - add-macos-to-ci
 
 jobs:
 #  create_release:
