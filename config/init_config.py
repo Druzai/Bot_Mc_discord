@@ -8,8 +8,8 @@ from glob import glob
 from hashlib import md5
 from json import load, JSONDecodeError, dump
 from locale import getdefaultlocale
-from os import mkdir, listdir, remove, getcwd
-from os.path import isfile, isdir
+from os import mkdir, listdir, remove, getcwd, environ
+from os.path import isfile, isdir, join as path_join
 from pathlib import Path
 from re import search
 from secrets import choice as sec_choice
@@ -563,6 +563,11 @@ class Config:
             return sys._MEIPASS
         else:
             return cls._current_bot_path
+
+    @classmethod
+    def setup_ca_file(cls):
+        if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+            environ['SSL_CERT_FILE'] = path_join(sys._MEIPASS, 'lib', 'cert.pem')
 
     @classmethod
     def init_with_system_language(cls):
