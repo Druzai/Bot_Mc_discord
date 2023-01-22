@@ -7,66 +7,62 @@ on:
 #      - add-macos-to-ci
 
 jobs:
-#  create_release:
-#    name: Create release
-#    runs-on: ubuntu-latest
-#    outputs:
-#      upload_url: ${{ steps.create_release.outputs.upload_url }}
-#      tag: ${{ steps.commit.outputs.source_tag }}
-#    steps:
-#      - name: Clone repository
-#        uses: actions/checkout@v3
-#
-#      - name: Set up Python 3.8
-#        uses: actions/setup-python@v4
-#        with:
-#          python-version: 3.8
-#
-#      - name: Install dependencies
-#        run: |
-#          python -m pip install --upgrade pip
-#          pip install -r requirements.txt
-#          pip install flake8
-#
-#      - name: Lint with flake8
-#        run: |
-#          # stop the build if there are Python syntax errors or undefined names
-#          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-#          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-#          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-#
-#      - name: Get commit tag
-#        id: commit
-#        run: echo "source_tag=$(python3 Discord_bot.py -v)" >> $GITHUB_OUTPUT
-#
-#      - name: Get release notes
-#        uses: yashanand1910/standard-release-notes@v1.3.0
-#        id: release_notes
-#        with:
-#          changelog_path: ./CHANGELOG.md
-#          version: ${{ steps.commit.outputs.source_tag }}
-#
-#      - name: Create release
-#        id: create_release
-#        uses: actions/create-release@v1
-#        env:
-#          GITHUB_TOKEN: ${{ github.token }}
-#        with:
-#          tag_name: ${{ steps.commit.outputs.source_tag }}
-#          release_name: ${{ steps.commit.outputs.source_tag }}
-#          body: ${{ steps.release_notes.outputs.release_notes }}
-#          draft: false
-#          prerelease: false
+  create_release:
+    name: Create release
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.commit.outputs.source_tag }}
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install flake8
+
+      - name: Lint with flake8
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Get commit tag
+        id: commit
+        run: echo "source_tag=$(python3 Discord_bot.py -v)" >> $GITHUB_OUTPUT
+
+      - name: Get release notes
+        uses: yashanand1910/standard-release-notes@v1.3.0
+        id: release_notes
+        with:
+          changelog_path: ./CHANGELOG.md
+          version: ${{ steps.commit.outputs.source_tag }}
+
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.commit.outputs.source_tag }}
+          name: ${{ steps.commit.outputs.source_tag }}
+          body: ${{ steps.release_notes.outputs.release_notes }}
+          draft: true
+          prerelease: false
+          target_commitish: ${{ github.sha }}
 
   release_built_assets_for_windows:
     name: Release built assets
-#    needs: create_release
+    needs: create_release
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         python-version: [ 3.8 ] # , "3.10", "3.11"
-        os: [ "macos-11" ]
-        # os: [ "ubuntu-20.04", "windows-2019" ] # "macos-11"
+        os: [ "ubuntu-20.04", "windows-2019", "macos-11" ]
     steps:
       - name: Clone repository
         uses: actions/checkout@v3
@@ -97,42 +93,20 @@ jobs:
       - name: Build with pyinstaller
         run: make
 
-#      - name: Upload release asset for Windows
-#        if: matrix.os == 'windows-2019'
-#        uses: actions/upload-release-asset@v1
-#        env:
-#          GITHUB_TOKEN: ${{ github.token }}
-#        with:
-#          upload_url: ${{ needs.create_release.outputs.upload_url }}
-#          asset_path: ./dist_build/Discord_bot.exe
-#          asset_name: Discord_bot_windows_x64_p${{ matrix.python-version }}_v${{ needs.create_release.outputs.tag }}.exe
-#          asset_content_type: application/vnd.microsoft.portable-executable
+      - name: Rename release asset for Windows
+        if: matrix.os == 'windows-2019'
+        run: mv ./dist_build/Discord_bot.exe ./dist_build/Discord_bot_windows_x64_p${{ matrix.python-version }}_v${{ needs.create_release.outputs.tag }}.exe
 
-#      - name: Upload release asset with Linux
-#        if: matrix.os == 'ubuntu-20.04'
-#        uses: actions/upload-release-asset@v1
-#        env:
-#          GITHUB_TOKEN: ${{ github.token }}
-#        with:
-#          upload_url: ${{ needs.create_release.outputs.upload_url }}
-#          asset_path: ./dist_build/Discord_bot
-#          asset_name: Discord_bot_linux_x64_p${{ matrix.python-version }}_v${{ needs.create_release.outputs.tag }}
-#          asset_content_type: application/x-executable
+      - name: Rename release asset for Linux
+        if: matrix.os == 'ubuntu-20.04'
+        run: mv ./dist_build/Discord_bot ./dist_build/Discord_bot_linux_x64_p${{ matrix.python-version }}_v${{ needs.create_release.outputs.tag }}
 
-      - name: Upload release artifact with macOS
+      - name: Rename release asset for macOS
         if: matrix.os == 'macos-11'
-        uses: actions/upload-artifact@v3
-        with:
-          name: Discord_bot_macos_x64_p${{ matrix.python-version }}
-          path: ./dist_build/Discord_bot
+        run: mv ./dist_build/Discord_bot ./dist_build/Discord_bot_macos_x64_p${{ matrix.python-version }}_v${{ needs.create_release.outputs.tag }}
 
-#      - name: Upload release asset with macOS
-#        if: matrix.os == 'macos-11'
-#        uses: actions/upload-release-asset@v1
-#        env:
-#          GITHUB_TOKEN: ${{ github.token }}
-#        with:
-#          upload_url: ${{ needs.create_release.outputs.upload_url }}
-#          asset_path: ./dist_build/Discord_bot
-#          asset_name: Discord_bot_macos_x64_p${{ matrix.python-version }}_v${{ needs.create_release.outputs.tag }}
-#          asset_content_type: application/x-executable
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.create_release.outputs.tag }}
+          files: ./dist_build/*

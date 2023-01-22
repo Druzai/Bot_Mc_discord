@@ -16,8 +16,8 @@ def get_certs():
 
 
 def get_datas():
-    data = [(f"./locales/{d}/LC_MESSAGES/lang.mo", f"locales/{d}/LC_MESSAGES") for d in os.listdir("locales") if
-            path.isdir(path.join("locales", d))]
+    data = [(f"./locales/{d}/LC_MESSAGES/lang.mo", f"locales/{d}/LC_MESSAGES")
+            for d in os.listdir("locales") if path.isdir(path.join("locales", d))]
     if sys.platform == "darwin":
         data += get_certs()
     return data
@@ -27,7 +27,7 @@ a = Analysis(['Discord_bot.py'],
              pathex=['.'],
              binaries=[],
              datas=get_datas(),
-             hiddenimports=['certifi'],
+             hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
