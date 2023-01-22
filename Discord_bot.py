@@ -69,6 +69,8 @@ def main():
     if len(argv) > 1 and (argv[1] == "-v" or argv[1] == "--version"):
         print(VERSION)
         exit(0)
+    if Config.get_os() == OS.MacOS:
+        Config.setup_ca_file()
     try:
         if len(argv) == 1 or (len(argv) > 1 and argv[1] == "-cs"):
             Config.read_config(change_servers=(len(argv) > 1 and argv[1] == "-cs"))
