@@ -2,8 +2,8 @@ name: Build with pyinstaller and release
 
 on:
   push:
-#    branches:
-#      - master
+    branches:
+      - master
 
 jobs:
   create_release:
@@ -50,7 +50,7 @@ jobs:
           tag_name: ${{ steps.commit.outputs.source_tag }}
           name: ${{ steps.commit.outputs.source_tag }}
           body: ${{ steps.release_notes.outputs.release_notes }}
-          draft: true
+          draft: false
           prerelease: false
           target_commitish: ${{ github.sha }}
 
@@ -109,6 +109,6 @@ jobs:
         with:
           tag_name: ${{ needs.create_release.outputs.tag }}
           files: ./dist_build/*
-          draft: true
+          draft: false
           prerelease: false
           target_commitish: ${{ github.sha }}
