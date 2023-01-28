@@ -165,7 +165,7 @@ set name for this script) in your root Minecraft server directory! Example of fi
 ```batch
 @echo off
 rem min_ram, max_ram - consists how many min and max GB you're allocating for server on start up
-rem your_jar_file - jar file that starts up your server. It can be for vanilla: standard server.jar or for modded server: spigot.jar, forge.jar
+rem your_jar_file - jar file that starts up your server. It can be for vanilla: standard server.jar or for modded server: spigot.jar, forge.jar and etc.
 rem java_parameters - parameters for Minecraft server
 set min_ram=1
 set max_ram=3
@@ -204,7 +204,7 @@ this script) in your root Minecraft server directory! Example of file:
 
 ```shell
 # min_ram, max_ram - consists how many min and max GB you're allocating for server on start up
-# your_jar_file - jar file that starts up your server. It can be for vanilla: standard server.jar or for modded server: spigot.jar, forge.jar
+# your_jar_file - jar file that starts up your server. It can be for vanilla: standard server.jar or for modded server: spigot.jar, forge.jar and etc.
 # java_parameters - parameters for Minecraft server
 min_ram='1G'
 max_ram='3G'
@@ -213,21 +213,23 @@ java_parameters=''
 exec java -Xms${min_ram} -Xmx${max_ram} ${java_parameters} -Dfile.encoding=UTF-8 -jar ${your_jar_file} nogui
 ```
 
-For server process bot will start a virtual terminal session via `screen` command. You can connect to it
-via `screen -r %your_session_name%`. You can find server name in list of virtual sessions - `screen -ls`.
+For server process bot will start a virtual terminal session via `screen` command with name according to the selected
+server's name. You can connect to it via `screen -r %selected_server_session_name%`. You can find server name in list
+of virtual sessions - `screen -ls`.
 
 ### macOS
 
 On macOS you should start bot executable file from terminal `%path_to_bot%/bot_executable_file`. Because if you just
 double click on executable file, current working directory will be set as your home directory (`~`) and bot won't
-find config and key.
+find config and key in most cases.
 
 For the bot to properly start the Minecraft server you have to have `*.command` or `*.sh` script (in bot setting you can
 set name for this script) in your root Minecraft server directory! Example of file can be seen above in [Linux](#linux)
 section.
 
-For server process bot will start a virtual terminal session via `screen` command. You can connect to it
-via `screen -r %your_session_name%`. You can find server name in list of virtual sessions - `screen -ls`.
+For server process bot will start a virtual terminal session via `screen` command with name according to the selected
+server's name. You can connect to it via `screen -r %selected_server_session_name%`. You can find server name in list of
+virtual sessions - `screen -ls`.
 
 ## Localization
 
