@@ -1079,7 +1079,7 @@ class MinecraftCommands(commands.Cog):
     @decorators.has_minecrafter_role_or_default()
     @commands.guild_only()
     async def b_force(self, ctx: commands.Context, *, reason: str = None):
-        if backup_force_checking(ctx, self._bot):
+        if await backup_force_checking(ctx, self._bot):
             await on_backup_force_callback(ctx, self._bot, self.backups_thread, reason)
 
     @backup.command(pass_context=True, name="restore")

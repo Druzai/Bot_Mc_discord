@@ -117,6 +117,8 @@ async def send_msg(ctx: Union[Messageable, Interaction], msg: str, view: View = 
     if isinstance(ctx, Interaction):
         message = await send_interaction(ctx, msg, view=view, is_reaction=is_reaction)
     else:
+        if view == MISSING:
+            view = None
         message = await ctx.send(
             content=msg,
             view=view,
@@ -2498,8 +2500,8 @@ async def backup_force_checking(
             not BotVars.is_restarting and not BotVars.is_restoring and not BotVars.is_backing_up:
         b_reason = handle_backups_limit_and_size(bot)
         if b_reason:
-            await ctx.send(add_quotes(get_translation("Can't create backup because of {0}\n"
-                                                      "Delete some backups to proceed!").format(b_reason)))
+            await send_msg(ctx, add_quotes(get_translation("Can't create backup because of {0}\n"
+                                                           "Delete some backups to proceed!").format(b_reason)))
             return False
         await warn_about_auto_backups(ctx, bot)
         return True
