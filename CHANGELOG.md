@@ -7,10 +7,11 @@ All important changes to this project will be documented in this file.
 #### Improvements:
 
 * Added handling chat line on spigot, paper or bukkit
+* Updated dependencies
 
 #### Fixed:
 
-* --
+* Fixed non-awaited coroutine `backup_force_checking`
 
 #### Breaking changes:
 
