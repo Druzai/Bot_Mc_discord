@@ -19,7 +19,7 @@ from sys import argv
 from textwrap import wrap
 from threading import Thread, Event
 from time import sleep
-from traceback import format_exception
+from traceback import format_exception, format_exception_only
 from typing import Tuple, List, Dict, Optional, Union, TYPE_CHECKING, AsyncIterator, Callable, Awaitable, Any
 from urllib.parse import unquote
 from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
@@ -39,7 +39,8 @@ from discord.utils import get as utils_get, _get_mime_type_for_image, MISSING
 from mcipc.query import Client as Client_q
 from mcipc.rcon import Client as Client_r, WrongPassword
 from psutil import process_iter, NoSuchProcess, disk_usage, Process, AccessDenied
-from requests import post as req_post, get as req_get, head as req_head, Timeout
+from requests import post as req_post, get as req_get, head as req_head
+from requests.exceptions import SSLError, Timeout
 
 from components.decorators import MissingAdminPermissions, is_admin, is_minecrafter
 from components.localization import get_translation, get_locales, get_current_locale, set_locale
@@ -3432,6 +3433,22 @@ def handle_unhandled_error_in_events(func_number: int = 2):
                               .format(func_name(func_number=func_number + 1)))
 
 
+@contextmanager
+def handle_unhandled_error_in_link_request(image_preview=False):
+    try:
+        yield
+    except Timeout:
+        pass
+    except SSLError as error:
+        if image_preview:
+            print(get_translation("Ignoring the SSL error when checking a link for image preview ({0}):")
+                  .format(error.request.url))
+        else:
+            print(get_translation("Ignoring the SSL error when connecting with a link ({0}):")
+                  .format(error.request.url))
+        print("".join(format_exception_only(type(error), error)).rstrip("\n"))
+
+
 async def handle_message_for_chat(
         message: Message,
         bot: commands.Bot,
@@ -3829,7 +3846,7 @@ async def _handle_components_in_message(
                     "name": ""
                 })
             else:
-                with suppress(Timeout):
+                with handle_unhandled_error_in_link_request(image_preview=True):
                     resp = req_head(link, timeout=(3, 6), headers={"User-Agent": UserAgent.get_header()})
                     if resp.status_code == 200 and resp.headers.get("content-length") is not None and \
                             int(resp.headers.get("content-length")) <= 20971520:
@@ -4190,7 +4207,7 @@ def has_transparency(img: Image.Image):
 
 def get_image_data(url: str):
     if search(r"https?://tenor\.com/view", url):
-        with suppress(Timeout):
+        with handle_unhandled_error_in_link_request(image_preview=True):
             text = req_get(url, timeout=(4, 8), headers={"User-Agent": UserAgent.get_header()}).text
             match = search(rf"property=\"og:image\"\scontent=\"(?P<link>{URL_REGEX})?\"", text)
             url = match.group("link") if match is not None else None
@@ -4202,7 +4219,7 @@ def get_image_data(url: str):
         else:
             filename = url.split("/")[-1].split("?", maxsplit=1)[0]
         filename = unquote(filename)
-        with suppress(Timeout):
+        with handle_unhandled_error_in_link_request(image_preview=True):
             return dict(
                 bytes=BytesIO(req_get(url, timeout=(4, 8), headers={"User-Agent": UserAgent.get_header()}).content),
                 name=filename
@@ -4368,7 +4385,7 @@ def get_server_version() -> ServerVersion:
 
 
 def parse_snapshot(version: str) -> Optional[str]:
-    with suppress(Timeout):
+    with handle_unhandled_error_in_link_request():
         answer = req_get(
             url="https://minecraft.fandom.com/api.php",
             params={
@@ -4406,7 +4423,7 @@ def shorten_string(string: str, max_length: int):
 
 def get_shortened_url(url: str):
     for service_url in ["https://clck.ru/--", "https://tinyurl.com/api-create.php"]:
-        with suppress(Timeout):
+        with handle_unhandled_error_in_link_request():
             response = req_post(
                 service_url,
                 params={"url": url},

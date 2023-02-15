@@ -12,6 +12,7 @@ All important changes to this project will be documented in this file.
 #### Fixed:
 
 * Fixed non-awaited coroutine `backup_force_checking`
+* Added handling if an SSL error occurs
 
 #### Breaking changes:
 
