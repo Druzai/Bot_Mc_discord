@@ -760,25 +760,28 @@ def check_if_player_logged_out(line: str, INFO_line: str):
 
 
 def check_if_player_logged_in(line: str, INFO_line: str):
-    from components.additional_funcs import get_server_players
-
     nick = None
     ip_address = None
     match = search(
-        rf"{INFO_line} (?P<nick>.+)\[/(?P<ip>\d+\.\d+\.\d+\.\d+):\d+] logged in with entity id \d+ at",
+        INFO_line +
+        r" (?P<nick>.+)\[/(?P<ip>((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}):\d{1,5}] logged in with entity id \d+ at",
         line
     )
     if match:
         nick = match.group("nick").strip()
         ip_address = match.group("ip").strip()
-        try:
-            data = get_server_players()
-            valid = nick in data["players"]
-        except (ConnectionError, socket.error):
-            valid = nick in [p.player_minecraft_nick for p in Config.get_server_config().seen_players]
-        if not valid:
-            nick = None
-            ip_address = None
+        if Config.get_secure_auth().enable_login_check:
+            from components.additional_funcs import get_server_players
+
+            valid = False
+            with suppress(ConnectionError, socket.error):
+                data = get_server_players()
+                valid = nick in data["players"]
+            if not valid:
+                valid = nick in [p.player_minecraft_nick for p in Config.get_server_config().seen_players]
+            if not valid:
+                nick = None
+                ip_address = None
     return nick, ip_address
 
 

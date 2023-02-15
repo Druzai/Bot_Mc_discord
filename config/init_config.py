@@ -166,6 +166,7 @@ class Auth_users_list:
 @dataclass
 class Secure_authorization:
     enable_secure_auth: Optional[bool] = None
+    enable_login_check: Optional[bool] = None
     max_login_attempts: int = -1
     days_before_ip_expires: int = -1
     days_before_ip_will_be_deleted: int = -1
@@ -1821,11 +1822,19 @@ class Config:
         # Secure auth
         if cls.get_secure_auth().enable_secure_auth is None:
             cls._need_to_rewrite = True
-            if cls._ask_for_data(get_translation("Would you like to enable authorization security?") + " Y/n\n> ",
-                                 "y"):
-                cls.get_secure_auth().enable_secure_auth = True
-            else:
-                cls.get_secure_auth().enable_secure_auth = False
+            cls.get_secure_auth().enable_secure_auth = \
+                cls._ask_for_data(get_translation("Would you like to enable authorization security?") + " Y/n\n> ", "y")
+        if cls.get_secure_auth().enable_login_check is None:
+            cls._need_to_rewrite = True
+            cls.get_secure_auth().enable_login_check = \
+                cls._ask_for_data(
+                    get_translation(
+                        "Would you like to enable login check? Y/n"
+                        " (bot will ping the server to check if the player is really logged in)\n"
+                        "Note: It's better to disable this option if you're using a modded server (forge, fabric)!"
+                    ) + "\n> ",
+                    "y"
+                )
         if cls.get_secure_auth().max_login_attempts < 1 or cls.get_secure_auth().max_login_attempts > 100:
             cls._need_to_rewrite = True
             cls.get_secure_auth().max_login_attempts = \

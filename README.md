@@ -22,6 +22,7 @@
     * Work with server whitelist
     * Secure authorization
         * Has options to ban and unban IP-address regardless of whether secure authorization is enabled or not
+        * **If bot sometimes can't register a logged in player, disable `enable_login_check` option in bot config!**
     * Autoload if the Minecraft server crashes
     * Auto stop if the Minecraft server online during certain period of time without players
     * Auto backup at specified intervals and forced backup by member
