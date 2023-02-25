@@ -152,9 +152,8 @@ this [article](https://www.minecraft.net/en-us/article/important-message--securi
 >
 > **Or check if your modded server already has a patch for it!**
 
-For Minecraft server lower than version `1.17.0` for game chat to work properly you have to have
-argument `-Dfile.encoding=UTF-8` when you're executing `*.bat`, `*.cmd`, shortcut, `*.sh` or `*.command` script (
-necessary for Windows).
+For game chat to work properly you have to have argument `-Dfile.encoding=UTF-8` when you're executing `*.bat`, `*.cmd`,
+shortcut, `*.sh` or `*.command` script (necessary for Windows).
 
 ### Windows
 
@@ -165,9 +164,12 @@ set name for this script) in your root Minecraft server directory! Example of fi
 
 ```batch
 @echo off
+rem java_runtime - path to java executable or its alias, default is 'java' alias
+rem                If path has spaces, enclose the string in double quotes! For example: java_runtime="path to java runtime"
 rem min_ram, max_ram - consists how many min and max GB you're allocating for server on start up
 rem your_jar_file - jar file that starts up your server. It can be for vanilla: standard server.jar or for modded server: spigot.jar, forge.jar and etc.
 rem java_parameters - parameters for Minecraft server
+set java_runtime=java
 set min_ram=1
 set max_ram=3
 set your_jar_file=server.jar
@@ -175,8 +177,7 @@ set java_parameters=
 chcp 65001
 cls
 title Minecraft Server Console (%max_ram%Gb RAM)
-echo java -Xms%min_ram%G -Xmx%max_ram%G %java_parameters% -jar %your_jar_file% nogui
-java -Xms%min_ram%G -Xmx%max_ram%G %java_parameters% -Dfile.encoding=UTF-8 -jar %your_jar_file% nogui
+%java_runtime% -Xms%min_ram%G -Xmx%max_ram%G %java_parameters% -Dfile.encoding=UTF-8 -jar %your_jar_file% nogui
 exit /b
 ```
 
@@ -204,14 +205,16 @@ For the bot to properly start the Minecraft server you have to have `*.sh` scrip
 this script) in your root Minecraft server directory! Example of file:
 
 ```shell
+# java_runtime - path to java executable or its alias, default is 'java' alias
 # min_ram, max_ram - consists how many min and max GB you're allocating for server on start up
 # your_jar_file - jar file that starts up your server. It can be for vanilla: standard server.jar or for modded server: spigot.jar, forge.jar and etc.
 # java_parameters - parameters for Minecraft server
+java_runtime='java'
 min_ram='1G'
 max_ram='3G'
 your_jar_file='server.jar'
 java_parameters=''
-exec java -Xms${min_ram} -Xmx${max_ram} ${java_parameters} -Dfile.encoding=UTF-8 -jar ${your_jar_file} nogui
+exec ${java_runtime} -Xms${min_ram} -Xmx${max_ram} ${java_parameters} -Dfile.encoding=UTF-8 -jar ${your_jar_file} nogui
 ```
 
 For server process bot will start a virtual terminal session via `screen` command with name according to the selected

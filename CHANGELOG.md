@@ -2,19 +2,20 @@
 
 All important changes to this project will be documented in this file.
 
-### [1.4.1 Unreleased](https://github.com/Druzai/Bot_Mc_discord/compare/1.4.0...1.4.1) (2022-xx-xx)
+### [1.4.1 Unreleased](https://github.com/Druzai/Bot_Mc_discord/compare/1.4.0...1.4.1) (2023-xx-xx)
 
 #### Improvements:
 
 * Added handling chat line on spigot, paper or bukkit
 * Added option to disable login check (whether the player is really logged in)
-  * This option was added because when using modded Minecraft (forge, fabric), the player registers with delay and the bot might think that login message is fake
+    * This option was added because when using modded Minecraft (forge, fabric), the player registers with delay and the bot might think that login message is fake
 * Updated dependencies
 
 #### Fixed:
 
 * Fixed non-awaited coroutine `backup_force_checking`
 * Added handling if an SSL error occurs
+* Fixed update of buttons in bot menu
 
 #### Breaking changes:
 
@@ -75,10 +76,10 @@ Added support for Python 3.11.
         * From `channel chat` to `chat webhook channel`
     * Added alias `remove` to all `del` subcommands
     * Added usage of Discord dropdown lists in commands:
-      * `language select`
-      * `authorize unban`
-      * `backups remove`
-      * `backups restore`
+        * `language select`
+        * `authorize unban`
+        * `backups remove`
+        * `backups restore`
 * Changed naming:
     * Renamed `Cross-platform chat` to `Game chat` in all bot messages
 
