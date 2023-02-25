@@ -2887,8 +2887,8 @@ class MenuBotView(TemplateSelectView):
         if is_admin(interaction):
             Config.get_secure_auth().enable_secure_auth = not Config.get_secure_auth().enable_secure_auth
             Config.save_config()
-            button.emoji = "🔑" if button.style == ButtonStyle.green else "🔒"
-            button.style = ButtonStyle.red if button.style == ButtonStyle.green else ButtonStyle.green
+            button.emoji = "🔒" if Config.get_secure_auth().enable_secure_auth else "🔑"
+            button.style = ButtonStyle.green if Config.get_secure_auth().enable_secure_auth else ButtonStyle.red
             await edit_interaction(interaction, self, self.message_id)
             if Config.get_secure_auth().enable_secure_auth:
                 with suppress(ConnectionError, socket.error):
@@ -2908,7 +2908,7 @@ class MenuBotView(TemplateSelectView):
         if is_minecrafter(interaction):
             Config.get_backups_settings().automatic_backup = not Config.get_backups_settings().automatic_backup
             Config.save_config()
-            button.style = ButtonStyle.red if button.style == ButtonStyle.green else ButtonStyle.green
+            button.style = ButtonStyle.green if Config.get_backups_settings().automatic_backup else ButtonStyle.red
             await edit_interaction(interaction, self, self.message_id)
             if Config.get_backups_settings().automatic_backup:
                 await warn_about_auto_backups(interaction, self.bot, is_reaction=True)
@@ -2922,8 +2922,9 @@ class MenuBotView(TemplateSelectView):
         if is_minecrafter(interaction):
             async with handle_rcon_error(None, interaction, is_reaction=True):
                 msg = None
+                state = ServerProperties().white_list
                 with connect_rcon() as cl_r:
-                    if ServerProperties().white_list:
+                    if state:
                         cl_r.run("whitelist off")
                         msg = add_quotes(get_translation("The server is allowed to let any players regardless "
                                                          "of the list of allowed nicknames"))
@@ -2932,7 +2933,7 @@ class MenuBotView(TemplateSelectView):
                         msg = add_quotes(get_translation("The server is forbidden to let players not "
                                                          "from the list of allowed nicknames"))
 
-                button.style = ButtonStyle.red if button.style == ButtonStyle.green else ButtonStyle.green
+                button.style = ButtonStyle.red if state else ButtonStyle.green
                 await edit_interaction(interaction, self, self.message_id)
                 if msg is not None:
                     await send_interaction(interaction, msg, is_reaction=True)
@@ -2942,8 +2943,8 @@ class MenuBotView(TemplateSelectView):
         if is_admin(interaction):
             Config.get_op_settings().enable_op = not Config.get_op_settings().enable_op
             Config.save_config()
-            button.emoji = "🥽" if button.style == ButtonStyle.green else "🗿"
-            button.style = ButtonStyle.red if button.style == ButtonStyle.green else ButtonStyle.green
+            button.emoji = "🗿" if Config.get_op_settings().enable_op else "🥽"
+            button.style = ButtonStyle.green if Config.get_op_settings().enable_op else ButtonStyle.red
             await edit_interaction(interaction, self, self.message_id)
             if Config.get_op_settings().enable_op:
                 msg = get_translation("Getting an operator to Minecraft players is enabled")
@@ -2956,8 +2957,8 @@ class MenuBotView(TemplateSelectView):
         if is_minecrafter(interaction):
             Config.get_settings().bot_settings.forceload = not Config.get_settings().bot_settings.forceload
             Config.save_config()
-            button.emoji = "🇽" if button.style == ButtonStyle.green else "♾"
-            button.style = ButtonStyle.red if button.style == ButtonStyle.green else ButtonStyle.green
+            button.emoji = "♾" if Config.get_settings().bot_settings.forceload else "🇽"
+            button.style = ButtonStyle.green if Config.get_settings().bot_settings.forceload else ButtonStyle.red
             await edit_interaction(interaction, self, self.message_id)
             await send_interaction(interaction, add_quotes(bot_forceload_info()), is_reaction=True)
 
@@ -2966,8 +2967,8 @@ class MenuBotView(TemplateSelectView):
         if is_minecrafter(interaction):
             Config.get_settings().bot_settings.auto_shutdown = not Config.get_settings().bot_settings.auto_shutdown
             Config.save_config()
-            button.emoji = "🌕" if button.style == ButtonStyle.green else "🌜"
-            button.style = ButtonStyle.red if button.style == ButtonStyle.green else ButtonStyle.green
+            button.emoji = "🌜" if Config.get_settings().bot_settings.auto_shutdown else "🌕"
+            button.style = ButtonStyle.green if Config.get_settings().bot_settings.auto_shutdown else ButtonStyle.red
             await edit_interaction(interaction, self, self.message_id)
             await send_interaction(
                 interaction,
@@ -2981,7 +2982,7 @@ class MenuBotView(TemplateSelectView):
             Config.get_game_chat_settings().enable_game_chat = \
                 not Config.get_game_chat_settings().enable_game_chat
             Config.save_config()
-            button.style = ButtonStyle.red if button.style == ButtonStyle.green else ButtonStyle.green
+            button.style = ButtonStyle.green if Config.get_game_chat_settings().enable_game_chat else ButtonStyle.red
             await edit_interaction(interaction, self, self.message_id)
             if Config.get_game_chat_settings().enable_game_chat:
                 BotVars.webhook_chat = None
@@ -3003,7 +3004,8 @@ class MenuBotView(TemplateSelectView):
             Config.get_image_preview_settings().enable_image_preview = \
                 not Config.get_image_preview_settings().enable_image_preview
             Config.save_config()
-            button.style = ButtonStyle.red if button.style == ButtonStyle.green else ButtonStyle.green
+            button.style = ButtonStyle.green\
+                if Config.get_image_preview_settings().enable_image_preview else ButtonStyle.red
             await edit_interaction(interaction, self, self.message_id)
             if Config.get_image_preview_settings().enable_image_preview:
                 msg = get_translation("Image preview enabled") + "!"
@@ -3016,8 +3018,8 @@ class MenuBotView(TemplateSelectView):
         if is_minecrafter(interaction):
             Config.get_obituary_settings().enable_obituary = not Config.get_obituary_settings().enable_obituary
             Config.save_config()
-            button.emoji = "☠" if button.style == ButtonStyle.green else "👻"
-            button.style = ButtonStyle.red if button.style == ButtonStyle.green else ButtonStyle.green
+            button.emoji = "👻" if Config.get_obituary_settings().enable_obituary else "☠"
+            button.style = ButtonStyle.green if Config.get_obituary_settings().enable_obituary else ButtonStyle.red
             await edit_interaction(interaction, self, self.message_id)
             if Config.get_obituary_settings().enable_obituary:
                 msg = get_translation("Obituary enabled") + "!"
@@ -3030,8 +3032,8 @@ class MenuBotView(TemplateSelectView):
         if is_admin(interaction):
             Config.get_rss_feed_settings().enable_rss_feed = not Config.get_rss_feed_settings().enable_rss_feed
             Config.save_config()
-            button.emoji = "🔕" if button.style == ButtonStyle.green else "🔔"
-            button.style = ButtonStyle.red if button.style == ButtonStyle.green else ButtonStyle.green
+            button.emoji = "🔔" if Config.get_rss_feed_settings().enable_rss_feed else "🔕"
+            button.style = ButtonStyle.green if Config.get_rss_feed_settings().enable_rss_feed else ButtonStyle.red
             await edit_interaction(interaction, self, self.message_id)
             if Config.get_rss_feed_settings().enable_rss_feed:
                 BotVars.webhook_rss = None
