@@ -269,6 +269,8 @@ class MinecraftCommands(commands.Cog):
         if not Config.get_op_settings().enable_op:
             Config.get_op_settings().enable_op = True
             Config.save_config()
+        if self.menu_bot_view is not None:
+            await self.menu_bot_view.update_view()
         await ctx.send(add_quotes(get_translation("Getting an operator to Minecraft players is enabled")))
 
     @op.command(pass_context=True, name="off")
@@ -279,6 +281,8 @@ class MinecraftCommands(commands.Cog):
         if Config.get_op_settings().enable_op:
             Config.get_op_settings().enable_op = False
             Config.save_config()
+        if self.menu_bot_view is not None:
+            await self.menu_bot_view.update_view()
         await ctx.send(add_quotes(get_translation("Getting an operator to Minecraft players is disabled")))
 
     @op.command(pass_context=True, name="history", aliases=["hist"], ignore_extra=False)
@@ -410,6 +414,8 @@ class MinecraftCommands(commands.Cog):
         if not Config.get_secure_auth().enable_secure_auth:
             Config.get_secure_auth().enable_secure_auth = True
             Config.save_config()
+        if self.menu_bot_view is not None:
+            await self.menu_bot_view.update_view()
         with suppress(ConnectionError, socket.error):
             if BotVars.watcher_of_log_file is None:
                 BotVars.watcher_of_log_file = create_watcher(BotVars.watcher_of_log_file, get_server_version())
@@ -424,6 +430,8 @@ class MinecraftCommands(commands.Cog):
         if Config.get_secure_auth().enable_secure_auth:
             Config.get_secure_auth().enable_secure_auth = False
             Config.save_config()
+        if self.menu_bot_view is not None:
+            await self.menu_bot_view.update_view()
         if not Config.get_game_chat_settings().enable_game_chat and \
                 BotVars.watcher_of_log_file is not None:
             BotVars.watcher_of_log_file.stop()
@@ -778,6 +786,8 @@ class MinecraftCommands(commands.Cog):
         if not Config.get_settings().bot_settings.auto_shutdown:
             Config.get_settings().bot_settings.auto_shutdown = True
             Config.save_config()
+        if self.menu_bot_view is not None:
+            await self.menu_bot_view.update_view()
         await ctx.send(add_quotes(bot_shutdown_info(with_timeout=True)))
 
     @s_shutdown.command(pass_context=True, name="off")
@@ -788,6 +798,8 @@ class MinecraftCommands(commands.Cog):
         if Config.get_settings().bot_settings.auto_shutdown:
             Config.get_settings().bot_settings.auto_shutdown = False
             Config.save_config()
+        if self.menu_bot_view is not None:
+            await self.menu_bot_view.update_view()
         await ctx.send(add_quotes(bot_shutdown_info()))
 
     @s_shutdown.command(pass_context=True, name="timeout", ignore_extra=False)
@@ -822,6 +834,8 @@ class MinecraftCommands(commands.Cog):
         if not Config.get_settings().bot_settings.forceload:
             Config.get_settings().bot_settings.forceload = True
             Config.save_config()
+        if self.menu_bot_view is not None:
+            await self.menu_bot_view.update_view()
         await ctx.send(add_quotes(bot_forceload_info()))
 
     @s_forceload.command(pass_context=True, name="off")
@@ -832,6 +846,8 @@ class MinecraftCommands(commands.Cog):
         if Config.get_settings().bot_settings.forceload:
             Config.get_settings().bot_settings.forceload = False
             Config.save_config()
+        if self.menu_bot_view is not None:
+            await self.menu_bot_view.update_view()
         await ctx.send(add_quotes(bot_forceload_info()))
 
     @commands.group(pass_context=True, aliases=["wl"], invoke_without_command=True)
@@ -931,6 +947,8 @@ class MinecraftCommands(commands.Cog):
                 cl_r.run("whitelist on")
                 await ctx.send(add_quotes(get_translation("The server is forbidden to let players not "
                                                           "from the list of allowed nicknames")))
+            if self.menu_bot_view is not None:
+                await self.menu_bot_view.update_view()
 
     @whitelist.command(pass_context=True, name="off")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -942,6 +960,8 @@ class MinecraftCommands(commands.Cog):
                 cl_r.run("whitelist off")
                 await ctx.send(add_quotes(get_translation("The server is allowed to let any players regardless "
                                                           "of the list of allowed nicknames")))
+            if self.menu_bot_view is not None:
+                await self.menu_bot_view.update_view()
 
     @whitelist.command(pass_context=True, name="reload")
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
@@ -1021,6 +1041,8 @@ class MinecraftCommands(commands.Cog):
         if not Config.get_backups_settings().automatic_backup:
             Config.get_backups_settings().automatic_backup = True
             Config.save_config()
+        if self.menu_bot_view is not None:
+            await self.menu_bot_view.update_view()
         await warn_about_auto_backups(ctx, self._bot)
         await ctx.send(add_quotes(get_translation("Automatic backups enabled")))
 
@@ -1032,6 +1054,8 @@ class MinecraftCommands(commands.Cog):
         if Config.get_backups_settings().automatic_backup:
             Config.get_backups_settings().automatic_backup = False
             Config.save_config()
+        if self.menu_bot_view is not None:
+            await self.menu_bot_view.update_view()
         await ctx.send(add_quotes(get_translation("Automatic backups disabled")))
 
     @backup.command(pass_context=True, name="period", ignore_extra=False)

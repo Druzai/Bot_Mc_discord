@@ -225,6 +225,8 @@ class ChatCommands(commands.Cog):
         if not Config.get_game_chat_settings().enable_game_chat:
             Config.get_game_chat_settings().enable_game_chat = True
             Config.save_config()
+        if self._commands_cog.menu_bot_view is not None:
+            await self._commands_cog.menu_bot_view.update_view()
         BotVars.webhook_chat = None
         await create_webhooks(self._bot)
         with suppress(ConnectionError, socket.error):
@@ -241,6 +243,8 @@ class ChatCommands(commands.Cog):
         if Config.get_game_chat_settings().enable_game_chat:
             Config.get_game_chat_settings().enable_game_chat = False
             Config.save_config()
+        if self._commands_cog.menu_bot_view is not None:
+            await self._commands_cog.menu_bot_view.update_view()
         if not Config.get_secure_auth().enable_secure_auth and BotVars.watcher_of_log_file is not None:
             BotVars.watcher_of_log_file.stop()
         await ctx.send(get_translation("Game chat disabled") + "!")
@@ -280,6 +284,8 @@ class ChatCommands(commands.Cog):
         if not Config.get_obituary_settings().enable_obituary:
             Config.get_obituary_settings().enable_obituary = True
             Config.save_config()
+        if self._commands_cog.menu_bot_view is not None:
+            await self._commands_cog.menu_bot_view.update_view()
         await ctx.send(get_translation("Obituary enabled") + "!")
 
     @c_obituary.command(pass_context=True, name="off")
@@ -290,6 +296,8 @@ class ChatCommands(commands.Cog):
         if Config.get_obituary_settings().enable_obituary:
             Config.get_obituary_settings().enable_obituary = False
             Config.save_config()
+        if self._commands_cog.menu_bot_view is not None:
+            await self._commands_cog.menu_bot_view.update_view()
         await ctx.send(get_translation("Obituary disabled") + "!")
 
     @c_obituary.group(pass_context=True, name="name", invoke_without_command=True, ignore_extra=False)
@@ -436,6 +444,8 @@ class ChatCommands(commands.Cog):
         if not Config.get_image_preview_settings().enable_image_preview:
             Config.get_image_preview_settings().enable_image_preview = True
             Config.save_config()
+        if self._commands_cog.menu_bot_view is not None:
+            await self._commands_cog.menu_bot_view.update_view()
         await ctx.send(get_translation("Image preview enabled") + "!")
 
     @c_images.command(pass_context=True, name="off")
@@ -446,6 +456,8 @@ class ChatCommands(commands.Cog):
         if Config.get_image_preview_settings().enable_image_preview:
             Config.get_image_preview_settings().enable_image_preview = False
             Config.save_config()
+        if self._commands_cog.menu_bot_view is not None:
+            await self._commands_cog.menu_bot_view.update_view()
         await ctx.send(get_translation("Image preview disabled") + "!")
 
     @c_images.command(pass_context=True, name="width", ignore_extra=False)
@@ -590,6 +602,8 @@ class ChatCommands(commands.Cog):
         if not Config.get_rss_feed_settings().enable_rss_feed:
             Config.get_rss_feed_settings().enable_rss_feed = True
             Config.save_config()
+        if self._commands_cog.menu_bot_view is not None:
+            await self._commands_cog.menu_bot_view.update_view()
         BotVars.webhook_rss = None
         await create_webhooks(self._bot)
         if self.rss_feed_task.is_running():
@@ -606,6 +620,8 @@ class ChatCommands(commands.Cog):
         if Config.get_rss_feed_settings().enable_rss_feed:
             Config.get_rss_feed_settings().enable_rss_feed = False
             Config.save_config()
+        if self._commands_cog.menu_bot_view is not None:
+            await self._commands_cog.menu_bot_view.update_view()
         if self.rss_feed_task.is_running():
             self.rss_feed_task.stop()
         await ctx.send(get_translation("RSS disabled") + "!")
