@@ -23,7 +23,7 @@ from components.additional_funcs import (
     check_if_string_in_all_translations, build_nickname_tellraw_for_bot, send_select_view, shorten_string, SelectChoice,
     send_interaction, DISCORD_SELECT_FIELD_MAX_LENGTH, MenuServerView, on_server_select_callback, MenuBotView,
     get_message_and_channel, backup_force_checking, on_backup_force_callback, backup_restore_checking,
-    send_backup_restore_select, send_backup_remove_select, check_if_obituary_webhook
+    send_backup_restore_select, send_backup_remove_select, check_if_obituary_webhook, bot_backup_list
 )
 from components.localization import get_translation
 from components.watcher_handle import create_watcher
@@ -1173,38 +1173,7 @@ class MinecraftCommands(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
     @commands.guild_only()
     async def b_list(self, ctx: commands.Context):
-        if len(Config.get_server_config().backups) > 0:
-            message = get_translation("List of backups for '{0}' server:") \
-                          .format(Config.get_selected_server_from_list().server_name) + "\n"
-            i = 1
-            total_numb = get_number_of_digits(len(Config.get_server_config().backups))
-            additional_space = (total_numb - 1) * " "
-            for backup in Config.get_server_config().backups:
-                first_additional_space = (total_numb - get_number_of_digits(i)) * " "
-                message += f"{first_additional_space}[{i}] " + get_translation("Date: ") + \
-                           backup.file_creation_date.strftime(get_translation("%H:%M:%S %d/%m/%Y"))
-                message += f"\n\t{additional_space}" + get_translation("Backup size: ") + \
-                           get_human_readable_size(
-                               get_file_size(Config.get_selected_server_from_list().working_directory,
-                                             Config.get_backups_settings().name_of_the_backups_folder,
-                                             f"{backup.file_name}.zip"))
-                if backup.reason is None and backup.initiator is None:
-                    message += f"\n\t{additional_space}" + get_translation("Reason: ") + \
-                               get_translation("Automatic backup")
-                else:
-                    message += f"\n\t{additional_space}" + get_translation("Reason: ") + \
-                               (backup.reason if backup.reason else get_translation("Not stated"))
-                    message += f"\n\t{additional_space}" + get_translation("Initiator: ") + \
-                               await get_member_string(self._bot, backup.initiator)
-                message += "\n"
-                if backup.restored_from:
-                    message += "\t" + \
-                               get_translation("The world of the server was restored from this backup") + "\n"
-                i += 1
-            await ctx.send(add_quotes(message))
-        else:
-            await ctx.send(add_quotes(get_translation("There are no backups for '{0}' server!")
-                                      .format(Config.get_selected_server_from_list().server_name)))
+        await bot_backup_list(ctx, self._bot)
 
     @commands.group(pass_context=True, invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)

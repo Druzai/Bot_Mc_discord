@@ -684,8 +684,9 @@ class BackupsThread(Thread):
                     if players_count != 0:
                         BotVars.is_auto_backup_disable = False
                 elif len(Config.get_server_config().backups) > 0 and \
+                        Config.get_server_config().states.started_info.date is not None and \
                         Config.get_server_config().states.started_info.date > \
-                        max([b.file_creation_date for b in Config.get_server_config().backups]):
+                        max(b.file_creation_date for b in Config.get_server_config().backups):
                     BotVars.is_auto_backup_disable = False
 
                 if not BotVars.is_auto_backup_disable:
@@ -1529,6 +1530,46 @@ async def bot_backup(
     await send_msg(ctx, add_quotes(bot_message), is_reaction=is_reaction)
 
 
+async def bot_backup_list(
+        ctx: Union[commands.Context, TextChannel, VoiceChannel, ChannelThread, GroupChannel, Interaction],
+        bot: Union[commands.Bot, Client],
+        is_reaction=False
+):
+    if len(Config.get_server_config().backups) > 0:
+        message = get_translation("List of backups for '{0}' server:") \
+                      .format(Config.get_selected_server_from_list().server_name) + "\n"
+        i = 1
+        total_numb = get_number_of_digits(len(Config.get_server_config().backups))
+        additional_space = (total_numb - 1) * " "
+        for backup in Config.get_server_config().backups:
+            first_additional_space = (total_numb - get_number_of_digits(i)) * " "
+            message += f"{first_additional_space}[{i}] " + get_translation("Date: ") + \
+                       backup.file_creation_date.strftime(get_translation("%H:%M:%S %d/%m/%Y"))
+            message += f"\n\t{additional_space}" + get_translation("Backup size: ") + \
+                       get_human_readable_size(
+                           get_file_size(Config.get_selected_server_from_list().working_directory,
+                                         Config.get_backups_settings().name_of_the_backups_folder,
+                                         f"{backup.file_name}.zip"))
+            if backup.reason is None and backup.initiator is None:
+                message += f"\n\t{additional_space}" + get_translation("Reason: ") + \
+                           get_translation("Automatic backup")
+            else:
+                message += f"\n\t{additional_space}" + get_translation("Reason: ") + \
+                           (backup.reason if backup.reason else get_translation("Not stated"))
+                message += f"\n\t{additional_space}" + get_translation("Initiator: ") + \
+                           await get_member_string(bot, backup.initiator)
+            message += "\n"
+            if backup.restored_from:
+                message += f"\t{additional_space}" + \
+                           get_translation("The world of the server was restored from this backup") + "\n"
+            i += 1
+    else:
+        message = get_translation(
+            "There are no backups for '{0}' server!"
+        ).format(Config.get_selected_server_from_list().server_name)
+    await send_msg(ctx, add_quotes(message), is_reaction=is_reaction)
+
+
 async def on_backups_select_option(i: int, bot: commands.Bot):
     backup = Config.get_server_config().backups[i]
 
@@ -2350,15 +2391,16 @@ class MenuServerView(TemplateSelectView):
         self.c_list.label = get_translation("Players online")
         self.c_s_update.label = get_translation("Update")
 
+        self.c_backup.label = get_translation("Backups")
+        self.c_b_list.label = get_translation("List")
+        self.c_b_force.label = get_translation("Create")
+        self.c_b_restore.label = get_translation("Restore")
+        self.c_b_remove.label = get_translation("Delete")
+
         self.c_server.label = get_translation("Server")
         self.c_start.label = get_translation("Start")
         self.c_stop.label = get_translation("Stop")
         self.c_restart.label = get_translation("Restart")
-
-        self.c_backup.label = get_translation("Backups")
-        self.c_b_force.label = get_translation("Create")
-        self.c_b_restore.label = get_translation("Restore")
-        self.c_b_remove.label = get_translation("Delete")
 
     async def do_after_sending_message(self):
         if self.channel_id is not None and Config.get_menu_settings().server_menu_channel_id is None:
@@ -2389,6 +2431,11 @@ class MenuServerView(TemplateSelectView):
         BotVars.react_auth = interaction.user
         await bot_backup(interaction, interaction.client, is_reaction=True)
 
+    @button(style=ButtonStyle.secondary, custom_id="menu_server_view:backup_list", emoji="📃", row=1)
+    async def c_b_list(self, interaction: Interaction, button: Button):
+        BotVars.react_auth = interaction.user
+        await bot_backup_list(interaction, interaction.client, is_reaction=True)
+
     @button(style=ButtonStyle.secondary, custom_id="menu_server_view:backup_force", emoji="💽", row=1)
     async def c_b_force(self, interaction: Interaction, button: Button):
         BotVars.react_auth = interaction.user
@@ -2409,7 +2456,7 @@ class MenuServerView(TemplateSelectView):
                         interaction,
                         self.bot,
                         self.commands_cog.backups_thread,
-                        reason=reason.value if len(reason.value) > 0 else None,
+                        reason=reason.value.strip() if len(reason.value.strip()) > 0 else None,
                         is_reaction=True
                     )
 
@@ -3004,7 +3051,7 @@ class MenuBotView(TemplateSelectView):
             Config.get_image_preview_settings().enable_image_preview = \
                 not Config.get_image_preview_settings().enable_image_preview
             Config.save_config()
-            button.style = ButtonStyle.green\
+            button.style = ButtonStyle.green \
                 if Config.get_image_preview_settings().enable_image_preview else ButtonStyle.red
             await edit_interaction(interaction, self, self.message_id)
             if Config.get_image_preview_settings().enable_image_preview:
@@ -4211,7 +4258,7 @@ def get_image_data(url: str):
     if search(r"https?://tenor\.com/view", url):
         with handle_unhandled_error_in_link_request(image_preview=True):
             text = req_get(url, timeout=(4, 8), headers={"User-Agent": UserAgent.get_header()}).text
-            match = search(rf"property=\"og:image\"\scontent=\"(?P<link>{URL_REGEX})?\"", text)
+            match = search(rf"property=\"og:image\"\s*content=\"(?P<link>{URL_REGEX})?\"", text)
             url = match.group("link") if match is not None else None
 
     if url is not None:
