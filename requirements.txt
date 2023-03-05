@@ -1,5 +1,5 @@
-cryptography==39.0.1
-discord.py==2.1.1
+cryptography==39.0.2
+discord.py==2.2.2
 mcipc==1.5.4
 psutil==5.9.4
 feedparser==6.0.10
