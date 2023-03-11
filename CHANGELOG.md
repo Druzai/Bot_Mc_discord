@@ -20,6 +20,7 @@ All important changes to this project will be documented in this file.
 * Fixed update of buttons in bot menu
 * Added strings `**For admin only!**` to some command descriptions
 * Removed requirement for admin role for `associate` command
+* Fixed checking if player can't be kicked
 
 #### Breaking changes:
 

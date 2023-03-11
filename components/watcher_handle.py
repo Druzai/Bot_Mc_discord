@@ -462,7 +462,7 @@ def _check_log_file(
 
             if logged_in_nick is not None and ip_address is not None and \
                     Config.get_secure_auth().enable_secure_auth:
-                from components.additional_funcs import connect_rcon, add_quotes, handle_rcon_error
+                from components.additional_funcs import connect_rcon, add_quotes, handle_rcon_error, send_rcon_kick
 
                 save_auth_users = False
                 if logged_in_nick not in [u.nick for u in Config.get_auth_users()]:
@@ -519,11 +519,7 @@ def _check_log_file(
                                                                                                             code)
                         with suppress(ConnectionError, socket.error):
                             with connect_rcon() as cl_r:
-                                response = cl_r.kick(
-                                    logged_in_nick if server_version.minor < 14 else f"'{logged_in_nick}'",
-                                    kick_reason
-                                )
-                                if not search(kick_reason, response):
+                                if not send_rcon_kick(cl_r, server_version, logged_in_nick, kick_reason):
                                     secs = Config.get_secure_auth().mins_before_code_expires * 60
                                     if server_version.minor > 2:
                                         if server_version.minor < 7 or \

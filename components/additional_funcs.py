@@ -13,7 +13,7 @@ from os import chdir, system, walk, mkdir, remove
 from os.path import join as p_join, getsize, isfile
 from pathlib import Path
 from random import randint, choice
-from re import search, split, findall, sub, compile
+from re import search, split, findall, sub, compile, DOTALL
 from shutil import rmtree
 from sys import argv
 from textwrap import wrap
@@ -3145,6 +3145,11 @@ async def handle_rcon_error(ctx: Optional[commands.Context], interaction: Intera
                 ctx=ctx,
                 is_reaction=is_reaction
             )
+
+
+def send_rcon_kick(cl_r: Client_r, server_version: 'ServerVersion', player_nick: str, reason: str) -> bool:
+    response = cl_r.kick(player_nick if server_version.minor < 14 else f"'{player_nick}'", reason)
+    return reason in response and search(r".*<--\[HERE]$", response, DOTALL) is None
 
 
 class HelpCommandArgument(commands.CheckFailure):

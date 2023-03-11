@@ -15,15 +15,15 @@ from discord.ext import commands, tasks
 from components import decorators
 from components.additional_funcs import (
     server_checkups, send_status, get_server_players, add_quotes, bot_status, bot_list, bot_start, bot_stop,
-    bot_restart, connect_rcon, make_underscored_line, get_human_readable_size, get_file_size, BackupsThread,
-    send_message_of_deleted_backup, bot_backup, delete_after_by_msg, get_half_members_count_with_role,
-    warn_about_auto_backups, get_bot_display_name, get_server_version, DISCORD_SYMBOLS_IN_MESSAGE_LIMIT,
-    get_number_of_digits, bot_associate, bot_associate_info, get_time_string, bot_shutdown_info, bot_forceload_info,
-    get_member_string, handle_rcon_error, IPv4Address, handle_unhandled_error_in_task,
-    check_if_string_in_all_translations, build_nickname_tellraw_for_bot, send_select_view, shorten_string, SelectChoice,
-    send_interaction, DISCORD_SELECT_FIELD_MAX_LENGTH, MenuServerView, on_server_select_callback, MenuBotView,
-    get_message_and_channel, backup_force_checking, on_backup_force_callback, backup_restore_checking,
-    send_backup_restore_select, send_backup_remove_select, check_if_obituary_webhook, bot_backup_list
+    bot_restart, connect_rcon, make_underscored_line, BackupsThread, send_message_of_deleted_backup, bot_backup,
+    delete_after_by_msg, get_half_members_count_with_role, warn_about_auto_backups, get_bot_display_name,
+    get_server_version, DISCORD_SYMBOLS_IN_MESSAGE_LIMIT, get_number_of_digits, bot_associate, bot_associate_info,
+    get_time_string, bot_shutdown_info, bot_forceload_info, handle_rcon_error, IPv4Address, send_rcon_kick,
+    handle_unhandled_error_in_task, check_if_string_in_all_translations, build_nickname_tellraw_for_bot,
+    send_select_view, shorten_string, SelectChoice, send_interaction, DISCORD_SELECT_FIELD_MAX_LENGTH, MenuServerView,
+    on_server_select_callback, MenuBotView, get_message_and_channel, backup_force_checking, on_backup_force_callback,
+    backup_restore_checking, send_backup_restore_select, send_backup_remove_select, check_if_obituary_webhook,
+    bot_backup_list
 )
 from components.localization import get_translation
 from components.watcher_handle import create_watcher
@@ -690,19 +690,13 @@ class MinecraftCommands(commands.Cog):
                        add_quotes(get_translation("These nicks were revoked with this IP-address:") +
                                   "\n- " + "\n- ".join(possible_matches)))
         if len(available_players_to_kick) > 0:
-            server_version = None
+            server_version = get_server_version()
             kicked_nicks = []
             reason = get_translation("One of the sessions for this nick has been ended")
             with suppress(ConnectionError, socket.error):
                 with connect_rcon() as cl_r:
                     for player in available_players_to_kick:
-                        response = cl_r.kick(
-                            player if get_server_version().minor < 14 else f"'{player}'",
-                            reason
-                        )
-                        if not search(reason, response):
-                            if server_version is None:
-                                server_version = get_server_version()
+                        if not send_rcon_kick(cl_r, server_version, player, reason):
                             if server_version.minor > 2:
                                 cl_r.run(f"ban-ip {ip} {reason}")
                             else:
@@ -739,19 +733,13 @@ class MinecraftCommands(commands.Cog):
         await ctx.send(f"{ctx.author.mention}\n" + add_quotes(get_translation("All these nicks were revoked:") +
                                                               "\n- " + "\n- ".join(nicks_to_revoke)))
         if len(available_players_to_kick) > 0:
-            server_version = None
+            server_version = get_server_version()
             kicked_nicks = []
             reason = get_translation("All sessions for this nick have been ended")
             with suppress(ConnectionError, socket.error):
                 with connect_rcon() as cl_r:
                     for player in available_players_to_kick:
-                        response = cl_r.kick(
-                            player if get_server_version().minor < 14 else f"'{player}'",
-                            reason
-                        )
-                        if not search(reason, response):
-                            if server_version is None:
-                                server_version = get_server_version()
+                        if not send_rcon_kick(cl_r, server_version, player, reason):
                             for ip in Config.get_known_user_ips(player):
                                 if server_version.minor > 2:
                                     cl_r.run(f"ban-ip {ip} {reason}")
