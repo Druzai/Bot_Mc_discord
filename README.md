@@ -136,7 +136,7 @@ For macOS you have to update certificates by running script `/Applications/Pytho
 
 ### Build with pyinstaller
 
-Firstly, you have to install pyinstaller via `pip install pyinstaller==5.6.2`.
+Firstly, you have to install pyinstaller via `pip install pyinstaller==5.8.0`.
 
 Type in command prompt `make` in root directory of the project to build it.
 
@@ -152,8 +152,8 @@ this [article](https://www.minecraft.net/en-us/article/important-message--securi
 >
 > **Or check if your modded server already has a patch for it!**
 
-For game chat to work properly you have to have argument `-Dfile.encoding=UTF-8` when you're executing `*.bat`, `*.cmd`,
-shortcut, `*.sh` or `*.command` script (necessary for Windows).
+For game chat to work properly with languages other than English, you have to have argument `-Dfile.encoding=UTF-8` when
+you're executing `*.bat`, `*.cmd`, shortcut, `*.sh` or `*.command` script.
 
 ### Windows
 
