@@ -11,6 +11,7 @@ All important changes to this project will be documented in this file.
     * This option was added because when using modded Minecraft (forge, fabric), the player registers with delay and the bot might think that login message is fake
 * Added button `List` to server menu that shows list of backups from selected Minecraft server
 * Updated translation strings for death messages for version `1.19.4`
+* Added option to enforce default game mode for selected server instead of hardcoded enforcement
 * Updated dependencies
 
 #### Fixed:

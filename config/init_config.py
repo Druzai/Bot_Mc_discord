@@ -295,6 +295,7 @@ class Server_settings:
     start_file_name: str = ""
     server_loading_time: Optional[int] = None
     enforce_offline_mode: bool = False
+    enforce_default_gamemode: bool = False
 
 
 @dataclass
@@ -896,43 +897,34 @@ class Config:
                                .format(filepath.as_posix()))
         # Check server parameters
         changed_parameters = []
-        changed = False
         if cls.get_selected_server_from_list().enforce_offline_mode:
             if server_properties.online_mode:
-                changed = True
                 server_properties.online_mode = False
                 changed_parameters.append("online-mode=false")
             if server_properties.enforce_secure_profile:
-                changed = True
                 server_properties.enforce_secure_profile = False
                 changed_parameters.append("enforce-secure-profile=false")
-        if not server_properties.force_gamemode:
-            changed = True
+        if cls.get_selected_server_from_list().enforce_default_gamemode and not server_properties.force_gamemode:
             server_properties.force_gamemode = True
             changed_parameters.append("force-gamemode=true")
         if not server_properties.enable_query:
-            changed = True
             server_properties.enable_query = True
             changed_parameters.append("enable-query=true")
         if server_properties.query_port is None or server_properties.query_port == "":
-            changed = True
             server_properties.query_port = 25565
             changed_parameters.append(f"query.port={server_properties.query_port}")
         if not server_properties.enable_rcon:
-            changed = True
             server_properties.enable_rcon = True
             changed_parameters.append("enable-rcon=true")
         if server_properties.rcon_port is None or server_properties.rcon_port == "":
-            changed = True
             server_properties.rcon_port = 25575
             changed_parameters.append(f"rcon.port={server_properties.rcon_port}")
         if server_properties.rcon_password is None or server_properties.rcon_password == "":
-            changed = True
             server_properties.rcon_password = "".join(sec_choice(ascii_letters + digits) for _ in range(20))
             changed_parameters.append(f"rcon.password={server_properties.rcon_password}")
             changed_parameters.append(get_translation("Reminder: For better security "
                                                       "you have to change this password for a more secure one."))
-        if changed:
+        if len(changed_parameters) > 0:
             server_properties.save()
             print("------")
             print(get_translation("Note: In '{0}' bot set these parameters:").format(filepath.as_posix()))
@@ -1516,8 +1508,8 @@ class Config:
                                       if cls._settings_instance.servers_list[s] == server][0]
                     cls._settings_instance.servers_list[old_server_pos] = changed_server
                 elif cls._ask_for_data(get_translation("Would you like to delete this server '{0}'?").format(
-                        server.server_name) +
-                                       " Y/n\n> ", "y"):
+                        server.server_name
+                ) + " Y/n\n> ", "y"):
                     cls._settings_instance.servers_list.remove(server)
 
         cls._settings_instance.ask_to_change_servers_list = False
@@ -1542,10 +1534,19 @@ class Config:
             server.server_name = cls._ask_for_data(get_translation("Enter server name") + "\n> ")
             server.working_directory = cls._get_server_working_directory()
             server.start_file_name = cls._get_server_start_file_name(server.working_directory)
-            server.enforce_offline_mode = bool(cls._ask_for_data(get_translation("Do you want the bot to set server "
-                                                                                 "properties to offline mode "
-                                                                                 "(without Internet access)?") +
-                                                                 " Y/n\n> ", "y"))
+            server.enforce_offline_mode = cls._ask_for_data(
+                get_translation("Do you want the bot to set server properties "
+                                "to offline mode (without Internet access)?") + " Y/n\n> ",
+                "y"
+            )
+            server.enforce_default_gamemode = cls._ask_for_data(
+                get_translation(
+                    "Do you want the bot to set server property 'force-gamemode' to 'true'? Y/n"
+                    " (forces players to join in the default game mode. Default is survival)\n"
+                    "Note: It's better to enable this option if you're using a temporary operator via bot commands"
+                ) + " \n> ",
+                "y"
+            )
         else:
             if cls._ask_for_data(
                     get_translation("Change server name '{0}'?").format(server.server_name) + " Y/n\n> ", "y"):
@@ -1558,14 +1559,21 @@ class Config:
                     get_translation("Change server start file name '{0}'?").format(server.start_file_name) +
                     " Y/n\n> ", "y"):
                 server.start_file_name = cls._get_server_start_file_name(server.working_directory)
-            if cls._ask_for_data(
-                    get_translation("Change server's enforce offline mode?").format(server.start_file_name) +
-                    " Y/n\n> ", "y"):
-                server.enforce_offline_mode = bool(cls._ask_for_data(get_translation("Do you want the bot to set "
-                                                                                     "server properties to "
-                                                                                     "offline mode "
-                                                                                     "(without Internet access)?") +
-                                                                     " Y/n\n> ", "y"))
+            if cls._ask_for_data(get_translation("Change server's enforce offline mode?") + " Y/n\n> ", "y"):
+                server.enforce_offline_mode = cls._ask_for_data(
+                    get_translation("Do you want the bot to set server properties "
+                                    "to offline mode (without Internet access)?") + " Y/n\n> ",
+                    "y"
+                )
+            if cls._ask_for_data(get_translation("Change server's enforce default game mode?") + " Y/n\n> ", "y"):
+                server.enforce_default_gamemode = cls._ask_for_data(
+                    get_translation(
+                        "Do you want the bot to set server property 'force-gamemode' to 'true'? Y/n"
+                        " (forces players to join in the default game mode. Default is survival)\n"
+                        "Note: It's better to enable this option if you're using a temporary operator via bot commands"
+                    ) + " \n> ",
+                    "y"
+                )
         return server
 
     @classmethod
