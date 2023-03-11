@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
 "POT-Creation-Date: 2023-03-09 22:24+0300\n"
-"PO-Revision-Date: 2023-03-09 22:28+0300\n"
+"PO-Revision-Date: 2023-03-11 18:10+0300\n"
 "Last-Translator: Druzai\n"
 "Language-Team: \n"
 "Language: en\n"
@@ -839,6 +839,7 @@ msgstr "Handles secure authorization in Minecraft 🔑"
 #: ..\_frozen_translations.py:191
 msgid "help_authorize"
 msgstr ""
+"**For admin only!**\n"
 "Returns information about secure authorization configuration and authorized "
 "players"
 
@@ -876,11 +877,15 @@ msgstr ""
 
 #: ..\_frozen_translations.py:199
 msgid "help_authorize_off"
-msgstr "Disables secure authorization"
+msgstr ""
+"**For admin only!**\n"
+"Disables secure authorization"
 
 #: ..\_frozen_translations.py:200
 msgid "help_authorize_on"
-msgstr "Enables secure authorization"
+msgstr ""
+"**For admin only!**\n"
+"Enables secure authorization"
 
 #: ..\_frozen_translations.py:201
 msgid "help_authorize_revoke"
@@ -900,11 +905,14 @@ msgstr ""
 
 #: ..\_frozen_translations.py:204
 msgid "help_authorize_revoke_all"
-msgstr "Revokes all logged nicks"
+msgstr ""
+"**For admin only!**\n"
+"Revokes all logged nicks"
 
 #: ..\_frozen_translations.py:205
 msgid "help_authorize_unban"
 msgstr ""
+"**For admin only!**\n"
 "Unbans IP-address with provided argument\n"
 "Without arguments returns a dropdown menu with the list of banned IP-address "
 "from selected Minecraft server ban list for unban"
@@ -1099,11 +1107,15 @@ msgstr "Enables obituary"
 
 #: ..\_frozen_translations.py:245
 msgid "help_chat_off"
-msgstr "Disables game chat"
+msgstr ""
+"**For admin only!**\n"
+"Disables game chat"
 
 #: ..\_frozen_translations.py:246
 msgid "help_chat_on"
-msgstr "Enables game chat"
+msgstr ""
+"**For admin only!**\n"
+"Enables game chat"
 
 #: ..\_frozen_translations.py:247
 msgid "help_chat_webhook"
@@ -1331,15 +1343,20 @@ msgstr ""
 
 #: ..\_frozen_translations.py:285
 msgid "help_op_off"
-msgstr "Disables getting an operator to Minecraft players"
+msgstr ""
+"**For admin only!**\n"
+"Disables getting an operator to Minecraft players"
 
 #: ..\_frozen_translations.py:286
 msgid "help_op_on"
-msgstr "Enables getting an operator to Minecraft players"
+msgstr ""
+"**For admin only!**\n"
+"Enables getting an operator to Minecraft players"
 
 #: ..\_frozen_translations.py:287
 msgid "help_op_timeout"
 msgstr ""
+"**For admin only!**\n"
 "Changes timeout for being operator in Minecraft\n"
 "Without arguments shows current timeout"
 
@@ -1389,7 +1406,9 @@ msgstr ""
 
 #: ..\_frozen_translations.py:297
 msgid "help_role_admin"
-msgstr "Saves admin role for bot"
+msgstr ""
+"**For admin only!**\n"
+"Saves admin role for bot"
 
 #: ..\_frozen_translations.py:298
 msgid "help_role_admin_role"
@@ -1397,11 +1416,15 @@ msgstr "Role mention, like '@Role' or role id if you're developer"
 
 #: ..\_frozen_translations.py:299
 msgid "help_role_admin_clear"
-msgstr "Unbinds admin role for bot"
+msgstr ""
+"**For admin only!**\n"
+"Unbinds admin role for bot"
 
 #: ..\_frozen_translations.py:300
 msgid "help_role_command"
-msgstr "Saves role for commands that manage Minecraft server"
+msgstr ""
+"**For admin only!**\n"
+"Saves role for commands that manage Minecraft server"
 
 #: ..\_frozen_translations.py:301
 msgid "help_role_command_role"
@@ -1409,7 +1432,9 @@ msgstr "Role mention, like '@Role' or role id if you're developer"
 
 #: ..\_frozen_translations.py:302
 msgid "help_role_command_clear"
-msgstr "Unbinds role for commands that manage Minecraft server"
+msgstr ""
+"**For admin only!**\n"
+"Unbinds role for commands that manage Minecraft server"
 
 #: ..\_frozen_translations.py:303
 msgid "help_brief_rss"
@@ -1431,11 +1456,15 @@ msgstr "Integer number of seconds"
 
 #: ..\_frozen_translations.py:307
 msgid "help_rss_off"
-msgstr "Disables RSS"
+msgstr ""
+"**For admin only!**\n"
+"Disables RSS"
 
 #: ..\_frozen_translations.py:308
 msgid "help_rss_on"
-msgstr "Enables RSS"
+msgstr ""
+"**For admin only!**\n"
+"Enables RSS"
 
 #: ..\_frozen_translations.py:309
 msgid "help_rss_url"

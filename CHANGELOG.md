@@ -10,6 +10,7 @@ All important changes to this project will be documented in this file.
 * Added option to disable login check (whether the player is really logged in)
     * This option was added because when using modded Minecraft (forge, fabric), the player registers with delay and the bot might think that login message is fake
 * Added button `List` to server menu that shows list of backups from selected Minecraft server
+* Updated translation strings for death messages for version `1.19.4`
 * Updated dependencies
 
 #### Fixed:
@@ -17,6 +18,8 @@ All important changes to this project will be documented in this file.
 * Fixed non-awaited coroutine `backup_force_checking`
 * Added handling if an SSL error occurs
 * Fixed update of buttons in bot menu
+* Added strings `**For admin only!**` to some command descriptions
+* Removed requirement for admin role for `associate` command
 
 #### Breaking changes:
 

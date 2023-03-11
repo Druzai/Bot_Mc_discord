@@ -361,7 +361,6 @@ class MinecraftCommands(commands.Cog):
 
     @commands.group(pass_context=True, aliases=["assoc"], invoke_without_command=True, ignore_extra=False)
     @commands.bot_has_permissions(send_messages=True, view_channel=True)
-    @decorators.has_admin_role()
     @commands.guild_only()
     async def associate(self, ctx: commands.Context, for_who: Literal['me', 'everyone']):
         """Associates discord user with nick in Minecraft"""
