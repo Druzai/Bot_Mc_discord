@@ -51,7 +51,7 @@
         * Custom emojis are converted to text with their own text name and hyperlink to img of emoji if applicable
         * Minecraft players can send custom emojis typing `:emoji_name:` (finds first full match, then if nothing is
           found trying to find case-insensitive name)
-        * Most of the standard unicode emojis are not processed by the vanilla Minecraft server
+        * Most of the standard unicode emojis are not processed by the vanilla Minecraft client
     * Logging of death messages from Minecraft
         * Supported custom avatar for death messages
             * If you set custom avatar and getting standard avatar in webhook message then your image link is invalid!
@@ -184,8 +184,8 @@ exit /b
 Also, if you don't want the server console to pop up in front of other windows at startup, you'll need to create
 shortcut by doing these steps:
 
-- Create a shortcut to the `*.bat` or `*.cmd` file. To do so, right click on the file, click `Create Shortcut`
-- Right click on the shortcut and choose `Properties`
+- Create a shortcut to the `*.bat` or `*.cmd` file. To do so, right-click on the file, click `Create Shortcut`
+- Right-click on the shortcut and choose `Properties`
 - In the `Run`: drop down, choose `Minimized`
 - Click `OK`
 
@@ -224,7 +224,7 @@ of virtual sessions - `screen -ls`.
 ### macOS
 
 On macOS you should start bot executable file from terminal `%path_to_bot%/bot_executable_file`. Because if you just
-double click on executable file, current working directory will be set as your home directory (`~`) and bot won't
+double-click on executable file, current working directory will be set as your home directory (`~`) and bot won't
 find config and key in most cases.
 
 For the bot to properly start the Minecraft server you have to have `*.command` or `*.sh` script (in bot setting you can
