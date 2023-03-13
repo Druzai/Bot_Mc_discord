@@ -196,11 +196,11 @@ def _check_log_file(
                 player_message = match.group("message")
 
                 if "> " in player_nick:
-                    from components.additional_funcs import get_server_players
+                    from components.additional_funcs import get_server_full_stats
 
                     splits = player_nick.split("> ")
                     try:
-                        players = get_server_players()["players"]
+                        players = get_server_full_stats().players
                         indexes = list(range(len(splits), 0, -1))
                     except (ConnectionError, socket.error):
                         players = []
@@ -767,12 +767,11 @@ def check_if_player_logged_in(line: str, INFO_line: str):
         nick = match.group("nick").strip()
         ip_address = match.group("ip").strip()
         if Config.get_secure_auth().enable_login_check:
-            from components.additional_funcs import get_server_players
+            from components.additional_funcs import get_server_full_stats
 
             valid = False
             with suppress(ConnectionError, socket.error):
-                data = get_server_players()
-                valid = nick in data["players"]
+                valid = nick in get_server_full_stats().players
             if not valid:
                 valid = nick in [p.player_minecraft_nick for p in Config.get_server_config().seen_players]
             if not valid:

@@ -37,6 +37,7 @@ from discord.ext import commands
 from discord.ui import View, Select, Item, Button, button, Modal, TextInput
 from discord.utils import get as utils_get, _get_mime_type_for_image, MISSING
 from mcipc.query import Client as Client_q
+from mcipc.query.proto.full_stats import FullStats
 from mcipc.rcon import Client as Client_r, WrongPassword
 from psutil import process_iter, NoSuchProcess, disk_usage, Process, AccessDenied
 from requests import post as req_post, get as req_get, head as req_head
@@ -427,7 +428,7 @@ async def stop_server(
         return
 
     try:
-        players_info = get_server_players()
+        players_info = get_server_full_stats()
     except (ConnectionError, socket.error):
         if len(get_list_of_processes()) == 0:
             print(get_translation("Bot Exception: Couldn't connect to server, because it's stopped"))
@@ -440,11 +441,11 @@ async def stop_server(
         no_connection = True
 
     if not no_connection:
-        if players_info["current"] > 0:
+        if players_info.num_players > 0:
             logged_only_author_accounts = None
             author_id = get_author(ctx, bot, is_reaction).id
             if len(Config.get_known_users_list()) > 0:
-                for player in players_info["players"]:
+                for player in players_info.players:
                     possible_player = [u.user_discord_id for u in Config.get_known_users_list()
                                        if u.user_minecraft_nick == player]
                     if len(possible_player) > 0 and author_id == possible_player[0]:
@@ -457,14 +458,14 @@ async def stop_server(
                 if not await poll.run(channel=ctx.channel if hasattr(ctx, 'channel') else ctx,
                                       message=get_translation("this man {0} trying to stop the server with {1} "
                                                               "player(s) on it. Will you let that happen?")
-                                              .format(author.mention, players_info["current"]),
+                                              .format(author.mention, players_info.num_players),
                                       command="stop",
                                       needed_role=Config.get_settings().bot_settings.managing_commands_role_id,
                                       remove_logs_after=5):
                     return
             elif not logged_only_author_accounts and not is_reaction:
                 await delete_after_by_msg(ctx.message)
-        elif players_info["current"] == 0 and is_reaction:
+        elif players_info.num_players == 0 and is_reaction:
             how_many_sec = 0
 
         BotVars.is_stopping = True
@@ -681,7 +682,7 @@ class BackupsThread(Thread):
                 players_count = 0
                 if BotVars.is_server_on:
                     with suppress(ConnectionError, socket.error):
-                        players_count = get_server_players().get("current")
+                        players_count = get_server_full_stats().num_players
                     if players_count != 0:
                         BotVars.is_auto_backup_disable = False
                 elif len(Config.get_server_config().backups) > 0 and \
@@ -1082,14 +1083,14 @@ def get_time_string(seconds: int, use_colon=False):
 async def server_checkups(bot: commands.Bot, backups_thread: BackupsThread, poll: 'Poll'):
     java_processes = get_list_of_processes()
     try:
-        info = get_server_players()
+        info = get_server_full_stats()
         if len(java_processes) == 0:
             raise ConnectionError()
-        if info.get("current") != 0:
+        if info.num_players != 0:
             to_save = False
             BotVars.players_login_dict = {k: v for k, v in BotVars.players_login_dict.items()
-                                          if k in info.get("players")}
-            for player in info.get("players"):
+                                          if k in info.players}
+            for player in info.players:
                 if player not in [i.player_minecraft_nick for i in Config.get_server_config().seen_players]:
                     Config.add_to_seen_players_list(player)
                     to_save = True
@@ -1109,16 +1110,16 @@ async def server_checkups(bot: commands.Bot, backups_thread: BackupsThread, poll
             task = bot.loop.create_task(bot.change_presence(
                 activity=Activity(type=ActivityType.playing,
                                   name=Config.get_settings().bot_settings.gaming_status +
-                                       ", " + str(info.get("current")) + get_translation(" player(s) online"))
+                                       ", " + str(info.num_players) + get_translation(" player(s) online"))
             ))
             task.add_done_callback(_ignore_some_tasks_errors)
             if Config.get_settings().bot_settings.auto_shutdown:
-                if info.get("current") == 0 and BotVars.auto_shutdown_start_date is None:
+                if info.num_players == 0 and BotVars.auto_shutdown_start_date is None:
                     BotVars.auto_shutdown_start_date = \
                         datetime.now() + timedelta(seconds=Config.get_timeouts_settings().calc_before_shutdown)
-                elif info.get("current") != 0 and BotVars.auto_shutdown_start_date is not None:
+                elif info.num_players != 0 and BotVars.auto_shutdown_start_date is not None:
                     BotVars.auto_shutdown_start_date = None
-                elif info.get("current") == 0 and BotVars.auto_shutdown_start_date <= datetime.now():
+                elif info.num_players == 0 and BotVars.auto_shutdown_start_date <= datetime.now():
                     channel = bot.guilds[0].get_channel(Config.get_settings().bot_settings.commands_channel_id)
                     if channel is None:
                         channel = utils_get(bot.guilds[0].channels, type=ChannelType.text)
@@ -1251,12 +1252,12 @@ async def bot_list(
         is_reaction=False
 ):
     try:
-        info = get_server_players()
-        if info.get("current") == 0:
+        info = get_server_full_stats()
+        if info.players == 0:
             await send_msg(ctx, add_quotes(get_translation("There are no players on the server")),
                            is_reaction=is_reaction)
         else:
-            players_dict = {p: None for p in info.get("players")}
+            players_dict = {p: None for p in info.players}
             if Config.get_secure_auth().enable_secure_auth:
                 for player in Config.get_auth_users():
                     if player.nick in players_dict.keys() and BotVars.player_logged(player.nick) is not None:
@@ -1280,8 +1281,8 @@ async def bot_list(
                         players_list.append(f"{k} ({w_from} {v.strftime(time_f)})")
                 else:
                     players_list.append(k)
-            await send_msg(ctx, add_quotes(get_translation("Players online: {0} / {1}").format(info.get("current"),
-                                                                                               info.get("max")) +
+            await send_msg(ctx, add_quotes(get_translation("Players online: {0} / {1}").format(info.num_players,
+                                                                                               info.max_players) +
                                            "\n- " + "\n- ".join(players_list)),
                            is_reaction=is_reaction)
     except (ConnectionError, socket.error):
@@ -3536,7 +3537,7 @@ async def handle_message_for_chat(
         await send_msg(message.channel, f"{author.mention}\n" +
                        add_quotes(get_translation("server is loading!").capitalize()), is_reaction=True)
     else:
-        if get_server_players().get("current") == 0:
+        if get_server_full_stats().num_players == 0:
             await send_msg(message.channel, f"{author.mention}, " +
                            get_translation("No players on server!").lower(), is_reaction=True)
             return
@@ -4092,7 +4093,7 @@ def _search_mentions_in_message(message: Message, edit_command=False) -> set:
             if member.id in [i.user_discord_id for i in Config.get_known_users_list()]:
                 nicks.extend([i.user_minecraft_nick for i in Config.get_known_users_list()
                               if i.user_discord_id == member.id])
-        server_players = get_server_players().get("players")
+        server_players = get_server_full_stats().players
         # Check @'minecraft_nick' mentions
         if "@" in message.content:
             seen_players = [i.player_minecraft_nick for i in Config.get_server_config().seen_players]
@@ -4122,7 +4123,7 @@ def _build_nickname_tellraw_for_minecraft_player(
         right_bracket: str = "> "
 ):
     tellraw_obj = [{"text": left_bracket}]
-    if server_version.minor > 7 and len(nick.split()) == 1 and nick in get_server_players().get("players"):
+    if server_version.minor > 7 and len(nick.split()) == 1 and nick in get_server_full_stats().players:
         tellraw_obj += [{"selector": f"@p[name={nick}]"}]
     elif server_version.minor > 7:
         if check_if_obituary_webhook(nick, for_game_chat=True):
@@ -4462,11 +4463,10 @@ def parse_snapshot(version: str) -> Optional[str]:
                     return category["*"]
 
 
-def get_server_players() -> dict:
-    """Returns dict, keys: current, max, players"""
+def get_server_full_stats() -> FullStats:
     with connect_query() as cl_q:
         info = cl_q.full_stats
-    return dict(current=info.num_players, max=info.max_players, players=info.players)
+    return info
 
 
 def shorten_string(string: str, max_length: int):
@@ -4533,12 +4533,12 @@ def setup_print_handlers():
         file = open(Config.get_bot_log_name(), "a", encoding="utf8")
     else:
         file = None
-    Output_file_handler(file)
+    OutputFileHandler(file)
     if file is not None:
-        Error_file_handler(file)
+        ErrorFileHandler(file)
 
 
-class Output_file_handler:
+class OutputFileHandler:
     def __init__(self, file=None):
         self.file = file
         self.stdout = sys.stdout
@@ -4568,7 +4568,7 @@ class Output_file_handler:
             self.file.flush()
 
 
-class Error_file_handler:
+class ErrorFileHandler:
     def __init__(self, file=None):
         self.file = file
         self.stderr = sys.stderr

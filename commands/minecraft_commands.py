@@ -14,7 +14,7 @@ from discord.ext import commands, tasks
 
 from components import decorators
 from components.additional_funcs import (
-    server_checkups, send_status, get_server_players, add_quotes, bot_status, bot_list, bot_start, bot_stop,
+    server_checkups, send_status, get_server_full_stats, add_quotes, bot_status, bot_list, bot_start, bot_stop,
     bot_restart, connect_rcon, make_underscored_line, BackupsThread, send_message_of_deleted_backup, bot_backup,
     delete_after_by_msg, get_half_members_count_with_role, warn_about_auto_backups, get_bot_display_name,
     get_server_version, DISCORD_SYMBOLS_IN_MESSAGE_LIMIT, get_number_of_digits, bot_associate, bot_associate_info,
@@ -115,7 +115,8 @@ class MinecraftCommands(commands.Cog):
         doing_opping = BotVars.is_doing_op
         BotVars.is_doing_op = True
         if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and not BotVars.is_restarting:
-            if get_server_players().get("current") == 0:
+            data = get_server_full_stats()
+            if data.num_players == 0:
                 await ctx.send(f"{ctx.author.mention}, " +
                                get_translation("There are no players on the server").lower() + "!")
                 BotVars.is_doing_op = doing_opping
@@ -143,7 +144,7 @@ class MinecraftCommands(commands.Cog):
                 BotVars.is_doing_op = doing_opping
                 return
 
-            if minecraft_nick not in get_server_players().get("players"):
+            if minecraft_nick not in data.players:
                 await ctx.send(get_translation("{0}, I didn't see this nick `{1}` online!")
                                .format(ctx.author.mention, minecraft_nick))
                 BotVars.is_doing_op = doing_opping
@@ -222,7 +223,7 @@ class MinecraftCommands(commands.Cog):
                             for player in to_delete_ops:
                                 cl_r.deop(player)
                             if server_version.minor < 4:
-                                for player in get_server_players()["players"]:
+                                for player in get_server_full_stats().players:
                                     if server_version.minor > 2:
                                         cl_r.run(f"gamemode {gamemode} {player}")
                                     else:
@@ -682,7 +683,7 @@ class MinecraftCommands(commands.Cog):
         Config.remove_ip_address(ip, possible_matches)
         Config.save_auth_users()
         try:
-            server_players = get_server_players().get("players")
+            server_players = get_server_full_stats().players
             available_players_to_kick = [p for p in possible_matches if p in server_players]
         except (ConnectionError, socket.error):
             available_players_to_kick = []
@@ -723,7 +724,7 @@ class MinecraftCommands(commands.Cog):
 
         nicks_to_revoke = [pl.nick for pl in Config.get_auth_users()]
         try:
-            server_players = get_server_players().get("players")
+            server_players = get_server_full_stats().players
             available_players_to_kick = [p for p in nicks_to_revoke if p in server_players]
         except (ConnectionError, socket.error):
             available_players_to_kick = []
