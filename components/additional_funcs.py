@@ -2358,6 +2358,213 @@ async def on_server_select_callback(
     return SelectChoice.STOP_VIEW
 
 
+async def op_checking(
+        ctx: Union[commands.Context, Interaction],
+        bot: commands.Bot,
+        minecraft_nick: str,
+        is_reaction: bool = False
+) -> bool:
+    author = get_author(ctx, bot, is_reaction)
+    if not Config.get_op_settings().enable_op:
+        await send_msg(
+            ctx,
+            f"{author.mention}, " + get_translation("Getting an operator to Minecraft players is disabled") + "!",
+            is_reaction=is_reaction
+        )
+        return False
+
+    if BotVars.is_server_on and not BotVars.is_stopping and not BotVars.is_loading and not BotVars.is_restarting:
+        data = get_server_full_stats()
+        if data.num_players == 0:
+            await send_msg(
+                ctx,
+                f"{author.mention}, " + get_translation("There are no players on the server").lower() + "!",
+                is_reaction=is_reaction
+            )
+            return False
+
+        if minecraft_nick not in [p.player_minecraft_nick for p in Config.get_server_config().seen_players]:
+            await send_msg(
+                ctx,
+                get_translation("{0}, I didn't see this nick on server, son! "
+                                "Go to the server via this nick before...").format(author.mention),
+                is_reaction=is_reaction
+            )
+            return False
+
+        if minecraft_nick not in [u.user_minecraft_nick for u in Config.get_known_users_list()] or \
+                author.id not in [u.user_discord_id for u in Config.get_known_users_list()
+                                  if u.user_minecraft_nick == minecraft_nick]:
+            await send_msg(
+                ctx,
+                get_translation("{0}, this nick isn't bound to you, use `{1}associate add` first...").format(
+                    author.mention, Config.get_settings().bot_settings.prefix
+                ),
+                is_reaction=is_reaction
+            )
+            return False
+
+        if minecraft_nick in [p.player_minecraft_nick for p in Config.get_server_config().seen_players] and \
+                [p.number_of_times_to_op for p in Config.get_server_config().seen_players
+                 if p.player_minecraft_nick == minecraft_nick][0] == 0:
+            await send_msg(
+                ctx,
+                get_translation("{0}, you had run out of attempts to get an operator for `{1}` nick!").format(
+                    author.mention, minecraft_nick
+                ),
+                is_reaction=is_reaction
+            )
+            return False
+
+        if minecraft_nick not in data.players:
+            await send_msg(
+                ctx,
+                get_translation("{0}, I didn't see this nick `{1}` online!").format(author.mention, minecraft_nick),
+                is_reaction=is_reaction
+            )
+            return False
+
+        if minecraft_nick in BotVars.op_deop_list:
+            await send_msg(
+                ctx,
+                get_translation("{0}, you've already been given an operator!").format(author.mention),
+                is_reaction=is_reaction
+            )
+            return False
+
+        return True
+    else:
+        await send_status(ctx, is_reaction=is_reaction)
+        return False
+
+
+async def on_op_callback(
+        ctx: Union[commands.Context, Interaction],
+        bot: commands.Bot,
+        minecraft_nick: str,
+        reasons: str = "",
+        is_reaction: bool = False
+):
+    doing_opping = BotVars.is_doing_op
+    BotVars.is_doing_op = True
+    author = get_author(ctx, bot, is_reaction)
+
+    BotVars.op_deop_list.append(minecraft_nick)
+    Config.append_to_op_log(datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " || " + get_translation("Opped ") +
+                            minecraft_nick + (" || " + get_translation("Reason: ") + reasons if reasons else ""))
+    await_time_op = Config.get_timeouts_settings().await_seconds_when_opped
+    bot_display_name = get_bot_display_name(bot)
+    server_version = get_server_version()
+    try:
+        with connect_rcon() as cl_r:
+            bot_message = f"{minecraft_nick}, " + get_translation("you've been given an operator for") + \
+                          f" {get_time_string(await_time_op)}."
+            if server_version.minor < 7:
+                cl_r.say(bot_message)
+            else:
+                bot_tellraw = build_nickname_tellraw_for_bot(server_version, bot_display_name)
+                bot_tellraw[-1]["text"] += bot_message
+                cl_r.tellraw("@a", bot_tellraw)
+            cl_r.mkop(minecraft_nick)
+        Config.decrease_number_to_op_for_player(minecraft_nick)
+        Config.save_server_config()
+    except (ConnectionError, socket.error):
+        await send_msg(
+            ctx,
+            get_translation("{0}, server isn't working (at least I've tried), try again later...").format(
+                author.mention
+            ),
+            is_reaction=is_reaction
+        )
+        BotVars.is_doing_op = doing_opping
+        return
+    is_special_bot_speech = randint(0, 3) == 1
+    if is_special_bot_speech and await_time_op > 0:
+        line_to_op = get_translation(
+            "So {0}, I gave you an operator, but I'm not going to pretend like "
+            "I did it to win favors upstairs. "
+            "I'll come in {1}, take away operator from everyone and we're even. "
+            "I don't give a shit why you want this operator and mind my own business. "
+            "If you want it, well, you must have your reasons..."
+        ).format(author.mention, get_time_string(await_time_op))
+    else:
+        line_to_op = add_quotes(get_translation(
+            "Now {0} is an operator!"
+        ).format(f"{author.display_name}#{author.discriminator}"))
+    await send_msg(ctx, line_to_op, is_reaction=is_reaction)
+    if await_time_op > 0:
+        await asleep(await_time_op)
+        if minecraft_nick != BotVars.op_deop_list[-1]:
+            BotVars.is_doing_op = doing_opping
+            return
+        to_delete_ops = Config.get_list_of_ops(server_version)
+        while True:
+            await asleep(Config.get_timeouts_settings().await_seconds_when_connecting_via_rcon)
+            with suppress(ConnectionError, socket.error):
+                if server_version.minor < 13:
+                    gamemode = 0
+                else:
+                    gamemode = "survival"
+                with connect_rcon() as cl_r:
+                    bot_message = f"{minecraft_nick}, "
+                    if len(to_delete_ops) > 1:
+                        bot_message += get_translation(
+                            "the operator will be taken away from {0} players now."
+                        ).format(len(to_delete_ops))
+                    else:
+                        bot_message += get_translation("the operator will be taken away from you.")
+                    if server_version.minor < 7:
+                        cl_r.say(bot_message)
+                    else:
+                        bot_tellraw = build_nickname_tellraw_for_bot(server_version, bot_display_name)
+                        bot_tellraw[-1]["text"] += bot_message
+                        cl_r.tellraw("@a", bot_tellraw)
+                    for player in to_delete_ops:
+                        cl_r.deop(player)
+                    if server_version.minor < 4:
+                        for player in get_server_full_stats().players:
+                            if server_version.minor > 2:
+                                cl_r.run(f"gamemode {gamemode} {player}")
+                            else:
+                                cl_r.run(f"gamemode {player} {gamemode}")
+                    else:
+                        cl_r.run(f"gamemode {gamemode} @a")
+                    if server_version.minor > 2:
+                        cl_r.run(f"defaultgamemode {gamemode}")
+                break
+        Config.append_to_op_log(
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " || " + get_translation("Deopped all") + " " +
+            (str(get_translation("|| Note: ") +
+                 get_translation("from {0} people in belated list operator was taken away")
+                 .format(len(BotVars.op_deop_list))) if len(BotVars.op_deop_list) > 1 else ""))
+        if is_special_bot_speech:
+            line_to_deop = get_translation(
+                "Well, {0}, your time is over..."
+            ).format(
+                author.mention
+            ) + (" " + get_translation("and not only yours...") if len(to_delete_ops) > 1 else "") \
+                           + "\n" + get_translation("As they say \"Cheeki breeki i v damké!\"")
+        else:
+            line_to_deop = add_quotes(get_translation(
+                "The operator was taken away from {0}"
+            ).format(
+                f"{author.display_name}#{author.discriminator}"
+            ) + (" " + get_translation("and {0} player(s)").format(len(to_delete_ops) - 1)
+                 if len(to_delete_ops) > 1 else "") + ".")
+        await send_msg(ctx, line_to_deop, is_reaction=is_reaction)
+        BotVars.op_deop_list.clear()
+    else:
+        await send_msg(
+            ctx,
+            get_translation("{0}, you have no time limit, but you are all doomed...").format(author.mention),
+            is_reaction=is_reaction
+        )
+        with suppress(ValueError):
+            BotVars.op_deop_list.remove(minecraft_nick)
+
+    BotVars.is_doing_op = False if len(BotVars.op_deop_list) == 0 else doing_opping
+
+
 class MenuServerView(TemplateSelectView):
     def __init__(self, bot: commands.Bot, commands_cog: 'MinecraftCommands'):
         super().__init__(
@@ -2392,6 +2599,7 @@ class MenuServerView(TemplateSelectView):
         self.c_status.label = get_translation("Status")
         self.c_list.label = get_translation("Players online")
         self.c_s_update.label = get_translation("Update")
+        self.c_op.label = get_translation("Get an operator")
 
         self.c_backup.label = get_translation("Backups")
         self.c_b_list.label = get_translation("List")
@@ -2424,9 +2632,49 @@ class MenuServerView(TemplateSelectView):
 
     @button(style=ButtonStyle.secondary, custom_id="menu_server_view:status_update", emoji="📶", row=0)
     async def c_s_update(self, interaction: Interaction, button: Button):
+        BotVars.react_auth = interaction.user
         if await self.interaction_check_select(interaction):
             self.commands_cog.checkups_task.restart()
             await send_interaction(interaction, add_quotes(get_translation("Updated bot status!")), is_reaction=True)
+
+    @button(style=ButtonStyle.secondary, custom_id="menu_server_view:op", emoji="🪄", row=0)
+    async def c_op(self, interaction: Interaction, button: Button):
+        BotVars.react_auth = interaction.user
+        if await self.interaction_check_select(interaction):
+            op_reason_modal = Modal(title=get_translation("Getting an operator"))
+            nick = TextInput(
+                label=get_translation("What is the player's nick?"),
+                style=TextStyle.short,
+                placeholder=get_translation("Type here..."),
+                required=True,
+                max_length=300,
+            )
+            reason = TextInput(
+                label=get_translation("What is the reason for getting an operator?"),
+                style=TextStyle.long,
+                placeholder=get_translation("Type here... (you can leave this blank)"),
+                required=False,
+                max_length=300,
+            )
+            op_reason_modal.add_item(nick)
+            op_reason_modal.add_item(reason)
+
+            async def on_submit(interaction: Interaction):
+                if await op_checking(interaction, self.bot, minecraft_nick=nick.value.strip(), is_reaction=True):
+                    await on_op_callback(
+                        interaction,
+                        self.bot,
+                        minecraft_nick=nick.value.strip(),
+                        reasons=reason.value.strip(),
+                        is_reaction=True
+                    )
+
+            async def on_error(interaction: Interaction, error: Exception) -> None:
+                await send_error_on_interaction("OpReasonModal", interaction, None, error, True)
+
+            op_reason_modal.on_submit = on_submit
+            op_reason_modal.on_error = on_error
+            await interaction.response.send_modal(op_reason_modal)
 
     @button(style=ButtonStyle.secondary, custom_id="menu_server_view:backup", emoji="📇", row=1)
     async def c_backup(self, interaction: Interaction, button: Button):
@@ -2453,7 +2701,7 @@ class MenuServerView(TemplateSelectView):
             backup_reason_modal.add_item(reason)
 
             async def on_submit(interaction: Interaction):
-                if await backup_force_checking(interaction, self.bot):
+                if await backup_force_checking(interaction, self.bot, is_reaction=True):
                     await on_backup_force_callback(
                         interaction,
                         self.bot,
@@ -2492,6 +2740,7 @@ class MenuServerView(TemplateSelectView):
 
     @button(style=ButtonStyle.secondary, custom_id="menu_server_view:server", emoji="🪪", row=2)
     async def c_server(self, interaction: Interaction, button: Button):
+        BotVars.react_auth = interaction.user
         await send_interaction(
             interaction,
             add_quotes(get_translation("Selected server") + ": " +
@@ -2537,6 +2786,7 @@ class MenuServerView(TemplateSelectView):
             )
 
     async def v_select_callback(self, interaction: Interaction):
+        BotVars.react_auth = interaction.user
         if await self.interaction_check_select(interaction):
             await on_server_select_callback(interaction, is_reaction=True)
             await self.update_view()
@@ -2544,19 +2794,24 @@ class MenuServerView(TemplateSelectView):
 
 async def backup_force_checking(
         ctx: Union[commands.Context, Interaction],
-        bot: commands.Bot
+        bot: commands.Bot,
+        is_reaction: bool = False
 ) -> bool:
     if not BotVars.is_loading and not BotVars.is_stopping and \
             not BotVars.is_restarting and not BotVars.is_restoring and not BotVars.is_backing_up:
         b_reason = handle_backups_limit_and_size(bot)
         if b_reason:
-            await send_msg(ctx, add_quotes(get_translation("Can't create backup because of {0}\n"
-                                                           "Delete some backups to proceed!").format(b_reason)))
+            await send_msg(
+                ctx,
+                add_quotes(get_translation("Can't create backup because of {0}\n"
+                                           "Delete some backups to proceed!").format(b_reason)),
+                is_reaction=is_reaction
+            )
             return False
-        await warn_about_auto_backups(ctx, bot)
+        await warn_about_auto_backups(ctx, bot, is_reaction=is_reaction)
         return True
     else:
-        await send_status(ctx)
+        await send_status(ctx, is_reaction=is_reaction)
         return False
 
 

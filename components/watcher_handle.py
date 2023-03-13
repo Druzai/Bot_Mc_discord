@@ -637,7 +637,7 @@ def _check_log_file(
                     message_match = search(f"{INFO_line}(?: .+:)? {REGEX_DEATH_MESSAGES[regex]}", line)
                     if message_match:
                         id_match = search(
-                            r"\['[^']+'/(?P<id>\d+), l='[^']+', x=-?\d+\.\d+, y=-?\d+\.\d+, z=-?\d+\.\d+]",
+                            r"\[\'.+\'/(?P<id>\d+), l=\'.+\', x=-?\d+\.\d+, y=-?\d+\.\d+, z=-?\d+\.\d+]",
                             line
                         )
                         if id_match is not None:
@@ -760,7 +760,8 @@ def check_if_player_logged_in(line: str, INFO_line: str):
     ip_address = None
     match = search(
         INFO_line +
-        r" (?P<nick>.+)\[/(?P<ip>((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}):\d{1,5}] logged in with entity id \d+ at",
+        r" (?P<nick>.+)\[/(?P<ip>((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}):\d{1,5}]"
+        r" logged in with entity id \d+ at \(-?\d+\.\d+, -?\d+\.\d+, -?\d+\.\d+\)",
         line
     )
     if match:

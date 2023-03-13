@@ -10,6 +10,7 @@ All important changes to this project will be documented in this file.
 * Added option to disable login check (whether the player is really logged in)
     * This option was added because when using modded Minecraft (forge, fabric), the player registers with delay and the bot might think that login message is fake
 * Added button `List` to server menu that shows list of backups from selected Minecraft server
+* Added button `Get an operator` to server menu that gives player an operator in Minecraft
 * Updated translation strings for death messages for version `1.19.4`
 * Added option to enforce default game mode for selected server instead of hardcoded enforcement
 * Updated dependencies
@@ -27,7 +28,7 @@ All important changes to this project will be documented in this file.
 
 * --
 
-### [1.4.0](https://github.com/Druzai/Bot_Mc_discord/compare/1.3.2...1.4.0) (2022-12-03)
+## [1.4.0](https://github.com/Druzai/Bot_Mc_discord/compare/1.3.2...1.4.0) (2022-12-03)
 
 #### Main features:
 
@@ -325,7 +326,7 @@ Fixed stop/restart in menu
   a new one
 * Changed file extension of config files from `.yaml` to `.yml`
 
-## [0.4.0](https://github.com/Druzai/Bot_Mc_discord/compare/0.2.1...0.4.0) (2021-08-30)
+### [0.4.0](https://github.com/Druzai/Bot_Mc_discord/compare/0.2.1...0.4.0) (2021-08-30)
 
 ### Stable release with huge changes
 
