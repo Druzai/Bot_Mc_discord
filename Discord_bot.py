@@ -1,5 +1,5 @@
 from asyncio import run
-from logging import ERROR
+from logging import ERROR, Formatter
 from sys import exit, argv
 from threading import enumerate as threads
 from traceback import format_exc
@@ -88,7 +88,11 @@ def main():
         BotVars.bot_for_webhooks = bot
         Config.read_server_info()
         print(get_translation("Server info read!"))
-        bot.run(Config.get_settings().bot_settings.token, log_level=ERROR)
+        bot.run(
+            Config.get_settings().bot_settings.token,
+            log_level=ERROR,
+            log_formatter=Formatter("[{asctime}] [{levelname:<8}] {name}: {message}", "%Y-%m-%d %H:%M:%S", style="{")
+        )
     except LoginFailure:
         print(get_translation("Bot/Discord Error: Your token is wrong"))
     except (RuntimeError, FileNotFoundError) as e:
