@@ -2,7 +2,7 @@
 
 All important changes to this project will be documented in this file.
 
-### [1.4.1 Unreleased](https://github.com/Druzai/Bot_Mc_discord/compare/1.4.0...1.4.1) (2023-xx-xx)
+### [1.4.1](https://github.com/Druzai/Bot_Mc_discord/compare/1.4.0...1.4.1) (2023-03-14)
 
 #### Improvements:
 
@@ -23,10 +23,7 @@ All important changes to this project will be documented in this file.
 * Added strings `**For admin only!**` to some command descriptions
 * Removed requirement for admin role for `associate` command
 * Fixed checking if player can't be kicked
-
-#### Breaking changes:
-
-* --
+* Fixed deletion of backup warn messages if they were called from interaction
 
 ## [1.4.0](https://github.com/Druzai/Bot_Mc_discord/compare/1.3.2...1.4.0) (2022-12-03)
 
