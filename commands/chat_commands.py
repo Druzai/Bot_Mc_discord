@@ -75,7 +75,10 @@ class ChatCommands(commands.Cog):
                         )
                         self._bot.add_view(
                             view,
-                            message_id=Config.get_menu_settings().server_menu_message_id
+                            message_id=(
+                                Config.get_menu_settings().server_menu_message_id if isinstance(view, MenuServerView)
+                                else Config.get_menu_settings().bot_menu_message_id
+                            )
                         )
                     else:
                         if isinstance(view, MenuServerView):
