@@ -60,7 +60,6 @@ if Config.get_os() == OS.Windows:
 UNITS = ("B", "KB", "MB", "GB", "TB", "PB")
 DISCORD_SYMBOLS_IN_MESSAGE_LIMIT = 2000
 MAX_RCON_COMMAND_STR_LENGTH = 1446
-MAX_RCON_COMMAND_RUN_STR_LENGTH = 1370
 MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH = MAX_RCON_COMMAND_STR_LENGTH - 9 - 2
 DISCORD_SELECT_FIELD_MAX_LENGTH = 100
 DISCORD_SELECT_OPTIONS_MAX_LENGTH = 25
@@ -4629,7 +4628,7 @@ def send_image_to_chat(url: str, image_name: str, required_width: int = None, re
                         }
                     ]
                     array_count = 0
-                    tellraw_str_length = len(dumps(tellraw, ensure_ascii=False))
+                    tellraw_str_length = len(dumps(tellraw, ensure_ascii=False).encode())
                     for x in range(width):
                         if img_has_transparency:
                             r, g, b, a = pixels[x, y]
@@ -4641,18 +4640,26 @@ def send_image_to_chat(url: str, image_name: str, required_width: int = None, re
                                 pixel = {"text": "┇", "color": rgb2hex(r, g, b)}
                         else:
                             pixel = {"text": "┇", "color": rgb2hex(*pixels[x, y])}
-                        pixel_str = len(dumps(pixel, ensure_ascii=False)) + 2
+                        full_pixel_str_length = len(dumps(pixel, ensure_ascii=False).encode()) + 2
+                        pixel_text_str_length = len(pixel["text"].encode())
+                        able_to_merge = tellraw[-1].get("color", "") == pixel["color"]
 
                         if len(f"data modify storage {storage_unit} {array_count + 1} set value ''") + \
-                                tellraw_str_length + pixel_str > MAX_RCON_COMMAND_RUN_STR_LENGTH:
+                                tellraw_str_length + \
+                                (pixel_text_str_length if able_to_merge
+                                else full_pixel_str_length) > MAX_RCON_COMMAND_STR_LENGTH:
                             array_count += 1
                             cl_r.run(f"data modify storage {storage_unit} {array_count} "
                                      f"set value '{dumps(tellraw, ensure_ascii=False)}'")
                             tellraw = [pixel]
-                            tellraw_str_length = pixel_str
+                            tellraw_str_length = full_pixel_str_length
                         else:
-                            tellraw.append(pixel)
-                            tellraw_str_length += pixel_str
+                            if able_to_merge:
+                                tellraw[-1]["text"] += pixel["text"]
+                                tellraw_str_length += pixel_text_str_length
+                            else:
+                                tellraw.append(pixel)
+                                tellraw_str_length += full_pixel_str_length
                     if len(tellraw) > 0:
                         array_count += 1
                         cl_r.run(f"data modify storage {storage_unit} {array_count} "
@@ -4665,6 +4672,7 @@ def send_image_to_chat(url: str, image_name: str, required_width: int = None, re
                         max_number_of_arrays = array_count
                 for number in range(1, max_number_of_arrays + 1):
                     cl_r.run(f"data remove storage {storage_unit} {number}")
+    img.close()
 
 
 @contextmanager
