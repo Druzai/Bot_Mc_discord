@@ -922,7 +922,7 @@ def restore_from_zip_archive(zip_name: str, zip_path: str, level_name: str):
 
         if multiple_folders:
             seek_zip = ZipFile(Path(f"{zip_path}/{zip_name}.zip"), mode="r")
-            level_name_list = [p.name for p in Zip_Path(seek_zip).iterdir()]
+            level_name_list = [p.name for p in Zip_Path(seek_zip).iterdir() if p.is_dir()]
             seek_zip.close()
             for name in level_name_list:
                 rmtree(Path(Config.get_selected_server_from_list().working_directory, name), ignore_errors=True)
