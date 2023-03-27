@@ -22,7 +22,7 @@ from time import sleep
 from traceback import format_exception, format_exception_only
 from typing import Tuple, List, Dict, Optional, Union, TYPE_CHECKING, AsyncIterator, Callable, Awaitable, Any
 from urllib.parse import unquote
-from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
+from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA, Path as Zip_Path
 
 from PIL import Image, UnidentifiedImageError
 from aiohttp import ClientSession
@@ -696,30 +696,30 @@ class BackupsThread(Thread):
                     handle_backups_limit_and_size(self._bot, auto_backups=True)
                     # Creating auto backup
                     file_name = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
-                    level_name_path = Path(Config.get_selected_server_from_list().working_directory,
-                                           ServerProperties().level_name).as_posix()
+                    level_name = ServerProperties().level_name
                     try:
                         obj = next(create_zip_archive(
                             self._bot,
                             file_name,
                             Path(Config.get_selected_server_from_list().working_directory,
                                  Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
-                            level_name_path,
+                            level_name,
                             Config.get_backups_settings().compression_method
                         ), None)
                         Config.add_backup_info(file_name=file_name)
                         Config.save_server_config()
                         print(get_translation("Backup completed!"))
-                        if isinstance(obj, list) and len(obj) > 0:
+                        if isinstance(obj, dict):
                             print(get_translation("Bot couldn't archive some files "
                                                   "to this backup, they located in path '{0}'")
                                   .format(Path(Config.get_selected_server_from_list().working_directory,
-                                               ServerProperties().level_name).as_posix()))
+                                               level_name if obj["single_folder"] else "").as_posix()))
                             print(get_translation("List of these files:"))
-                            print(", ".join(obj))
+                            print(", ".join(obj["files"]))
                     except FileNotFoundError:
                         print(get_translation("The world folder in path '{0}' doesn't exist or is empty!")
-                              .format(level_name_path))
+                              .format(Path(Config.get_selected_server_from_list().working_directory,
+                                           level_name).as_posix()))
                         print(get_translation("Backup cancelled!"))
 
                 if BotVars.is_server_on and players_count == 0:
@@ -743,7 +743,7 @@ def create_zip_archive(
         bot: commands.Bot,
         zip_name: str,
         zip_path: str,
-        dir_path: str,
+        level_name: str,
         compression: str,
         forced=False,
         user: Member = None
@@ -765,16 +765,29 @@ def create_zip_archive(
     dt = datetime.now()
     last_message_change = datetime.now() - timedelta(seconds=4)
 
-    # Check if world folder doesn't exist or is empty
-    dir_obj = Path(dir_path)
-    if not dir_obj.exists() or not dir_obj.is_dir() or next(dir_obj.rglob('*'), None) is None:
+    # Check if world in 1 folder or in several folders
+    level_dir_list = []
+    for p in Path(Config.get_selected_server_from_list().working_directory).iterdir():
+        if p.is_dir() and next(p.rglob("*"), None) is not None:
+            gen = p.glob("session.lock")
+            try:
+                gen.__next__()
+            except StopIteration:
+                # Check if folder in common names
+                if p.name not in [level_name, f"{level_name}_nether", f"{level_name}_the_end"]:
+                    continue
+            level_dir_list.append(p)
+
+    # Check if world folder(s) exist(s)
+    if len(level_dir_list) == 0:
         BotVars.is_backing_up = False
         raise FileNotFoundError()
 
     # Count size of all files in directory
-    for root, _, files in walk(dir_path):
-        for fname in files:
-            total += getsize(p_join(root, fname))
+    for path in level_dir_list:
+        for root, _, files in walk(path):
+            for f_name in files:
+                total += getsize(p_join(root, f_name))
 
     current = 0
     use_rcon = False
@@ -828,32 +841,37 @@ def create_zip_archive(
                                                         "color": "light_purple"}])
     # Create zip file with output of percents
     with ZipFile(Path(f"{zip_path}/{zip_name}.zip"), mode="w", compression=comp) as z:
-        for root, _, files in walk(dir_path):
-            for file in files:
-                if file == "session.lock":
-                    continue
+        if len(level_dir_list) > 1:
+            z.writestr(".multiple_folders", "")
+        for path in level_dir_list:
+            relative_path = path if len(level_dir_list) == 1 \
+                else Config.get_selected_server_from_list().working_directory
+            for root, _, files in walk(path):
+                for file in files:
+                    if file == "session.lock":
+                        continue
 
-                fn = Path(root, file)
-                afn = fn.relative_to(dir_path)
-                if forced:
-                    if (datetime.now() - last_message_change).seconds >= 4:
-                        timedelta_secs = (datetime.now() - dt).seconds
-                        percent = round(100 * current / total)
-                        yield add_quotes(f"diff\n{percent}% {get_time_string(timedelta_secs, False)} '{afn}'\n"
-                                         f"- |{'█' * (percent // 5)}{' ' * (20 - percent // 5)}|")
-                        last_message_change = datetime.now()
-                tries = 0
-                while tries < 3:
-                    with suppress(PermissionError):
-                        with open(fn, mode="rb") as f:
-                            f.read(1)
-                        z.write(fn, arcname=afn)
-                        break
-                    tries += 1
-                    sleep(1)
-                if tries >= 3:
-                    list_of_unarchived_files.append(f"'{afn.as_posix()}'")
-                current += getsize(fn)
+                    fn = Path(root, file)
+                    afn = fn.relative_to(relative_path)
+                    if forced:
+                        if (datetime.now() - last_message_change).seconds >= 4:
+                            timedelta_secs = (datetime.now() - dt).seconds
+                            percent = round(100 * current / total)
+                            yield add_quotes(f"diff\n{percent}% {get_time_string(timedelta_secs, False)} '{afn}'\n"
+                                             f"- |{'█' * (percent // 5)}{' ' * (20 - percent // 5)}|")
+                            last_message_change = datetime.now()
+                    tries = 0
+                    while tries < 3:
+                        with suppress(PermissionError):
+                            with open(fn, mode="rb") as f:
+                                f.read(1)
+                            z.write(fn, arcname=afn)
+                            break
+                        tries += 1
+                        sleep(1)
+                    if tries >= 3:
+                        list_of_unarchived_files.append(f"'{afn.as_posix()}'")
+                    current += getsize(fn)
 
     if forced:
         date_t = get_time_string((datetime.now() - dt).seconds, True)
@@ -886,16 +904,39 @@ def create_zip_archive(
                                        "color": "dark_red"}])
     BotVars.is_backing_up = False
     if len(list_of_unarchived_files) > 0:
-        yield list_of_unarchived_files
+        yield {
+            "files": list_of_unarchived_files,
+            "single_folder": len(level_dir_list) == 1 and level_dir_list[0].name == level_name
+        }
 
 
-def restore_from_zip_archive(zip_name: str, zip_path: str, dir_path: str):
+def restore_from_zip_archive(zip_name: str, zip_path: str, level_name: str):
     BotVars.is_restoring = True
-    rmtree(dir_path, ignore_errors=True)
-    mkdir(dir_path)
-
     with ZipFile(Path(f"{zip_path}/{zip_name}.zip"), mode="r") as z:
-        z.extractall(dir_path)
+        # Check if world in 1 folder or in several folders
+        try:
+            z.getinfo(".multiple_folders")
+            multiple_folders = True
+        except KeyError:
+            multiple_folders = False
+
+        if multiple_folders:
+            seek_zip = ZipFile(Path(f"{zip_path}/{zip_name}.zip"), mode="r")
+            level_name_list = [p.name for p in Zip_Path(seek_zip).iterdir()]
+            seek_zip.close()
+            for name in level_name_list:
+                rmtree(Path(Config.get_selected_server_from_list().working_directory, name), ignore_errors=True)
+
+                z.extractall(
+                    path=Config.get_selected_server_from_list().working_directory,
+                    members=[data.filename for data in z.infolist() if data.filename.startswith(name)]
+                )
+        else:
+            level_dir_path = Path(Config.get_selected_server_from_list().working_directory, level_name)
+            rmtree(level_dir_path, ignore_errors=True)
+            mkdir(level_dir_path)
+
+            z.extractall(level_dir_path)
     BotVars.is_restoring = False
 
 
@@ -2826,14 +2867,13 @@ async def on_backup_force_callback(
     print(get_translation("Starting backup triggered by {0}").format(f"{author.display_name}#{author.discriminator}"))
     msg = await send_msg(ctx, add_quotes(get_translation("Starting backup...")))
     file_name = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
-    list_obj = None
+    dict_obj = None
     level_name = ServerProperties().level_name
     try:
         for obj in create_zip_archive(bot, file_name,
                                       Path(Config.get_selected_server_from_list().working_directory,
                                            Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
-                                      Path(Config.get_selected_server_from_list().working_directory,
-                                           level_name).as_posix(),
+                                      level_name,
                                       Config.get_backups_settings().compression_method, forced=True,
                                       user=author):
             if isinstance(obj, str):
@@ -2841,22 +2881,22 @@ async def on_backup_force_callback(
                     await msg.edit(content=obj)
                 else:
                     msg = await send_msg(ctx, obj)
-            elif isinstance(obj, list):
-                list_obj = obj
+            elif isinstance(obj, dict):
+                dict_obj = obj
         Config.add_backup_info(file_name=file_name, reason=reason, initiator=author.id)
         Config.save_server_config()
         backups_thread.skip()
         if is_reaction:
             await delete_after_by_msg(msg, ctx)
         print(get_translation("Backup completed!"))
-        if isinstance(list_obj, list):
+        if isinstance(dict_obj, dict):
             await send_msg(ctx, add_quotes(get_translation("Bot couldn't archive some files to this backup!")),
                            is_reaction=is_reaction)
             print(get_translation("Bot couldn't archive some files to this backup, they located in path '{0}'")
                   .format(Path(Config.get_selected_server_from_list().working_directory,
-                               ServerProperties().level_name).as_posix()))
+                               level_name if dict_obj["single_folder"] else "").as_posix()))
             print(get_translation("List of these files:"))
-            print(", ".join(list_obj))
+            print(", ".join(dict_obj["files"]))
     except FileNotFoundError:
         exception_reason = add_quotes(get_translation("Backup cancelled!") + "\n" +
                                       get_translation("The world folder '{0}' doesn't exist or is empty!")
@@ -2941,7 +2981,7 @@ async def send_backup_restore_select(
                 Config.get_selected_server_from_list().working_directory,
                 Config.get_backups_settings().name_of_the_backups_folder
             ).as_posix(),
-            Path(Config.get_selected_server_from_list().working_directory, level_name).as_posix()
+            level_name
         )
         for backup in Config.get_server_config().backups:
             if backup.restored_from:

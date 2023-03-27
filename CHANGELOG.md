@@ -6,11 +6,12 @@ All important changes to this project will be documented in this file.
 
 #### Improvements:
 
-* --
+* Added backup of several world folders:
+    * For example, these servers split world data: PaperMC, Bukkit and Spigot
 
 #### Fixed:
 
-* --
+* Fixed checking login string for PaperMC/Bukkit/Spigot servers
 
 #### Breaking changes:
 
@@ -20,7 +21,7 @@ All important changes to this project will be documented in this file.
 
 #### Improvements:
 
-* Added handling chat line on spigot, paper or bukkit Minecraft server
+* Added handling chat line on Spigot, PaperMC or Bukkit Minecraft server
 * Added option to disable login check (whether the player is really logged in)
     * This option was added because when using modded Minecraft (forge, fabric), the player registers with delay and the bot might think that login message is fake
 * Added button `List` to server menu that shows list of backups from selected Minecraft server
