@@ -761,7 +761,7 @@ def check_if_player_logged_in(line: str, INFO_line: str):
     match = search(
         INFO_line +
         r" (?P<nick>.+)\[/(?P<ip>((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}):\d{1,5}]"
-        r" logged in with entity id \d+ at \(-?\d+\.\d+, -?\d+\.\d+, -?\d+\.\d+\)",
+        r" logged in with entity id \d+ at \((?:\[\w+])?-?\d+\.\d+, -?\d+\.\d+, -?\d+\.\d+\)",
         line
     )
     if match:
