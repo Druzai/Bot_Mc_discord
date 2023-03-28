@@ -3,10 +3,9 @@ from logging import ERROR, Formatter
 from sys import exit, argv
 from threading import enumerate as threads
 from traceback import format_exc
-from typing import Union
 
 from colorama import Fore, Style
-from discord import Intents, Permissions
+from discord import Intents
 from discord.errors import LoginFailure
 from discord.ext import commands
 from sshkeyboard import listen_keyboard, stop_listening
@@ -17,7 +16,7 @@ from commands.chat_commands import ChatCommands
 from commands.minecraft_commands import MinecraftCommands
 from commands.poll import Poll
 from components.additional_funcs import setup_print_handlers
-from components.localization import get_translation, RuntimeTextHandler
+from components.localization import get_translation
 from config.init_config import Config, BotVars, OS
 
 if Config.get_os() == OS.Windows:
@@ -26,41 +25,28 @@ if Config.get_os() == OS.Windows:
 VERSION = "1.4.2a"
 
 
-def _create_pot_lines_for_subcommands(command: Union[commands.Command, commands.Group], find_str: str):
-    if not hasattr(command, "commands") or len(command.commands) == 0:
-        return
-
-    for subcommand in sorted(command.commands, key=lambda c: c.name):
-        RuntimeTextHandler.add_translation(f"{find_str}_{subcommand.name}")
-        for arg in sorted(subcommand.clean_params.keys()):
-            RuntimeTextHandler.add_translation(f"{find_str}_{subcommand.name}_{arg}")
-        _create_pot_lines_for_subcommands(subcommand, f"{find_str}_{subcommand.name}")
-
-
-def create_pot_lines(bot: commands.Bot):
-    if len(argv) > 1 and argv[1] == "-g":
-        for command in sorted(bot.commands, key=lambda c: c.name):
-            RuntimeTextHandler.add_translation(f"help_brief_{command.name}")
-            RuntimeTextHandler.add_translation(f"help_{command.name}")
-            for arg in sorted(command.clean_params.keys()):
-                RuntimeTextHandler.add_translation(f"help_{command.name}_{arg}")
-            _create_pot_lines_for_subcommands(command, f"help_{command.name}")
-        for perm in sorted(Permissions.VALID_FLAGS.keys()):
-            RuntimeTextHandler.add_translation(perm.replace("_", " ").replace("guild", "server").title())
-        RuntimeTextHandler.freeze_translation()
-        exit(0)
-
-
 def get_prefix(bot, msg):
     return commands.when_mentioned(bot, msg) + [Config.get_settings().bot_settings.prefix]
 
 
+def build_bot(create_pot_lines=False) -> commands.Bot:
+    bot = commands.Bot(command_prefix=get_prefix, intents=Intents.all(), help_command=None)
+
+    async def add_cogs(bot: commands.Bot):
+        for i in [Poll, MinecraftCommands, ChatCommands]:
+            await bot.add_cog(i(bot, create_pot_lines))
+        return bot
+
+    bot = run(add_cogs(bot))
+    return bot
+
+
 def main():
-    if len(argv) == 1 or (len(argv) > 1 and argv[1] not in ["-v", "--version", "-g"]):
+    if len(argv) == 1 or (len(argv) > 1 and argv[1] not in ["-v", "--version"]):
         Config.init_with_system_language()
     if Config.get_os() == OS.Windows:
         init()
-    if len(argv) > 1 and argv[1] not in ["-h", "--help", "-v", "--version", "-g", "-cs"]:
+    if len(argv) > 1 and argv[1] not in ["-h", "--help", "-v", "--version", "-cs"]:
         print(get_translation("Bot doesn't have this command line argument!"))
         exit(0)
     if len(argv) > 1 and (argv[1] == "-h" or argv[1] == "--help"):
@@ -75,15 +61,8 @@ def main():
         if len(argv) == 1 or (len(argv) > 1 and argv[1] == "-cs"):
             Config.read_config(change_servers=(len(argv) > 1 and argv[1] == "-cs"))
             setup_print_handlers()
-        bot = commands.Bot(command_prefix=get_prefix, intents=Intents.all(), help_command=None)
 
-        async def add_cogs(bot: commands.Bot):
-            for i in [Poll, MinecraftCommands, ChatCommands]:
-                await bot.add_cog(i(bot))
-            return bot
-
-        bot = run(add_cogs(bot))
-        create_pot_lines(bot)
+        bot = build_bot()
         print(get_translation("Bot started!"))
         BotVars.bot_for_webhooks = bot
         Config.read_server_info()

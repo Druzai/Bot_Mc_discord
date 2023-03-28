@@ -1,7 +1,6 @@
 import socket
 from contextlib import suppress
 from platform import python_version
-from sys import argv
 from typing import TYPE_CHECKING, Union, Optional
 
 import discord
@@ -31,7 +30,7 @@ if TYPE_CHECKING:
 
 
 class ChatCommands(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: commands.Bot, create_pot_lines=False):
         self._bot: commands.Bot = bot
         self._IndPoll: Optional['Poll'] = bot.get_cog("Poll")
         if self._IndPoll is None:
@@ -39,7 +38,7 @@ class ChatCommands(commands.Cog):
         self._commands_cog: Optional['MinecraftCommands'] = bot.get_cog("MinecraftCommands")
         if self._commands_cog is None:
             raise RuntimeError("Cog 'MinecraftCommands' not found!")
-        if len(argv) == 1 and Config.get_rss_feed_settings().enable_rss_feed:
+        if not create_pot_lines and Config.get_rss_feed_settings().enable_rss_feed:
             self.rss_feed_task.change_interval(seconds=Config.get_rss_feed_settings().rss_download_delay)
 
     @commands.Cog.listener()

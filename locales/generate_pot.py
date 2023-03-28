@@ -44,11 +44,11 @@ def set_utf8(python_home: str):
 
 def generate_pot_file():
     if platform == "linux" or platform == "linux2":
-        system("python3 ./Discord_bot.py -g")
+        system("python3 ./generate_translation_lines.py")
         chdir("locales")
         system_code = system("pygettext3 -d lang -o lang.pot -v -k get_translation ../*.py ../*/*.py")
     elif platform == "darwin":
-        system("python3 ./Discord_bot.py -g")
+        system("python3 ./generate_translation_lines.py")
         chdir("locales")
         python_home = "/".join(os_file.split("/")[:-3])
         python_version = os_file.split("/")[-2]
@@ -56,7 +56,7 @@ def generate_pot_file():
                              "-d lang -o lang.pot -v -k get_translation ../*.py ../*/*.py")
     elif platform == "win32":
         if not shell32.IsUserAnAdmin():
-            system("py .\\Discord_bot.py -g")
+            system("py .\\generate_translation_lines.py")
         chdir("locales")
         python_home = "\\".join(os_file.split("\\")[:-2])
         set_utf8(python_home)

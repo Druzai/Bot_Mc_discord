@@ -21,7 +21,7 @@ class Poll(commands.Cog):
     _emoji_symbols = {"yes": "☑", "no": "❎"}
     _await_date = {}
 
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: commands.Bot, create_pot_lines=False):
         self._bot: commands.Bot = bot
         for command in ["clear", "stop", "backup_remove", "backup_remove_all"]:
             self._await_date[command] = datetime.now()

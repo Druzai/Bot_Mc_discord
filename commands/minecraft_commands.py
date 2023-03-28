@@ -1,12 +1,9 @@
 import socket
-from asyncio import sleep as asleep
 from contextlib import suppress
 from datetime import datetime
 from os import remove
 from pathlib import Path
-from random import randint
 from re import search
-from sys import argv
 from typing import TYPE_CHECKING, Literal, Optional
 
 from discord import DMChannel, Member, SelectOption, Interaction
@@ -14,13 +11,13 @@ from discord.ext import commands, tasks
 
 from components import decorators
 from components.additional_funcs import (
-    server_checkups, send_status, get_server_full_stats, add_quotes, bot_status, bot_list, bot_start, bot_stop,
+    server_checkups, get_server_full_stats, add_quotes, bot_status, bot_list, bot_start, bot_stop,
     bot_restart, connect_rcon, make_underscored_line, BackupsThread, send_message_of_deleted_backup, bot_backup,
-    delete_after_by_msg, get_half_members_count_with_role, warn_about_auto_backups, get_bot_display_name,
-    get_server_version, DISCORD_SYMBOLS_IN_MESSAGE_LIMIT, get_number_of_digits, bot_associate, bot_associate_info,
+    delete_after_by_msg, get_half_members_count_with_role, warn_about_auto_backups, get_server_version,
+    DISCORD_SYMBOLS_IN_MESSAGE_LIMIT, get_number_of_digits, bot_associate, bot_associate_info,
     get_time_string, bot_shutdown_info, bot_forceload_info, handle_rcon_error, IPv4Address, send_rcon_kick,
-    handle_unhandled_error_in_task, check_if_string_in_all_translations, build_nickname_tellraw_for_bot,
-    send_select_view, shorten_string, SelectChoice, send_interaction, DISCORD_SELECT_FIELD_MAX_LENGTH, MenuServerView,
+    handle_unhandled_error_in_task, check_if_string_in_all_translations, send_select_view, shorten_string, SelectChoice,
+    send_interaction, DISCORD_SELECT_FIELD_MAX_LENGTH, MenuServerView,
     on_server_select_callback, MenuBotView, get_message_and_channel, backup_force_checking, on_backup_force_callback,
     backup_restore_checking, send_backup_restore_select, send_backup_remove_select, check_if_obituary_webhook,
     bot_backup_list, op_checking, on_op_callback
@@ -34,7 +31,7 @@ if TYPE_CHECKING:
 
 
 class MinecraftCommands(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: commands.Bot, create_pot_lines=False):
         self._bot: commands.Bot = bot
         self._IndPoll: Optional['Poll'] = bot.get_cog("Poll")
         if self._IndPoll is None:
@@ -48,7 +45,7 @@ class MinecraftCommands(commands.Cog):
             self.menu_bot_view: Optional[MenuBotView] = MenuBotView(self._bot, self)
         else:
             self.menu_bot_view: Optional[MenuBotView] = None
-        if len(argv) == 1:
+        if not create_pot_lines:
             self.backups_thread.start()
             self.checkups_task.change_interval(seconds=Config.get_timeouts_settings().await_seconds_in_check_ups)
 
