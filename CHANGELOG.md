@@ -13,6 +13,7 @@ All important changes to this project will be documented in this file.
 #### Fixed:
 
 * Fixed checking login string for PaperMC/Bukkit/Spigot servers
+* Fixed English translations for poll descriptions
 
 #### Breaking changes:
 

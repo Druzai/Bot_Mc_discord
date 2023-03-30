@@ -50,8 +50,3 @@ class RuntimeTextHandler:
     @classmethod
     def add_translation(cls, text: str):
         cls._translations.append(f"get_translation(\"{text}\")")
-
-
-if len(argv) > 1 and argv[1] == "-g":
-    for lang in _locales:
-        RuntimeTextHandler.add_translation(lang)

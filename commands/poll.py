@@ -59,10 +59,12 @@ class Poll(commands.Cog):
                 mention = needed_role.mention
         start_msg = None
         if add_votes_count or add_mention or message is not None:
-            start_msg = await channel.send((f"{mention}, " if add_mention else "") +
-                                           (f"{message} " if message is not None else "") +
-                                           (get_translation("To win the poll needed {0} vote(s)!")
-                                            .format(str(need_for_voting)) if add_votes_count else ""))
+            start_msg = await channel.send(
+                content=(f"{mention}, " if add_mention else "") +
+                        (f"{message} " if message is not None else "") +
+                        (get_translation("To win the poll needed {0} vote(s)!").format(str(need_for_voting))
+                         if add_votes_count else "")
+            )
         poll_msg = await self.make_embed(channel, embed_message)
         current_poll = PollContent(channel, command, need_for_voting, needed_role, remove_logs_after, admin_needed)
         self._polls[poll_msg.id] = current_poll

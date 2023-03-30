@@ -4,7 +4,8 @@ from discord import Permissions
 from discord.ext import commands
 
 from Discord_bot import build_bot
-from components.localization import RuntimeTextHandler
+from components.constants import UNITS, DEATH_MESSAGES, ENTITIES
+from components.localization import RuntimeTextHandler, get_locales
 
 
 def _create_pot_lines_for_subcommands(command: Union[commands.Command, commands.Group], find_str: str):
@@ -19,6 +20,14 @@ def _create_pot_lines_for_subcommands(command: Union[commands.Command, commands.
 
 
 def create_pot_lines(bot: commands.Bot):
+    for lang in get_locales():
+        RuntimeTextHandler.add_translation(lang)
+    for un in UNITS:
+        RuntimeTextHandler.add_translation(un)
+    for msg in DEATH_MESSAGES:
+        RuntimeTextHandler.add_translation(msg)
+    for entity in ENTITIES:
+        RuntimeTextHandler.add_translation(entity)
     for command in sorted(bot.commands, key=lambda c: c.name):
         RuntimeTextHandler.add_translation(f"help_brief_{command.name}")
         RuntimeTextHandler.add_translation(f"help_{command.name}")

@@ -16,6 +16,7 @@ from colorama import Fore, Style
 from discord import SyncWebhook, Webhook, TextChannel, Role, ChannelType, SyncWebhookMessage
 from discord.utils import get as utils_get, escape_markdown, find as utils_find
 
+from components.constants import DEATH_MESSAGES, REGEX_DEATH_MESSAGES, MASS_REGEX_DEATH_MESSAGES
 from components.localization import get_translation
 from config.init_config import Config, BotVars
 
@@ -630,8 +631,6 @@ def _check_log_file(
                 continue
 
         if Config.get_obituary_settings().enable_obituary and BotVars.webhook_chat is not None:
-            from components.additional_funcs import DEATH_MESSAGES, REGEX_DEATH_MESSAGES, MASS_REGEX_DEATH_MESSAGES
-
             if search(f"{INFO_line} {MASS_REGEX_DEATH_MESSAGES}", line):
                 for regex in range(len(REGEX_DEATH_MESSAGES)):
                     message_match = search(f"{INFO_line}(?: .+:)? {REGEX_DEATH_MESSAGES[regex]}", line)

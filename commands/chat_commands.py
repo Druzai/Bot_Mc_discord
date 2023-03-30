@@ -16,9 +16,9 @@ from components.additional_funcs import (
     parse_subcommands_for_help, find_subcommand, make_underscored_line, create_webhooks, bot_dm_clear, send_msg,
     delete_after_by_msg, HelpCommandArgument, handle_unhandled_error_in_task, handle_unhandled_error_in_events,
     get_avatar_info, URLAddress, get_server_version, get_time_string, get_channel_string, send_select_view,
-    shorten_string, DISCORD_SELECT_FIELD_MAX_LENGTH, on_language_select_callback, get_message_and_channel,
-    MenuServerView, MenuBotView, get_member_string
+    shorten_string, on_language_select_callback, get_message_and_channel, MenuServerView, MenuBotView, get_member_string
 )
+from components.constants import DISCORD_SELECT_FIELD_MAX_LENGTH
 from components.localization import get_translation, get_locales, get_current_locale
 from components.rss_feed_handle import check_on_rss_feed
 from components.watcher_handle import create_watcher

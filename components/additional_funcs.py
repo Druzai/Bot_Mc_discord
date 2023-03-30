@@ -15,7 +15,6 @@ from pathlib import Path
 from random import randint, choice
 from re import search, split, findall, sub, compile, DOTALL
 from shutil import rmtree
-from sys import argv
 from textwrap import wrap
 from threading import Thread, Event
 from time import sleep
@@ -43,11 +42,15 @@ from psutil import process_iter, NoSuchProcess, disk_usage, Process, AccessDenie
 from requests import post as req_post, get as req_get, head as req_head
 from requests.exceptions import SSLError, Timeout
 
+from components.constants import (
+    URL_REGEX, UNITS, MAX_RCON_COMMAND_STR_LENGTH, MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH,
+    DISCORD_SELECT_FIELD_MAX_LENGTH, DISCORD_SELECT_OPTIONS_MAX_LENGTH, ANSI_ESCAPE
+)
 from components.decorators import MissingAdminPermissions, is_admin, is_minecrafter
 from components.localization import get_translation, get_locales, get_current_locale, set_locale
 from components.rss_feed_handle import get_feed_webhook
 from components.watcher_handle import create_watcher, get_chat_webhook
-from config.init_config import Config, BotVars, ServerProperties, OS, URL_REGEX
+from config.init_config import Config, BotVars, ServerProperties, OS
 
 if TYPE_CHECKING:
     from commands.poll import Poll
@@ -56,63 +59,6 @@ if TYPE_CHECKING:
 
 if Config.get_os() == OS.Windows:
     from os import startfile
-
-UNITS = ("B", "KB", "MB", "GB", "TB", "PB")
-DISCORD_SYMBOLS_IN_MESSAGE_LIMIT = 2000
-MAX_RCON_COMMAND_STR_LENGTH = 1446
-MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH = MAX_RCON_COMMAND_STR_LENGTH - 9 - 2
-DISCORD_SELECT_FIELD_MAX_LENGTH = 100
-DISCORD_SELECT_OPTIONS_MAX_LENGTH = 25
-DISCORD_MAX_SELECT_OPTIONS_IN_MESSAGE = DISCORD_SELECT_OPTIONS_MAX_LENGTH * 5
-ANSI_ESCAPE = compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
-
-# Messages taken from https://minecraft.fandom.com/wiki/Death_messages
-DEATH_MESSAGES = [
-    '{0} was squashed by a falling anvil', '{0} was squashed by a falling anvil whilst fighting {1}',
-    '{0} was shot by {1}', '{0} was shot by {1} using {2}', '{0} was killed by {1}', '{0} was pricked to death',
-    '{0} walked into a cactus whilst trying to escape {1}', '{0} was squished too much', '{0} was squashed by {1}',
-    "{0} was roasted in dragon's breath", "{0} was roasted in dragon's breath by {1}", '{0} drowned',
-    '{0} drowned whilst trying to escape {1}', '{0} died from dehydration',
-    '{0} died from dehydration whilst trying to escape {1}', '{0} was killed by even more magic', '{0} blew up',
-    '{0} was blown up by {1}', '{0} was blown up by {1} using {2}', '{0} hit the ground too hard',
-    '{0} hit the ground too hard whilst trying to escape {1}', '{0} was squashed by a falling block',
-    '{0} was squashed by a falling block whilst fighting {1}', '{0} was skewered by a falling stalactite',
-    '{0} was skewered by a falling stalactite whilst fighting {1}', '{0} was fireballed by {1}',
-    '{0} was fireballed by {1} using {2}', '{0} went off with a bang',
-    '{0} went off with a bang due to a firework fired from {2} by {1}', '{0} went off with a bang whilst fighting {1}',
-    '{0} experienced kinetic energy', '{0} experienced kinetic energy whilst trying to escape {1}',
-    '{0} froze to death', '{0} was frozen to death by {1}', '{0} died', '{0} died because of {1}',
-    '{0} discovered the floor was lava', '{0} walked into the danger zone due to {1}',
-    '{0} was killed by {1} using magic', '{0} was killed by {1} using {2}', '{0} went up in flames',
-    '{0} walked into fire whilst fighting {1}', '{0} suffocated in a wall',
-    '{0} suffocated in a wall whilst fighting {1}', '{0} tried to swim in lava',
-    '{0} tried to swim in lava to escape {1}', '{0} was struck by lightning',
-    '{0} was struck by lightning whilst fighting {1}', '{0} was killed by magic',
-    '{0} was killed by magic whilst trying to escape {1}', '{0} was slain by {1}', '{0} was slain by {1} using {2}',
-    '{0} burned to death', '{0} was burnt to a crisp whilst fighting {1} wielding {2}',
-    '{0} was burnt to a crisp whilst fighting {1}', '{0} fell out of the world',
-    "{0} didn't want to live in the same world as {1}", '{0} was obliterated by a sonically-charged shriek',
-    '{0} was obliterated by a sonically-charged shriek whilst trying to escape {1} wielding {2}',
-    '{0} was obliterated by a sonically-charged shriek whilst trying to escape {1}', '{0} was impaled on a stalagmite',
-    '{0} was impaled on a stalagmite whilst fighting {1}', '{0} starved to death',
-    '{0} starved to death whilst fighting {1}', '{0} was stung to death', '{0} was stung to death by {1} using {2}',
-    '{0} was stung to death by {1}', '{0} was poked to death by a sweet berry bush',
-    '{0} was poked to death by a sweet berry bush whilst trying to escape {1}', '{0} was killed trying to hurt {1}',
-    '{0} was killed by {2} trying to hurt {1}', '{0} was pummeled by {1}', '{0} was pummeled by {1} using {2}',
-    '{0} was impaled by {1}', '{0} was impaled by {1} with {2}', '{0} withered away',
-    '{0} withered away whilst fighting {1}', '{0} was shot by a skull from {1}',
-    '{0} was shot by a skull from {1} using {2}', '{0} fell from a high place', '{0} fell off a ladder',
-    '{0} fell while climbing', '{0} fell off scaffolding', '{0} fell off some twisting vines',
-    '{0} fell off some vines', '{0} fell off some weeping vines', '{0} was doomed to fall by {1}',
-    '{0} was doomed to fall by {1} using {2}', '{0} fell too far and was finished by {1}',
-    '{0} fell too far and was finished by {1} using {2}', '{0} was doomed to fall', '{0} fell out of the water',
-    "{0} was shot by a {1}'s skull", '{0} was fell too far and was finished by {1}',
-    '{0} was fell too far and was finished by {1} using {2}', '{0} was roasted in dragon breath',
-    '{0} was roasted in dragon breath by {1}', '{0} walked into danger zone due to {1}'
-]
-DEATH_MESSAGES = sorted(DEATH_MESSAGES, key=lambda s: len(s), reverse=True)
-REGEX_DEATH_MESSAGES = [sub(r"\{\d}", r"(.+)", m) for m in DEATH_MESSAGES]
-MASS_REGEX_DEATH_MESSAGES = "|".join(REGEX_DEATH_MESSAGES)
 
 
 async def send_msg(ctx: Union[Messageable, Interaction], msg: str, view: View = MISSING, is_reaction=False):
@@ -455,7 +401,7 @@ async def stop_server(
 
             if not logged_only_author_accounts and await poll.timer(ctx, get_author(ctx, bot, is_reaction), 5, "stop"):
                 if not await poll.run(channel=ctx.channel if hasattr(ctx, 'channel') else ctx,
-                                      message=get_translation("this man {0} trying to stop the server with {1} "
+                                      message=get_translation("this man {0} is trying to stop the server with {1} "
                                                               "player(s) on it. Will you let that happen?")
                                               .format(author.mention, players_info.num_players),
                                       command="stop",
@@ -1452,7 +1398,7 @@ async def bot_clear(
             return
         if await poll.run(channel=ctx.channel,
                           message=get_translation(
-                              "this man {0} trying to delete some history of this channel. Will you let that happen?"
+                              "this man {0} is trying to delete some history of this channel. Will you let that happen?"
                           ).format(ctx.author.mention),
                           command="clear",
                           remove_logs_after=5):
@@ -3053,18 +2999,31 @@ async def send_backup_remove_select(
                 return SelectChoice.DELETE_SELECT
 
             if await IndPoll.timer(ctx, get_author(ctx, bot, is_reaction), 5, "backup_remove"):
-                member = await get_member_string(bot, selected_backup.initiator)
+                member = await get_member_string(bot, selected_backup.initiator, mention=True)
+                if selected_backup.reason is not None:
+                    message = get_translation(
+                        "this man {0} is trying to delete backup with reason `{1}` dated `{2}` made by {3} of `{4}` "
+                        "server. Will you let that happen?"
+                    ).format(
+                        author.mention,
+                        selected_backup.reason,
+                        selected_backup.file_creation_date.strftime(get_translation("%H:%M:%S %d/%m/%Y")),
+                        member,
+                        Config.get_selected_server_from_list().server_name
+                    )
+                else:
+                    message = get_translation(
+                        "this man {0} is trying to delete backup dated `{1}` made by {2} of `{3}` "
+                        "server. Will you let that happen?"
+                    ).format(
+                        author.mention,
+                        selected_backup.file_creation_date.strftime(get_translation("%H:%M:%S %d/%m/%Y")),
+                        member,
+                        Config.get_selected_server_from_list().server_name
+                    )
                 if not await IndPoll.run(
                         channel=ctx.channel,
-                        message=get_translation(
-                            "this man {0} trying to delete backup dated `{1}` made by {2} of `{3}` "
-                            "server. Will you let that happen?"
-                        ).format(
-                            author.mention,
-                            selected_backup.file_creation_date.strftime(get_translation("%H:%M:%S %d/%m/%Y")),
-                            member,
-                            Config.get_selected_server_from_list().server_name
-                        ),
+                        message=message,
                         command="backup_remove",
                         needed_role=Config.get_settings().bot_settings.managing_commands_role_id,
                         need_for_voting=get_half_members_count_with_role(
@@ -4893,26 +4852,3 @@ class ErrorFileHandler:
     def flush(self):
         if self.file is not None:
             self.file.flush()
-
-
-if len(argv) > 1 and argv[1] == "-g":
-    from components.localization import RuntimeTextHandler
-
-    entities = [
-        '[Intentional Game Design]', 'Area Effect Cloud', 'Arrow', 'Axolotl', 'Bee', 'Blaze', 'Cave Spider', 'Creeper',
-        'Drowned', 'Elder Guardian', 'End Crystal', 'Ender Dragon', 'Enderman', 'Endermite', 'Evoker', 'Frog', 'Ghast',
-        'Giant', 'Goat', 'Guardian', 'Hoglin', 'Husk', 'Illusioner', 'Iron Golem', 'The Killer Bunny', 'Lightning Bolt',
-        'Llama', 'Magma Cube', 'Ocelot', 'Panda', 'Phantom', 'Piglin', 'Piglin Brute', 'Pillager', 'Polar Bear',
-        'Pufferfish', 'Ravager', 'Shulker', 'Silverfish', 'Skeleton', 'Slime', 'Snow Golem', 'Snowball',
-        'Spectral Arrow', 'Spider', 'Stray', 'Strider', 'Trader Llama', 'Vex', 'Villager', 'Butcher', 'Cartographer',
-        'Cleric', 'Farmer', 'Fisherman', 'Fletcher', 'Leatherworker', 'Librarian', 'Mason', 'Nitwit', 'Shepherd',
-        'Toolsmith', 'Weaponsmith', 'Vindicator', 'Warden', 'Witch', 'Wither', 'Wither Skeleton', 'Wolf', 'Zoglin',
-        'Zombie', 'Zombie Villager', 'Zombified Piglin', 'Zombie Pigman'
-    ]
-
-    for un in UNITS:
-        RuntimeTextHandler.add_translation(un)
-    for msg in DEATH_MESSAGES:
-        RuntimeTextHandler.add_translation(msg)
-    for entity in entities:
-        RuntimeTextHandler.add_translation(entity)

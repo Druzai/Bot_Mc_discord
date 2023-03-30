@@ -11,17 +11,17 @@ from discord.ext import commands, tasks
 
 from components import decorators
 from components.additional_funcs import (
-    server_checkups, get_server_full_stats, add_quotes, bot_status, bot_list, bot_start, bot_stop,
-    bot_restart, connect_rcon, make_underscored_line, BackupsThread, send_message_of_deleted_backup, bot_backup,
-    delete_after_by_msg, get_half_members_count_with_role, warn_about_auto_backups, get_server_version,
-    DISCORD_SYMBOLS_IN_MESSAGE_LIMIT, get_number_of_digits, bot_associate, bot_associate_info,
-    get_time_string, bot_shutdown_info, bot_forceload_info, handle_rcon_error, IPv4Address, send_rcon_kick,
-    handle_unhandled_error_in_task, check_if_string_in_all_translations, send_select_view, shorten_string, SelectChoice,
-    send_interaction, DISCORD_SELECT_FIELD_MAX_LENGTH, MenuServerView,
-    on_server_select_callback, MenuBotView, get_message_and_channel, backup_force_checking, on_backup_force_callback,
-    backup_restore_checking, send_backup_restore_select, send_backup_remove_select, check_if_obituary_webhook,
-    bot_backup_list, op_checking, on_op_callback
+    server_checkups, get_server_full_stats, add_quotes, bot_status, bot_list, bot_start, bot_stop, bot_restart,
+    connect_rcon, make_underscored_line, BackupsThread, send_message_of_deleted_backup, bot_backup, delete_after_by_msg,
+    get_half_members_count_with_role, warn_about_auto_backups, get_server_version, get_number_of_digits, bot_associate,
+    bot_associate_info, get_time_string, bot_shutdown_info, bot_forceload_info, handle_rcon_error, IPv4Address,
+    send_rcon_kick, handle_unhandled_error_in_task, check_if_string_in_all_translations, send_select_view,
+    shorten_string, SelectChoice, send_interaction, MenuServerView, on_server_select_callback, MenuBotView,
+    get_message_and_channel, backup_force_checking, on_backup_force_callback, backup_restore_checking,
+    send_backup_restore_select, send_backup_remove_select, check_if_obituary_webhook, bot_backup_list, op_checking,
+    on_op_callback
 )
+from components.constants import DISCORD_SYMBOLS_IN_MESSAGE_LIMIT, DISCORD_SELECT_FIELD_MAX_LENGTH
 from components.localization import get_translation
 from components.watcher_handle import create_watcher
 from config.init_config import BotVars, Config, ServerProperties
@@ -318,7 +318,7 @@ class MinecraftCommands(commands.Cog):
             if bound_user is None:
                 if not await self._IndPoll.run(channel=ctx.channel,
                                                message=get_translation(
-                                                   "this man {0} trying to login as `{1}`. "
+                                                   "this man {0} is trying to login as `{1}`. "
                                                    "Bot requesting create link {0} -> {1}. "
                                                    "Will you let that happen?"
                                                ).format(ctx.author.mention, nick),
@@ -977,7 +977,7 @@ class MinecraftCommands(commands.Cog):
             if not await self._IndPoll.run(
                     channel=ctx.channel,
                     message=get_translation(
-                        "this man {0} trying to delete all backups of `{1}` server. "
+                        "this man {0} is trying to delete all backups of `{1}` server. "
                         "Will you let that happen?"
                     ).format(ctx.author.mention,
                              Config.get_selected_server_from_list().server_name),
