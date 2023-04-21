@@ -14,6 +14,7 @@ All important changes to this project will be documented in this file.
 
 * Fixed checking login string for PaperMC/Bukkit/Spigot servers
 * Fixed English translations for poll descriptions
+* Fixed search for release version in snapshot (Changing API of the `minecraft.fandom.com`)
 
 #### Breaking changes:
 

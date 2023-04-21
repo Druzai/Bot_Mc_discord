@@ -4720,8 +4720,7 @@ def parse_snapshot(version: str) -> Optional[str]:
         answer = answer.json()
         if answer.get("parse", None) is not None and answer["parse"].get("categories", None) is not None:
             for category in answer["parse"]["categories"]:
-                if all(i in category["*"].lower() for i in ["java_edition", "snapshots"]) and \
-                        version in category["sortkey"]:
+                if search(r"(?i)java_edition\D+(?:\d{1,2}\.?){2,3}\D+snapshots", category["*"]):
                     return category["*"]
 
 
