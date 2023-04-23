@@ -27,6 +27,8 @@
     * Auto stop if the Minecraft server online during certain period of time without players
     * Auto backup at specified intervals and forced backup by member
         * Auto deleting backup(s) if backup's limit or space exceeded
+        * Bot can handle backup of several world folders
+            * For example, these servers split world data to separate folders: `PaperMC`, `Bukkit` and `Spigot`
         * **If there are files in backups directory that not in server config, they will be deleted! And vice versa!**
     * Make yourself an operator for limited amount of time if your Discord account has association with Minecraft nick
         * **Bot can't do it when nick has spaces!** (this applies to servers from `1.0.0` to `1.19.0`!)
@@ -50,7 +52,7 @@
     * Half supported emojis
         * Custom emojis are converted to text with their own text name and hyperlink to img of emoji if applicable
         * Minecraft players can send custom emojis typing `:emoji_name:` (finds first full match, then if nothing is
-          found trying to find case-insensitive name)
+          found bot will try to find case-insensitive name)
         * Most of the standard unicode emojis are not processed by the vanilla Minecraft client
     * Logging of death messages from Minecraft
         * Supported custom avatar for death messages
@@ -68,7 +70,7 @@
         * Supported image opacity
         * Works in versions `1.16.0` and higher
     * Some features may not work in versions lower than `1.7.2`!
-* Setting up optional rss feed. Bot will send new items from feed to Discord text channel via webhook
+* Setting up optional RSS feed. Bot will send new items from feed to Discord text channel via webhook
 
 **How bot converts mentions from Minecraft chat to Discord for game chat:**
 
@@ -136,7 +138,7 @@ For macOS you have to update certificates by running script `/Applications/Pytho
 
 ### Build with pyinstaller
 
-Firstly, you have to install pyinstaller via `pip install pyinstaller==5.8.0`.
+Firstly, you have to install pyinstaller via `pip install pyinstaller==5.10.1`.
 
 Type in command prompt `make` in root directory of the project to build it.
 
