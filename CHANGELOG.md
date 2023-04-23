@@ -8,7 +8,8 @@ All important changes to this project will be documented in this file.
 
 * Added backup of several world folders:
     * For example, these servers split world data: PaperMC, Bukkit and Spigot
-* Added pixels' merging of the same color when sending image via rcon
+* Added pixels' merging of the same color when sending image via rcon to reduce data transfer
+* Updated dependencies
 
 #### Fixed:
 
