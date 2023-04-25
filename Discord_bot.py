@@ -22,7 +22,7 @@ from config.init_config import Config, BotVars, OS
 if Config.get_os() == OS.Windows:
     from colorama import init
 
-VERSION = "1.4.2"
+VERSION = "1.4.3a"
 
 
 def get_prefix(bot, msg):
