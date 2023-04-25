@@ -10,7 +10,7 @@ All important changes to this project will be documented in this file.
 
 #### Fixed:
 
-* --
+* Removed delete logic to wipe nonexistent files and folders in backups folder for selected server
 
 #### Breaking changes:
 

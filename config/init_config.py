@@ -8,12 +8,11 @@ from glob import glob
 from hashlib import md5
 from json import load, JSONDecodeError, dump
 from locale import getdefaultlocale
-from os import mkdir, listdir, remove, getcwd, environ
+from os import mkdir, getcwd, environ
 from os.path import isfile, isdir, join as path_join
 from pathlib import Path
 from re import search
 from secrets import choice as sec_choice
-from shutil import rmtree
 from string import ascii_letters, digits
 from struct import unpack
 from typing import List, Optional, TYPE_CHECKING, Set, Union, Dict
@@ -857,24 +856,6 @@ class Config:
             print(get_translation("Deleted backup entry named '{0}'").format(bc.file_name))
         if len(list_to_remove) > 0:
             cls.save_server_config()
-        # Remove nonexistent backups from server's backups folder
-        print(get_translation("Starting checking backups folder '{0}' for nonexistent files and folder by using '{1}'")
-              .format(Path(cls.get_selected_server_from_list().working_directory,
-                           cls.get_backups_settings().name_of_the_backups_folder).as_posix(), cls._server_config_name))
-        list_of_backups_names = [b.file_name for b in cls.get_server_config().backups]
-        for backup in listdir(Path(cls.get_selected_server_from_list().working_directory,
-                                   cls.get_backups_settings().name_of_the_backups_folder)):
-            file_path = Path(cls.get_selected_server_from_list().working_directory,
-                             cls.get_backups_settings().name_of_the_backups_folder, backup)
-            if file_path.is_file():
-                if backup.rsplit(".", 1)[0] not in list_of_backups_names:
-                    remove(Path(cls.get_selected_server_from_list().working_directory,
-                                cls.get_backups_settings().name_of_the_backups_folder, backup))
-                    print(get_translation("Deleted file in path '{0}'").format(file_path.as_posix()))
-            else:
-                rmtree(file_path, ignore_errors=True)
-                print(get_translation("Deleted folder in path '{0}'").format(file_path.as_posix()))
-        print(get_translation("Done!"))
         # Check if last backup is older than time of stopped server
         if len(cls.get_server_config().backups) > 0:
             if cls.get_server_config().states.stopped_info.date is not None:

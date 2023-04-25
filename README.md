@@ -29,7 +29,8 @@
         * Auto deleting backup(s) if backup's limit or space exceeded
         * Bot can handle backup of several world folders
             * For example, these servers split world data to separate folders: `PaperMC`, `Bukkit` and `Spigot`
-        * **If there are files in backups directory that not in server config, they will be deleted! And vice versa!**
+        * **If there are files in backups directory that not in server config, they will be deleted only from server
+          config!**
     * Make yourself an operator for limited amount of time if your Discord account has association with Minecraft nick
         * **Bot can't do it when nick has spaces!** (this applies to servers from `1.0.0` to `1.19.0`!)
 * Changing Minecraft servers on the go while server is down
