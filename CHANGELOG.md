@@ -2,7 +2,7 @@
 
 All important changes to this project will be documented in this file.
 
-### [1.4.2 Unreleased](https://github.com/Druzai/Bot_Mc_discord/compare/1.4.1...1.4.2) (2023-xx-xx)
+### [1.4.2](https://github.com/Druzai/Bot_Mc_discord/compare/1.4.1...1.4.2) (2023-04-25)
 
 #### Improvements:
 
@@ -16,10 +16,6 @@ All important changes to this project will be documented in this file.
 * Fixed checking login string for PaperMC/Bukkit/Spigot servers
 * Fixed English translations for poll descriptions
 * Fixed search for release version in snapshot (Changing API of the `minecraft.fandom.com`)
-
-#### Breaking changes:
-
-* --
 
 ### [1.4.1](https://github.com/Druzai/Bot_Mc_discord/compare/1.4.0...1.4.1) (2023-03-14)
 
