@@ -6,7 +6,7 @@ All important changes to this project will be documented in this file.
 
 #### Improvements:
 
-* --
+* Added new translation strings for death messages for version `1.20`
 
 #### Fixed:
 
