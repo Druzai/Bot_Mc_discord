@@ -13,17 +13,6 @@ EMOJI_REGEX = r"<a?:\w+:\d+>"
 TENOR_REGEX = r"https?://tenor\.com/view"
 CODE_LETTERS = "WERTYUPASFGHKZXCVBNM23456789$%&+="
 
-ENTITIES = [
-    '[Intentional Game Design]', 'Area Effect Cloud', 'Arrow', 'Axolotl', 'Bee', 'Blaze', 'Cave Spider', 'Creeper',
-    'Drowned', 'Elder Guardian', 'End Crystal', 'Ender Dragon', 'Enderman', 'Endermite', 'Evoker', 'Frog', 'Ghast',
-    'Giant', 'Goat', 'Guardian', 'Hoglin', 'Husk', 'Illusioner', 'Iron Golem', 'The Killer Bunny', 'Lightning Bolt',
-    'Llama', 'Magma Cube', 'Ocelot', 'Panda', 'Phantom', 'Piglin', 'Piglin Brute', 'Pillager', 'Polar Bear',
-    'Pufferfish', 'Ravager', 'Shulker', 'Silverfish', 'Skeleton', 'Slime', 'Snow Golem', 'Snowball', 'Spectral Arrow',
-    'Spider', 'Stray', 'Strider', 'Trader Llama', 'Vex', 'Villager', 'Butcher', 'Cartographer', 'Cleric', 'Farmer',
-    'Fisherman', 'Fletcher', 'Leatherworker', 'Librarian', 'Mason', 'Nitwit', 'Shepherd', 'Toolsmith', 'Weaponsmith',
-    'Vindicator', 'Warden', 'Witch', 'Wither', 'Wither Skeleton', 'Wolf', 'Zoglin', 'Zombie', 'Zombie Villager',
-    'Zombified Piglin', 'Zombie Pigman'
-]
 # Messages taken from https://minecraft.fandom.com/wiki/Death_messages
 DEATH_MESSAGES = [
     '{0} was squashed by a falling anvil', '{0} was squashed by a falling anvil whilst fighting {1}',
