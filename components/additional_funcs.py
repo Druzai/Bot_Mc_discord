@@ -2,7 +2,7 @@ import inspect
 import socket
 import sys
 import typing
-from asyncio import sleep as asleep, Task, CancelledError
+from asyncio import sleep as asleep, Task, CancelledError, Event as AsyncEvent, run_coroutine_threadsafe
 from contextlib import contextmanager, suppress, asynccontextmanager
 from datetime import datetime, timedelta
 from enum import Enum, auto
@@ -601,8 +601,14 @@ class BackupsThread(Thread):
         super().__init__()
         self.name = "BackupsThread"
         self.daemon = True
+
+        self._force_run = False
+        self._force_args = ()
+        self._force_wait = AsyncEvent()
+        self._force_list = []
+
         self._skip = Event()
-        self._bot = bot
+        self._bot: commands.Bot = bot
         self._terminate = False
         self._backing_up = False
 
@@ -613,6 +619,16 @@ class BackupsThread(Thread):
                 break
             if is_skipped:
                 self._skip.clear()
+                if self._force_run:
+                    self._force_list.clear()
+                    try:
+                        obj = create_zip_archive(self._bot, *self._force_args)
+                        self._force_list.append(obj)
+                    except FileNotFoundError as error:
+                        self._force_list.append(error)
+                    self._force_run = False
+                    self._force_args = ()
+                    self._force_wait.set()
                 continue
 
             if not BotVars.is_backing_up and not BotVars.is_restoring and Config.get_backups_settings().automatic_backup:
@@ -643,14 +659,14 @@ class BackupsThread(Thread):
                     file_name = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
                     level_name = ServerProperties().level_name
                     try:
-                        obj = next(create_zip_archive(
+                        obj = create_zip_archive(
                             self._bot,
                             file_name,
                             Path(Config.get_selected_server_from_list().working_directory,
                                  Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
                             level_name,
                             Config.get_backups_settings().compression_method
-                        ), None)
+                        )
                         Config.add_backup_info(file_name=file_name)
                         Config.save_server_config()
                         print(get_translation("Backup completed!"))
@@ -676,6 +692,24 @@ class BackupsThread(Thread):
     def skip(self):
         self._skip.set()
 
+    def run_forced_backup(
+            self,
+            zip_name: str,
+            zip_path: str,
+            level_name: str,
+            compression: str,
+            user: Member,
+            msg: Message
+    ) -> AsyncEvent:
+        self._force_run = True
+        self._force_args = (zip_name, zip_path, level_name, compression, True, user, msg)
+        self._force_wait = AsyncEvent()
+        self.skip()
+        return self._force_wait
+
+    def get_forced_list(self):
+        return self._force_list
+
     def join(self, timeout=0.5):
         while self._backing_up:
             sleep(1.0)
@@ -690,8 +724,9 @@ def create_zip_archive(
         zip_path: str,
         level_name: str,
         compression: str,
-        forced=False,
-        user: Member = None
+        forced: bool = False,
+        user: Member = None,
+        msg: Message = None
 ):
     """recursively .zip a directory"""
     BotVars.is_backing_up = True
@@ -798,12 +833,16 @@ def create_zip_archive(
 
                     fn = Path(root, file)
                     afn = fn.relative_to(relative_path)
-                    if forced:
+                    if forced and msg is not None:
                         if (datetime.now() - last_message_change).seconds >= 4:
                             timedelta_secs = (datetime.now() - dt).seconds
                             percent = round(100 * current / total)
-                            yield add_quotes(f"diff\n{percent}% {get_time_string(timedelta_secs, False)} '{afn}'\n"
-                                             f"- |{'█' * (percent // 5)}{' ' * (20 - percent // 5)}|")
+                            run_coroutine_threadsafe(msg.edit(
+                                content=add_quotes(
+                                    f"diff\n{percent}% {get_time_string(timedelta_secs, False)} '{afn}'\n"
+                                    f"- |{'█' * (percent // 5)}{' ' * (20 - percent // 5)}|"
+                                )
+                            ), bot.loop)
                             last_message_change = datetime.now()
                     tries = 0
                     while tries < 3:
@@ -818,7 +857,7 @@ def create_zip_archive(
                         list_of_unarchived_files.append(f"'{afn.as_posix()}'")
                     current += getsize(fn)
 
-    if forced:
+    if forced and msg is not None:
         date_t = get_time_string((datetime.now() - dt).seconds, True)
         backup_size = get_file_size(f"{zip_path}/{zip_name}.zip")
         backup_size_str = get_human_readable_size(backup_size, round=True)
@@ -826,11 +865,15 @@ def create_zip_archive(
                                             ServerProperties().level_name)
         world_folder_size_str = get_human_readable_size(world_folder_size, stop_unit=backup_size_str.split(" ")[-1],
                                                         round=True)
-        yield add_quotes(get_translation("Done in {0}\nCompression method: {1}").format(date_t, compression) +
-                         f"\n{world_folder_size_str} -> {backup_size_str} " +
-                         (f"(x{world_folder_size // backup_size})"
-                          if round(world_folder_size / backup_size, 1).is_integer()
-                          else f"(x{world_folder_size / backup_size:.1f})"))
+        run_coroutine_threadsafe(msg.edit(
+            content=add_quotes(
+                get_translation("Done in {0}\nCompression method: {1}").format(date_t, compression) +
+                f"\n{world_folder_size_str} -> {backup_size_str} " +
+                (f"(x{world_folder_size // backup_size})"
+                 if round(world_folder_size / backup_size, 1).is_integer()
+                 else f"(x{world_folder_size / backup_size:.1f})")
+            )
+        ), bot.loop)
     if use_rcon:
         with suppress(ConnectionError, socket.error):
             with connect_rcon() as cl_r:
@@ -849,7 +892,7 @@ def create_zip_archive(
                                        "color": "dark_red"}])
     BotVars.is_backing_up = False
     if len(list_of_unarchived_files) > 0:
-        yield {
+        return {
             "files": list_of_unarchived_files,
             "single_folder": len(level_dir_list) == 1 and level_dir_list[0].name == level_name
         }
@@ -1061,8 +1104,8 @@ def get_time_string(seconds: int, use_colon=False):
     else:
         min_str = get_translation(" min")
         return ("" if seconds // 60 == 0 else f"{str(seconds // 60)}{min_str}") + \
-               (" " if seconds > 59 and seconds % 60 != 0 else "") + \
-               ("" if seconds % 60 == 0 else f"{str(seconds % 60)}{sec_str}")
+            (" " if seconds > 59 and seconds % 60 != 0 else "") + \
+            ("" if seconds % 60 == 0 else f"{str(seconds % 60)}{sec_str}")
 
 
 async def server_checkups(bot: commands.Bot, backups_thread: BackupsThread, poll: 'Poll'):
@@ -2814,17 +2857,19 @@ async def on_backup_force_callback(
     dict_obj = None
     level_name = ServerProperties().level_name
     try:
-        for obj in create_zip_archive(bot, file_name,
-                                      Path(Config.get_selected_server_from_list().working_directory,
-                                           Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
-                                      level_name,
-                                      Config.get_backups_settings().compression_method, forced=True,
-                                      user=author):
-            if isinstance(obj, str):
-                if msg is not None:
-                    await msg.edit(content=obj)
-                else:
-                    msg = await send_msg(ctx, obj)
+        wait = backups_thread.run_forced_backup(
+            file_name,
+            Path(Config.get_selected_server_from_list().working_directory,
+                 Config.get_backups_settings().name_of_the_backups_folder).as_posix(),
+            level_name,
+            Config.get_backups_settings().compression_method,
+            user=author,
+            msg=msg
+        )
+        await wait.wait()
+        for obj in backups_thread.get_forced_list():
+            if isinstance(obj, BaseException):
+                raise obj
             elif isinstance(obj, dict):
                 dict_obj = obj
         Config.add_backup_info(file_name=file_name, reason=reason, initiator=author.id)

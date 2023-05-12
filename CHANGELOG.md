@@ -11,6 +11,7 @@ All important changes to this project will be documented in this file.
 #### Fixed:
 
 * Removed delete logic to wipe nonexistent files and folders in backups folder for selected server
+* Speeded up creation of forced backups by using `BackupsThread` instead of running in `asyncio.Task`
 
 #### Breaking changes:
 
