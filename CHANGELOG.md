@@ -12,6 +12,7 @@ All important changes to this project will be documented in this file.
 
 * Removed delete logic to wipe nonexistent files and folders in backups folder for selected server
 * Speeded up creation of forced backups by using `BackupsThread` instead of running in `asyncio.Task`
+    * Bot can report of force backup completion in Discord with small delay (about 3-5 seconds)
 
 #### Breaking changes:
 
