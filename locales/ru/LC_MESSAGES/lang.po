@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
 "POT-Creation-Date: 2023-05-17 21:47+0300\n"
-"PO-Revision-Date: 2023-05-17 21:51+0300\n"
+"PO-Revision-Date: 2023-05-31 11:27+0300\n"
 "Last-Translator: Druzai\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -198,7 +198,7 @@ msgstr "{0} упал с высоты и был добит {1}"
 
 #: ..\_frozen_translations.py:34
 msgid "{0} walked into the danger zone due to {1}"
-msgstr "{0} зашёл в опасную зону из-за {1}"
+msgstr "{0} забрёл в опасную зону из-за {1}"
 
 #: ..\_frozen_translations.py:35
 msgid "{0} was shot by a skull from {1} using {2}"
@@ -206,7 +206,7 @@ msgstr "{0} был поражён черепом из {1} с помощью {2}"
 
 #: ..\_frozen_translations.py:36
 msgid "{0} was roasted in dragon's breath by {1}"
-msgstr "{0} сварился заживо в драконьем дыхании из-за {1}"
+msgstr "{0} растворился в драконьем дыхании из-за {1}"
 
 #: ..\_frozen_translations.py:37
 msgid "{0} was skewered by a falling stalactite"
