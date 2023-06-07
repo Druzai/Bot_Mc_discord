@@ -2,7 +2,7 @@
 
 All important changes to this project will be documented in this file.
 
-### [1.4.3 Unreleased](https://github.com/Druzai/Bot_Mc_discord/compare/1.4.2...1.4.3) (2023-xx-xx)
+### [1.4.3](https://github.com/Druzai/Bot_Mc_discord/compare/1.4.2...1.4.3) (2023-06-07)
 
 #### Improvements:
 
@@ -13,10 +13,6 @@ All important changes to this project will be documented in this file.
 * Removed delete logic to wipe nonexistent files and folders in backups folder for selected server
 * Speeded up creation of forced backups by using `BackupsThread` instead of running in `asyncio.Task`
     * Bot can report of force backup completion in Discord with small delay (about 3-5 seconds)
-
-#### Breaking changes:
-
-* --
 
 ### [1.4.2](https://github.com/Druzai/Bot_Mc_discord/compare/1.4.1...1.4.2) (2023-04-25)
 
