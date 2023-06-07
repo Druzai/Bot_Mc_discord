@@ -84,10 +84,18 @@ class ChatCommands(commands.Cog):
                             self._commands_cog.menu_server_view = None
                             Config.get_menu_settings().server_menu_message_id = None
                             Config.get_menu_settings().server_menu_channel_id = None
+                            print(get_translation("Bot Error: {0}").format(
+                                get_translation("Bot couldn't find message for server menu! "
+                                                "Deleting its id from config!")
+                            ))
                         elif isinstance(view, MenuBotView):
                             self._commands_cog.menu_bot_view = None
                             Config.get_menu_settings().bot_menu_message_id = None
                             Config.get_menu_settings().bot_menu_channel_id = None
+                            print(get_translation("Bot Error: {0}").format(
+                                get_translation(
+                                    "Bot couldn't find message for bot menu! Deleting its id from config!")
+                            ))
                         to_save = True
             if to_save:
                 Config.save_config()

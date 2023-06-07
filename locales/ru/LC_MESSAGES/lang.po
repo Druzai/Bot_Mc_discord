@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
-"POT-Creation-Date: 2023-05-17 21:47+0300\n"
-"PO-Revision-Date: 2023-05-31 11:27+0300\n"
+"POT-Creation-Date: 2023-06-07 17:55+0300\n"
+"PO-Revision-Date: 2023-06-07 17:57+0300\n"
 "Last-Translator: Druzai\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -43,8 +43,8 @@ msgstr "Информация о сервере прочтена!"
 msgid "Bot/Discord Error: Your token is wrong"
 msgstr "Ошибка бота/дискорда: Ваш токен не правильный"
 
-#: ..\Discord_bot.py:78 ..\Discord_bot.py:80
-#: ..\components\additional_funcs.py:3412
+#: ..\Discord_bot.py:78 ..\Discord_bot.py:80 ..\commands\chat_commands.py:87
+#: ..\commands\chat_commands.py:95 ..\components\additional_funcs.py:3412
 msgid "Bot Error: {0}"
 msgstr "Ошибка бота: {0}"
 
@@ -2221,150 +2221,159 @@ msgstr "Версия discord.py"
 msgid "Version of Python"
 msgstr "Версия Python"
 
-#: ..\commands\chat_commands.py:94
+#: ..\commands\chat_commands.py:88
+msgid "Bot couldn't find message for server menu! Deleting its id from config!"
+msgstr ""
+"Бот не смог найти сообщение для меню сервера! Удаляем его id из конфига!"
+
+#: ..\commands\chat_commands.py:96
+msgid "Bot couldn't find message for bot menu! Deleting its id from config!"
+msgstr "Бот не смог найти сообщение для меню бота! Удаляем его id из конфига!"
+
+#: ..\commands\chat_commands.py:102
 msgid "Bot is ready!"
 msgstr "Бот готов к работе!"
 
-#: ..\commands\chat_commands.py:95
+#: ..\commands\chat_commands.py:103
 msgid "To stop the bot press Ctrl + C"
 msgstr "Чтобы остановить бота, нажмите Ctrl + C"
 
-#: ..\commands\chat_commands.py:105 ..\commands\chat_commands.py:119
+#: ..\commands\chat_commands.py:113 ..\commands\chat_commands.py:127
 msgid "Channel {0} set as commands' channel for bot"
 msgstr "Канал {0} настроен как канал команд для бота"
 
-#: ..\commands\chat_commands.py:107
+#: ..\commands\chat_commands.py:115
 msgid "Channel for bot commands is not found or unreachable!"
 msgstr "Канал для команд бота не найден или недоступен!"
 
-#: ..\commands\chat_commands.py:130 ..\commands\chat_commands.py:152
+#: ..\commands\chat_commands.py:138 ..\commands\chat_commands.py:160
 msgid "Role {0} set as role for commands that manage Minecraft server"
 msgstr ""
 "Роль {0} задана в качестве роли для команд, которые управляют майнкрафт "
 "сервером"
 
-#: ..\commands\chat_commands.py:133
+#: ..\commands\chat_commands.py:141
 msgid "Role for commands that manage Minecraft server not stated"
 msgstr "Роль для команд, которые управляют майнкрафт сервером, не задана"
 
-#: ..\commands\chat_commands.py:140 ..\commands\chat_commands.py:173
+#: ..\commands\chat_commands.py:148 ..\commands\chat_commands.py:181
 msgid "Role {0} set as admin role for bot"
 msgstr "Роль {0} установлена в качестве роли админа для бота"
 
-#: ..\commands\chat_commands.py:142
+#: ..\commands\chat_commands.py:150
 msgid "Admin role not stated"
 msgstr "Роль админа не указана"
 
-#: ..\commands\chat_commands.py:163
+#: ..\commands\chat_commands.py:171
 msgid "Role for commands that manage Minecraft server has been cleared"
 msgstr "Роль для команд, которые управляют майнкрафт сервером, была очищена"
 
-#: ..\commands\chat_commands.py:182
+#: ..\commands\chat_commands.py:190
 msgid "Admin role has been cleared"
 msgstr "Роль админа была очищена"
 
-#: ..\commands\chat_commands.py:190 ..\commands\chat_commands.py:238
+#: ..\commands\chat_commands.py:198 ..\commands\chat_commands.py:246
 #: ..\components\additional_funcs.py:3340 ..\config\init_config.py:1691
 #: ..\config\init_config.py:1716
 msgid "Game chat enabled"
 msgstr "Игровой чат включён"
 
-#: ..\commands\chat_commands.py:192 ..\commands\chat_commands.py:502
+#: ..\commands\chat_commands.py:200 ..\commands\chat_commands.py:510
 msgid "Webhook for game chat set to `{0}` owned by {1} and to channel {2}"
 msgstr ""
 "Вебхук для игрового чата установлен на `{0}`, принадлежащий {1} и на канал "
 "{2}"
 
-#: ..\commands\chat_commands.py:202
+#: ..\commands\chat_commands.py:210
 msgid "Channel {0} set to Minecraft game chat"
 msgstr "Канал {0} настроен на игровой чат майнкрафта"
 
-#: ..\commands\chat_commands.py:204
+#: ..\commands\chat_commands.py:212
 msgid "Channel for Minecraft game chat is not found or unreachable!"
 msgstr "Канал для игрового чата майнкрафта не найден или недоступен!"
 
-#: ..\commands\chat_commands.py:206 ..\commands\chat_commands.py:509
+#: ..\commands\chat_commands.py:214 ..\commands\chat_commands.py:517
 msgid "Webhook for game chat not set!"
 msgstr "Вебхук для игрового чата не установлен!"
 
-#: ..\commands\chat_commands.py:209 ..\commands\chat_commands.py:432
-#: ..\commands\chat_commands.py:451 ..\components\additional_funcs.py:3357
+#: ..\commands\chat_commands.py:217 ..\commands\chat_commands.py:440
+#: ..\commands\chat_commands.py:459 ..\components\additional_funcs.py:3357
 #: ..\config\init_config.py:1751
 msgid "Image preview enabled"
 msgstr "Предварительный просмотр изображения включён"
 
-#: ..\commands\chat_commands.py:211 ..\commands\chat_commands.py:438
-#: ..\commands\chat_commands.py:463 ..\components\additional_funcs.py:3359
+#: ..\commands\chat_commands.py:219 ..\commands\chat_commands.py:446
+#: ..\commands\chat_commands.py:471 ..\components\additional_funcs.py:3359
 #: ..\config\init_config.py:1754
 msgid "Image preview disabled"
 msgstr "Предварительный просмотр изображения выключен"
 
-#: ..\commands\chat_commands.py:214 ..\commands\chat_commands.py:259
-#: ..\commands\chat_commands.py:291 ..\components\additional_funcs.py:3371
+#: ..\commands\chat_commands.py:222 ..\commands\chat_commands.py:267
+#: ..\commands\chat_commands.py:299 ..\components\additional_funcs.py:3371
 #: ..\config\init_config.py:1781
 msgid "Obituary enabled"
 msgstr "Некролог включён"
 
-#: ..\commands\chat_commands.py:216 ..\commands\chat_commands.py:278
-#: ..\commands\chat_commands.py:303 ..\components\additional_funcs.py:3373
+#: ..\commands\chat_commands.py:224 ..\commands\chat_commands.py:286
+#: ..\commands\chat_commands.py:311 ..\components\additional_funcs.py:3373
 #: ..\config\init_config.py:1807
 msgid "Obituary disabled"
 msgstr "Некролог выключен"
 
-#: ..\commands\chat_commands.py:219 ..\commands\chat_commands.py:252
-#: ..\commands\chat_commands.py:354 ..\commands\chat_commands.py:527
-#: ..\commands\chat_commands.py:539 ..\commands\chat_commands.py:555
+#: ..\commands\chat_commands.py:227 ..\commands\chat_commands.py:260
+#: ..\commands\chat_commands.py:362 ..\commands\chat_commands.py:535
+#: ..\commands\chat_commands.py:547 ..\commands\chat_commands.py:563
 #: ..\components\additional_funcs.py:3344 ..\config\init_config.py:1713
 #: ..\config\init_config.py:1718
 msgid "Game chat disabled"
 msgstr "Игровой чат выключен"
 
-#: ..\commands\chat_commands.py:262 ..\commands\chat_commands.py:320
+#: ..\commands\chat_commands.py:270 ..\commands\chat_commands.py:328
 msgid "Webhook name for death messages set to {0}"
 msgstr "Имя вебхука для сообщений о смерти установлено как {0}"
 
-#: ..\commands\chat_commands.py:266
+#: ..\commands\chat_commands.py:274
 msgid "Webhook name for death messages set to default - {0}"
 msgstr "Имя вебхука для сообщений о смерти установлено по умолчанию как - {0}"
 
-#: ..\commands\chat_commands.py:272 ..\commands\chat_commands.py:346
+#: ..\commands\chat_commands.py:280 ..\commands\chat_commands.py:354
 msgid "Avatar URL for death messages set to {0}"
 msgstr "URL-адрес аватара для сообщений о смерти установлен на {0}"
 
-#: ..\commands\chat_commands.py:276
+#: ..\commands\chat_commands.py:284
 msgid "Avatar URL for death messages not set!"
 msgstr "URL-адрес аватара для сообщений о смерти не задан!"
 
-#: ..\commands\chat_commands.py:313 ..\components\additional_funcs.py:1686
+#: ..\commands\chat_commands.py:321 ..\components\additional_funcs.py:1686
 msgid "This nick is already associated with member {0}."
 msgstr "Этот ник уже ассоциирован с участником {0}."
 
-#: ..\commands\chat_commands.py:330
+#: ..\commands\chat_commands.py:338
 msgid "Webhook name for death messages has been cleared and set to default"
 msgstr ""
 "Имя вебхука для сообщений о смерти было очищено и установлено по умолчанию"
 
-#: ..\commands\chat_commands.py:340 ..\commands\chat_commands.py:547
-#: ..\commands\chat_commands.py:700
+#: ..\commands\chat_commands.py:348 ..\commands\chat_commands.py:555
+#: ..\commands\chat_commands.py:708
 msgid "Unsupported image type was given!"
 msgstr "Был передан неподдерживаемый тип изображения!"
 
-#: ..\commands\chat_commands.py:345
+#: ..\commands\chat_commands.py:353
 msgid "Do not delete this message or attachment(s)!"
 msgstr "Не удаляйте это сообщение или вложение(ия)!"
 
-#: ..\commands\chat_commands.py:356
+#: ..\commands\chat_commands.py:364
 msgid "You can't edit messages from other members with this command!"
 msgstr ""
 "Вы не можете редактировать сообщения от других участников с помощью этой "
 "команды!"
 
-#: ..\commands\chat_commands.py:367 ..\components\additional_funcs.py:2428
+#: ..\commands\chat_commands.py:375 ..\components\additional_funcs.py:2428
 msgid "{0}, this nick isn't bound to you, use `{1}associate add` first..."
 msgstr ""
 "{0}, этот ник не привязан к вам, воспользуйся `{1}associate add` сначала..."
 
-#: ..\commands\chat_commands.py:380
+#: ..\commands\chat_commands.py:388
 msgid ""
 "The bot couldn't find any messages sent by your bound Minecraft accounts in "
 "the last 100 messages!"
@@ -2372,150 +2381,150 @@ msgstr ""
 "Бот не смог найти никаких сообщений, отправленных вашими связанными "
 "майнкрафт аккаунтами среди последних 100 сообщений!"
 
-#: ..\commands\chat_commands.py:383 ..\components\additional_funcs.py:1715
+#: ..\commands\chat_commands.py:391 ..\components\additional_funcs.py:1715
 msgid "{0}, you have no bound nicks"
 msgstr "{0}, у вас нет привязанных ников"
 
-#: ..\commands\chat_commands.py:403
+#: ..\commands\chat_commands.py:411
 msgid "Can't edit this message, it's not owned by game chat webhook!"
 msgstr ""
 "Невозможно изменить сообщение, оно не принадлежит вебхуку игрового чата!"
 
-#: ..\commands\chat_commands.py:409 ..\commands\chat_commands.py:416
+#: ..\commands\chat_commands.py:417 ..\commands\chat_commands.py:424
 msgid "Owner: "
 msgstr "Владелец: "
 
-#: ..\commands\chat_commands.py:410
+#: ..\commands\chat_commands.py:418
 msgid "webhook {0} owned by {1}"
 msgstr "вебхук {0}, принадлежащий {1}"
 
-#: ..\commands\chat_commands.py:422
+#: ..\commands\chat_commands.py:430
 msgid "You're not in channel for Minecraft game chat!"
 msgstr "Вы не в канале для игрового чата майнкрафта!"
 
-#: ..\commands\chat_commands.py:433 ..\commands\chat_commands.py:479
+#: ..\commands\chat_commands.py:441 ..\commands\chat_commands.py:487
 msgid "The maximum image width set to {0}"
 msgstr "Максимальная ширина изображения установлена на {0}"
 
-#: ..\commands\chat_commands.py:435 ..\commands\chat_commands.py:495
+#: ..\commands\chat_commands.py:443 ..\commands\chat_commands.py:503
 msgid "The maximum image height set to {0}"
 msgstr "Максимальная высота изображения установлена на {0}"
 
-#: ..\commands\chat_commands.py:471 ..\commands\chat_commands.py:474
-#: ..\commands\chat_commands.py:487 ..\commands\chat_commands.py:490
+#: ..\commands\chat_commands.py:479 ..\commands\chat_commands.py:482
+#: ..\commands\chat_commands.py:495 ..\commands\chat_commands.py:498
 #: ..\commands\minecraft_commands.py:140 ..\commands\minecraft_commands.py:194
 #: ..\commands\minecraft_commands.py:197 ..\commands\minecraft_commands.py:646
 #: ..\commands\minecraft_commands.py:649
 msgid "Wrong 1-st argument used!"
 msgstr "Использован неверный 1-й аргумент!"
 
-#: ..\commands\chat_commands.py:472 ..\commands\chat_commands.py:488
+#: ..\commands\chat_commands.py:480 ..\commands\chat_commands.py:496
 #: ..\commands\minecraft_commands.py:195 ..\commands\minecraft_commands.py:647
 msgid "Integer must be above or equal {0}!"
 msgstr "Целое число должно быть больше или равно {0}!"
 
-#: ..\commands\chat_commands.py:475 ..\commands\chat_commands.py:491
+#: ..\commands\chat_commands.py:483 ..\commands\chat_commands.py:499
 #: ..\commands\minecraft_commands.py:198 ..\commands\minecraft_commands.py:650
 msgid "Integer must be below or equal {0}!"
 msgstr "Целое число должно быть меньше или равно {0}!"
 
-#: ..\commands\chat_commands.py:519
+#: ..\commands\chat_commands.py:527
 msgid "Reloaded webhook for game chat!"
 msgstr "Перезагружен вебхук для игрового чата!"
 
-#: ..\commands\chat_commands.py:531 ..\commands\chat_commands.py:684
+#: ..\commands\chat_commands.py:539 ..\commands\chat_commands.py:692
 msgid "Updated webhook name to `{0}`!"
 msgstr "Имя вебхука изменено на `{0}`!"
 
-#: ..\commands\chat_commands.py:545 ..\commands\chat_commands.py:698
+#: ..\commands\chat_commands.py:553 ..\commands\chat_commands.py:706
 msgid "Updated webhook avatar!"
 msgstr "Обновлён аватар вебхука!"
 
-#: ..\commands\chat_commands.py:562
+#: ..\commands\chat_commands.py:570
 msgid ""
 "Channel {0} set to Minecraft game chat and as default channel for its webhook"
 msgstr ""
 "Канал {0} настроен на игровой чат майнкрафта, а для его вебхука как канал по "
 "умолчанию"
 
-#: ..\commands\chat_commands.py:571 ..\commands\chat_commands.py:615
+#: ..\commands\chat_commands.py:579 ..\commands\chat_commands.py:623
 #: ..\components\additional_funcs.py:3391 ..\config\init_config.py:1872
 #: ..\config\init_config.py:1908
 msgid "RSS enabled"
 msgstr "RSS включён"
 
-#: ..\commands\chat_commands.py:573 ..\commands\chat_commands.py:656
+#: ..\commands\chat_commands.py:581 ..\commands\chat_commands.py:664
 msgid "Webhook for RSS set to `{0}` owned by {1} and to channel {2}"
 msgstr "Вебхук для RSS настроен на `{0}`, принадлежащий {1}, и на канал {2}"
 
-#: ..\commands\chat_commands.py:579 ..\commands\chat_commands.py:662
+#: ..\commands\chat_commands.py:587 ..\commands\chat_commands.py:670
 msgid "Webhook for RSS not set!"
 msgstr "Вебхук для RSS не указан!"
 
-#: ..\commands\chat_commands.py:582 ..\commands\chat_commands.py:638
+#: ..\commands\chat_commands.py:590 ..\commands\chat_commands.py:646
 msgid "URL for RSS set to {0}"
 msgstr "URL-адрес для RSS поставлен на {0}"
 
-#: ..\commands\chat_commands.py:586
+#: ..\commands\chat_commands.py:594
 msgid "URL for RSS not set!"
 msgstr "URL-адрес для RSS не указан!"
 
-#: ..\commands\chat_commands.py:589 ..\commands\chat_commands.py:648
+#: ..\commands\chat_commands.py:597 ..\commands\chat_commands.py:656
 msgid "Scan interval for RSS feed set to `{0}`"
 msgstr "Интервал сканирования для RSS-канала установлен как `{0}`"
 
-#: ..\commands\chat_commands.py:593 ..\config\init_config.py:1896
+#: ..\commands\chat_commands.py:601 ..\config\init_config.py:1896
 msgid "Scan interval for RSS feed not set"
 msgstr "Интервал сканирования для RSS-канала не установлен"
 
-#: ..\commands\chat_commands.py:596 ..\commands\chat_commands.py:629
-#: ..\commands\chat_commands.py:680 ..\commands\chat_commands.py:692
-#: ..\commands\chat_commands.py:708 ..\components\additional_funcs.py:3395
+#: ..\commands\chat_commands.py:604 ..\commands\chat_commands.py:637
+#: ..\commands\chat_commands.py:688 ..\commands\chat_commands.py:700
+#: ..\commands\chat_commands.py:716 ..\components\additional_funcs.py:3395
 #: ..\config\init_config.py:1905 ..\config\init_config.py:1910
 msgid "RSS disabled"
 msgstr "RSS выключен"
 
-#: ..\commands\chat_commands.py:672
+#: ..\commands\chat_commands.py:680
 msgid "Reloaded webhook for RSS!"
 msgstr "Перезагружен вебхук для RSS!"
 
-#: ..\commands\chat_commands.py:714
+#: ..\commands\chat_commands.py:722
 msgid "Channel {0} set to RSS webhook as default channel"
 msgstr "Канал {0} настроен как канал по умолчанию для RSS вебхука"
 
-#: ..\commands\chat_commands.py:755
+#: ..\commands\chat_commands.py:763
 msgid "Available languages:"
 msgstr "Доступные языки:"
 
-#: ..\commands\chat_commands.py:790
+#: ..\commands\chat_commands.py:798
 msgid "Select bot language:"
 msgstr "Выберите язык бота:"
 
-#: ..\commands\chat_commands.py:799
+#: ..\commands\chat_commands.py:807
 msgid "Current prefix - '{0}'"
 msgstr "Текущий префикс - '{0}'"
 
-#: ..\commands\chat_commands.py:810
+#: ..\commands\chat_commands.py:818
 msgid "Prefix can't have spaces!"
 msgstr "Префикс не может иметь пробелов!"
 
-#: ..\commands\chat_commands.py:815
+#: ..\commands\chat_commands.py:823
 msgid "Changed prefix to '{0}'."
 msgstr "Префикс изменён на '{0}'."
 
-#: ..\commands\chat_commands.py:835 ..\commands\chat_commands.py:855
+#: ..\commands\chat_commands.py:843 ..\commands\chat_commands.py:863
 msgid "Bot doesn't have such subcommand!"
 msgstr "Бот не имеет такой подкоманды!"
 
-#: ..\commands\chat_commands.py:857
+#: ..\commands\chat_commands.py:865
 msgid "Bot doesn't have such command!"
 msgstr "Бот не имеет такой команды!"
 
-#: ..\commands\chat_commands.py:864
+#: ..\commands\chat_commands.py:872
 msgid "List of all commands, prefix - {0}"
 msgstr "Список всех команд, префикс - {0}"
 
-#: ..\commands\chat_commands.py:879
+#: ..\commands\chat_commands.py:887
 msgid ""
 "Values in [square brackets] are optional.\n"
 "Values in <angle brackets> have to be provided by you.\n"
@@ -2529,11 +2538,11 @@ msgstr ""
 "Для получения дополнительной информации используйте команду '{prefix}help'.\n"
 "Или для удобства - '{prefix}команда {arg_list}'."
 
-#: ..\commands\chat_commands.py:933
+#: ..\commands\chat_commands.py:941
 msgid "You didn't provide reply in your message!"
 msgstr "Вы не прикрепили ответ к вашему сообщению!"
 
-#: ..\commands\chat_commands.py:943
+#: ..\commands\chat_commands.py:951
 msgid "Starting RSS feed check"
 msgstr "Запускаем проверку RSS-канала"
 
