@@ -139,7 +139,7 @@ For macOS you have to update certificates by running script `/Applications/Pytho
 
 ### Build with pyinstaller
 
-Firstly, you have to install pyinstaller via `pip install pyinstaller==5.10.1`.
+Firstly, you have to install pyinstaller via `pip install pyinstaller==5.11.0`.
 
 Type in command prompt `make` in root directory of the project to build it.
 
