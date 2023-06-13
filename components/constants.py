@@ -9,6 +9,7 @@ DISCORD_SELECT_OPTIONS_MAX_LENGTH = 25
 DISCORD_MAX_SELECT_OPTIONS_IN_MESSAGE = DISCORD_SELECT_OPTIONS_MAX_LENGTH * 5
 ANSI_ESCAPE = compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 URL_REGEX = r"https?://(?:[a-zA-Z]|[0-9]|[#-_@.&+]|[!*(),]|%[0-9a-fA-F][0-9a-fA-F])+"
+IPv4_REGEX = r"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)(\.(?!$)|$)){4}$"
 EMOJI_REGEX = r"<a?:\w+:\d+>"
 TENOR_REGEX = r"https?://tenor\.com/view"
 CODE_LETTERS = "WERTYUPASFGHKZXCVBNM23456789$%&+="

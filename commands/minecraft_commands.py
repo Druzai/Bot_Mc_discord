@@ -19,7 +19,7 @@ from components.additional_funcs import (
     shorten_string, SelectChoice, send_interaction, MenuServerView, on_server_select_callback, MenuBotView,
     get_message_and_channel, backup_force_checking, on_backup_force_callback, backup_restore_checking,
     send_backup_restore_select, send_backup_remove_select, check_if_obituary_webhook, bot_backup_list, op_checking,
-    on_op_callback
+    on_op_callback, get_user_name
 )
 from components.constants import DISCORD_SYMBOLS_IN_MESSAGE_LIMIT, DISCORD_SELECT_FIELD_MAX_LENGTH
 from components.localization import get_translation
@@ -996,7 +996,7 @@ class MinecraftCommands(commands.Cog):
         for backup in Config.get_server_config().backups:
             remove(Path(Config.get_selected_server_from_list().working_directory,
                         Config.get_backups_settings().name_of_the_backups_folder, f"{backup.file_name}.zip"))
-        send_message_of_deleted_backup(self._bot, f"{ctx.author.display_name}#{ctx.author.discriminator}")
+        send_message_of_deleted_backup(self._bot, get_user_name(ctx.author))
         Config.get_server_config().backups.clear()
         Config.save_server_config()
         await ctx.send(add_quotes(get_translation("Deleted all backups of '{0}' server")

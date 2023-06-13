@@ -418,10 +418,12 @@ def _check_log_file(
                     if chn is None:
                         print(get_translation("Bot Error: Couldn't find channel for game chat!"))
                     else:
+                        from components.additional_funcs import is_user_webhook
+
                         async def get_last_message(channel: TextChannel):
                             last_msg = None
                             async for message in channel.history(limit=100):
-                                if message.author.discriminator == "0000" and message.author.name == player_nick:
+                                if is_user_webhook(message.author) and message.author.name == player_nick:
                                     last_msg = message
                                     break
                             return last_msg

@@ -16,7 +16,8 @@ from components.additional_funcs import (
     parse_subcommands_for_help, find_subcommand, make_underscored_line, create_webhooks, bot_dm_clear, send_msg,
     delete_after_by_msg, HelpCommandArgument, handle_unhandled_error_in_task, handle_unhandled_error_in_events,
     get_avatar_info, URLAddress, get_server_version, get_time_string, get_channel_string, send_select_view,
-    shorten_string, on_language_select_callback, get_message_and_channel, MenuServerView, MenuBotView, get_member_string
+    shorten_string, on_language_select_callback, get_message_and_channel, MenuServerView, MenuBotView,
+    get_member_string, get_user_name, is_user_webhook
 )
 from components.constants import DISCORD_SELECT_FIELD_MAX_LENGTH
 from components.localization import get_translation, get_locales, get_current_locale
@@ -46,7 +47,7 @@ class ChatCommands(commands.Cog):
         with handle_unhandled_error_in_events():
             print("------")
             print(get_translation("Logged in Discord as"))
-            print(f"{self._bot.user.name}#{self._bot.user.discriminator}")
+            print(get_user_name(self._bot.user))
             print(get_translation("Version of discord.py") + " - " + discord.__version__)
             print(get_translation("Version of Python") + " - " + python_version())
             print("------")
@@ -360,7 +361,7 @@ class ChatCommands(commands.Cog):
     async def c_edit(self, ctx: commands.Context, *, edited_message: str):
         if not Config.get_game_chat_settings().enable_game_chat:
             await send_msg(ctx, add_quotes(get_translation("Game chat disabled") + "!"), is_reaction=True)
-        elif ctx.message.reference is not None and ctx.message.reference.resolved.author.discriminator != "0000":
+        elif ctx.message.reference is not None and not is_user_webhook(ctx.message.reference.resolved.author):
             await send_msg(ctx, add_quotes(get_translation("You can't edit messages from "
                                                            "other members with this command!")), is_reaction=True)
         elif BotVars.webhook_chat is not None and ctx.channel.id == BotVars.webhook_chat.channel_id:
@@ -380,7 +381,7 @@ class ChatCommands(commands.Cog):
                                     if u.user_discord_id == ctx.author.id]
                 if len(associated_nicks) > 0:
                     async for message in ctx.channel.history(limit=100):
-                        if message.author.discriminator == "0000" and message.author.name in associated_nicks:
+                        if is_user_webhook(message.author) and message.author.name in associated_nicks:
                             last_message = message
                             break
                     if last_message is None:

@@ -29,7 +29,7 @@ from colorama import Style, Fore
 from discord import (
     Activity, ActivityType, Message, Status, Member, Role, MessageType, NotFound, HTTPException, Forbidden, Emoji,
     ChannelType, TextChannel, VoiceChannel, Thread as ChannelThread, GroupChannel, Webhook, InvalidData, SelectOption,
-    Interaction, Client, ButtonStyle, TextStyle
+    Interaction, Client, ButtonStyle, TextStyle, User, ClientUser
 )
 from discord.abc import Messageable
 from discord.ext import commands
@@ -44,7 +44,7 @@ from requests.exceptions import SSLError, Timeout
 
 from components.constants import (
     URL_REGEX, UNITS, MAX_RCON_COMMAND_STR_LENGTH, MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH,
-    DISCORD_SELECT_FIELD_MAX_LENGTH, DISCORD_SELECT_OPTIONS_MAX_LENGTH, ANSI_ESCAPE
+    DISCORD_SELECT_FIELD_MAX_LENGTH, DISCORD_SELECT_OPTIONS_MAX_LENGTH, ANSI_ESCAPE, IPv4_REGEX
 )
 from components.decorators import MissingAdminPermissions, is_admin, is_minecrafter
 from components.localization import get_translation, get_locales, get_current_locale, set_locale
@@ -159,6 +159,28 @@ def get_author(
         else:
             author = bot.user
     return author
+
+
+def get_user_name(user: Union[User, ClientUser, Member, None]):
+    if user is None:
+        return ""
+    if hasattr(user, "discriminator") and user.discriminator != "0":
+        return f"{user.display_name}#{user.discriminator}"
+    return user.display_name
+
+
+def get_full_user_info(user: Member):
+    if hasattr(user, "discriminator") and user.discriminator != "0":
+        return f"{user.display_name}\n" \
+               f"{user.name}#{user.discriminator}"
+    return f"{user.display_name}\n" \
+           f"{user.name}"
+
+
+def is_user_webhook(user: Union[User, ClientUser, Member]):
+    if hasattr(user, "discriminator"):
+        return user.bot and user.discriminator == "0000"
+    return user.bot and len(user.mutual_guilds) == 0
 
 
 async def send_status(ctx: Union[commands.Context, Interaction], is_reaction=False):
@@ -531,14 +553,14 @@ async def get_member_string(bot: commands.Bot, id: int, mention: bool = False):
         if member is None:
             member = await bot.guilds[0].fetch_member(id)
         if not mention:
-            member = f"{member.display_name}#{member.discriminator}"
+            member = get_user_name(member)
         else:
             member = member.mention
     except (HTTPException, Forbidden, NotFound):
         try:
             user = await bot.fetch_user(id)
             if not mention:
-                member = f"{user.name}#{user.discriminator}"
+                member = get_user_name(user)
             else:
                 member = user.mention
         except (HTTPException, NotFound):
@@ -782,7 +804,7 @@ def create_zip_archive(
             tellraw_msg = tellraw_init.copy()
             if forced:
                 tellraw_msg.append({"text": get_translation("Starting backup triggered by {0} in 3 seconds...")
-                                   .format(f"{user.display_name}#{user.discriminator}"), "color": "yellow"})
+                                   .format(get_user_name(user)), "color": "yellow"})
             else:
                 tellraw_msg.append({"text": get_translation("Starting automatic backup in 3 seconds..."),
                                     "color": "dark_aqua"})
@@ -791,7 +813,7 @@ def create_zip_archive(
                 if server_version.minor < 7:
                     if forced:
                         cl_r.say(get_translation("Starting backup triggered by {0} in 3 seconds...")
-                                 .format(f"{user.display_name}#{user.discriminator}"))
+                                 .format(get_user_name(user)))
                     else:
                         cl_r.say(get_translation("Starting automatic backup in 3 seconds..."))
                 else:
@@ -1750,7 +1772,7 @@ async def bot_associate_info(ctx: commands.Context, for_me: bool, show: str = No
             if not len(v) or (show is not None and show == "seen" and all([isinstance(i, str) for i in v])):
                 continue
             member = await ctx.guild.fetch_member(k)
-            message += f"{member.display_name}#{member.discriminator}:\n"
+            message += f"{get_user_name(member)}:\n"
             for item in v:
                 if show is None:
                     message += f"- {item}\n"
@@ -2170,7 +2192,7 @@ class TemplateSelectView(View):
         if start_index > 0 and start_index > self.get_last_page():
             start_index -= 1
         self.select_page = start_index
-        stop_index = start_index * DISCORD_SELECT_OPTIONS_MAX_LENGTH + 25
+        stop_index = (start_index + 1) * DISCORD_SELECT_OPTIONS_MAX_LENGTH
         if stop_index > self.options_list_length:
             stop_index = self.options_list_length
         start_index *= DISCORD_SELECT_OPTIONS_MAX_LENGTH
@@ -2185,7 +2207,7 @@ class TemplateSelectView(View):
             self.select_page = last_page
         else:
             self.select_page = page
-        stop_index = self.select_page * DISCORD_SELECT_OPTIONS_MAX_LENGTH + 25
+        stop_index = (self.select_page + 1) * DISCORD_SELECT_OPTIONS_MAX_LENGTH
         if stop_index > self.options_list_length:
             stop_index = self.options_list_length
         start_index = self.select_page * DISCORD_SELECT_OPTIONS_MAX_LENGTH
@@ -2303,7 +2325,7 @@ async def send_select_view(
         min_values: int = 1,
         max_values: int = 1,
         bot: Optional[commands.Bot] = None,
-        timeout: Optional[int] = 180.0
+        timeout: Optional[float] = 180.0
 ):
     view = SelectView(
         raw_options,
@@ -2518,7 +2540,7 @@ async def on_op_callback(
     else:
         line_to_op = add_quotes(get_translation(
             "Now {0} is an operator!"
-        ).format(f"{author.display_name}#{author.discriminator}"))
+        ).format(get_user_name(author) + f"({minecraft_nick})"))
     await send_msg(ctx, line_to_op, is_reaction=is_reaction)
     if await_time_op > 0:
         await asleep(await_time_op)
@@ -2576,7 +2598,7 @@ async def on_op_callback(
             line_to_deop = add_quotes(get_translation(
                 "The operator was taken away from {0}"
             ).format(
-                f"{author.display_name}#{author.discriminator}"
+                get_user_name(author) + f"({minecraft_nick})"
             ) + (" " + get_translation("and {0} player(s)").format(len(to_delete_ops) - 1)
                  if len(to_delete_ops) > 1 else "") + ".")
         await send_msg(ctx, line_to_deop, is_reaction=is_reaction)
@@ -2590,7 +2612,7 @@ async def on_op_callback(
         with suppress(ValueError):
             BotVars.op_deop_list.remove(minecraft_nick)
 
-    BotVars.is_doing_op = False if len(BotVars.op_deop_list) == 0 else doing_opping
+    BotVars.is_doing_op = False if len(BotVars.op_deop_list) == 0 else True
 
 
 class MenuServerView(TemplateSelectView):
@@ -2851,7 +2873,7 @@ async def on_backup_force_callback(
         is_reaction: bool = False
 ):
     author = get_author(ctx, bot, is_reaction=is_reaction)
-    print(get_translation("Starting backup triggered by {0}").format(f"{author.display_name}#{author.discriminator}"))
+    print(get_translation("Starting backup triggered by {0}").format(author))
     msg = await send_msg(ctx, add_quotes(get_translation("Starting backup...")))
     file_name = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
     dict_obj = None
@@ -3086,7 +3108,7 @@ async def send_backup_remove_select(
                     Config.get_backups_settings().name_of_the_backups_folder, f"{selected_backup.file_name}.zip"))
         send_message_of_deleted_backup(
             bot,
-            f"{author.display_name}#{author.discriminator}",
+            get_user_name(author),
             selected_backup,
             member_name=await get_member_string(bot, selected_backup.initiator)
         )
@@ -3462,7 +3484,7 @@ class BadIPv4Address(commands.BadArgument):
 
 class IPv4Address(commands.Converter):
     async def convert(self, ctx: commands.Context, argument: str):
-        if search(r"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)(\.(?!$)|$)){4}$", argument):
+        if search(IPv4_REGEX, argument):
             return argument
         raise BadIPv4Address(argument)
 
@@ -3812,7 +3834,7 @@ async def handle_message_for_chat(
     edit_command = len(edit_command_content) != 0
     if message.author.id == bot.user.id or \
             (message.content.startswith(Config.get_settings().bot_settings.prefix) and not edit_command) or \
-            str(message.author.discriminator) == "0000" or \
+            is_user_webhook(message.author) or \
             (len(message.content) == 0 and len(message.attachments) == 0 and len(message.stickers) == 0):
         return
 
@@ -4138,12 +4160,12 @@ async def _handle_reply_in_message(message: Message, result_msg: dict) -> Tuple[
     if message.reference is not None:
         reply_msg = message.reference.resolved
         cnt = reply_msg.clean_content.replace("\u200b", "").strip()
-        if reply_msg.author.discriminator == "0000":
-            # reply to Minecraft player
+        if is_user_webhook(reply_msg.author):
+            # Reply to Minecraft player (Webhook)
             nick = reply_msg.author.display_name
             reply_from_minecraft_user = True
         else:
-            # Reply to discord user
+            # Reply to Discord user
             nick = await message.guild.fetch_member(reply_msg.author.id)
             reply_from_minecraft_user = False
         result_msg["reply"] = ["\n -> <", nick, "> ", cnt]
@@ -4380,7 +4402,7 @@ def _search_mentions_in_message(message: Message, edit_command=False) -> set:
         # Check role, user mentions and reply author mention
         members_from_roles = list(chain(*[i.members for i in message.role_mentions]))
         if message.reference is not None and not edit_command:
-            if message.reference.resolved.author.discriminator != "0000":
+            if not is_user_webhook(message.reference.resolved.author):
                 members_from_roles.append(message.reference.resolved.author)
             else:
                 nicks.append(message.reference.resolved.author.name)
@@ -4454,8 +4476,7 @@ def _build_nickname_tellraw_for_discord_member(
         left_bracket: str = "<",
         right_bracket: str = "> "
 ):
-    hover_string = ["", {"text": f"{author.display_name}\n"
-                                 f"{author.name}#{author.discriminator}"}]
+    hover_string = ["", {"text": get_full_user_info(author)}]
     if server_version.minor > 11:
         hover_string[-1]["text"] += "\nShift + "
         hover_string += [{"keybind": "key.attack"}]
@@ -4792,7 +4813,9 @@ def get_shortened_url(url: str):
             )
             if response.ok and len(response.text) > 0:
                 return response.text
-    print(get_translation("Bot couldn't shorten the URL \"{0}\" using link shortening services.").format(url))
+    print(get_translation("Bot Error: {0}").format(
+        get_translation("Bot couldn't shorten the URL \"{0}\" using link shortening services.").format(url)
+    ))
     return url[:256]
 
 
