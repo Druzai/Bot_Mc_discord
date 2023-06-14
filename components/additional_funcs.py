@@ -4445,15 +4445,24 @@ def _build_nickname_tellraw_for_minecraft_player(
     if server_version.minor > 7 and len(nick.split()) == 1 and nick in get_server_full_stats().players:
         tellraw_obj += [{"selector": f"@p[name={nick}]"}]
     elif server_version.minor > 7:
+        hover_component = [f"{nick}\n"]
         if check_if_obituary_webhook(nick, for_game_chat=True):
-            entity = get_translation("Entity")
+            if server_version.minor > 15:
+                hover_component += [{"translate": "gui.entity_tooltip.type", "with": [get_translation("Entity")]}]
+            else:
+                hover_component += [get_translation("Type: {0}").format(get_translation("Entity"))]
         else:
-            entity = get_translation("Player")
-        hover_string = f"{nick}\n" + get_translation("Type: {0}").format(entity) + f"\n{Config.get_offline_uuid(nick)}"
+            if server_version.minor > 15:
+                hover_component += [{"translate": "gui.entity_tooltip.type", "with": [{"translate": "entity.minecraft.player"}]}]
+            else:
+                hover_component += [get_translation("Type: {0}").format(get_translation("Player"))]
+        hover_component += [f"\n{Config.get_offline_uuid(nick)}"]
+        if server_version.minor <= 15:
+            hover_component = "".join(hover_component)
         tellraw_obj += [{
             "text": nick,
             "clickEvent": {"action": "suggest_command", "value": f"tell {nick} "},
-            "hoverEvent": {"action": "show_text", content_name: hover_string}
+            "hoverEvent": {"action": "show_text", content_name: hover_component}
         }]
     else:
         tellraw_obj += [{
@@ -4476,15 +4485,17 @@ def _build_nickname_tellraw_for_discord_member(
         left_bracket: str = "<",
         right_bracket: str = "> "
 ):
-    hover_string = ["", {"text": get_full_user_info(author)}]
+    hover_component = [get_full_user_info(author)]
     if server_version.minor > 11:
-        hover_string[-1]["text"] += "\nShift + "
-        hover_string += [{"keybind": "key.attack"}]
+        hover_component[-1] += "\nShift + "
+        hover_component += [{"keybind": "key.attack"}]
     tellraw_obj = [
         {"text": left_bracket},
-        {"text": author.display_name,
-         "color": "dark_gray",
-         "hoverEvent": {"action": "show_text", content_name: hover_string}},
+        {
+            "text": author.display_name,
+            "color": "dark_gray",
+            "hoverEvent": {"action": "show_text", content_name: hover_component}
+        },
         {"text": right_bracket}
     ]
     if server_version.minor > 7:
@@ -4505,12 +4516,19 @@ def build_nickname_tellraw_for_bot(
     content_name = "contents" if server_version.minor >= 16 else "value"
     tellraw_obj = [{"text": left_bracket}]
     if server_version.minor > 7:
-        hover_string = f"{nick}\n" + get_translation("Type: {0}").format(get_translation("Entity")) + \
-                       f"\n{Config.get_offline_uuid(nick)}"
+        if server_version.minor > 15:
+            hover_component = [
+                f"{nick}\n",
+                {"translate": "gui.entity_tooltip.type", "with": [get_translation("Entity")]},
+                f"\n{Config.get_offline_uuid(nick)}"
+            ]
+        else:
+            hover_component = f"{nick}\n" + get_translation("Type: {0}").format(get_translation("Entity")) + \
+                              f"\n{Config.get_offline_uuid(nick)}"
         tellraw_obj += [{
             "text": nick,
             "color": "dark_gray",
-            "hoverEvent": {"action": "show_text", content_name: hover_string}
+            "hoverEvent": {"action": "show_text", content_name: hover_component}
         }]
     else:
         tellraw_obj += [{

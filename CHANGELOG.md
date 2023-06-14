@@ -6,7 +6,8 @@ All important changes to this project will be documented in this file.
 
 #### Improvements:
 
-* --
+* Adapted bot to migration to new nickname system
+* Added support for translating of entity type in hover text when using game chat in Minecraft
 
 #### Fixed:
 
