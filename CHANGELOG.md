@@ -8,6 +8,8 @@ All important changes to this project will be documented in this file.
 
 * Adapted bot to migration to new nickname system
 * Added support for translating of entity type in hover text when using game chat in Minecraft
+* Added parsing for IPv6 addresses when secure authorization enabled
+    * But bot can't ban and unban these IPs using vanilla server ([MC-97885](https://bugs.mojang.com/browse/MC-97885))
 
 #### Fixed:
 

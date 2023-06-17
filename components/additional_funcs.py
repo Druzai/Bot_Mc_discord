@@ -7,6 +7,7 @@ from contextlib import contextmanager, suppress, asynccontextmanager
 from datetime import datetime, timedelta
 from enum import Enum, auto
 from io import BytesIO
+from ipaddress import IPv4Address as IPv4AddressClass
 from itertools import chain
 from json import dumps
 from os import chdir, system, walk, mkdir, remove
@@ -44,7 +45,7 @@ from requests.exceptions import SSLError, Timeout
 
 from components.constants import (
     URL_REGEX, UNITS, MAX_RCON_COMMAND_STR_LENGTH, MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH,
-    DISCORD_SELECT_FIELD_MAX_LENGTH, DISCORD_SELECT_OPTIONS_MAX_LENGTH, ANSI_ESCAPE, IPv4_REGEX
+    DISCORD_SELECT_FIELD_MAX_LENGTH, DISCORD_SELECT_OPTIONS_MAX_LENGTH, ANSI_ESCAPE
 )
 from components.decorators import MissingAdminPermissions, is_admin, is_minecrafter
 from components.localization import get_translation, get_locales, get_current_locale, set_locale
@@ -3484,9 +3485,10 @@ class BadIPv4Address(commands.BadArgument):
 
 class IPv4Address(commands.Converter):
     async def convert(self, ctx: commands.Context, argument: str):
-        if search(IPv4_REGEX, argument):
-            return argument
-        raise BadIPv4Address(argument)
+        try:
+            return str(IPv4AddressClass(argument))
+        except ValueError:
+            raise BadIPv4Address(argument)
 
 
 class BadURLAddress(commands.BadArgument):
@@ -3712,10 +3714,10 @@ async def get_missing_permissions_message(
     if interaction:
         print(get_translation("{0} don't have some permissions to use interaction").format(author))
         return get_translation("You don't have these permissions to use this interaction:").capitalize() + \
-               "\n- " + "\n- ".join(missing_perms)
+            "\n- " + "\n- ".join(missing_perms)
     print(get_translation("{0} don't have some permissions to run command").format(author))
     return get_translation("You don't have these permissions to run this command:").capitalize() + \
-           "\n- " + "\n- ".join(missing_perms)
+        "\n- " + "\n- ".join(missing_perms)
 
 
 async def send_error_on_interaction(
@@ -4453,7 +4455,10 @@ def _build_nickname_tellraw_for_minecraft_player(
                 hover_component += [get_translation("Type: {0}").format(get_translation("Entity"))]
         else:
             if server_version.minor > 15:
-                hover_component += [{"translate": "gui.entity_tooltip.type", "with": [{"translate": "entity.minecraft.player"}]}]
+                hover_component += [{
+                    "translate": "gui.entity_tooltip.type",
+                    "with": [{"translate": "entity.minecraft.player"}]
+                }]
             else:
                 hover_component += [get_translation("Type: {0}").format(get_translation("Player"))]
         hover_component += [f"\n{Config.get_offline_uuid(nick)}"]
@@ -4556,7 +4561,7 @@ class UserAgent:
             return f"Macintosh; Intel Mac OS X {version}"
         else:
             return choice(["X11; Linux", "X11; OpenBSD", "X11; Ubuntu; Linux"]) + \
-                   choice([" i386", " i686", " amd64", " x86_64"])
+                choice([" i386", " i686", " amd64", " x86_64"])
 
     @classmethod
     def _set_header(cls):

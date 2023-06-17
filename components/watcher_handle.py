@@ -3,6 +3,7 @@ from asyncio import run_coroutine_threadsafe, sleep as asleep
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime
+from ipaddress import ip_address as parse_ip, IPv4Address, IPv6Address
 from os import SEEK_END, stat
 from pathlib import Path
 from re import search, split, findall, sub
@@ -10,7 +11,7 @@ from sys import exc_info
 from threading import Thread
 from time import sleep
 from traceback import format_exc
-from typing import TYPE_CHECKING, Optional, List
+from typing import TYPE_CHECKING, Optional, List, Tuple, Union
 
 from colorama import Fore, Style
 from discord import SyncWebhook, Webhook, TextChannel, Role, ChannelType, SyncWebhookMessage
@@ -474,19 +475,23 @@ def _check_log_file(
                 nick_numb = [i for i in range(len(Config.get_auth_users()))
                              if Config.get_auth_users()[i].nick == logged_in_nick][0]
                 nick_logged = BotVars.player_logged(Config.get_auth_users()[nick_numb].nick) is not None
-                is_invasion_to_ban = nick_logged and ip_address not in Config.get_known_user_ips()
-                is_invasion_to_kick = nick_logged and ip_address not in Config.get_known_user_ips(logged_in_nick)
+                is_invasion_to_ban = nick_logged and ip_address.compressed not in Config.get_known_user_ips()
+                is_invasion_to_kick = nick_logged and \
+                                      ip_address.compressed not in Config.get_known_user_ips(logged_in_nick)
 
                 if not is_invasion_to_ban and not is_invasion_to_kick:
-                    if ip_address in [ip.ip_address for ip in Config.get_auth_users()[nick_numb].ip_addresses]:
-                        user_attempts, code = Config.update_ip_address(logged_in_nick, ip_address)
+                    if ip_address.compressed in [ip.ip_address for ip in
+                                                 Config.get_auth_users()[nick_numb].ip_addresses]:
+                        user_attempts, code = Config.update_ip_address(logged_in_nick, ip_address.compressed)
                     else:
-                        user_attempts, code = Config.add_ip_address(logged_in_nick, ip_address, is_login_attempt=True)
+                        user_attempts, code = Config.add_ip_address(logged_in_nick, ip_address.compressed,
+                                                                    is_login_attempt=True)
                     save_auth_users = True
                 else:
                     user_attempts, code = 0, 0
                 if is_invasion_to_ban or is_invasion_to_kick or (code is not None and user_attempts is not None):
-                    if is_invasion_to_ban or user_attempts >= Config.get_secure_auth().max_login_attempts + 1:
+                    if ip_address.version == 4 and \
+                            (is_invasion_to_ban or user_attempts >= Config.get_secure_auth().max_login_attempts + 1):
                         if is_invasion_to_ban:
                             ban_reason = get_translation("Intrusion attempt on already logged in nick\nYour IP: {0}") \
                                 .format(ip_address)
@@ -504,7 +509,7 @@ def _check_log_file(
                             if is_invasion_to_ban:
                                 ban_reason = get_translation("Intrusion prevented: User was banned!")
                             else:
-                                Config.remove_ip_address(ip_address, [logged_in_nick])
+                                Config.remove_ip_address(ip_address.compressed, [logged_in_nick])
                                 save_auth_users = True
                                 ban_reason = get_translation("Too many login attempts: User was banned!")
                             msg = f"{ban_reason}\n" + get_translation("Nick: {0}\nIP: {1}\nTime: {2}").format(
@@ -518,11 +523,12 @@ def _check_log_file(
                         if is_invasion_to_kick:
                             kick_reason = get_translation("You don't own this logged in nick")
                         else:
-                            kick_reason = get_translation("Not authorized\nYour IP: {0}\nCode: {1}").format(ip_address,
-                                                                                                            code)
+                            kick_reason = get_translation("Not authorized\nYour IP: {0}\nCode: {1}") \
+                                .format(ip_address, code)
                         with suppress(ConnectionError, socket.error):
                             with connect_rcon() as cl_r:
-                                if not send_rcon_kick(cl_r, server_version, logged_in_nick, kick_reason):
+                                if not send_rcon_kick(cl_r, server_version, logged_in_nick, kick_reason) and \
+                                        ip_address.version != 6:
                                     secs = Config.get_secure_auth().mins_before_code_expires * 60
                                     if server_version.minor > 2:
                                         if server_version.minor < 7 or \
@@ -537,14 +543,14 @@ def _check_log_file(
                                     else:
                                         cl_r.run(f"ban-ip {ip_address}")
 
-                                    async def run_delayed_command(ip_address, seconds):
+                                    async def run_delayed_command(ip_address: str, seconds: int):
                                         await asleep(seconds)
                                         with suppress(ConnectionError, socket.error):
                                             with connect_rcon() as cl_r:
                                                 cl_r.run(f"pardon-ip {ip_address}")
 
                                     run_coroutine_threadsafe(
-                                        run_delayed_command(ip_address, secs),
+                                        run_delayed_command(ip_address.compressed, secs),
                                         BotVars.bot_for_webhooks.loop
                                     )
                         if is_invasion_to_kick:
@@ -554,7 +560,11 @@ def _check_log_file(
                             if user.user_minecraft_nick == logged_in_nick:
                                 member = BotVars.bot_for_webhooks.guilds[0].get_member(user.user_discord_id)
 
-                        user_nicks = Config.get_user_nicks(ip_address=ip_address, nick=logged_in_nick, authorized=True)
+                        user_nicks = Config.get_user_nicks(
+                            ip_address=ip_address.compressed,
+                            nick=logged_in_nick,
+                            authorized=True
+                        )
                         status = get_translation("Status:") + f" {user_nicks[logged_in_nick][0][1]}\n"
                         used_nicks = None
                         if (len(user_nicks) != 1 and user_nicks.get(logged_in_nick, None) is not None) or \
@@ -567,18 +577,20 @@ def _check_log_file(
                             status += used_nicks
 
                         msg = get_translation("Connection attempt detected!\nNick: {0}\n"
-                                              "IP: {1}\n{2}Connection attempts: {3}\nTime: {4}") \
-                            .format(logged_in_nick, ip_address, status,
-                                    f"{user_attempts}/{Config.get_secure_auth().max_login_attempts}",
-                                    datetime.now().strftime(get_translation("%H:%M:%S %d/%m/%Y")))
+                                              "IP: {1}\n{2}Connection attempts: {3}\nTime: {4}").format(
+                            logged_in_nick, ip_address, status,
+                            f"{user_attempts}/{Config.get_secure_auth().max_login_attempts if ip_address.version == 4 else '∞'}",
+                            datetime.now().strftime(get_translation("%H:%M:%S %d/%m/%Y"))
+                        )
                         msg = add_quotes(msg) + "\n"
                         nick_for_command = logged_in_nick if " " not in logged_in_nick else f"\"{logged_in_nick}\""
                         msg += get_translation("To proceed enter command `{0}` within {1} min") \
                                    .format(f"{Config.get_settings().bot_settings.prefix}auth login "
                                            f"{nick_for_command} <code>",
                                            Config.get_secure_auth().mins_before_code_expires) + "\n"
-                        msg += get_translation("To ban this IP-address enter command `{0}`") \
-                            .format(f"{Config.get_settings().bot_settings.prefix}auth ban {ip_address} [reason]")
+                        if ip_address.version != 6:
+                            msg += get_translation("To ban this IP-address enter command `{0}`") \
+                                .format(f"{Config.get_settings().bot_settings.prefix}auth ban {ip_address} [reason]")
                         if member is not None:
                             for p in poll.get_polls().values():
                                 if p.command == f"auth login {logged_in_nick} {ip_address}":
@@ -594,13 +606,16 @@ def _check_log_file(
                                                   remove_logs_after=5,
                                                   add_mention=False,
                                                   add_votes_count=False):
-                                    Config.update_ip_address(nick, ip_address, whitelist=True)
+                                    Config.update_ip_address(nick, ip_address.compressed, whitelist=True)
                                     Config.save_auth_users()
                                     await member.send(get_translation("{0}, bot gave access to the nick "
                                                                       "`{1}` with IP-address `{2}`!")
                                                       .format(member.mention, nick, ip_address))
+                                    if ip_address.version == 6:
+                                        return
+
                                     banned_ips = Config.get_list_of_banned_ips_and_reasons(server_version)
-                                    if ip_address in [e["ip"] for e in banned_ips]:
+                                    if ip_address.compressed in [e["ip"] for e in banned_ips]:
                                         async with handle_rcon_error(member):
                                             with connect_rcon() as cl_r:
                                                 cl_r.run(f"pardon-ip {ip_address}")
@@ -756,18 +771,24 @@ def check_if_player_logged_out(line: str, INFO_line: str):
     return nick, reason
 
 
-def check_if_player_logged_in(line: str, INFO_line: str):
+def check_if_player_logged_in(line: str, INFO_line: str) -> Tuple[Optional[str], Union[IPv4Address, IPv6Address, None]]:
     nick = None
     ip_address = None
     match = search(
         INFO_line +
-        r" (?P<nick>.+)\[/(?P<ip>((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}):\d{1,5}]"
+        r" (?P<nick>.+)\[/(?P<ip>.+):\d{1,5}]"
         r" logged in with entity id \d+ at \((?:\[\w+])?-?\d+\.\d+, -?\d+\.\d+, -?\d+\.\d+\)",
         line
     )
     if match:
         nick = match.group("nick").strip()
-        ip_address = match.group("ip").strip()
+        ip_address = match.group("ip").strip("[] ")
+
+        try:
+            ip_address = parse_ip(ip_address)
+        except ValueError:
+            return None, None
+
         if Config.get_secure_auth().enable_login_check:
             from components.additional_funcs import get_server_full_stats
 

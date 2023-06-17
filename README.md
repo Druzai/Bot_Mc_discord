@@ -22,6 +22,8 @@
     * Work with server whitelist
     * Secure authorization
         * Has options to ban and unban IP-address regardless of whether secure authorization is enabled or not
+            * **But bot can't ban and unban IPv6 addresses using vanilla server!**
+              ([MC-97885](https://bugs.mojang.com/browse/MC-97885))
         * **If bot sometimes can't register a logged in player, disable `enable_login_check` option in bot config!**
     * Autoload if the Minecraft server crashes
     * Auto stop if the Minecraft server online during certain period of time without players
@@ -32,7 +34,7 @@
         * **If there are files in backups directory that not in server config, they will be deleted only from server
           config!**
     * Make yourself an operator for limited amount of time if your Discord account has association with Minecraft nick
-        * **Bot can't do it when nick has spaces!** (this applies to servers from `1.0.0` to `1.19.0`!)
+        * **Bot can't do it when nick has spaces!** (this applies to server versions from `1.0.0` to `1.19.0`)
 * Changing Minecraft servers on the go while server is down
 * Creating menus for quick bot and Minecraft server management
     * Creating a server menu with buttons and a dropdown to quickly execute common commands
@@ -156,7 +158,7 @@ this [article](https://www.minecraft.net/en-us/article/important-message--securi
 > **Or check if your modded server already has a patch for it!**
 
 For game chat to work properly with languages other than English, you have to have argument `-Dfile.encoding=UTF-8` when
-you're executing `*.bat`, `*.cmd`, shortcut, `*.sh` or `*.command` script.
+you're executing `*.bat`, `*.cmd`, Windows shortcut, `*.sh` or `*.command` script.
 
 ### Windows
 
