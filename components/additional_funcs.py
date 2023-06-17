@@ -2483,6 +2483,16 @@ async def op_checking(
             )
             return False
 
+        if " " in minecraft_nick:
+            await send_msg(
+                ctx,
+                get_translation("{0}, I can't give an operator to this nick `{1}` because it contains spaces!").format(
+                    author.mention, minecraft_nick
+                ),
+                is_reaction=is_reaction
+            )
+            return False
+
         return True
     else:
         await send_status(ctx, is_reaction=is_reaction)

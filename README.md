@@ -34,7 +34,7 @@
         * **If there are files in backups directory that not in server config, they will be deleted only from server
           config!**
     * Make yourself an operator for limited amount of time if your Discord account has association with Minecraft nick
-        * **Bot can't do it when nick has spaces!** (this applies to server versions from `1.0.0` to `1.19.0`)
+        * **Bot can't do it when nick has spaces!** (vanilla server limitation)
 * Changing Minecraft servers on the go while server is down
 * Creating menus for quick bot and Minecraft server management
     * Creating a server menu with buttons and a dropdown to quickly execute common commands
@@ -72,20 +72,20 @@
             * Shows emoji if there is only one emoji in the message
         * Supported image opacity
         * Works in versions `1.16.0` and higher
-    * Some features may not work in versions lower than `1.7.2`!
+    * Some features may not work in versions below `1.7.2`!
 * Setting up optional RSS feed. Bot will send new items from feed to Discord text channel via webhook
 
 **How bot converts mentions from Minecraft chat to Discord for game chat:**
 
-| Minecraft               | Discord                  |
-|-------------------------|--------------------------|
-| `@a`                    | `@Minecrafters`          |
-| `@all`                  | `@Minecrafters`          |
-| `@e`                    | `@everyone`              |
-| `@everyone`             | `@everyone`              |
-| `@p`                    | `@here`                  |
-| `@here`                 | `@here`                  |
-| `@AnyRoleOrUserMention` | `@SameRoleOrUserMention` |
+| Minecraft               | Discord                 |
+|-------------------------|-------------------------|
+| `@a`                    | `@Minecrafters`         |
+| `@all`                  | `@Minecrafters`         |
+| `@e`                    | `@everyone`             |
+| `@everyone`             | `@everyone`             |
+| `@p`                    | `@here`                 |
+| `@here`                 | `@here`                 |
+| `@AnyRoleOrUserMention` | `@AnyRoleOrUserMention` |
 
 `@Minecrafters` - an optional role in Discord for managing the Minecraft server. If not stated then bot will
 mention `@everyone`.
