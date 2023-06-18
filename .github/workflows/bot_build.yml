@@ -23,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt -r requirements-build.txt flake8
+          pip install -r requirements.txt flake8
 
       - name: Lint with flake8
         run: |
@@ -31,11 +31,6 @@ jobs:
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-
-      - name: Install gettext for Linux
-        run: |
-          sudo apt-get update
-          sudo apt-get install gettext
 
       - name: Get commit tag
         id: commit
@@ -54,18 +49,6 @@ jobs:
           tag_name: ${{ steps.commit.outputs.source_tag }}
           name: ${{ steps.commit.outputs.source_tag }}
           body: ${{ steps.release_notes.outputs.release_notes }}
-          draft: false
-          prerelease: false
-          target_commitish: ${{ github.sha }}
-
-      - name: Build with shiv
-        run: make build_pyz
-
-      - name: Upload release asset
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ steps.commit.outputs.source_tag }}
-          files: ./dist_build/*
           draft: false
           prerelease: false
           target_commitish: ${{ github.sha }}
@@ -107,17 +90,27 @@ jobs:
       - name: Build with pyinstaller
         run: make
 
+      - name: Build with shiv
+        if: matrix.python-version == '3.8'
+        run: make build_pyz
+
       - name: Rename release asset for Windows
         if: matrix.os == 'windows-2019'
-        run: mv ./dist_build/Discord_bot.exe ./dist_build/Discord_bot_windows_x64_p${{ matrix.python-version }}_v${{ needs.create_release.outputs.tag }}.exe
+        run: |
+          mv ./dist_build/Discord_bot.exe ./dist_build/Discord_bot_windows_x64_p${{ matrix.python-version }}_v${{ needs.create_release.outputs.tag }}.exe
+          test -f ./dist_build/Discord_bot.pyz && mv ./dist_build/Discord_bot.pyz ./dist_build/Discord_bot_windows_x64_v${{ needs.create_release.outputs.tag }}.pyz
 
       - name: Rename release asset for Linux
         if: matrix.os == 'ubuntu-20.04'
-        run: mv ./dist_build/Discord_bot ./dist_build/Discord_bot_linux_x64_p${{ matrix.python-version }}_v${{ needs.create_release.outputs.tag }}
+        run: |
+          mv ./dist_build/Discord_bot ./dist_build/Discord_bot_linux_x64_p${{ matrix.python-version }}_v${{ needs.create_release.outputs.tag }}
+          test -f ./dist_build/Discord_bot.pyz && mv ./dist_build/Discord_bot.pyz ./dist_build/Discord_bot_linux_x64_v${{ needs.create_release.outputs.tag }}.pyz
 
       - name: Rename release asset for macOS
         if: matrix.os == 'macos-11'
-        run: mv ./dist_build/Discord_bot ./dist_build/Discord_bot_macos_x64_p${{ matrix.python-version }}_v${{ needs.create_release.outputs.tag }}
+        run: |
+          mv ./dist_build/Discord_bot ./dist_build/Discord_bot_macos_x64_p${{ matrix.python-version }}_v${{ needs.create_release.outputs.tag }}
+          test -f ./dist_build/Discord_bot.pyz && mv ./dist_build/Discord_bot.pyz ./dist_build/Discord_bot_macos_x64_v${{ needs.create_release.outputs.tag }}.pyz
 
       - name: Upload release asset
         uses: softprops/action-gh-release@v1
