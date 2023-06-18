@@ -10,10 +10,12 @@ All important changes to this project will be documented in this file.
 * Added support for translating of entity type in hover text when using game chat in Minecraft
 * Added parsing for IPv6 addresses when secure authorization enabled
     * But bot can't ban and unban these IPs using vanilla server ([MC-97885](https://bugs.mojang.com/browse/MC-97885))
+* Added build of executable archive with `shiv`
 
 #### Fixed:
 
-* --
+* Added check in `op` command if minecraft nick has spaces
+* Fixed checking of minecraft players' number
 
 #### Breaking changes:
 

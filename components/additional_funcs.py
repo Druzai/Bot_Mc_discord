@@ -1304,7 +1304,7 @@ async def bot_list(
 ):
     try:
         info = get_server_full_stats()
-        if info.players == 0:
+        if info.num_players == 0:
             await send_msg(ctx, add_quotes(get_translation("There are no players on the server")),
                            is_reaction=is_reaction)
         else:

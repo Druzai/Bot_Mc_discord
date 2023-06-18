@@ -131,21 +131,31 @@ manually if you want.
 
 ### Lib installation
 
-Type in command prompt: (you must have [requirements.txt](requirements.txt) in root folder of the project)
+Type in command prompt: (you must have [requirements.txt](requirements.txt)
+and [requirements-build.txt](requirements-build.txt) in root folder of the project)
 
 ```
-pip install -r requirements.txt
+pip install -r requirements.txt -r requirements-build.txt
 ```
 
 For macOS you have to update certificates by running script `/Applications/Python 3.XX/Install Certificates.command`
 
 ### Build with pyinstaller
 
-Firstly, you have to install pyinstaller via `pip install pyinstaller==5.12.0`.
+It builds an executable file with bundled Python interpreter.
 
 Type in command prompt `make` in root directory of the project to build it.
 
 Executable file will be in `%project_root_dir%/build_dist`.
+
+### Build with shiv
+
+It builds an executable archive, but it requires Python to launch!
+
+Type in command prompt `make build_pyz` in root directory of the project to build it.
+
+Executable archive will be in `%project_root_dir%/build_dist`. You can launch it with a double click or via
+Python - `python Discord_bot.pyz`.
 
 ## Run
 

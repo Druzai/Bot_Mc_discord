@@ -5,7 +5,9 @@ from pathlib import Path
 from sys import argv
 
 _locales_path = getcwd()
-if getattr(sys, 'frozen', False) and getattr(sys, '_MEIPASS', False):
+if argv[0].endswith(".pyz"):
+    _locales_path = path.dirname(path.dirname(__file__))
+elif getattr(sys, 'frozen', False) and getattr(sys, '_MEIPASS', False):
     _locales_path = sys._MEIPASS
 _locales_path = Path(_locales_path + "/locales").as_posix()
 
