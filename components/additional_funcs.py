@@ -4577,12 +4577,12 @@ class UserAgent:
     def _set_header(cls):
         if randint(0, 1):
             # Chrome
-            version = f"{randint(70, 99)}.{randint(0, 99)}.{randint(0, 9999)}.{randint(0, 999)}"
+            version = f"{randint(105, 114)}.{randint(0, 99)}.{randint(0, 9999)}.{randint(0, 999)}"
             cls._header = f"Mozilla/5.0 ({cls._get_os()}) AppleWebKit/537.36 " \
                           f"(KHTML, like Gecko) Chrome/{version} Safari/537.36"
         else:
             # Firefox
-            version = f"{randint(78, 102)}.0"
+            version = f"{randint(102, 115)}.0"
             cls._header = f"Mozilla/5.0 ({cls._get_os()}; rv:{version}) Gecko/20100101 Firefox/{version}"
 
     @classmethod
