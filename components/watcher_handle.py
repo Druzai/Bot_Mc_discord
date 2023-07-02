@@ -251,21 +251,25 @@ def _check_log_file(
                                             mentions[i_mention].extend([None, cut_right_string])
                                         found = True
                                         break
+                                if found:
+                                    break
                                 # Check mention on user mention
                                 for member in BotVars.bot_for_webhooks.guilds[0].members:
-                                    if member.name.lower() == mention:
-                                        mentions[i_mention] = [member.name if len(add_string) == 0
-                                                               else [member.name, add_string], member]
-                                        if cut_right_string is not None:
-                                            mentions[i_mention].append(cut_right_string)
-                                        found = True
-                                        break
-                                    elif member.display_name.lower() == mention:
+                                    if member.display_name.lower() == mention:
                                         mentions[i_mention] = [member.display_name if len(add_string) == 0
                                                                else [member.display_name, add_string], member]
+                                        found = True
+                                    elif member.global_name is not None and member.global_name.lower() == mention:
+                                        mentions[i_mention] = [member.global_name if len(add_string) == 0
+                                                               else [member.global_name, add_string], member]
+                                        found = True
+                                    elif member.name.lower() == mention:
+                                        mentions[i_mention] = [member.name if len(add_string) == 0
+                                                               else [member.name, add_string], member]
+                                        found = True
+                                    if found:
                                         if cut_right_string is not None:
                                             mentions[i_mention].append(cut_right_string)
-                                        found = True
                                         break
                                 if found:
                                     break
