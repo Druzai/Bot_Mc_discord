@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
 "POT-Creation-Date: 2023-06-17 20:55+0300\n"
-"PO-Revision-Date: 2023-06-17 20:56+0300\n"
+"PO-Revision-Date: 2023-07-02 11:42+0300\n"
 "Last-Translator: Druzai\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -279,7 +279,7 @@ msgstr "{0} растворился в драконьем дыхании"
 
 #: ..\_frozen_translations.py:54
 msgid "{0} was killed whilst fighting {1}"
-msgstr "{0} был убит, сражаясь с {1}"
+msgstr "{0} был убит, пока боролся с {1}"
 
 #: ..\_frozen_translations.py:55
 msgid "{0} was killed by even more magic"
@@ -491,7 +491,7 @@ msgstr "{0} иссушён"
 
 #: ..\_frozen_translations.py:107
 msgid "{0} was killed"
-msgstr "{0} был убит"
+msgstr "{0} убит"
 
 #: ..\_frozen_translations.py:108
 msgid "{0} drowned"
