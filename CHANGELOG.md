@@ -2,7 +2,7 @@
 
 All important changes to this project will be documented in this file.
 
-### [1.4.4 Unreleased](https://github.com/Druzai/Bot_Mc_discord/compare/1.4.3...1.4.4) (2023-xx-xx)
+### [1.4.4](https://github.com/Druzai/Bot_Mc_discord/compare/1.4.3...1.4.4) (2023-07-02)
 
 #### Improvements:
 
@@ -16,10 +16,6 @@ All important changes to this project will be documented in this file.
 
 * Added check in `op` command if minecraft nick has spaces
 * Fixed checking of minecraft players' number
-
-#### Breaking changes:
-
-* --
 
 ### [1.4.3](https://github.com/Druzai/Bot_Mc_discord/compare/1.4.2...1.4.3) (2023-06-07)
 
