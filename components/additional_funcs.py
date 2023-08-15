@@ -524,10 +524,11 @@ def get_list_of_processes() -> List[Process]:
         return BotVars.java_processes
 
     list_proc = []
+    cwd = Path(Config.get_selected_server_from_list().working_directory)
     for proc in process_iter():
         with proc.oneshot():
             with suppress(NoSuchProcess, AccessDenied):
-                if "java" in proc.name() and Config.get_selected_server_from_list().working_directory == proc.cwd():
+                if "java" in proc.name() and cwd.samefile(proc.cwd()):
                     list_proc.append(proc)
     BotVars.java_processes = list_proc
     return list_proc
