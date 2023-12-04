@@ -518,6 +518,14 @@ class ServerProperties:
     def white_list(self, value: bool):
         self["white-list"] = self._parse_to_parameter(value)
 
+    @property
+    def log_ips(self) -> bool:
+        return self._parse_from_parameter(self["log-ips"], is_bool=True)
+
+    @log_ips.setter
+    def log_ips(self, value: bool):
+        self["log-ips"] = self._parse_to_parameter(value)
+
 
 class Config:
     _current_bot_path: str = getcwd()
@@ -886,6 +894,12 @@ class Config:
         if cls.get_selected_server_from_list().enforce_default_gamemode and not server_properties.force_gamemode:
             server_properties.force_gamemode = True
             changed_parameters.append("force-gamemode=true")
+        # Ensure we have IPs shown if secure auth enabled otherwise message
+        if cls.get_secure_auth().enable_secure_auth and server_properties.log_ips is False:
+            server_properties.log_ips = True
+            changed_parameters.append("log-ips=true")
+            changed_parameters.append(get_translation("Note: Bot set property \"log-ips\" to true "
+                                                      "because otherwise secure authorization won't work."))
         if not server_properties.enable_query:
             server_properties.enable_query = True
             changed_parameters.append("enable-query=true")
