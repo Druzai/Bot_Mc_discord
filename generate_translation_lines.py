@@ -27,7 +27,7 @@ MINECRAFT_ENTITIES = [
     'Vex', 'Villager', 'Armorer', 'Butcher', 'Cartographer', 'Cleric', 'Farmer', 'Fisherman', 'Fletcher',
     'Leatherworker', 'Librarian', 'Mason', 'Nitwit', 'Shepherd', 'Toolsmith', 'Weaponsmith', 'Vindicator',
     'Wandering Trader', 'Warden', 'Witch', 'Wither', 'Wither Skeleton', 'Wither Skull', 'Wolf', 'Zoglin', 'Zombie',
-    'Zombie Horse', 'Zombie Villager', 'Zombified Piglin', 'Zombie Pigman', 'Minecart with Spawner'
+    'Zombie Horse', 'Zombie Villager', 'Zombified Piglin', 'Zombie Pigman', 'Breeze', 'Minecart with Spawner'
 ]
 
 
