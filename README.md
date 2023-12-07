@@ -111,7 +111,7 @@ Supported 2 languages:
 
 ## Requirements
 
-* [Python 3.8-3.11](https://www.python.org/downloads/)
+* [Python 3.8-3.12](https://www.python.org/downloads/)
 * For Linux and macOS
     * Required installed screen command ([Linux](https://linuxize.com/post/how-to-use-linux-screen/)
       [macOS](https://brewinstall.org/install-screen-mac-osx/))
