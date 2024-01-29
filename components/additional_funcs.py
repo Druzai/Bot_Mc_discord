@@ -4197,10 +4197,13 @@ async def _handle_components_in_message(
         store_images_for_preview = False
     attachments, images_for_preview = _handle_attachments_in_message(message, store_images_for_preview)
     emoji_regex = r"<a?:\w+:\d+>"
+    emoji_regex_groups = r"<a?:(?P<name>\w+):(?P<id>\d+)>"
     tenor_regex = r"https?://tenor\.com/view"
+    markdown_hyperlink_regex = rf"\[.+\]\([^ ]+(?: \".+\")?\)"
+    markdown_hyperlink_regex_groups = rf"\[(?P<text>.+)\]\((?P<url>{URL_REGEX})(?: \"(?P<title>.+)\")?\)"
 
     async def repl_emoji(match: str, is_reply: bool):
-        obj = search(r"<a?:(?P<name>\w+):(?P<id>\d+)>", match)
+        obj = search(emoji_regex_groups, match)
         emoji_name = f":{obj.group('name')}:"
         if only_replace_links:
             return emoji_name
@@ -4224,7 +4227,44 @@ async def _handle_components_in_message(
             else:
                 return emoji_name
 
-    def repl_url(link: str, is_reply: bool):
+    async def repl_md_hyperlink(match: str, is_reply: bool):
+        obj = search(markdown_hyperlink_regex_groups, match)
+        if obj is None:
+            return match
+        text = obj.group("text")
+        link = obj.group("url")
+        title = obj.group("title")
+
+        if store_images_for_preview and not is_reply:
+            with handle_unhandled_error_in_link_request(image_preview=True):
+                resp = req_head(link, timeout=(3, 6), headers={"User-Agent": UserAgent.get_header()})
+                if resp.status_code == 200 and resp.headers.get("content-length") is not None and \
+                        int(resp.headers.get("content-length")) <= 20971520:
+                    # Checks if Content-Length not larger than 20 MB
+                    if resp.headers.get("content-type") is None or \
+                            (resp.headers.get("content-type") is not None and
+                             "image" in resp.headers.get("content-type")):
+                        images_for_preview.append({
+                            "type": "link",
+                            "url": link,
+                            "name": text + (f" ({title})" if title is not None else "")
+                        })
+        if only_replace_links:
+            if version_lower_1_7_2:
+                parsed_link = get_shortened_url(link) if len(link) > 30 else link
+                return f"[{shorten_string(text, 40)}]({parsed_link}{' ' + shorten_string(title, 20) if title is not None else ''})"
+            else:
+                return f"[{shorten_string(text, 70)}]({shorten_string(link, 30)}{' ' + shorten_string(title, 20) if title is not None else ''})"
+        else:
+            result_dict = {
+                "text": shorten_string(text, 70),
+                "hyperlink": link if len(link) < 257 else get_shortened_url(link)
+            }
+            if title is not None:
+                result_dict.update({"hover": title})
+            return result_dict
+
+    async def repl_url(link: str, is_reply: bool):
         is_tenor = bool(search(tenor_regex, link))
         if store_images_for_preview and not is_reply:
             if is_tenor:
@@ -4265,16 +4305,16 @@ async def _handle_components_in_message(
 
     transformations = {
         emoji_regex: repl_emoji,
+        markdown_hyperlink_regex: repl_md_hyperlink,
         URL_REGEX: repl_url
     }
     mass_regex = "|".join(transformations.keys())
 
     async def repl(obj, is_reply: bool):
         match = obj.group(0)
-        if search(URL_REGEX, match):
-            return transformations.get(URL_REGEX)(match, is_reply)
-        else:
-            return await transformations.get(emoji_regex)(match, is_reply)
+        for pattern in transformations.keys():
+            if search(pattern, match):
+                return await transformations.get(pattern)(match, is_reply)
 
     for key, ms in result_msg.items():
         if isinstance(ms, list):
