@@ -8,26 +8,26 @@ from components.constants import UNITS, DEATH_MESSAGES
 from components.localization import RuntimeTextHandler, get_locales
 
 MINECRAFT_ENTITIES = [
-    '[Intentional Game Design]', 'Allay', 'Area Effect Cloud', 'Armor Stand', 'Arrow', 'Axolotl', 'Bat', 'Bee', 'Blaze',
-    'Boat', 'Camel', 'Cat', 'Cave Spider', 'Boat with Chest', 'Minecart with Chest', 'Chicken', 'Cod',
-    'Minecart with Command Block', 'Cow', 'Creeper', 'Dolphin', 'Donkey', 'Dragon Fireball', 'Drowned', 'Thrown Egg',
-    'Elder Guardian', 'End Crystal', 'Ender Dragon', 'Thrown Ender Pearl', 'Enderman', 'Endermite', 'Evoker',
-    "Thrown Bottle o' Enchanting", 'Experience Orb', 'Fireball', 'Firework Rocket', 'Fox', 'Frog',
-    'Minecart with Furnace', 'Ghast', 'Giant', 'Glow Squid', 'Goat', 'Guardian', 'Hoglin', 'Minecart with Hopper',
-    'Horse', 'Husk', 'Illusioner', 'Iron Golem', 'The Killer Bunny', 'Lightning Bolt', 'Llama', 'Magma Cube',
-    'Minecart', 'Mooshroom', 'Mule', 'Ocelot', 'Panda', 'Parrot', 'Phantom', 'Pig', 'Piglin', 'Piglin Brute',
-    'Pillager', 'Polar Bear', 'Pufferfish', 'Rabbit', 'Ravager', 'Salmon', 'Sheep', 'Shulker', 'Silverfish', 'Skeleton',
-    'Skeleton Horse', 'Slime', 'Small Fireball', 'Sniffer', 'Snow Golem', 'Snowball', 'Minecart with Monster Spawner',
-    'Spectral Arrow', 'Spider', 'Squid', 'Stray', 'Strider', 'Tadpole', 'Primed TNT', 'Minecart with TNT',
-    'Trader Llama', 'Trident', 'Tropical Fish', 'Anemone', 'Black Tang', 'Blue Tang', 'Butterflyfish', 'Cichlid',
-    'Clownfish', 'Cotton Candy Betta', 'Dottyback', 'Emperor Red Snapper', 'Goatfish', 'Moorish Idol',
-    'Ornate Butterflyfish', 'Parrotfish', 'Queen Angelfish', 'Red Cichlid', 'Red Lipped Blenny', 'Red Snapper',
-    'Threadfin', 'Tomato Clownfish', 'Triggerfish', 'Yellowtail Parrotfish', 'Yellow Tang', 'Betty', 'Blockfish',
-    'Brinely', 'Clayfish', 'Dasher', 'Flopper', 'Glitter', 'Kob', 'Snooper', 'Spotty', 'Stripey', 'Sunstreak', 'Turtle',
-    'Vex', 'Villager', 'Armorer', 'Butcher', 'Cartographer', 'Cleric', 'Farmer', 'Fisherman', 'Fletcher',
-    'Leatherworker', 'Librarian', 'Mason', 'Nitwit', 'Shepherd', 'Toolsmith', 'Weaponsmith', 'Vindicator',
+    '[Intentional Game Design]', 'Allay', 'Area Effect Cloud', 'Armadillo', 'Armor Stand', 'Arrow', 'Axolotl', 'Bat',
+    'Bee', 'Blaze', 'Boat', 'Bogged', 'Breeze', 'Camel', 'Cat', 'Cave Spider', 'Boat with Chest', 'Minecart with Chest',
+    'Chicken', 'Cod', 'Minecart with Command Block', 'Cow', 'Creeper', 'Dolphin', 'Donkey', 'Dragon Fireball',
+    'Drowned', 'Thrown Egg', 'Elder Guardian', 'End Crystal', 'Ender Dragon', 'Thrown Ender Pearl', 'Enderman',
+    'Endermite', 'Evoker', "Thrown Bottle o' Enchanting", 'Experience Orb', 'Fireball', 'Firework Rocket', 'Fox',
+    'Frog', 'Minecart with Furnace', 'Ghast', 'Giant', 'Glow Squid', 'Goat', 'Guardian', 'Hoglin',
+    'Minecart with Hopper', 'Horse', 'Husk', 'Illusioner', 'Iron Golem', 'The Killer Bunny', 'Lightning Bolt', 'Llama',
+    'Magma Cube', 'Minecart', 'Mooshroom', 'Mule', 'Ocelot', 'Ominous Item Spawner', 'Panda', 'Parrot', 'Phantom',
+    'Pig', 'Piglin', 'Piglin Brute', 'Pillager', 'Polar Bear', 'Pufferfish', 'Rabbit', 'Ravager', 'Salmon', 'Sheep',
+    'Shulker', 'Silverfish', 'Skeleton', 'Skeleton Horse', 'Slime', 'Small Fireball', 'Sniffer', 'Snow Golem',
+    'Snowball', 'Minecart with Monster Spawner', 'Spectral Arrow', 'Spider', 'Squid', 'Stray', 'Strider', 'Tadpole',
+    'Primed TNT', 'Minecart with TNT', 'Trader Llama', 'Trident', 'Tropical Fish', 'Anemone', 'Black Tang', 'Blue Tang',
+    'Butterflyfish', 'Cichlid', 'Clownfish', 'Cotton Candy Betta', 'Dottyback', 'Emperor Red Snapper', 'Goatfish',
+    'Moorish Idol', 'Ornate Butterflyfish', 'Parrotfish', 'Queen Angelfish', 'Red Cichlid', 'Red Lipped Blenny',
+    'Red Snapper', 'Threadfin', 'Tomato Clownfish', 'Triggerfish', 'Yellowtail Parrotfish', 'Yellow Tang', 'Betty',
+    'Blockfish', 'Brinely', 'Clayfish', 'Dasher', 'Flopper', 'Glitter', 'Kob', 'Snooper', 'Spotty', 'Stripey',
+    'Sunstreak', 'Turtle', 'Vex', 'Villager', 'Armorer', 'Butcher', 'Cartographer', 'Cleric', 'Farmer', 'Fisherman',
+    'Fletcher', 'Leatherworker', 'Librarian', 'Mason', 'Nitwit', 'Shepherd', 'Toolsmith', 'Weaponsmith', 'Vindicator',
     'Wandering Trader', 'Warden', 'Witch', 'Wither', 'Wither Skeleton', 'Wither Skull', 'Wolf', 'Zoglin', 'Zombie',
-    'Zombie Horse', 'Zombie Villager', 'Zombified Piglin', 'Zombie Pigman', 'Breeze', 'Minecart with Spawner'
+    'Zombie Horse', 'Zombie Villager', 'Zombified Piglin', 'Zombie Pigman', 'Minecart with Spawner'
 ]
 
 
