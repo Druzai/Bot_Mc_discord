@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
 "POT-Creation-Date: 2024-04-25 15:23+0300\n"
-"PO-Revision-Date: 2024-04-25 15:24+0300\n"
+"PO-Revision-Date: 2024-04-27 14:48+0300\n"
 "Last-Translator: Druzai\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
 "Generated-By: pygettext.py 1.5\n"
-"X-Generator: Poedit 3.4.1\n"
+"X-Generator: Poedit 3.4.2\n"
 
 #: ..\Discord_bot.py:50
 msgid "Bot doesn't have this command line argument!"
@@ -146,11 +146,11 @@ msgstr "{0} преобразовал кинетическую энергию в�
 
 #: ..\_frozen_translations.py:20
 msgid "{0} was burned to a crisp while fighting {1} wielding {2}"
-msgstr "{0} был поджарен, пока боролся с {1}, с помощью {2}"
+msgstr "{0} сгорает дотла, во время боя с — {1} (держа в руках: {2})"
 
 #: ..\_frozen_translations.py:21
 msgid "{0} was burnt to a crisp whilst fighting {1} wielding {2}"
-msgstr "{0} был поджарен, пока боролся с {1}, с помощью {2}"
+msgstr "{0} сгорает дотла, во время боя с — {1} (держа в руках: {2})"
 
 #: ..\_frozen_translations.py:22
 msgid "{0} was squashed by a falling anvil whilst fighting {1}"
@@ -286,7 +286,7 @@ msgstr "{0} был поражён черепом из {1} с помощью {2}"
 
 #: ..\_frozen_translations.py:55
 msgid "{0} was roasted in dragon's breath by {1}"
-msgstr "{0} прожарился в драконьем дыхании из-за {1}"
+msgstr "{0} зажарил своим дыханием дракон из-за — {1}"
 
 #: ..\_frozen_translations.py:56
 msgid "{0} was skewered by a falling stalactite"
@@ -374,11 +374,11 @@ msgstr "{0} покинул пределы этого мира"
 
 #: ..\_frozen_translations.py:77
 msgid "{0} was roasted in dragon's breath"
-msgstr "{0} зажарен дыханием дракона"
+msgstr "{0} испепелён дыханием дракона"
 
 #: ..\_frozen_translations.py:78
 msgid "{0} was killed whilst fighting {1}"
-msgstr "{0} Был убит во время боя с {1}"
+msgstr "{0} был убит, пока был в драке с {1}"
 
 #: ..\_frozen_translations.py:79
 msgid "{0} was killed by even more magic"
@@ -390,7 +390,7 @@ msgstr "{0} был взорван {1} с помощью {2}"
 
 #: ..\_frozen_translations.py:81
 msgid "{0} was killed while fighting {1}"
-msgstr "{0} Был убит во время боя с {1}"
+msgstr "{0} был убит, пока был в драке с {1}"
 
 #: ..\_frozen_translations.py:82
 msgid "{0} discovered the floor was lava"

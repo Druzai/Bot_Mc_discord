@@ -4199,7 +4199,7 @@ async def _handle_components_in_message(
     emoji_regex = r"<a?:\w+:\d+>"
     emoji_regex_groups = r"<a?:(?P<name>\w+):(?P<id>\d+)>"
     tenor_regex = r"https?://tenor\.com/view"
-    markdown_hyperlink_regex = rf"\[.+\]\([^ ]+(?: \".+\")?\)"
+    markdown_hyperlink_regex = r"\[.+\]\([^ ]+(?: \".+\")?\)"
     markdown_hyperlink_regex_groups = rf"\[(?P<text>.+)\]\((?P<url>{URL_REGEX})(?: \"(?P<title>.+)\")?\)"
 
     async def repl_emoji(match: str, is_reply: bool):
