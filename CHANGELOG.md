@@ -7,9 +7,8 @@ All important changes to this project will be documented in this file.
 #### Improvements:
 
 * Added fixing property `log-ips` in `server.properties` when secure authorization enabled on versions `1.20.2` and higher
-* Added fixed translation strings for death messages for version `1.20.4`
 * Added parsing hyperlinks from Markdown, e.g. `[link](http://example.com "title")`
-* Added and updated translation strings for death messages for version `1.20.5`
+* Added and updated translation strings for death messages up to version `1.21`
 
 #### Fixed:
 
