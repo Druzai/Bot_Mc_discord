@@ -12,9 +12,9 @@ def generate_pot_file():
         chdir("locales")
         system_code = system(f"python3 pygettext.py -d lang -o lang.pot -v -k get_translation ../*.py ../*/*.py")
     elif platform == "win32":
-        system("py .\\generate_translation_lines.py")
+        system("python .\\generate_translation_lines.py")
         chdir("locales")
-        system_code = system(f"py pygettext.py -d lang -o lang.pot -v -k get_translation ..\\*.py ..\\*\\*.py")
+        system_code = system(f"python pygettext.py -d lang -o lang.pot -v -k get_translation ..\\*.py ..\\*\\*.py")
     else:
         print("Your system - unknown.")
         return
