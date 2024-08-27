@@ -9,6 +9,8 @@ All important changes to this project will be documented in this file.
 * Added fixing property `log-ips` in `server.properties` when secure authorization enabled on versions `1.20.2` and higher
 * Added parsing hyperlinks from Markdown, e.g. `[link](http://example.com "title")`
 * Added and updated translation strings for death messages up to version `1.21`
+* Added using http(s) proxy for bot's requests
+* Added support for Python 3.12
 
 #### Fixed:
 
