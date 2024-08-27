@@ -525,6 +525,7 @@ def get_list_of_processes() -> List[Process]:
 
     list_proc = []
     cwd = Path(Config.get_selected_server_from_list().working_directory)
+    process_iter.cache_clear()
     for proc in process_iter():
         with proc.oneshot():
             with suppress(NoSuchProcess, AccessDenied):
@@ -4618,12 +4619,12 @@ class UserAgent:
     def _set_header(cls):
         if randint(0, 1):
             # Chrome
-            version = f"{randint(105, 114)}.{randint(0, 99)}.{randint(0, 9999)}.{randint(0, 999)}"
+            version = f"{randint(105, 126)}.{randint(0, 99)}.{randint(0, 9999)}.{randint(0, 999)}"
             cls._header = f"Mozilla/5.0 ({cls._get_os()}) AppleWebKit/537.36 " \
                           f"(KHTML, like Gecko) Chrome/{version} Safari/537.36"
         else:
             # Firefox
-            version = f"{randint(102, 115)}.0"
+            version = f"{randint(102, 127)}.0"
             cls._header = f"Mozilla/5.0 ({cls._get_os()}; rv:{version}) Gecko/20100101 Firefox/{version}"
 
     @classmethod

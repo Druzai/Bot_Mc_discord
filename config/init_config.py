@@ -21,9 +21,11 @@ from colorama import Style
 from cryptography.fernet import InvalidToken
 from discord import SyncWebhook, Member
 from discord.ext.commands import Bot
+from discord.utils import MISSING
 from jsons import load as sload, DeserializationError
 from omegaconf import OmegaConf as Conf
 from psutil import Process
+from requests import Session
 
 from components.constants import CODE_LETTERS, URL_REGEX
 from components.localization import get_translation, get_locales, set_locale
@@ -51,7 +53,9 @@ class BotVars:
     java_processes: List[Process] = []
     watcher_of_log_file: Optional['Watcher'] = None
     webhook_chat: Optional[SyncWebhook] = None
+    wh_session_chat: Optional[Session] = None
     webhook_rss: Optional[SyncWebhook] = None
+    wh_session_rss: Optional[Session] = None
     bot_for_webhooks: Bot = None
 
     @classmethod
@@ -199,7 +203,7 @@ class Timeouts:
     @property
     def calc_before_shutdown(self):
         return round(self.await_seconds_before_shutdown / self.await_seconds_in_check_ups) \
-               * self.await_seconds_in_check_ups
+            * self.await_seconds_in_check_ups
 
 
 @dataclass
@@ -245,6 +249,15 @@ class Op:
 
 
 @dataclass
+class Proxy:
+    enable_proxy: Optional[bool] = None
+    proxy_url: Optional[str] = None
+    enable_proxy_credentials: Optional[bool] = None
+    proxy_login: Optional[str] = None
+    proxy_password: Optional[str] = None
+
+
+@dataclass
 class Bot_settings:
     language: Optional[str] = None
     _token = None
@@ -259,6 +272,7 @@ class Bot_settings:
         self._token = token_decrypted
         self.token_encrypted = encrypt_string(token_decrypted)
 
+    proxy: Proxy = field(default_factory=Proxy)
     prefix: str = ""
     help_arguments: List[str] = field(default_factory=list)
     gaming_status: str = ""
@@ -670,7 +684,7 @@ class Config:
                                 dt.timedelta(minutes=cls.get_secure_auth().mins_before_code_expires)
                             cls.get_auth_users()[i].ip_addresses[j].expires_on_date = None
                             return cls.get_auth_users()[i].ip_addresses[j].login_attempts, \
-                                   cls.get_auth_users()[i].ip_addresses[j].code
+                                cls.get_auth_users()[i].ip_addresses[j].code
                         else:
                             cls.get_auth_users()[i].ip_addresses[j].expires_on_date = \
                                 datetime.now() + dt.timedelta(days=cls.get_secure_auth().days_before_ip_expires)
@@ -1062,6 +1076,50 @@ class Config:
         return cls._bot_log_name
 
     @classmethod
+    def get_proxy_url(cls):
+        if (Config.get_settings().bot_settings.proxy.enable_proxy
+                and Config.get_settings().bot_settings.proxy.proxy_url is not None
+                and len(Config.get_settings().bot_settings.proxy.proxy_url) > 0):
+            return Config.get_settings().bot_settings.proxy.proxy_url
+        return
+
+    @classmethod
+    def get_proxy_credentials(cls):
+        auth_login = Config.get_settings().bot_settings.proxy.proxy_login
+        auth_password = Config.get_settings().bot_settings.proxy.proxy_password
+        if (Config.get_settings().bot_settings.proxy.enable_proxy_credentials and auth_login is not None
+                and auth_password is not None and len(auth_login) > 0 and len(auth_password) > 0):
+            return auth_login, auth_password
+        return
+
+    @classmethod
+    def get_webhook_proxy_session(cls):
+        session = Session()
+        proxies = {}
+        proxy_url = Config.get_proxy_url()
+        if proxy_url is None:
+            return MISSING
+
+        proxy_credentials = Config.get_proxy_credentials()
+        if proxy_url.startswith("http://"):
+            proxy_type = "http"
+        elif proxy_url.startswith("https://"):
+            proxy_type = "https"
+        else:
+            print(get_translation("Bot Error: {0}").format(
+                get_translation("Proxy type isn't HTTP or HTTPS. Bot will use webhooks without proxy!"))
+            )
+            return MISSING
+
+        if proxy_credentials is not None:
+            proxies[proxy_type] = (f"{proxy_type}://{proxy_credentials[0]}:{proxy_credentials[1]}@" +
+                                   proxy_url.lstrip(f"{proxy_type}://"))
+        else:
+            proxies[proxy_type] = proxy_url
+        session.proxies = proxies
+        return session
+
+    @classmethod
     def _load_from_yaml(cls, filepath: Path, baseclass):
         try:
             return sload(json_obj=Conf.to_object(Conf.load(filepath)), cls=baseclass)
@@ -1133,6 +1191,7 @@ class Config:
             print(get_translation("File '{0}' was found!").format(cls._config_name))
 
         cls._setup_token()
+        cls._setup_proxy()
         cls._setup_prefix()
         cls._setup_help_arguments()
         cls._setup_roles()
@@ -1193,6 +1252,42 @@ class Config:
                       .format(Path(Config._current_bot_path, "key").as_posix()))
             cls._settings_instance.bot_settings.token = \
                 cls._ask_for_data(get_translation("Discord token not founded. Enter it") + "\n> ")
+
+    @classmethod
+    def _setup_proxy(cls):
+        if cls._settings_instance.bot_settings.proxy.enable_proxy is None:
+            cls._settings_instance.bot_settings.proxy.enable_proxy = cls._ask_for_data(
+                get_translation("Enable using proxy?") + " Y/n\n> ", "y"
+            )
+        if cls._settings_instance.bot_settings.proxy.enable_proxy:
+            if cls._settings_instance.bot_settings.proxy.proxy_url is None:
+                cls._need_to_rewrite = True
+                cls._settings_instance.bot_settings.proxy.proxy_url = cls._ask_for_data(
+                        get_translation("Enter proxy URL (Example - http://{ip_address}:{port})") + "\n> ",
+                        try_link=True
+                    )
+
+            if cls._settings_instance.bot_settings.proxy.enable_proxy_credentials is None:
+                cls._settings_instance.bot_settings.proxy.enable_proxy_credentials = cls._ask_for_data(
+                    get_translation("Enable using proxy credentials?") + " Y/n\n> ", "y"
+                )
+            if cls._settings_instance.bot_settings.proxy.enable_proxy_credentials:
+                if cls._settings_instance.bot_settings.proxy.proxy_login is None:
+                    cls._need_to_rewrite = True
+                    cls._settings_instance.bot_settings.proxy.proxy_login = \
+                        cls._ask_for_data(get_translation("Enter proxy login") + "\n> ")
+                if cls._settings_instance.bot_settings.proxy.proxy_password is None:
+                    cls._need_to_rewrite = True
+                    cls._settings_instance.bot_settings.proxy.proxy_password = \
+                        cls._ask_for_data(get_translation("Enter proxy password") + "\n> ")
+
+        if Config.get_proxy_url() is not None:
+            print(get_translation("Bot using proxy URL '{0}'.").format(Config.get_proxy_url()))
+            if Config.get_proxy_credentials() is not None:
+                print(get_translation("Proxy: login '{0}', password '{1}'.").format(*Config.get_proxy_credentials()))
+        else:
+            print(get_translation("Bot isn't using any proxy."))
+
 
     @classmethod
     def _setup_prefix(cls):

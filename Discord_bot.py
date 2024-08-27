@@ -1,13 +1,15 @@
-from asyncio import run
+from asyncio import run, set_event_loop_policy, WindowsSelectorEventLoopPolicy
 from logging import ERROR, Formatter
-from sys import exit, argv
+from sys import exit, argv, version_info
 from threading import enumerate as threads
 from traceback import format_exc
 
+from aiohttp import BasicAuth
 from colorama import Fore, Style
 from discord import Intents
 from discord.errors import LoginFailure
 from discord.ext import commands
+from requests import Session
 from sshkeyboard import listen_keyboard, stop_listening
 from yaml.parser import ParserError
 from yaml.scanner import ScannerError
@@ -30,7 +32,16 @@ def get_prefix(bot, msg):
 
 
 def build_bot(create_pot_lines=False) -> commands.Bot:
-    bot = commands.Bot(command_prefix=get_prefix, intents=Intents.all(), help_command=None)
+    bot = commands.Bot(
+        command_prefix=get_prefix,
+        intents=Intents.all(),
+        help_command=None,
+        proxy=Config.get_proxy_url(),
+        proxy_auth=BasicAuth(*Config.get_proxy_credentials()) if Config.get_proxy_url() is not None and
+                                                                 Config.get_proxy_credentials() is not None else None
+    )
+    if Config.get_proxy_url() is not None and version_info[:2] < (3, 9):
+        set_event_loop_policy(WindowsSelectorEventLoopPolicy())
 
     async def add_cogs(bot: commands.Bot):
         for i in [Poll, MinecraftCommands, ChatCommands]:
@@ -89,6 +100,10 @@ def main():
         if len(argv) == 1 or (len(argv) > 1 and argv[1] == "-cs"):
             if BotVars.watcher_of_log_file is not None and BotVars.watcher_of_log_file.is_running():
                 BotVars.watcher_of_log_file.stop()
+            if isinstance(BotVars.wh_session_chat, Session):
+                BotVars.wh_session_chat.close()
+            if isinstance(BotVars.wh_session_rss, Session):
+                BotVars.wh_session_rss.close()
             for thread in threads():
                 if thread.name != "MainThread":
                     thread.join()

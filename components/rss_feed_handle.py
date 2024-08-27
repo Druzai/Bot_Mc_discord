@@ -41,10 +41,13 @@ async def check_on_rss_feed():
 
 
 async def get_feed_webhook(channel: Optional[TextChannel], webhooks: Optional[List[Webhook]]):
+    if BotVars.wh_session_rss is None:
+        BotVars.wh_session_rss = Config.get_webhook_proxy_session()
     if Config.get_rss_feed_settings().webhook_url:
         BotVars.webhook_rss = SyncWebhook.from_url(
             url=Config.get_rss_feed_settings().webhook_url,
-            bot_token=Config.get_settings().bot_settings.token
+            bot_token=Config.get_settings().bot_settings.token,
+            session=BotVars.wh_session_rss
         ).fetch()
     elif (webhooks is not None and len(webhooks) > 0) or channel is not None:
         if webhooks is not None and len(webhooks) > 0:
@@ -53,7 +56,8 @@ async def get_feed_webhook(channel: Optional[TextChannel], webhooks: Optional[Li
             webhook = await channel.create_webhook(name=get_translation("RSS webhook"))
         BotVars.webhook_rss = SyncWebhook.from_url(
             url=webhook.url,
-            bot_token=Config.get_settings().bot_settings.token
+            bot_token=Config.get_settings().bot_settings.token,
+            session=BotVars.wh_session_rss
         ).fetch()
         Config.get_rss_feed_settings().webhook_url = webhook.url
         Config.save_config()

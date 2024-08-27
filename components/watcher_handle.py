@@ -129,11 +129,13 @@ def create_watcher(watcher: Optional[Watcher], server_version: 'ServerVersion'):
 
 
 async def get_chat_webhook(channel: Optional[TextChannel], webhooks: Optional[List[Webhook]]):
-    need_to_save = False
+    if BotVars.wh_session_chat is None:
+        BotVars.wh_session_chat = Config.get_webhook_proxy_session()
     if Config.get_game_chat_settings().webhook_url:
         BotVars.webhook_chat = SyncWebhook.from_url(
             url=Config.get_game_chat_settings().webhook_url,
-            bot_token=Config.get_settings().bot_settings.token
+            bot_token=Config.get_settings().bot_settings.token,
+            session=BotVars.wh_session_chat
         ).fetch()
     elif (webhooks is not None and len(webhooks) > 0) or channel is not None:
         if webhooks is not None and len(webhooks) > 0:
@@ -142,15 +144,13 @@ async def get_chat_webhook(channel: Optional[TextChannel], webhooks: Optional[Li
             webhook = await channel.create_webhook(name=get_translation("Game chat webhook"))
         BotVars.webhook_chat = SyncWebhook.from_url(
             url=webhook.url,
-            bot_token=Config.get_settings().bot_settings.token
+            bot_token=Config.get_settings().bot_settings.token,
+            session=BotVars.wh_session_chat
         ).fetch()
         Config.get_game_chat_settings().webhook_url = webhook.url
-        need_to_save = True
+        Config.save_config()
     else:
         raise ValueError("'channel' and 'webhooks' are not declared!")
-
-    if need_to_save:
-        Config.save_config()
 
 
 def _check_log_file(
