@@ -2,7 +2,7 @@
 
 All important changes to this project will be documented in this file.
 
-### [1.4.5 Unreleased](https://github.com/Druzai/Bot_Mc_discord/compare/1.4.4...1.4.5) (2024-xx-xx)
+### [1.4.5](https://github.com/Druzai/Bot_Mc_discord/compare/1.4.4...1.4.5) (2024-09-21)
 
 #### Improvements:
 
@@ -16,10 +16,6 @@ All important changes to this project will be documented in this file.
 
 * Fixed path comparison in process list filtering
 * Fixed printing server name of Discord user instead of their username to bot's logs when backup was deleted
-
-#### Breaking changes:
-
-* --
 
 ### [1.4.4](https://github.com/Druzai/Bot_Mc_discord/compare/1.4.3...1.4.4) (2023-07-02)
 
