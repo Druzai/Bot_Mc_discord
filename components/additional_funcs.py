@@ -550,24 +550,29 @@ def get_bot_display_name(bot: commands.Bot):
     return bot.user.display_name
 
 
-async def get_member_string(bot: commands.Bot, id: int, mention: bool = False):
+async def get_user(bot: commands.Bot, id: int):
     try:
-        member = bot.guilds[0].get_member(id)
-        if member is None:
-            member = await bot.guilds[0].fetch_member(id)
-        if not mention:
-            member = get_user_name(member)
-        else:
-            member = member.mention
+        user = bot.guilds[0].get_member(id)
+        if user is None:
+            user = await bot.guilds[0].fetch_member(id)
     except (HTTPException, Forbidden, NotFound):
         try:
             user = await bot.fetch_user(id)
-            if not mention:
-                member = get_user_name(user)
-            else:
-                member = user.mention
         except (HTTPException, NotFound):
-            member = f"{'@' if mention else ''}invalid-user"
+            user = None
+    return user
+
+
+async def get_member_string(bot: commands.Bot, id: int, mention: bool = False, username: bool = False):
+    member = await get_user(bot, id)
+    if username:
+        member = member.name
+    elif mention:
+        member = member.mention
+    elif member is not None:
+        member = get_user_name(member)
+    else:
+        member = f"{'@' if mention else ''}invalid-user"
     return member
 
 
@@ -985,22 +990,46 @@ def delete_oldest_auto_backup_if_exists(reason: str, bot: commands.Bot):
     Config.get_server_config().backups.remove(backup)
 
 
-def send_message_of_deleted_backup(bot: commands.Bot, reason: str, backup=None, member_name: str = None):
+def send_message_of_deleted_backup(bot: commands.Bot, reason_user: Union[User, Member, str], backup=None, member: Union[User, Member] = None):
     if backup is not None:
         if backup.initiator is None:
             msg = get_translation(
                 "Deleted auto backup dated {0} because of {1}"
-            ).format(backup.file_creation_date.strftime(get_translation("%H:%M:%S %d/%m/%Y")), reason)
+            ).format(
+                backup.file_creation_date.strftime(get_translation("%H:%M:%S %d/%m/%Y")),
+                get_user_name(reason_user) if not isinstance(reason_user, str) else reason_user
+            )
+            msg_c = get_translation(
+                "Deleted auto backup dated {0} because of {1}"
+            ).format(backup.file_creation_date.strftime(get_translation("%H:%M:%S %d/%m/%Y")), reason_user)
         else:
-            if member_name is not None:
-                member = member_name
+            if member is not None:
+                member_string = get_user_name(member)
             else:
-                member = get_member_string(bot, backup.initiator)
+                member_string = run_coroutine_threadsafe(get_member_string(bot, backup.initiator),
+                                                         BotVars.bot_for_webhooks.loop).result()
             msg = get_translation(
                 "Deleted backup dated {0} made by {1} because of {2}"
-            ).format(backup.file_creation_date.strftime(get_translation("%H:%M:%S %d/%m/%Y")), member, reason)
+            ).format(
+                backup.file_creation_date.strftime(get_translation("%H:%M:%S %d/%m/%Y")),
+                member_string,
+                get_user_name(reason_user) if not isinstance(reason_user, str) else reason_user
+            )
+            msg_c = get_translation(
+                "Deleted backup dated {0} made by {1} because of {2}"
+            ).format(
+                backup.file_creation_date.strftime(get_translation("%H:%M:%S %d/%m/%Y")),
+                member if member is not None else run_coroutine_threadsafe(
+                    get_member_string(bot, backup.initiator, username=True),
+                    BotVars.bot_for_webhooks.loop
+                ).result(),
+                reason_user
+            )
     else:
-        msg = get_translation("Deleted all backups because of {0}").format(reason)
+        msg = get_translation("Deleted all backups because of {0}").format(
+            get_user_name(reason_user) if not isinstance(reason_user, str) else reason_user
+        )
+        msg_c = get_translation("Deleted all backups because of {0}").format(reason_user)
     with suppress(ConnectionError, socket.error):
         server_version = get_server_version()
         with connect_rcon() as cl_r:
@@ -1010,7 +1039,7 @@ def send_message_of_deleted_backup(bot: commands.Bot, reason: str, backup=None, 
                 cl_r.tellraw("@a",
                              build_nickname_tellraw_for_bot(server_version, get_bot_display_name(bot)) +
                              [{"text": msg, "color": "red"}])
-    print(msg)
+    print(msg_c)
 
 
 def handle_backups_limit_and_size(bot: commands.Bot, auto_backups=False):
@@ -3121,9 +3150,9 @@ async def send_backup_remove_select(
                     Config.get_backups_settings().name_of_the_backups_folder, f"{selected_backup.file_name}.zip"))
         send_message_of_deleted_backup(
             bot,
-            get_user_name(author),
+            author,
             selected_backup,
-            member_name=await get_member_string(bot, selected_backup.initiator)
+            member=await get_user(bot, selected_backup.initiator)
         )
         Config.get_server_config().backups.remove(selected_backup)
         Config.save_server_config()

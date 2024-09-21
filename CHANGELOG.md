@@ -15,6 +15,7 @@ All important changes to this project will be documented in this file.
 #### Fixed:
 
 * Fixed path comparison in process list filtering
+* Fixed printing server name of Discord user instead of their username to bot's logs when backup was deleted
 
 #### Breaking changes:
 

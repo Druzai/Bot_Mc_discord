@@ -996,7 +996,7 @@ class MinecraftCommands(commands.Cog):
         for backup in Config.get_server_config().backups:
             remove(Path(Config.get_selected_server_from_list().working_directory,
                         Config.get_backups_settings().name_of_the_backups_folder, f"{backup.file_name}.zip"))
-        send_message_of_deleted_backup(self._bot, get_user_name(ctx.author))
+        send_message_of_deleted_backup(self._bot, ctx.author)
         Config.get_server_config().backups.clear()
         Config.save_server_config()
         await ctx.send(add_quotes(get_translation("Deleted all backups of '{0}' server")
