@@ -2,6 +2,20 @@
 
 All important changes to this project will be documented in this file.
 
+### [1.4.6 Unreleased](https://github.com/Druzai/Bot_Mc_discord/compare/1.4.5...1.4.6) (2024-xx-xx)
+
+#### Improvements:
+
+* --
+
+#### Fixed:
+
+* --
+
+#### Breaking changes:
+
+* --
+
 ### [1.4.5](https://github.com/Druzai/Bot_Mc_discord/compare/1.4.4...1.4.5) (2024-09-21)
 
 #### Improvements:

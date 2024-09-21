@@ -25,7 +25,7 @@ if Config.get_os() == OS.Windows:
     from colorama import init
     from asyncio import WindowsSelectorEventLoopPolicy
 
-VERSION = "1.4.5"
+VERSION = "1.4.6a"
 
 
 def get_prefix(bot, msg):
