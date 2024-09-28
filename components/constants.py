@@ -13,7 +13,7 @@ EMOJI_REGEX = r"<a?:\w+:\d+>"
 TENOR_REGEX = r"https?://tenor\.com/view"
 CODE_LETTERS = "WERTYUPASFGHKZXCVBNM23456789~_&+="
 
-# Messages taken from https://minecraft.fandom.com/wiki/Death_messages
+# Messages taken from https://minecraft.wiki/w/Death_messages
 DEATH_MESSAGES = [
     '{0} was squashed by a falling anvil', '{0} was squashed by a falling anvil while fighting {1}',
     '{0} was shot by {1}', '{0} was shot by {1} using {2}', '{0} was killed by {1}', '{0} was pricked to death',

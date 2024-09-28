@@ -23,7 +23,10 @@ async def check_on_rss_feed():
         return
 
     send = False
-    parsed = parse(Config.get_rss_feed_settings().rss_url)
+    if Config.get_proxy_url() is None:
+        parsed = parse(Config.get_rss_feed_settings().rss_url)
+    else:
+        parsed = parse(BotVars.wh_session_rss.get(Config.get_rss_feed_settings().rss_url).text)
     with suppress(KeyError, AttributeError):
         new_date = datetime_from
         entries = parsed.entries
