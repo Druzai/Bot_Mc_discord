@@ -19,7 +19,7 @@ from components.additional_funcs import (
     shorten_string, SelectChoice, send_interaction, MenuServerView, on_server_select_callback, MenuBotView,
     get_message_and_channel, backup_force_checking, on_backup_force_callback, backup_restore_checking,
     send_backup_restore_select, send_backup_remove_select, check_if_obituary_webhook, bot_backup_list, op_checking,
-    on_op_callback, get_user_name
+    on_op_callback
 )
 from components.constants import DISCORD_SYMBOLS_IN_MESSAGE_LIMIT, DISCORD_SELECT_FIELD_MAX_LENGTH
 from components.localization import get_translation

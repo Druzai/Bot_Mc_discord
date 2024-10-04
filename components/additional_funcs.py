@@ -4874,7 +4874,7 @@ def get_server_version() -> ServerVersion:
 def parse_snapshot(version: str) -> Optional[str]:
     with handle_unhandled_error_in_link_request():
         answer = req_get(
-            url="https://minecraft.fandom.com/api.php",
+            url="https://minecraft.wiki/api.php",
             params={
                 "action": "parse",
                 "page": f"Java Edition {version}",
