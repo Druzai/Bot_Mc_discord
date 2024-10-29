@@ -6,15 +6,18 @@ All important changes to this project will be documented in this file.
 
 #### Improvements:
 
-* --
+* Switched to using new Minecraft Wiki API
+* Added translation strings for death messages up to version `1.21.3`
+* Enhanced algorithm to get average loading server time
 
 #### Fixed:
 
-* --
+* Added using proxy for getting RSS feed
 
 #### Breaking changes:
 
-* --
+* Renamed setting `server_loading_time` to `server_avg_loading_times`
+  * If you want to save old loading time - rename setting and set value as a list element in yaml notation, line in `help_arguments` setting
 
 ### [1.4.5](https://github.com/Druzai/Bot_Mc_discord/compare/1.4.4...1.4.5) (2024-09-21)
 

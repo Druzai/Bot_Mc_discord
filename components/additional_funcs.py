@@ -321,8 +321,8 @@ async def start_server(
                 BotVars.is_restarting = False
             return
         if (datetime.now() - last_presence_change).seconds >= 4:
-            if Config.get_selected_server_from_list().server_loading_time:
-                percentage = round((timedelta_secs / Config.get_selected_server_from_list().server_loading_time) * 100)
+            if Config.get_selected_server_from_list().avg_loading_time:
+                percentage = round((timedelta_secs / Config.get_selected_server_from_list().avg_loading_time) * 100)
                 output_bot = get_translation("Loading: ") + ((str(percentage) + "%") if percentage < 101 else "100%...")
             else:
                 output_bot = get_translation("{0}, elapsed time: ") \
@@ -339,18 +339,8 @@ async def start_server(
             Config.get_secure_auth().enable_secure_auth:
         BotVars.watcher_of_log_file = create_watcher(BotVars.watcher_of_log_file, get_server_version())
         BotVars.watcher_of_log_file.start()
-    to_save = False
-    if Config.get_selected_server_from_list().server_loading_time:
-        average_server_loading_time = (Config.get_selected_server_from_list().server_loading_time +
-                                       (datetime.now() - check_time).seconds) // 2
-        if average_server_loading_time != Config.get_selected_server_from_list().server_loading_time:
-            Config.get_selected_server_from_list().server_loading_time = average_server_loading_time
-            to_save = True
-    else:
-        Config.get_selected_server_from_list().server_loading_time = (datetime.now() - check_time).seconds
-        to_save = True
-    if to_save:
-        Config.save_config()
+    Config.get_selected_server_from_list().avg_loading_time = (datetime.now() - check_time).seconds
+    Config.save_config()
     print(get_translation("Server is running"))
     if ctx and not shut_up:
         await send_msg(ctx, author.mention + "\n" + add_quotes(get_translation("Server is up!")),
@@ -1286,9 +1276,9 @@ async def bot_status(
         bot_message += get_translation("Server is restoring from backup") + "\n"
     server_info = get_translation("Selected server: {0}") \
                       .format(Config.get_selected_server_from_list().server_name) + "\n"
-    if Config.get_selected_server_from_list().server_loading_time is not None:
+    if Config.get_selected_server_from_list().avg_loading_time is not None:
         server_info += get_translation("Average server loading time: {0}") \
-                           .format(get_time_string(Config.get_selected_server_from_list().server_loading_time)) + "\n"
+                           .format(get_time_string(Config.get_selected_server_from_list().avg_loading_time)) + "\n"
     if BotVars.is_server_on and not BotVars.is_stopping:
         try:
             server_version = get_server_version()

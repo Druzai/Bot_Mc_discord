@@ -15,7 +15,7 @@ from re import search
 from secrets import choice as sec_choice
 from string import ascii_letters, digits
 from struct import unpack
-from typing import List, Optional, TYPE_CHECKING, Set, Union, Dict
+from typing import List, Optional, TYPE_CHECKING, Set, Union, Dict, Iterable
 
 from colorama import Style
 from cryptography.fernet import InvalidToken
@@ -27,7 +27,7 @@ from omegaconf import OmegaConf as Conf
 from psutil import Process
 from requests import Session
 
-from components.constants import CODE_LETTERS, URL_REGEX
+from components.constants import CODE_LETTERS, URL_REGEX, WINDOW_AVERAGE_LENGTH
 from components.localization import get_translation, get_locales, set_locale
 from config.crypt_wrapper import encrypt_string, decrypt_string
 
@@ -89,6 +89,31 @@ class OS(Enum):
             return OS.MacOS
         else:
             return OS.Unknown
+
+
+class WindowedAverage:
+    def __init__(self, size: int):
+        self._size = size
+        self._data = []
+
+    @property
+    def average(self):
+        return int(sum(self._data) / len(self._data)) if len(self._data) > 0 else 0
+
+    def add(self, value: int):
+        self._data.append(value)
+        if len(self._data) > self._size:
+            value = self.average
+            self._data.pop(-1)
+            old_value = max(self._data, key=lambda x: abs(value - x))
+            self._data[self._data.index(old_value)] = value
+
+    def add_all(self, values: Iterable[int]):
+        for value in values:
+            self.add(value)
+
+    def dump_list(self):
+        return self._data
 
 
 @dataclass
@@ -304,9 +329,26 @@ class Server_settings:
     server_name: str = ""
     working_directory: str = ""
     start_file_name: str = ""
-    server_loading_time: Optional[int] = None
+    server_avg_loading_times: List[int] = field(default_factory=list)
     enforce_offline_mode: bool = False
     enforce_default_gamemode: bool = False
+
+    @property
+    def avg_loading_time(self):
+        if len(self.server_avg_loading_times) > 0:
+            wa = WindowedAverage(WINDOW_AVERAGE_LENGTH)
+            wa.add_all(self.server_avg_loading_times)
+            return wa.average
+        else:
+            return None
+
+    @avg_loading_time.setter
+    def avg_loading_time(self, value: int):
+        wa = WindowedAverage(WINDOW_AVERAGE_LENGTH)
+        wa.add_all(self.server_avg_loading_times)
+        wa.add(value)
+        self.server_avg_loading_times = wa.dump_list()
+        del wa
 
 
 @dataclass
@@ -1263,9 +1305,9 @@ class Config:
             if cls._settings_instance.bot_settings.proxy.proxy_url is None:
                 cls._need_to_rewrite = True
                 cls._settings_instance.bot_settings.proxy.proxy_url = cls._ask_for_data(
-                        get_translation("Enter proxy URL (Example - http://{ip_address}:{port})") + "\n> ",
-                        try_link=True
-                    )
+                    get_translation("Enter proxy URL (Example - http://{ip_address}:{port})") + "\n> ",
+                    try_link=True
+                )
 
             if cls._settings_instance.bot_settings.proxy.enable_proxy_credentials is None:
                 cls._settings_instance.bot_settings.proxy.enable_proxy_credentials = cls._ask_for_data(
@@ -1287,7 +1329,6 @@ class Config:
                 print(get_translation("Proxy: login '{0}', password '{1}'.").format(*Config.get_proxy_credentials()))
         else:
             print(get_translation("Bot isn't using any proxy."))
-
 
     @classmethod
     def _setup_prefix(cls):
