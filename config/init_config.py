@@ -11,7 +11,7 @@ from locale import getdefaultlocale
 from os import mkdir, getcwd, environ
 from os.path import isfile, isdir, join as path_join
 from pathlib import Path
-from re import search
+from re import search, findall
 from secrets import choice as sec_choice
 from string import ascii_letters, digits
 from struct import unpack
@@ -1143,21 +1143,18 @@ class Config:
             return MISSING
 
         proxy_credentials = Config.get_proxy_credentials()
-        if proxy_url.startswith("http://"):
-            proxy_type = "http"
-        elif proxy_url.startswith("https://"):
-            proxy_type = "https"
-        else:
+        if not proxy_url.startswith("http://") and not proxy_url.startswith("https://"):
             print(get_translation("Bot Error: {0}").format(
                 get_translation("Proxy type isn't HTTP or HTTPS. Bot will use webhooks without proxy!"))
             )
             return MISSING
 
         if proxy_credentials is not None:
-            proxies[proxy_type] = (f"{proxy_type}://{proxy_credentials[0]}:{proxy_credentials[1]}@" +
-                                   proxy_url.lstrip(f"{proxy_type}://"))
-        else:
-            proxies[proxy_type] = proxy_url
+            proxy_type = findall(r"https?://", proxy_url)[0]
+            proxy_url = (f"{proxy_type}{proxy_credentials[0]}:{proxy_credentials[1]}@" +
+                                   proxy_url.lstrip(proxy_type))
+        proxies["http"] = proxy_url
+        proxies["https"] = proxy_url
         session.proxies = proxies
         return session
 
