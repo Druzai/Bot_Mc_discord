@@ -13,7 +13,7 @@ from json import dumps
 from os import chdir, system, walk, mkdir, remove
 from os.path import join as p_join, getsize, isfile
 from pathlib import Path
-from random import randint, choice
+from random import randint
 from re import search, split, findall, sub, compile, DOTALL
 from shutil import rmtree
 from textwrap import wrap
@@ -40,7 +40,6 @@ from mcipc.query import Client as Client_q
 from mcipc.query.proto.full_stats import FullStats
 from mcipc.rcon import Client as Client_r, WrongPassword
 from psutil import process_iter, NoSuchProcess, disk_usage, Process, AccessDenied
-from requests import post as req_post, get as req_get, head as req_head
 from requests.exceptions import SSLError, Timeout
 
 from components.constants import (
@@ -4257,7 +4256,10 @@ async def _handle_components_in_message(
 
         if store_images_for_preview and not is_reply:
             with handle_unhandled_error_in_link_request(image_preview=True):
-                resp = req_head(link, timeout=(3, 6), headers={"User-Agent": UserAgent.get_header()})
+                resp = BotVars.session_for_other_requests.head(
+                    link,
+                    timeout=(3, 6)
+                )
                 if resp.status_code == 200 and resp.headers.get("content-length") is not None and \
                         int(resp.headers.get("content-length")) <= 20971520:
                     # Checks if Content-Length not larger than 20 MB
@@ -4295,7 +4297,10 @@ async def _handle_components_in_message(
                 })
             else:
                 with handle_unhandled_error_in_link_request(image_preview=True):
-                    resp = req_head(link, timeout=(3, 6), headers={"User-Agent": UserAgent.get_header()})
+                    resp = BotVars.session_for_other_requests.head(
+                        link,
+                        timeout=(3, 6)
+                    )
                     if resp.status_code == 200 and resp.headers.get("content-length") is not None and \
                             int(resp.headers.get("content-length")) <= 20971520:
                         # Checks if Content-Length not larger than 20 MB
@@ -4616,43 +4621,6 @@ def build_nickname_tellraw_for_bot(
     return tellraw_obj
 
 
-class UserAgent:
-    _header: str = None
-
-    @classmethod
-    def _get_os(cls):
-        if Config.get_os() == OS.Windows:
-            return "Windows NT 10.0; Win64; x64"
-        elif Config.get_os() == OS.MacOS:
-            separator = choice([".", "_"])
-            version = choice([
-                separator.join(["10", str(randint(13, 15)), str(randint(0, 10))]),
-                f"{randint(11, 13)}{separator}0"
-            ])
-            return f"Macintosh; Intel Mac OS X {version}"
-        else:
-            return choice(["X11; Linux", "X11; OpenBSD", "X11; Ubuntu; Linux"]) + \
-                choice([" i386", " i686", " amd64", " x86_64"])
-
-    @classmethod
-    def _set_header(cls):
-        if randint(0, 1):
-            # Chrome
-            version = f"{randint(105, 126)}.{randint(0, 99)}.{randint(0, 9999)}.{randint(0, 999)}"
-            cls._header = f"Mozilla/5.0 ({cls._get_os()}) AppleWebKit/537.36 " \
-                          f"(KHTML, like Gecko) Chrome/{version} Safari/537.36"
-        else:
-            # Firefox
-            version = f"{randint(102, 127)}.0"
-            cls._header = f"Mozilla/5.0 ({cls._get_os()}; rv:{version}) Gecko/20100101 Firefox/{version}"
-
-    @classmethod
-    def get_header(cls):
-        if cls._header is None:
-            cls._set_header()
-        return cls._header
-
-
 def rgb2hex(r, g, b):
     return "#{:02x}{:02x}{:02x}".format(r, g, b)
 
@@ -4676,7 +4644,10 @@ def has_transparency(img: Image.Image):
 def get_image_data(url: str):
     if search(r"https?://tenor\.com/view", url):
         with handle_unhandled_error_in_link_request(image_preview=True):
-            text = req_get(url, timeout=(4, 8), headers={"User-Agent": UserAgent.get_header()}).text
+            text = BotVars.session_for_other_requests.get(
+                url,
+                timeout=(4, 8)
+            ).text
             match = search(rf"property=\"og:image\"\s*content=\"(?P<link>{URL_REGEX})?\"", text)
             url = match.group("link") if match is not None else None
 
@@ -4689,7 +4660,10 @@ def get_image_data(url: str):
         filename = unquote(filename)
         with handle_unhandled_error_in_link_request(image_preview=True):
             return dict(
-                bytes=BytesIO(req_get(url, timeout=(4, 8), headers={"User-Agent": UserAgent.get_header()}).content),
+                bytes=BytesIO(BotVars.session_for_other_requests.get(
+                    url,
+                    timeout=(4, 8)
+                ).content),
                 name=filename
             )
 
@@ -4863,7 +4837,7 @@ def get_server_version() -> ServerVersion:
 
 def parse_snapshot(version: str) -> Optional[str]:
     with handle_unhandled_error_in_link_request():
-        answer = req_get(
+        answer = BotVars.session_for_other_requests.get(
             url="https://minecraft.wiki/api.php",
             params={
                 "action": "parse",
@@ -4871,8 +4845,7 @@ def parse_snapshot(version: str) -> Optional[str]:
                 "prop": "categories",
                 "format": "json"
             },
-            timeout=(3, 6),
-            headers={"User-Agent": UserAgent.get_header()}
+            timeout=(3, 6)
         )
         if not answer.ok and len(answer.content) == 0:
             return
@@ -4899,11 +4872,10 @@ def shorten_string(string: str, max_length: int):
 def get_shortened_url(url: str):
     for service_url in ["https://clck.ru/--", "https://tinyurl.com/api-create.php"]:
         with handle_unhandled_error_in_link_request():
-            response = req_post(
+            response = BotVars.session_for_other_requests.post(
                 service_url,
                 params={"url": url},
-                timeout=(3, 6),
-                headers={"User-Agent": UserAgent.get_header()}
+                timeout=(3, 6)
             )
             if response.ok and len(response.text) > 0:
                 return response.text

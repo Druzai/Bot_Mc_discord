@@ -7,7 +7,7 @@ from discord import SyncWebhook, Webhook, TextChannel
 from feedparser import parse
 
 from components.localization import get_translation
-from config.init_config import Config, BotVars
+from config.init_config import Config, BotVars, UserAgent
 
 
 async def check_on_rss_feed():
@@ -23,10 +23,21 @@ async def check_on_rss_feed():
         return
 
     send = False
-    if Config.get_proxy_url() is None:
-        parsed = parse(Config.get_rss_feed_settings().rss_url)
+    if Config.get_enable_rss_proxy():
+        headers = BotVars.wh_session_rss.headers
+        if Config.get_rss_feed_settings().rss_spoof_user_agent:
+            headers["User-Agent"] = UserAgent.get_header()
+        text = BotVars.wh_session_rss.get(
+            Config.get_rss_feed_settings().rss_url,
+            timeout=(3, 6),
+            headers=headers
+        ).text
+        parsed = parse(text)
     else:
-        parsed = parse(BotVars.wh_session_rss.get(Config.get_rss_feed_settings().rss_url).text)
+        parsed = parse(
+            Config.get_rss_feed_settings().rss_url,
+            agent=UserAgent.get_header() if Config.get_rss_feed_settings().rss_spoof_user_agent else None
+        )
     with suppress(KeyError, AttributeError):
         new_date = datetime_from
         entries = parsed.entries

@@ -52,6 +52,7 @@ class ChatCommands(commands.Cog):
             print(get_translation("Version of Python") + " - " + python_version())
             print("------")
             await create_webhooks(self._bot)
+            BotVars.session_for_other_requests = Config.get_proxy_session_for_other_requests()
             if Config.get_rss_feed_settings().enable_rss_feed and not self.rss_feed_task.is_running():
                 self.rss_feed_task.start()
             elif self.rss_feed_task.is_running():

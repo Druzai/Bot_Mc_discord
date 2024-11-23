@@ -11,6 +11,7 @@ from locale import getdefaultlocale
 from os import mkdir, getcwd, environ
 from os.path import isfile, isdir, join as path_join
 from pathlib import Path
+from random import randint, choice
 from re import search, findall
 from secrets import choice as sec_choice
 from string import ascii_letters, digits
@@ -52,6 +53,7 @@ class BotVars:
     players_login_dict: dict = {}  # Dict of logged nicks and datetime of their login
     java_processes: List[Process] = []
     watcher_of_log_file: Optional['Watcher'] = None
+    session_for_other_requests: Optional[Session] = None
     webhook_chat: Optional[SyncWebhook] = None
     wh_session_chat: Optional[Session] = None
     webhook_rss: Optional[SyncWebhook] = None
@@ -114,6 +116,47 @@ class WindowedAverage:
 
     def dump_list(self):
         return self._data
+
+
+class UserAgent:
+    _header: str = None
+
+    @classmethod
+    def _get_os(cls):
+        if Config.get_os() == OS.Windows:
+            return "Windows NT 10.0; Win64; x64"
+        elif Config.get_os() == OS.MacOS:
+            separator = choice([".", "_"])
+            version = choice([
+                separator.join(["10", str(randint(13, 15)), str(randint(0, 10))]),
+                f"{randint(11, 13)}{separator}0"
+            ])
+            return f"Macintosh; Intel Mac OS X {version}"
+        else:
+            return choice(["X11; Linux", "X11; OpenBSD", "X11; Ubuntu; Linux"]) + \
+                choice([" i386", " i686", " amd64", " x86_64"])
+
+    @classmethod
+    def _set_header(cls):
+        if randint(0, 1):
+            # Chrome
+            version = f"{randint(105, 131)}.{randint(0, 99)}.{randint(0, 9999)}.{randint(0, 999)}"
+            cls._header = f"Mozilla/5.0 ({cls._get_os()}) AppleWebKit/537.36 " \
+                          f"(KHTML, like Gecko) Chrome/{version} Safari/537.36"
+        else:
+            # Firefox
+            version = f"{randint(102, 132)}.0"
+            cls._header = f"Mozilla/5.0 ({cls._get_os()}; rv:{version}) Gecko/20100101 Firefox/{version}"
+
+    @classmethod
+    def get_header(cls):
+        if cls._header is None:
+            cls._set_header()
+        return cls._header
+
+    @classmethod
+    def clear_header(cls):
+        cls._header = None
 
 
 @dataclass
@@ -215,6 +258,7 @@ class Rss_feed:
     rss_url: Optional[str] = None
     rss_download_delay: int = -1
     rss_last_date: Optional[str] = None
+    rss_spoof_user_agent: Optional[bool] = None
 
 
 @dataclass
@@ -274,12 +318,19 @@ class Op:
 
 
 @dataclass
+class Proxy_opts:
+    enable_rss_proxy: Optional[bool] = None
+    enable_proxy_for_other_requests: Optional[bool] = None
+
+
+@dataclass
 class Proxy:
     enable_proxy: Optional[bool] = None
     proxy_url: Optional[str] = None
     enable_proxy_credentials: Optional[bool] = None
     proxy_login: Optional[str] = None
     proxy_password: Optional[str] = None
+    proxy_opts: Proxy_opts = field(default_factory=Proxy_opts)
 
 
 @dataclass
@@ -1135,26 +1186,50 @@ class Config:
         return
 
     @classmethod
-    def get_webhook_proxy_session(cls):
-        session = Session()
+    def get_enable_rss_proxy(cls):
+        return (Config.get_settings().bot_settings.proxy.enable_proxy and
+                Config.get_proxy_url() is not None and
+                Config.get_settings().bot_settings.proxy.proxy_opts.enable_rss_proxy)
+
+    @classmethod
+    def get_proxy_dict(cls):
         proxies = {}
         proxy_url = Config.get_proxy_url()
-        if proxy_url is None:
-            return MISSING
+        if not Config.get_settings().bot_settings.proxy.enable_proxy or proxy_url is None:
+            return
 
         proxy_credentials = Config.get_proxy_credentials()
         if not proxy_url.startswith("http://") and not proxy_url.startswith("https://"):
             print(get_translation("Bot Error: {0}").format(
-                get_translation("Proxy type isn't HTTP or HTTPS. Bot will use webhooks without proxy!"))
+                get_translation("Proxy type isn't HTTP or HTTPS. Bot will use webhooks and requests without proxy!"))
             )
-            return MISSING
+            return
 
         if proxy_credentials is not None:
             proxy_type = findall(r"https?://", proxy_url)[0]
-            proxy_url = (f"{proxy_type}{proxy_credentials[0]}:{proxy_credentials[1]}@" +
-                                   proxy_url.lstrip(proxy_type))
+            proxy_url = (f"{proxy_type}{proxy_credentials[0]}:{proxy_credentials[1]}@" + proxy_url.lstrip(proxy_type))
         proxies["http"] = proxy_url
         proxies["https"] = proxy_url
+        return proxies
+
+    @classmethod
+    def get_proxy_session_for_other_requests(cls):
+        session = Session()
+        session.headers["User-Agent"] = UserAgent.get_header()
+        if not Config.get_settings().bot_settings.proxy.enable_proxy or Config.get_proxy_url() is None or \
+                not Config.get_settings().bot_settings.proxy.proxy_opts.enable_proxy_for_other_requests:
+            return session
+        proxies = cls.get_proxy_dict()
+        if proxies is not None:
+            session.proxies = proxies
+        return session
+
+    @classmethod
+    def get_webhook_proxy_session(cls):
+        proxies = cls.get_proxy_dict()
+        if proxies is None:
+            return MISSING
+        session = Session()
         session.proxies = proxies
         return session
 
@@ -1295,6 +1370,7 @@ class Config:
     @classmethod
     def _setup_proxy(cls):
         if cls._settings_instance.bot_settings.proxy.enable_proxy is None:
+            cls._need_to_rewrite = True
             cls._settings_instance.bot_settings.proxy.enable_proxy = cls._ask_for_data(
                 get_translation("Enable using proxy?") + " Y/n\n> ", "y"
             )
@@ -1320,10 +1396,26 @@ class Config:
                     cls._settings_instance.bot_settings.proxy.proxy_password = \
                         cls._ask_for_data(get_translation("Enter proxy password") + "\n> ")
 
-        if Config.get_proxy_url() is not None:
-            print(get_translation("Bot using proxy URL '{0}'.").format(Config.get_proxy_url()))
-            if Config.get_proxy_credentials() is not None:
-                print(get_translation("Proxy: login '{0}', password '{1}'.").format(*Config.get_proxy_credentials()))
+            if cls._settings_instance.bot_settings.proxy.proxy_opts.enable_rss_proxy is None:
+                cls._need_to_rewrite = True
+                cls._settings_instance.bot_settings.proxy.proxy_opts.enable_rss_proxy = cls._ask_for_data(
+                    get_translation("Enable using proxy for RSS?") + " Y/n\n> ", "y"
+                )
+            if cls._settings_instance.bot_settings.proxy.proxy_opts.enable_proxy_for_other_requests is None:
+                cls._need_to_rewrite = True
+                cls._settings_instance.bot_settings.proxy.proxy_opts.enable_proxy_for_other_requests = \
+                    cls._ask_for_data(
+                        get_translation(
+                            "Enable using proxy for other requests?\n"
+                            "(Such as checking links/images from channel associated with game chat feature,"
+                            " checking snapshot version, getting shortened links and etc.)"
+                        ) + "\nY/n\n> ", "y"
+                    )
+
+        if cls._settings_instance.bot_settings.proxy.enable_proxy and cls.get_proxy_url() is not None:
+            print(get_translation("Bot using proxy URL '{0}'.").format(cls.get_proxy_url()))
+            if cls.get_proxy_credentials() is not None:
+                print(get_translation("Proxy: login '{0}', password '{1}'.").format(*cls.get_proxy_credentials()))
         else:
             print(get_translation("Bot isn't using any proxy."))
 
@@ -2014,47 +2106,58 @@ class Config:
     def _setup_rss_feed(cls):
         if cls.get_rss_feed_settings().enable_rss_feed is None:
             cls._need_to_rewrite = True
-            if cls._ask_for_data(get_translation("Would you like to enable RSS?") + " Y/n\n> ", "y"):
-                cls.get_rss_feed_settings().enable_rss_feed = True
-                print(get_translation("RSS enabled") + ".")
+            cls.get_rss_feed_settings().enable_rss_feed = cls._ask_for_data(
+                get_translation("Would you like to enable RSS?") + " Y/n\n> ", "y"
+            )
 
-                if cls.get_rss_feed_settings().webhook_url is None:
-                    if cls._ask_for_data(get_translation("Webhook URL for RSS not found. Would you like to enter it?") +
-                                         " Y/n\n> ", "y"):
-                        cls.get_rss_feed_settings().webhook_url = \
-                            cls._ask_for_data(get_translation("Enter webhook URL for RSS") + "\n> ", try_link=True)
-                    else:
-                        print(get_translation(
-                            "Bot will fetch disowned webhook or create a new one! "
-                            "You can change it via '{0}{1}'."
-                        ).format(Config.get_settings().bot_settings.prefix, "rss webhook"))
+        if cls.get_rss_feed_settings().enable_rss_feed:
+            if cls.get_rss_feed_settings().webhook_url is None:
+                if cls._ask_for_data(get_translation("Webhook URL for RSS not found. Would you like to enter it?") +
+                                     " Y/n\n> ", "y"):
+                    cls._need_to_rewrite = True
+                    cls.get_rss_feed_settings().webhook_url = \
+                        cls._ask_for_data(get_translation("Enter webhook URL for RSS") + "\n> ", try_link=True)
+                else:
+                    print(get_translation(
+                        "Bot will fetch disowned webhook or create a new one! "
+                        "You can change it via '{0}{1}'."
+                    ).format(Config.get_settings().bot_settings.prefix, "rss webhook"))
 
-                if cls.get_rss_feed_settings().rss_url is None:
-                    if cls._ask_for_data(
-                            get_translation("URL of RSS feed not found. Would you like to enter it?") + " Y/n\n> ",
-                            "y"):
-                        cls.get_rss_feed_settings().rss_url = \
-                            cls._ask_for_data(get_translation("Enter URL of RSS feed") + "\n> ", try_link=True)
-                    else:
-                        print(get_translation("RSS wouldn't work. Enter URL of RSS feed to bot config!"))
+            if cls.get_rss_feed_settings().rss_url is None:
+                if cls._ask_for_data(
+                        get_translation("URL of RSS feed not found. Would you like to enter it?") + " Y/n\n> ",
+                        "y"):
+                    cls._need_to_rewrite = True
+                    cls.get_rss_feed_settings().rss_url = \
+                        cls._ask_for_data(get_translation("Enter URL of RSS feed") + "\n> ", try_link=True)
+                else:
+                    print(get_translation("RSS wouldn't work. Enter URL of RSS feed to bot config!"))
 
-                if cls.get_rss_feed_settings().rss_download_delay < 1 or \
-                        cls.get_rss_feed_settings().rss_download_delay > 1440:
-                    print(get_translation("Scan interval for RSS feed not set") + ".")
-                    cls.get_rss_feed_settings().rss_download_delay = \
-                        cls._ask_for_data(get_translation("Enter scan interval for RSS feed (in seconds, int)") +
-                                          "\n> ", try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=1440)
+            if cls.get_rss_feed_settings().rss_download_delay < 1 or \
+                    cls.get_rss_feed_settings().rss_download_delay > 604800:
+                cls._need_to_rewrite = True
+                print(get_translation("Scan interval for RSS feed not set") + ".")
+                cls.get_rss_feed_settings().rss_download_delay = \
+                    cls._ask_for_data(get_translation("Enter scan interval for RSS feed (in seconds, int)") +
+                                      "\n> ", try_int=True, int_high_or_equal_than=1, int_low_or_equal_than=604800)
 
+            if cls.get_rss_feed_settings().rss_last_date is None:
+                cls._need_to_rewrite = True
                 cls.get_rss_feed_settings().rss_last_date = \
                     datetime.now().replace(microsecond=0).isoformat()
-            else:
-                cls.get_rss_feed_settings().enable_rss_feed = False
-                print(get_translation("RSS disabled") + ".")
+
+            if cls.get_rss_feed_settings().rss_spoof_user_agent is None:
+                cls._need_to_rewrite = True
+                cls.get_rss_feed_settings().rss_spoof_user_agent = cls._ask_for_data(
+                    get_translation("Enable using spoofed user agent (Chrome or Firefox) instead of default one"
+                                    " (indicating the sender is a bot) for RSS feed check requests?") + " Y/n\n> ",
+                    "y"
+                )
+
+        if cls.get_rss_feed_settings().enable_rss_feed:
+            print(get_translation("RSS enabled") + ".")
         else:
-            if cls.get_rss_feed_settings().enable_rss_feed:
-                print(get_translation("RSS enabled") + ".")
-            else:
-                print(get_translation("RSS disabled") + ".")
+            print(get_translation("RSS disabled") + ".")
 
     @classmethod
     def _setup_backups(cls):

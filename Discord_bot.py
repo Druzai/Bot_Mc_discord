@@ -101,6 +101,8 @@ def main():
         if len(argv) == 1 or (len(argv) > 1 and argv[1] == "-cs"):
             if BotVars.watcher_of_log_file is not None and BotVars.watcher_of_log_file.is_running():
                 BotVars.watcher_of_log_file.stop()
+            if isinstance(BotVars.session_for_other_requests, Session):
+                BotVars.session_for_other_requests.close()
             if isinstance(BotVars.wh_session_chat, Session):
                 BotVars.wh_session_chat.close()
             if isinstance(BotVars.wh_session_rss, Session):
