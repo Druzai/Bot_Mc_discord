@@ -1,2 +1,2 @@
-shiv==1.0.6
-pyinstaller==6.10.0
+shiv==1.0.8
+pyinstaller==6.11.1
