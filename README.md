@@ -6,7 +6,7 @@
    Bot for Minecraft Server in Discord
 </h1>
 
-[![Build with pyinstaller and release](https://github.com/Druzai/Bot_Mc_discord/actions/workflows/pyinstaller_build.yml/badge.svg?branch=master)](https://github.com/Druzai/Bot_Mc_discord/actions/workflows/pyinstaller_build.yml)
+[![Build with pyinstaller](https://github.com/Druzai/Bot_Mc_discord/actions/workflows/bot_build.yml/badge.svg?branch=master)](https://github.com/Druzai/Bot_Mc_discord/actions/workflows/bot_build.yml)
 
 ## Main features
 
@@ -75,7 +75,7 @@
         * Works in versions `1.16.0` and higher
     * Some features may not work in versions below `1.7.2`!
 * Setting up optional RSS feed. Bot will send new items from feed to Discord text channel via webhook
-* Setting up HTTP(S) proxy for all requests 
+* Setting up HTTP(S) proxy for all requests separately
 
 **How bot converts mentions from Minecraft chat to Discord for game chat:**
 
