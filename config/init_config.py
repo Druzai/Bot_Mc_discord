@@ -1408,7 +1408,7 @@ class Config:
                         get_translation(
                             "Enable using proxy for other requests?\n"
                             "(Such as checking links/images from channel associated with game chat feature,"
-                            " checking snapshot version, getting shortened links and etc.)"
+                            " checking Minecraft snapshot version, getting shortened links and etc.)"
                         ) + "\nY/n\n> ", "y"
                     )
 

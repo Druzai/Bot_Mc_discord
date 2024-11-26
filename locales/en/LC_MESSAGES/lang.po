@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
-"POT-Creation-Date: 2024-11-26 21:29+0300\n"
-"PO-Revision-Date: 2024-11-26 21:30+0300\n"
+"POT-Creation-Date: 2024-11-27 00:36+0300\n"
+"PO-Revision-Date: 2024-11-27 00:37+0300\n"
 "Last-Translator: Druzai\n"
 "Language-Team: \n"
 "Language: en\n"
@@ -3054,55 +3054,55 @@ msgstr ""
 msgid "Starting Minecraft server check-ups"
 msgstr "Starting Minecraft server check-ups"
 
-#: ../commands\poll.py:70
+#: ../commands\poll.py:68
 msgid "To win the poll needed {0} vote(s)!"
 msgstr "To win the poll needed {0} vote(s)!"
 
-#: ../commands\poll.py:100
+#: ../commands\poll.py:94
 msgid "Poll result: canceled!"
 msgstr "Poll result: canceled!"
 
-#: ../commands\poll.py:102
+#: ../commands\poll.py:96
 msgid "granted"
 msgstr "granted"
 
-#: ../commands\poll.py:103
+#: ../commands\poll.py:97
 msgid "refused"
 msgstr "refused"
 
-#: ../commands\poll.py:104
+#: ../commands\poll.py:98
 msgid "Poll result: permission {0}!"
 msgstr "Poll result: permission {0}!"
 
-#: ../commands\poll.py:120 ../commands\poll.py:130
+#: ../commands\poll.py:112
 msgid "Voting!"
 msgstr "Voting!"
 
-#: ../commands\poll.py:123 ../commands\poll.py:324
+#: ../commands\poll.py:115
 msgid "yes"
 msgstr "yes"
 
-#: ../commands\poll.py:124 ../commands\poll.py:326
+#: ../commands\poll.py:116
 msgid "no"
 msgstr "no"
 
-#: ../commands\poll.py:200
+#: ../commands\poll.py:185
 msgid "what are you doing? Time hasn't passed yet. Waiting {0} sec..."
 msgstr "what are you doing? Time hasn't passed yet. Waiting {0} sec..."
 
-#: ../commands\poll.py:250 ../commands\poll.py:297
+#: ../commands\poll.py:231 ../commands\poll.py:278
 msgid "poll have already finished!"
 msgstr "poll have already finished!"
 
-#: ../commands\poll.py:257
+#: ../commands\poll.py:238
 msgid "you've already voted!"
 msgstr "you've already voted!"
 
-#: ../commands\poll.py:264 ../commands\poll.py:273 ../commands\poll.py:304
+#: ../commands\poll.py:245 ../commands\poll.py:254 ../commands\poll.py:285
 msgid "you don't have needed '{0}' role"
 msgstr "you don't have needed '{0}' role"
 
-#: ../commands\poll.py:278
+#: ../commands\poll.py:259
 msgid "you don't have permission 'Administrator'"
 msgstr "you don't have permission 'Administrator'"
 
@@ -4458,10 +4458,8 @@ msgid "To ban this IP-address enter command `{0}`"
 msgstr "To ban this IP-address enter command `{0}`"
 
 #: ../components\watcher_handle.py:606
-msgid ""
-"Login without code? (Less safe)"
-msgstr ""
-"Login without code? (Less safe)"
+msgid "Login without code? (Less safe)"
+msgstr "Login without code? (Less safe)"
 
 #: ../config\init_config.py:179
 msgid "☠ Obituary ☠"
@@ -4631,11 +4629,13 @@ msgstr "Enable using proxy for RSS?"
 msgid ""
 "Enable using proxy for other requests?\n"
 "(Such as checking links/images from channel associated with game chat "
-"feature, checking snapshot version, getting shortened links and etc.)"
+"feature, checking Minecraft snapshot version, getting shortened links and "
+"etc.)"
 msgstr ""
 "Enable using proxy for other requests?\n"
 "(Such as checking links/images from channel associated with game chat "
-"feature, checking snapshot version, getting shortened links and etc.)"
+"feature, checking Minecraft snapshot version, getting shortened links and "
+"etc.)"
 
 #: ../config\init_config.py:1416
 msgid "Bot using proxy URL '{0}'."

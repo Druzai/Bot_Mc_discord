@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
-"POT-Creation-Date: 2024-11-26 21:29+0300\n"
-"PO-Revision-Date: 2024-11-26 21:30+0300\n"
+"POT-Creation-Date: 2024-11-27 00:36+0300\n"
+"PO-Revision-Date: 2024-11-27 00:37+0300\n"
 "Last-Translator: Druzai\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -3075,55 +3075,55 @@ msgstr ""
 msgid "Starting Minecraft server check-ups"
 msgstr "Запускаем проверки майнкрафт сервера"
 
-#: ../commands\poll.py:70
+#: ../commands\poll.py:68
 msgid "To win the poll needed {0} vote(s)!"
 msgstr "Для победы в опросе необходимо {0} голос(ов)!"
 
-#: ../commands\poll.py:100
+#: ../commands\poll.py:94
 msgid "Poll result: canceled!"
 msgstr "Результат опроса: отменён!"
 
-#: ../commands\poll.py:102
+#: ../commands\poll.py:96
 msgid "granted"
 msgstr "получено"
 
-#: ../commands\poll.py:103
+#: ../commands\poll.py:97
 msgid "refused"
 msgstr "отказано"
 
-#: ../commands\poll.py:104
+#: ../commands\poll.py:98
 msgid "Poll result: permission {0}!"
 msgstr "Результат опроса: разрешение {0}!"
 
-#: ../commands\poll.py:120 ../commands\poll.py:130
+#: ../commands\poll.py:112
 msgid "Voting!"
 msgstr "Голосовалочка!"
 
-#: ../commands\poll.py:123 ../commands\poll.py:324
+#: ../commands\poll.py:115
 msgid "yes"
 msgstr "да"
 
-#: ../commands\poll.py:124 ../commands\poll.py:326
+#: ../commands\poll.py:116
 msgid "no"
 msgstr "нет"
 
-#: ../commands\poll.py:200
+#: ../commands\poll.py:185
 msgid "what are you doing? Time hasn't passed yet. Waiting {0} sec..."
 msgstr "что вы делаете? Время ещё не прошло. Ждём {0} сек..."
 
-#: ../commands\poll.py:250 ../commands\poll.py:297
+#: ../commands\poll.py:231 ../commands\poll.py:278
 msgid "poll have already finished!"
 msgstr "опрос уже завершён!"
 
-#: ../commands\poll.py:257
+#: ../commands\poll.py:238
 msgid "you've already voted!"
 msgstr "вы уже проголосовали!"
 
-#: ../commands\poll.py:264 ../commands\poll.py:273 ../commands\poll.py:304
+#: ../commands\poll.py:245 ../commands\poll.py:254 ../commands\poll.py:285
 msgid "you don't have needed '{0}' role"
 msgstr "у вас нету нужной роли '{0}'"
 
-#: ../commands\poll.py:278
+#: ../commands\poll.py:259
 msgid "you don't have permission 'Administrator'"
 msgstr "у вас нету права доступа 'Администратор'"
 
@@ -4504,10 +4504,8 @@ msgid "To ban this IP-address enter command `{0}`"
 msgstr "Чтобы забанить этот IP-адрес, введите команду `{0}`"
 
 #: ../components\watcher_handle.py:606
-msgid ""
-"Login without code? (Less safe)"
-msgstr ""
-"Войти без кода? (Менее безопасно)"
+msgid "Login without code? (Less safe)"
+msgstr "Войти без кода? (Менее безопасно)"
 
 #: ../config\init_config.py:179
 msgid "☠ Obituary ☠"
@@ -4677,11 +4675,13 @@ msgstr "Включить использование прокси-сервера 
 msgid ""
 "Enable using proxy for other requests?\n"
 "(Such as checking links/images from channel associated with game chat "
-"feature, checking snapshot version, getting shortened links and etc.)"
+"feature, checking Minecraft snapshot version, getting shortened links and "
+"etc.)"
 msgstr ""
 "Разрешить использование прокси-сервера для других запросов?\n"
 "(Например, проверка ссылок/изображений с канала, связанного с функцией "
-"игрового чата, проверка версии снапшота, получение сокращенных ссылок и т.д.)"
+"игрового чата, проверка версии снапшота майнкрафта, получение сокращенных "
+"ссылок и т.д.)"
 
 #: ../config\init_config.py:1416
 msgid "Bot using proxy URL '{0}'."

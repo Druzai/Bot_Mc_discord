@@ -75,7 +75,13 @@
         * Works in versions `1.16.0` and higher
     * Some features may not work in versions below `1.7.2`!
 * Setting up optional RSS feed. Bot will send new items from feed to Discord text channel via webhook
-* Setting up HTTP(S) proxy for all requests separately
+* Setting up HTTP(S) proxy separately for different groups of requests
+    * Discord requests
+    * RSS feed check requests
+    * Other requests, such as:
+        * Checking links/images from channel associated with game chat feature
+        * Checking Minecraft snapshot version
+        * Getting shortened links
 
 **How bot converts mentions from Minecraft chat to Discord for game chat:**
 
