@@ -1,16 +1,19 @@
+import datetime as dt
 from asyncio import sleep as asleep
 from contextlib import suppress
 from datetime import datetime
 from enum import Enum, auto
-from typing import Union
+from typing import Union, Optional
 
 from discord import (
-    Color, Embed, Status, Role, NotFound, Forbidden, HTTPException, DMChannel, Member, InvalidData, TextChannel,
-    GroupChannel, RawReactionActionEvent, Thread, Interaction, User
+    Status, Role, NotFound, Forbidden, HTTPException, DMChannel, Member, InvalidData, TextChannel,
+    GroupChannel, Thread, Interaction, User, Poll as DiscordPoll, ClientException, RawPollVoteActionEvent, Message
 )
 from discord.abc import Messageable
+from discord.enums import ButtonStyle
 from discord.ext import commands
 from discord.ext.commands import Context
+from discord.ui import button, Button, View
 
 from components.additional_funcs import handle_unhandled_error_in_events, send_msg
 from components.localization import get_translation
@@ -38,10 +41,11 @@ class Poll(commands.Cog):
             admin_needed=False,
             add_mention=True,
             add_votes_count=True,
-            embed_message: str = None
+            poll_message: str = None
     ):
-        if message is None and embed_message is None:
-            raise ValueError("'message' and 'embed_message' is not stated!")
+        if message is None and poll_message is None:
+            raise ValueError("'message' and 'poll_message' is not stated!")
+        is_dm = False
         if not isinstance(channel, Member) and not isinstance(channel, DMChannel):
             if isinstance(channel, GroupChannel):
                 members_count = len([m for m in channel.recipients if not m.bot])
@@ -50,6 +54,7 @@ class Poll(commands.Cog):
             if members_count < need_for_voting:
                 need_for_voting = members_count
         else:
+            is_dm = True
             if need_for_voting > 1:
                 need_for_voting = 1
         mention = "@everyone"
@@ -65,90 +70,118 @@ class Poll(commands.Cog):
                         (get_translation("To win the poll needed {0} vote(s)!").format(str(need_for_voting))
                          if add_votes_count else "")
             )
-        poll_msg = await self.make_embed(channel, embed_message)
         current_poll = PollContent(channel, command, need_for_voting, needed_role, remove_logs_after, admin_needed)
+        poll_msg = await self.make_poll(channel, timeout, current_poll, poll_message, is_dm)
         self._polls[poll_msg.id] = current_poll
         seconds = 0
         while current_poll.state == States.NONE:
             await asleep(1)
             seconds += 1
-            if timeout <= seconds:
+            if (not is_dm and current_poll.poll.is_finalised()) or timeout <= seconds:
                 current_poll.cancel()
+        if not is_dm and not current_poll.poll.is_finalised():
+            with suppress(ClientException, HTTPException):
+                await current_poll.poll.end()
+        elif is_dm:
+            current_poll.view.stop()
         if start_msg is not None:
             with suppress(NotFound, Forbidden, HTTPException):
                 await start_msg.delete()
-        del self._polls[poll_msg.id]
+        if is_dm:
+            del self._polls[poll_msg.id]
+        else:
+            async def del_poll():
+                await asleep(10)
+                with suppress(KeyError):
+                    del self._polls[poll_msg.id]
+
+            self._bot.loop.create_task(del_poll())
         if current_poll.state == States.CANCELED:
             poll_res = "`" + get_translation("Poll result: canceled!") + "`"
         else:
             poll_res = get_translation("granted") if current_poll.state == \
                                                      States.GRANTED else get_translation("refused")
             poll_res = "`" + get_translation("Poll result: permission {0}!").format(poll_res) + "`"
-        try:
-            await poll_msg.edit(content=poll_res, embed=None)
+        await channel.send(poll_res, delete_after=remove_logs_after)
+        with suppress(NotFound, Forbidden, HTTPException):
             await poll_msg.delete(delay=remove_logs_after)
-        except (NotFound, Forbidden, HTTPException):
-            await channel.send(poll_res, delete_after=remove_logs_after)
         return None if current_poll.state == States.CANCELED else current_poll.state == States.GRANTED
 
-    async def make_embed(self, channel: Messageable, embed_message: str = None):
-        emb = Embed(title=get_translation("Survey. Voting!") if embed_message is None else embed_message,
-                    color=Color.orange())
-        emb.add_field(name=get_translation("yes"), value=self._emoji_symbols.get("yes"))
-        emb.add_field(name=get_translation("no"), value=self._emoji_symbols.get("no"))
-        add_reactions_to = await channel.send(embed=emb)
-        for emote in self._emoji_symbols.values():
-            await add_reactions_to.add_reaction(emote)
-        return add_reactions_to
+    async def make_poll(
+            self,
+            channel: Messageable,
+            duration_seconds: int,
+            poll_content: 'PollContent',
+            poll_message: str = None,
+            is_dm: bool = False
+    ):
+        if not is_dm:
+            poll = DiscordPoll(
+                question=get_translation("Voting!") if poll_message is None else poll_message,
+                duration=dt.timedelta(seconds=duration_seconds)
+            )
+            poll.add_answer(text=get_translation("yes").capitalize(), emoji=self._emoji_symbols["yes"])
+            poll.add_answer(text=get_translation("no").capitalize(), emoji=self._emoji_symbols["no"])
+            msg = await channel.send(poll=poll)
+            poll_content.set_discord_poll(poll)
+        else:
+            view = PollButtonsView(poll_content, self._emoji_symbols, float(duration_seconds))
+            msg = await channel.send(
+                content=get_translation("Voting!") if poll_message is None else poll_message,
+                view=view
+            )
+            poll_content.set_poll_view(view)
+        return msg
 
     @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
+    async def on_message(self, message: Message):
         with handle_unhandled_error_in_events():
-            if payload.message_id not in self._polls or \
-                    (payload.member is not None and payload.member.id == self._bot.user.id) or \
-                    (payload.member is None and payload.user_id == self._bot.user.id):
+            if message.author == self._bot.user and message.reference is not None \
+                    and message.reference.message_id in self._polls:
+                if self._polls[message.reference.message_id].RLA is not None:
+                    await message.delete(delay=self._polls[message.reference.message_id].RLA)
+                del self._polls[message.reference.message_id]
+
+    @commands.Cog.listener()
+    async def on_raw_poll_vote_add(self, payload: RawPollVoteActionEvent):
+        with handle_unhandled_error_in_events():
+            if payload.message_id not in self._polls or payload.user_id == self._bot.user.id:
                 return
             channel = self._bot.get_channel(payload.channel_id)
             if channel is None:
                 with suppress(InvalidData, HTTPException, NotFound, Forbidden):
                     channel = await self._bot.fetch_channel(payload.channel_id)
-            current_poll = self._polls[payload.message_id]
-            emoji = self._emoji_symbols["yes" if payload.emoji.name == self._emoji_symbols["yes"] else "no"]
-            if payload.member is None:
-                if isinstance(channel, DMChannel):
-                    user = await self._bot.fetch_user(payload.user_id)
-                else:
-                    user = await self._bot.guilds[0].fetch_member(payload.user_id)
+            current_poll: PollContent = self._polls[payload.message_id]
+            if isinstance(channel, DMChannel):
+                user = await self._bot.fetch_user(payload.user_id)
             else:
-                user = payload.member
-            if payload.emoji.name not in self._emoji_symbols.values() \
-                    or not await current_poll.count_add_voice(channel, user, emoji,
-                                                              payload.emoji.name == self._emoji_symbols["yes"]):
-                message = await channel.fetch_message(payload.message_id)
-                await message.remove_reaction(payload.emoji, user)
+                user = await self._bot.guilds[0].fetch_member(payload.user_id)
+            answer = current_poll.poll.get_answer(payload.answer_id)
+            if answer is not None:
+                await current_poll.count_add_voice(
+                    channel,
+                    user,
+                    self._emoji_symbols["yes" if answer.emoji.name == self._emoji_symbols["yes"] else "no"],
+                    answer.emoji.name == self._emoji_symbols["yes"]
+                )
 
     @commands.Cog.listener()
-    async def on_raw_reaction_remove(self, payload: RawReactionActionEvent):
+    async def on_raw_poll_vote_remove(self, payload: RawPollVoteActionEvent):
         with handle_unhandled_error_in_events():
-            if payload.message_id not in self._polls or \
-                    (payload.member is not None and payload.member.id == self._bot.user.id) or \
-                    (payload.member is None and payload.user_id == self._bot.user.id):
+            if payload.message_id not in self._polls or payload.user_id == self._bot.user.id:
                 return
-            current_poll = self._polls[payload.message_id]
-            if payload.emoji.name not in [v for k, v in current_poll.poll_voted_uniq.items() if k == payload.user_id]:
-                return
+            current_poll: PollContent = self._polls[payload.message_id]
             channel = self._bot.get_channel(payload.channel_id)
             if channel is None:
                 with suppress(InvalidData, HTTPException, NotFound, Forbidden):
                     channel = await self._bot.fetch_channel(payload.channel_id)
-            if payload.member is None:
-                if isinstance(channel, DMChannel):
-                    user = await self._bot.fetch_user(payload.user_id)
-                else:
-                    user = await self._bot.guilds[0].fetch_member(payload.user_id)
+            if isinstance(channel, DMChannel):
+                user = await self._bot.fetch_user(payload.user_id)
             else:
-                user = payload.member
-            await current_poll.count_del_voice(channel, user, payload.emoji.name == self._emoji_symbols["yes"])
+                user = await self._bot.guilds[0].fetch_member(payload.user_id)
+            answer = current_poll.poll.get_answer(payload.answer_id)
+            if answer is not None:
+                await current_poll.count_del_voice(channel, user, answer.emoji.name == self._emoji_symbols["yes"])
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload):
@@ -201,30 +234,50 @@ class PollContent:
         self.state = States.NONE
         self.command = command
         self.AN = admin_needed
+        self.poll: Optional[DiscordPoll] = None
+        self.view: Optional['PollButtonsView'] = None
 
-    async def count_add_voice(self, channel: Messageable, user: Member, emoji: str, to_left: bool):
+    def set_discord_poll(self, poll: DiscordPoll):
+        self.poll = poll
+
+    def set_poll_view(self, view: 'PollButtonsView'):
+        self.view = view
+
+    async def count_add_voice(self, channel: Union[Messageable, Interaction], user: Member, emoji: str, to_left: bool):
         if self.state is not States.NONE:
-            await channel.send(f"{user.mention}, " + get_translation("poll've already finished!"),
-                               delete_after=self.RLA)
+            await send_msg(
+                channel,
+                f"{user.mention}, " + get_translation("poll have already finished!"),
+                delete_delay=self.RLA
+            )
             return False
         if user.id in self.poll_voted_uniq.keys():
-            await channel.send(f"{user.mention}, " + get_translation("you've already voted!"),
-                               delete_after=self.RLA)
+            await send_msg(
+                channel,
+                f"{user.mention}, " + get_translation("you've already voted!"),
+                delete_delay=self.RLA
+            )
             return False
         if not self.AN and self.NR and self.NR.id not in (e.id for e in user.roles):
-            await channel.send(f"{user.mention}, " +
-                               get_translation("you don't have needed '{0}' role").format(self.NR.name),
-                               delete_after=self.RLA)
+            await send_msg(
+                channel,
+                f"{user.mention}, " + get_translation("you don't have needed '{0}' role").format(self.NR.name),
+                delete_delay=self.RLA
+            )
             return False
         if self.AN and self.NR and self.NR.id not in (e.id for e in user.roles) and \
                 not user.guild_permissions.administrator:
             if self.NR != "":
-                await channel.send(f"{user.mention}, " +
-                                   get_translation("you don't have needed '{0}' role").format(self.NR.name),
-                                   delete_after=self.RLA)
-            await channel.send(f"{user.mention}, " +
-                               get_translation("you don't have permission 'Administrator'"),
-                               delete_after=self.RLA)
+                await send_msg(
+                    channel,
+                    f"{user.mention}, " + get_translation("you don't have needed '{0}' role").format(self.NR.name),
+                    delete_delay=self.RLA
+                )
+            await send_msg(
+                channel,
+                f"{user.mention}, " + get_translation("you don't have permission 'Administrator'"),
+                delete_delay=self.RLA
+            )
             return False
         self.poll_voted_uniq.update({user.id: emoji})
         if to_left:
@@ -237,15 +290,20 @@ class PollContent:
             self.state = States.REFUSED
         return True
 
-    async def count_del_voice(self, channel: Messageable, user: Member, to_left: bool):
+    async def count_del_voice(self, channel: Union[Messageable, Interaction], user: Member, to_left: bool):
         if self.state is not States.NONE:
-            await channel.send(f"{user.mention}, " + get_translation("poll've already finished!"),
-                               delete_after=self.RLA)
+            await send_msg(
+                channel,
+                f"{user.mention}, " + get_translation("poll have already finished!"),
+                delete_delay=self.RLA
+            )
             return
         if self.NR and self.NR.id not in (e.id for e in user.roles):
-            await channel.send(f"{user.mention}, " +
-                               get_translation("you don't have needed '{0}' role").format(self.NR.name),
-                               delete_after=self.RLA)
+            await send_msg(
+                channel,
+                f"{user.mention}, " + get_translation("you don't have needed '{0}' role").format(self.NR.name),
+                delete_delay=self.RLA
+            )
             return
         self.poll_voted_uniq.pop(user.id)
         if to_left:
@@ -255,3 +313,32 @@ class PollContent:
 
     def cancel(self):
         self.state = States.CANCELED
+
+
+class PollButtonsView(View):
+    def __init__(self, poll: PollContent, emoji_symbols: dict, timeout: Optional[float] = None):
+        super().__init__(timeout=timeout)
+        self.current_poll = poll
+        self.emoji_symbols = emoji_symbols
+        self.p_yes.emoji = emoji_symbols['yes']
+        self.p_yes.label = get_translation("yes").capitalize()
+        self.p_no.emoji = emoji_symbols['no']
+        self.p_no.label = get_translation("no").capitalize()
+
+    @button(style=ButtonStyle.secondary, custom_id="poll:yes")
+    async def p_yes(self, interaction: Interaction, button: Button):
+        await self.current_poll.count_add_voice(
+            interaction,
+            interaction.user,
+            self.emoji_symbols["yes"],
+            True
+        )
+
+    @button(style=ButtonStyle.secondary, custom_id="poll:no")
+    async def p_no(self, interaction: Interaction, button: Button):
+        await self.current_poll.count_add_voice(
+            interaction,
+            interaction.user,
+            self.emoji_symbols["no"],
+            False
+        )

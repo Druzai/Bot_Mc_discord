@@ -61,18 +61,24 @@ if Config.get_os() == OS.Windows:
     from os import startfile
 
 
-async def send_msg(ctx: Union[Messageable, Interaction], msg: str, view: View = MISSING, is_reaction=False):
+async def send_msg(
+        ctx: Union[Messageable, Interaction],
+        msg: str,
+        view: View = MISSING,
+        is_reaction=False,
+        delete_delay: int = None
+):
     if isinstance(ctx, Interaction):
-        message = await send_interaction(ctx, msg, view=view, is_reaction=is_reaction)
+        message = await send_interaction(ctx, msg, view=view, is_reaction=is_reaction, delete_delay=delete_delay)
     else:
         if view == MISSING:
             view = None
-        message = await ctx.send(
-            content=msg,
-            view=view,
-            delete_after=(Config.get_timeouts_settings().await_seconds_before_message_deletion
-                          if is_reaction else None)
-        )
+        delete_after = None
+        if is_reaction:
+            delete_after = Config.get_timeouts_settings().await_seconds_before_message_deletion
+        elif delete_delay:
+            delete_after = delete_delay
+        message = await ctx.send(content=msg, view=view, delete_after=delete_after)
     return message
 
 
@@ -82,9 +88,15 @@ async def send_interaction(
         view: View = MISSING,
         ctx: Messageable = None,
         ephemeral=False,
-        is_reaction=False
+        is_reaction=False,
+        delete_delay: int = None
 ):
     message = None
+    delete_after = None
+    if is_reaction:
+        delete_after = Config.get_timeouts_settings().await_seconds_before_message_deletion
+    elif delete_delay:
+        delete_after = delete_delay
     try:
         if interaction is None or interaction.is_expired():
             raise ValueError()
@@ -95,8 +107,8 @@ async def send_interaction(
             await interaction.response.send_message(msg, view=view, ephemeral=ephemeral)
             message = await interaction.original_response()
 
-        if is_reaction:
-            await message.delete(delay=Config.get_timeouts_settings().await_seconds_before_message_deletion)
+        if delete_after is not None:
+            await message.delete(delay=delete_after)
     except (NotFound, HTTPException, ValueError):
         if ctx is None and interaction is not None:
             ctx = interaction.channel
@@ -106,8 +118,7 @@ async def send_interaction(
             message = await ctx.send(
                 content=msg,
                 view=view,
-                delete_after=(Config.get_timeouts_settings().await_seconds_before_message_deletion
-                              if is_reaction else None)
+                delete_after=delete_after
             )
     return message
 
@@ -3895,7 +3906,7 @@ async def handle_message_for_chat(
 
         server_version = get_server_version()
         reply_from_minecraft_user = None
-        if server_version.minor < 7:
+        if server_version.minor < 7 or (server_version.minor == 7 and server_version.patch < 2):
             if server_version.minor < 3:
                 message_length = 108
             elif 3 <= server_version.minor < 6:
@@ -4189,7 +4200,7 @@ def _clean_message(message: Message, edit_command_content: str = ""):
 
 async def _handle_reply_in_message(message: Message, result_msg: dict) -> Tuple[dict, bool]:
     reply_from_minecraft_user = None
-    if message.reference is not None:
+    if message.type == MessageType.reply and message.reference is not None:
         reply_msg = message.reference.resolved
         cnt = reply_msg.clean_content.replace("\u200b", "").strip()
         if is_user_webhook(reply_msg.author):
@@ -4256,10 +4267,7 @@ async def _handle_components_in_message(
 
         if store_images_for_preview and not is_reply:
             with handle_unhandled_error_in_link_request(image_preview=True):
-                resp = BotVars.session_for_other_requests.head(
-                    link,
-                    timeout=(3, 6)
-                )
+                resp = BotVars.session_for_other_requests.head(link, timeout=(3, 6))
                 if resp.status_code == 200 and resp.headers.get("content-length") is not None and \
                         int(resp.headers.get("content-length")) <= 20971520:
                     # Checks if Content-Length not larger than 20 MB
@@ -4297,10 +4305,7 @@ async def _handle_components_in_message(
                 })
             else:
                 with handle_unhandled_error_in_link_request(image_preview=True):
-                    resp = BotVars.session_for_other_requests.head(
-                        link,
-                        timeout=(3, 6)
-                    )
+                    resp = BotVars.session_for_other_requests.head(link, timeout=(3, 6))
                     if resp.status_code == 200 and resp.headers.get("content-length") is not None and \
                             int(resp.headers.get("content-length")) <= 20971520:
                         # Checks if Content-Length not larger than 20 MB
@@ -4644,10 +4649,7 @@ def has_transparency(img: Image.Image):
 def get_image_data(url: str):
     if search(r"https?://tenor\.com/view", url):
         with handle_unhandled_error_in_link_request(image_preview=True):
-            text = BotVars.session_for_other_requests.get(
-                url,
-                timeout=(4, 8)
-            ).text
+            text = BotVars.session_for_other_requests.get(url, timeout=(4, 8)).text
             match = search(rf"property=\"og:image\"\s*content=\"(?P<link>{URL_REGEX})?\"", text)
             url = match.group("link") if match is not None else None
 
@@ -4660,10 +4662,7 @@ def get_image_data(url: str):
         filename = unquote(filename)
         with handle_unhandled_error_in_link_request(image_preview=True):
             return dict(
-                bytes=BytesIO(BotVars.session_for_other_requests.get(
-                    url,
-                    timeout=(4, 8)
-                ).content),
+                bytes=BytesIO(BotVars.session_for_other_requests.get(url, timeout=(4, 8)).content),
                 name=filename
             )
 
@@ -4872,11 +4871,7 @@ def shorten_string(string: str, max_length: int):
 def get_shortened_url(url: str):
     for service_url in ["https://clck.ru/--", "https://tinyurl.com/api-create.php"]:
         with handle_unhandled_error_in_link_request():
-            response = BotVars.session_for_other_requests.post(
-                service_url,
-                params={"url": url},
-                timeout=(3, 6)
-            )
+            response = BotVars.session_for_other_requests.post(service_url, params={"url": url}, timeout=(3, 6))
             if response.ok and len(response.text) > 0:
                 return response.text
     print(get_translation("Bot Error: {0}").format(

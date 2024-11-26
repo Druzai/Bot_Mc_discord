@@ -7,10 +7,12 @@ All important changes to this project will be documented in this file.
 #### Improvements:
 
 * Switched to using new Minecraft Wiki API
+* Changed the way bot sends polls to use official [Poll Feature](https://support.discord.com/hc/en-us/articles/22163184112407-Polls-FAQ) instead of embed with reactions
+  * In DM with user bot will display buttons to vote (Discord limitation)
 * Added translation strings for death messages up to version `1.21.3`
 * Enhanced algorithm to get average loading server time
 * Added options to enable proxy for RSS and other requests separately
-* Added option to enable using User Agent from Chrome or Firefox when checking RSS feed instead of default one - `requests/1.31` or `feedparser/6.0.10`
+* Added option to enable using User Agent from Chrome or Firefox when checking RSS feed instead of default one indicating the sender is a bot
 
 #### Fixed:
 
