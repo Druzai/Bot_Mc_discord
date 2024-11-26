@@ -4505,11 +4505,9 @@ msgstr "Чтобы забанить этот IP-адрес, введите ко�
 
 #: ../components\watcher_handle.py:606
 msgid ""
-"Login without code?\n"
-"(Less safe)"
+"Login without code? (Less safe)"
 msgstr ""
-"Войти без кода?\n"
-"(Менее безопасно)"
+"Войти без кода? (Менее безопасно)"
 
 #: ../config\init_config.py:179
 msgid "☠ Obituary ☠"

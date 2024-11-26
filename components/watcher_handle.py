@@ -603,7 +603,7 @@ def _check_log_file(
                             async def send_message_and_poll(member, msg, poll, nick, ip_address, server_version):
                                 await member.send(msg)
                                 if await poll.run(channel=member,
-                                                  poll_message=get_translation("Login without code?\n(Less safe)"),
+                                                  poll_message=get_translation("Login without code? (Less safe)"),
                                                   command=f"auth login {nick} {ip_address}",
                                                   need_for_voting=1,
                                                   timeout=Config.get_secure_auth().mins_before_code_expires * 60,

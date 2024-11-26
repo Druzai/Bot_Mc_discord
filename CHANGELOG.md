@@ -8,7 +8,6 @@ All important changes to this project will be documented in this file.
 
 * Switched to using new Minecraft Wiki API
 * Changed the way bot sends polls to use official [Poll Feature](https://support.discord.com/hc/en-us/articles/22163184112407-Polls-FAQ) instead of embedded message with reactions
-  * In DM with user bot will display buttons to vote (Discord limitation)
 * Added translation strings for death messages up to version `1.21.3`
 * Enhanced algorithm to get average loading server time
 * Added options to enable proxy for RSS and other requests separately

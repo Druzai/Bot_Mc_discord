@@ -45,7 +45,6 @@ class Poll(commands.Cog):
     ):
         if message is None and poll_message is None:
             raise ValueError("'message' and 'poll_message' is not stated!")
-        is_dm = False
         if not isinstance(channel, Member) and not isinstance(channel, DMChannel):
             if isinstance(channel, GroupChannel):
                 members_count = len([m for m in channel.recipients if not m.bot])
@@ -54,7 +53,6 @@ class Poll(commands.Cog):
             if members_count < need_for_voting:
                 need_for_voting = members_count
         else:
-            is_dm = True
             if need_for_voting > 1:
                 need_for_voting = 1
         mention = "@everyone"
@@ -71,31 +69,27 @@ class Poll(commands.Cog):
                          if add_votes_count else "")
             )
         current_poll = PollContent(channel, command, need_for_voting, needed_role, remove_logs_after, admin_needed)
-        poll_msg = await self.make_poll(channel, timeout, current_poll, poll_message, is_dm)
+        poll_msg = await self.make_poll(channel, timeout, current_poll, poll_message)
         self._polls[poll_msg.id] = current_poll
         seconds = 0
         while current_poll.state == States.NONE:
             await asleep(1)
             seconds += 1
-            if (not is_dm and current_poll.poll.is_finalised()) or timeout <= seconds:
+            if current_poll.poll.is_finalised() or timeout <= seconds:
                 current_poll.cancel()
-        if not is_dm and not current_poll.poll.is_finalised():
+        if not current_poll.poll.is_finalised():
             with suppress(ClientException, HTTPException):
                 await current_poll.poll.end()
-        elif is_dm:
-            current_poll.view.stop()
         if start_msg is not None:
             with suppress(NotFound, Forbidden, HTTPException):
                 await start_msg.delete()
-        if is_dm:
-            del self._polls[poll_msg.id]
-        else:
-            async def del_poll():
-                await asleep(10)
-                with suppress(KeyError):
-                    del self._polls[poll_msg.id]
 
-            self._bot.loop.create_task(del_poll())
+        async def del_poll():
+            await asleep(10)
+            with suppress(KeyError):
+                del self._polls[poll_msg.id]
+
+        self._bot.loop.create_task(del_poll())
         if current_poll.state == States.CANCELED:
             poll_res = "`" + get_translation("Poll result: canceled!") + "`"
         else:
@@ -112,25 +106,16 @@ class Poll(commands.Cog):
             channel: Messageable,
             duration_seconds: int,
             poll_content: 'PollContent',
-            poll_message: str = None,
-            is_dm: bool = False
+            poll_message: str = None
     ):
-        if not is_dm:
-            poll = DiscordPoll(
-                question=get_translation("Voting!") if poll_message is None else poll_message,
-                duration=dt.timedelta(seconds=duration_seconds)
-            )
-            poll.add_answer(text=get_translation("yes").capitalize(), emoji=self._emoji_symbols["yes"])
-            poll.add_answer(text=get_translation("no").capitalize(), emoji=self._emoji_symbols["no"])
-            msg = await channel.send(poll=poll)
-            poll_content.set_discord_poll(poll)
-        else:
-            view = PollButtonsView(poll_content, self._emoji_symbols, float(duration_seconds))
-            msg = await channel.send(
-                content=get_translation("Voting!") if poll_message is None else poll_message,
-                view=view
-            )
-            poll_content.set_poll_view(view)
+        poll = DiscordPoll(
+            question=get_translation("Voting!") if poll_message is None else poll_message,
+            duration=dt.timedelta(seconds=duration_seconds if duration_seconds >= 3600 else 3600)
+        )
+        poll.add_answer(text=get_translation("yes").capitalize(), emoji=self._emoji_symbols["yes"])
+        poll.add_answer(text=get_translation("no").capitalize(), emoji=self._emoji_symbols["no"])
+        msg = await channel.send(poll=poll)
+        poll_content.set_discord_poll(poll)
         return msg
 
     @commands.Cog.listener()
@@ -235,13 +220,9 @@ class PollContent:
         self.command = command
         self.AN = admin_needed
         self.poll: Optional[DiscordPoll] = None
-        self.view: Optional['PollButtonsView'] = None
 
     def set_discord_poll(self, poll: DiscordPoll):
         self.poll = poll
-
-    def set_poll_view(self, view: 'PollButtonsView'):
-        self.view = view
 
     async def count_add_voice(self, channel: Union[Messageable, Interaction], user: Member, emoji: str, to_left: bool):
         if self.state is not States.NONE:
@@ -313,32 +294,3 @@ class PollContent:
 
     def cancel(self):
         self.state = States.CANCELED
-
-
-class PollButtonsView(View):
-    def __init__(self, poll: PollContent, emoji_symbols: dict, timeout: Optional[float] = None):
-        super().__init__(timeout=timeout)
-        self.current_poll = poll
-        self.emoji_symbols = emoji_symbols
-        self.p_yes.emoji = emoji_symbols['yes']
-        self.p_yes.label = get_translation("yes").capitalize()
-        self.p_no.emoji = emoji_symbols['no']
-        self.p_no.label = get_translation("no").capitalize()
-
-    @button(style=ButtonStyle.secondary, custom_id="poll:yes")
-    async def p_yes(self, interaction: Interaction, button: Button):
-        await self.current_poll.count_add_voice(
-            interaction,
-            interaction.user,
-            self.emoji_symbols["yes"],
-            True
-        )
-
-    @button(style=ButtonStyle.secondary, custom_id="poll:no")
-    async def p_no(self, interaction: Interaction, button: Button):
-        await self.current_poll.count_add_voice(
-            interaction,
-            interaction.user,
-            self.emoji_symbols["no"],
-            False
-        )

@@ -4459,11 +4459,9 @@ msgstr "To ban this IP-address enter command `{0}`"
 
 #: ../components\watcher_handle.py:606
 msgid ""
-"Login without code?\n"
-"(Less safe)"
+"Login without code? (Less safe)"
 msgstr ""
-"Login without code?\n"
-"(Less safe)"
+"Login without code? (Less safe)"
 
 #: ../config\init_config.py:179
 msgid "☠ Obituary ☠"
