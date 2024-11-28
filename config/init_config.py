@@ -1237,7 +1237,12 @@ class Config:
     def _load_from_yaml(cls, filepath: Path, baseclass):
         try:
             return sload(json_obj=Conf.to_object(Conf.load(filepath)), cls=baseclass)
-        except DeserializationError:
+        except DeserializationError as e:
+            print(get_translation("Bot Error: {0}").format(
+                get_translation("Couldn't parse config file - '{0}'").format(e)
+            ))
+            print(get_translation("Note: You can stop bot and fix config file manually."))
+            print(get_translation("Setting up a new config..."))
             return baseclass()
 
     @classmethod

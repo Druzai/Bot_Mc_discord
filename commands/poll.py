@@ -235,14 +235,16 @@ class PollContent:
         if user.id in self.poll_voted_uniq.keys():
             await send_msg(
                 channel,
-                f"{user.mention}, " + get_translation("you've already voted!"),
+                f"{user.mention}, " + get_translation("you've already voted!") +
+                " " + get_translation("This vote will not be counted!"),
                 delete_delay=self.RLA
             )
             return False
         if not self.AN and self.NR and self.NR.id not in (e.id for e in user.roles):
             await send_msg(
                 channel,
-                f"{user.mention}, " + get_translation("you don't have needed '{0}' role").format(self.NR.name),
+                f"{user.mention}, " + get_translation("you don't have needed '{0}' role!").format(self.NR.name) +
+                " " + get_translation("This vote will not be counted!"),
                 delete_delay=self.RLA
             )
             return False
@@ -251,12 +253,14 @@ class PollContent:
             if self.NR != "":
                 await send_msg(
                     channel,
-                    f"{user.mention}, " + get_translation("you don't have needed '{0}' role").format(self.NR.name),
+                    f"{user.mention}, " + get_translation("you don't have needed '{0}' role!").format(self.NR.name) +
+                    " " + get_translation("This vote will not be counted!"),
                     delete_delay=self.RLA
                 )
             await send_msg(
                 channel,
-                f"{user.mention}, " + get_translation("you don't have permission 'Administrator'"),
+                f"{user.mention}, " + get_translation("you don't have permission 'Administrator'!") +
+                " " + get_translation("This vote will not be counted!"),
                 delete_delay=self.RLA
             )
             return False
@@ -279,18 +283,12 @@ class PollContent:
                 delete_delay=self.RLA
             )
             return
-        if self.NR and self.NR.id not in (e.id for e in user.roles):
-            await send_msg(
-                channel,
-                f"{user.mention}, " + get_translation("you don't have needed '{0}' role").format(self.NR.name),
-                delete_delay=self.RLA
-            )
-            return
-        self.poll_voted_uniq.pop(user.id)
-        if to_left:
-            self.poll_yes -= 1
-        else:
-            self.poll_no -= 1
+        with suppress(KeyError):
+            self.poll_voted_uniq.pop(user.id)
+            if to_left:
+                self.poll_yes -= 1
+            else:
+                self.poll_no -= 1
 
     def cancel(self):
         self.state = States.CANCELED

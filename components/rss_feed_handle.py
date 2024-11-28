@@ -29,7 +29,7 @@ async def check_on_rss_feed():
             headers["User-Agent"] = UserAgent.get_header()
         text = BotVars.wh_session_rss.get(
             Config.get_rss_feed_settings().rss_url,
-            timeout=(3, 6),
+            timeout=(10, None),
             headers=headers
         ).text
         parsed = parse(text)

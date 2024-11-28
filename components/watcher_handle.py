@@ -14,7 +14,7 @@ from traceback import format_exc
 from typing import TYPE_CHECKING, Optional, List, Tuple, Union
 
 from colorama import Fore, Style
-from discord import SyncWebhook, Webhook, TextChannel, Role, ChannelType, SyncWebhookMessage
+from discord import SyncWebhook, Webhook, TextChannel, Role, ChannelType, SyncWebhookMessage, Member
 from discord.utils import get as utils_get, escape_markdown, find as utils_find
 
 from components.constants import DEATH_MESSAGES, REGEX_DEATH_MESSAGES, MASS_REGEX_DEATH_MESSAGES
@@ -600,7 +600,14 @@ def _check_log_file(
                                 if p.command == f"auth login {logged_in_nick} {ip_address}":
                                     p.cancel()
 
-                            async def send_message_and_poll(member, msg, poll, nick, ip_address, server_version):
+                            async def send_message_and_poll(
+                                    member: Member,
+                                    msg: str,
+                                    poll: Poll,
+                                    nick: str,
+                                    ip_address: Union[IPv4Address, IPv6Address],
+                                    server_version: ServerVersion
+                            ):
                                 await member.send(msg)
                                 if await poll.run(channel=member,
                                                   poll_message=get_translation("Login without code? (Less safe)"),

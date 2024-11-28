@@ -10,8 +10,7 @@
 
 ## Main features
 
-> **Warning**
->
+> [!IMPORTANT]
 > **This bot designed to work only on 1 Discord server!**
 
 * Managing Minecraft server via Discord bot:
@@ -98,16 +97,14 @@
 `@Minecrafters` - an optional role in Discord for managing the Minecraft server. If not stated then bot will
 mention `@everyone`.
 
-> **Warning**
->
+> [!WARNING]
 > Mentions from Minecraft mustn't contain `@` in them!
 
 ## Commands
 
 If you want to see help on all bot's commands use `help` command when bot is running.
 
-> **Note**
->
+> [!NOTE]
 > Some commands will require an optional role or/and an admin role if you set them in bot config.
 
 ## Languages
@@ -167,8 +164,7 @@ Python - `python Discord_bot.pyz`.
 
 ## Run
 
-> **Warning**
->
+> [!WARNING]
 > **If you're running Minecraft server between versions `1.7.2` and `1.18.0` to avoid critical security
 vulnerability `Log4Shell` do instructions stated in
 this [article](https://www.minecraft.net/en-us/article/important-message--security-vulnerability-java-edition)!**

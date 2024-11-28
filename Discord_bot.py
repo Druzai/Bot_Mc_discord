@@ -18,14 +18,13 @@ from commands.chat_commands import ChatCommands
 from commands.minecraft_commands import MinecraftCommands
 from commands.poll import Poll
 from components.additional_funcs import setup_print_handlers
+from components.constants import VERSION
 from components.localization import get_translation
 from config.init_config import Config, BotVars, OS
 
 if Config.get_os() == OS.Windows:
     from colorama import init
     from asyncio import WindowsSelectorEventLoopPolicy
-
-VERSION = "1.4.6a"
 
 
 def get_prefix(bot, msg):

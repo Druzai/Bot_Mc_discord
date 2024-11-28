@@ -19,7 +19,7 @@ from components.additional_funcs import (
     shorten_string, on_language_select_callback, get_message_and_channel, MenuServerView, MenuBotView,
     get_member_string, get_user_name, is_user_webhook
 )
-from components.constants import DISCORD_SELECT_FIELD_MAX_LENGTH
+from components.constants import DISCORD_SELECT_FIELD_MAX_LENGTH, VERSION
 from components.localization import get_translation, get_locales, get_current_locale
 from components.rss_feed_handle import check_on_rss_feed
 from components.watcher_handle import create_watcher
@@ -48,6 +48,7 @@ class ChatCommands(commands.Cog):
             print("------")
             print(get_translation("Logged in Discord as"))
             print(get_user_name(self._bot.user))
+            print(get_translation("Version of bot") + " - " + VERSION)
             print(get_translation("Version of discord.py") + " - " + discord.__version__)
             print(get_translation("Version of Python") + " - " + python_version())
             print("------")

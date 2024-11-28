@@ -8,11 +8,14 @@ All important changes to this project will be documented in this file.
 
 * Switched to using new Minecraft Wiki API
 * Changed the way bot sends polls to use official [Poll Feature](https://support.discord.com/hc/en-us/articles/22163184112407-Polls-FAQ) instead of embedded message with reactions
+  * Bot can't remove user votes, so when user without permission votes bot only warns them but that vote won't be counted
 * Added translation strings for death messages up to version `1.21.3`
 * Enhanced algorithm to get average loading server time
 * Added options to enable proxy for RSS and other requests separately
 * Added option to enable using User Agent from Chrome or Firefox when checking RSS feed instead of default one indicating the sender is a bot
 * Added support for Python 3.13
+* Switched to using ellipsis symbol `…` instead of three dots when sending text/tellraw to Discord and Minecraft server `1.1` and higher
+* Changed timeouts in requests (if you behind slow proxy)
 
 #### Fixed:
 

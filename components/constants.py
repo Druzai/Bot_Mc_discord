@@ -1,5 +1,7 @@
 from re import sub, compile
 
+VERSION = "1.4.6a"
+
 UNITS = ("B", "KB", "MB", "GB", "TB", "PB")
 WINDOW_AVERAGE_LENGTH = 5
 DISCORD_SYMBOLS_IN_MESSAGE_LIMIT = 2000

@@ -328,6 +328,9 @@ class MinecraftCommands(commands.Cog):
                                                timeout=Config.get_secure_auth().mins_before_code_expires * 60,
                                                admin_needed=True,
                                                remove_logs_after=5):
+                    await ctx.send(add_quotes(get_translation(
+                        "Bot couldn't create link {0} -> {1} because the majority voted against it!"
+                    ).format(ctx.author.display_name, nick)))
                     return
                 if check_if_obituary_webhook(nick):
                     await ctx.send(get_translation("{0}, you don't have permission to control fates! "
@@ -989,6 +992,10 @@ class MinecraftCommands(commands.Cog):
                     ),
                     remove_logs_after=5
             ):
+                await ctx.send(add_quotes(get_translation(
+                    "Bot couldn't delete all backups of `{0}` "
+                    "server because the majority voted against deleting them!"
+                ).format(Config.get_selected_server_from_list().server_name)))
                 return
         else:
             await delete_after_by_msg(ctx.message)

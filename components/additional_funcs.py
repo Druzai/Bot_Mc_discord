@@ -430,6 +430,14 @@ async def stop_server(
                                       command="stop",
                                       needed_role=Config.get_settings().bot_settings.managing_commands_role_id,
                                       remove_logs_after=5):
+                    await send_msg(
+                        ctx,
+                        add_quotes(get_translation(
+                            "Bot couldn't stop the server with {0} player(s) on it "
+                            "because the majority voted against it!"
+                        ).format(players_info.num_players)),
+                        is_reaction=is_reaction
+                    )
                     return
             elif not logged_only_author_accounts and not is_reaction:
                 await delete_after_by_msg(ctx.message)
@@ -1504,6 +1512,10 @@ async def bot_clear(
             else:
                 await ctx.message.delete()
                 await clear_with_big_limit(ctx, count=count, check_condition=check_condition)
+        else:
+            await ctx.send(add_quotes(get_translation(
+                "Bot couldn't delete some history of this channel because the majority voted against deleting it!"
+            )))
     else:
         await delete_after_by_msg(ctx.message)
 
@@ -2382,7 +2394,8 @@ async def send_select_view(
 
     async def on_timeout():
         view.stop()
-        await msg.delete()
+        with suppress(NotFound):
+            await msg.delete()
 
     view.on_timeout = on_timeout
 
@@ -2393,7 +2406,8 @@ async def send_select_view(
             view.on_timeout = lambda: None
         elif choice == SelectChoice.DELETE_SELECT:
             view.stop()
-            await msg.delete()
+            with suppress(NotFound):
+                await msg.delete()
 
     view.v_select.callback = callback
 
@@ -3140,6 +3154,18 @@ async def send_backup_remove_select(
                         ),
                         remove_logs_after=5
                 ):
+                    await send_msg(
+                        ctx if isinstance(ctx, commands.Context) else interaction,
+                        add_quotes(get_translation(
+                            "Bot couldn't delete backup dated `{0}` made by {1} of `{2}` "
+                            "server because the majority voted against deleting it!"
+                        ).format(
+                            selected_backup.file_creation_date.strftime(get_translation("%H:%M:%S %d/%m/%Y")),
+                            await get_member_string(bot, selected_backup.initiator),
+                            Config.get_selected_server_from_list().server_name
+                        )),
+                        is_reaction=is_reaction
+                    )
                     return SelectChoice.DELETE_SELECT
             else:
                 if isinstance(ctx, commands.Context):
@@ -3922,7 +3948,8 @@ async def handle_message_for_chat(
                 message,
                 bot,
                 only_replace_links=True,
-                version_lower_1_7_2=True
+                version_lower_1_7_2=True,
+                version_1_0_0=server_version.major == 1 and server_version.minor == 0 and server_version.patch == 0
             )
             msg = ""
             if result_msg.get("reply", None) is not None:
@@ -4221,11 +4248,12 @@ async def _handle_components_in_message(
         bot: commands.Bot,
         only_replace_links=False,
         version_lower_1_7_2=False,
-        store_images_for_preview=False
+        store_images_for_preview=False,
+        version_1_0_0=False
 ):
-    if only_replace_links or version_lower_1_7_2:
+    if only_replace_links or version_lower_1_7_2 or version_1_0_0:
         store_images_for_preview = False
-    attachments, images_for_preview = _handle_attachments_in_message(message, store_images_for_preview)
+    attachments, images_for_preview = _handle_attachments_in_message(message, store_images_for_preview, version_1_0_0)
     emoji_regex = r"<a?:\w+:\d+>"
     emoji_regex_groups = r"<a?:(?P<name>\w+):(?P<id>\d+)>"
     tenor_regex = r"https?://tenor\.com/view"
@@ -4267,7 +4295,7 @@ async def _handle_components_in_message(
 
         if store_images_for_preview and not is_reply:
             with handle_unhandled_error_in_link_request(image_preview=True):
-                resp = BotVars.session_for_other_requests.head(link, timeout=(3, 6))
+                resp = BotVars.session_for_other_requests.head(link, timeout=(10, None))
                 if resp.status_code == 200 and resp.headers.get("content-length") is not None and \
                         int(resp.headers.get("content-length")) <= 20971520:
                     # Checks if Content-Length not larger than 20 MB
@@ -4280,11 +4308,13 @@ async def _handle_components_in_message(
                             "name": text + (f" ({title})" if title is not None else "")
                         })
         if only_replace_links:
+            parsed_link = get_shortened_url(link) if len(link) > 30 else link
             if version_lower_1_7_2:
-                parsed_link = get_shortened_url(link) if len(link) > 30 else link
-                return f"[{shorten_string(text, 40)}]({parsed_link}{' ' + shorten_string(title, 20) if title is not None else ''})"
+                return f"[{shorten_string(text, 40, version_1_0_0)}]({parsed_link}" \
+                       f"{' ' + shorten_string(title, 20, version_1_0_0) if title is not None else ''})"
             else:
-                return f"[{shorten_string(text, 70)}]({shorten_string(link, 30)}{' ' + shorten_string(title, 20) if title is not None else ''})"
+                return f"[{shorten_string(text, 70)}]({parsed_link}" \
+                       f"{' ' + shorten_string(title, 20) if title is not None else ''})"
         else:
             result_dict = {
                 "text": shorten_string(text, 70),
@@ -4305,7 +4335,7 @@ async def _handle_components_in_message(
                 })
             else:
                 with handle_unhandled_error_in_link_request(image_preview=True):
-                    resp = BotVars.session_for_other_requests.head(link, timeout=(3, 6))
+                    resp = BotVars.session_for_other_requests.head(link, timeout=(10, None))
                     if resp.status_code == 200 and resp.headers.get("content-length") is not None and \
                             int(resp.headers.get("content-length")) <= 20971520:
                         # Checks if Content-Length not larger than 20 MB
@@ -4391,7 +4421,7 @@ async def _handle_components_in_message(
     return result_msg, images_for_preview
 
 
-def _handle_attachments_in_message(message: Message, store_images_for_preview=False):
+def _handle_attachments_in_message(message: Message, store_images_for_preview=False, version_1_0_0=False):
     attachments = {}
     messages = [message]
     images_for_preview: List[Dict[str, Union[str, int]]] = []
@@ -4428,7 +4458,7 @@ def _handle_attachments_in_message(message: Message, store_images_for_preview=Fa
                         a_type = f"[{attachment.content_type.split('/')[-1]}]"
                     else:
                         need_hover = False
-                        a_type = f"[{shorten_string(attachment.filename, max_length=20)}]"
+                        a_type = f"[{shorten_string(attachment.filename, 20, version_1_0_0)}]"
                     iattach.append({
                         "text": a_type,
                         "hyperlink": attachment.url if len(attachment.url) < 257 else get_shortened_url(attachment.url)
@@ -4649,7 +4679,7 @@ def has_transparency(img: Image.Image):
 def get_image_data(url: str):
     if search(r"https?://tenor\.com/view", url):
         with handle_unhandled_error_in_link_request(image_preview=True):
-            text = BotVars.session_for_other_requests.get(url, timeout=(4, 8)).text
+            text = BotVars.session_for_other_requests.get(url, timeout=(10, None)).text
             match = search(rf"property=\"og:image\"\s*content=\"(?P<link>{URL_REGEX})?\"", text)
             url = match.group("link") if match is not None else None
 
@@ -4662,7 +4692,7 @@ def get_image_data(url: str):
         filename = unquote(filename)
         with handle_unhandled_error_in_link_request(image_preview=True):
             return dict(
-                bytes=BytesIO(BotVars.session_for_other_requests.get(url, timeout=(4, 8)).content),
+                bytes=BytesIO(BotVars.session_for_other_requests.get(url, timeout=(10, None)).content),
                 name=filename
             )
 
@@ -4844,7 +4874,7 @@ def parse_snapshot(version: str) -> Optional[str]:
                 "prop": "categories",
                 "format": "json"
             },
-            timeout=(3, 6)
+            timeout=10
         )
         if not answer.ok and len(answer.content) == 0:
             return
@@ -4861,9 +4891,12 @@ def get_server_full_stats() -> FullStats:
     return info
 
 
-def shorten_string(string: str, max_length: int):
+def shorten_string(string: str, max_length: int, use_long_ellipsis_symbol: bool = False):
     if len(string) > max_length:
-        return f"{string[:max_length - 3].strip(' ')}..."
+        if use_long_ellipsis_symbol:
+            return f"{string[:max_length - 3].strip(' ')}..."
+        else:
+            return f"{string[:max_length - 1].strip(' ')}…"
     else:
         return string
 
@@ -4871,7 +4904,7 @@ def shorten_string(string: str, max_length: int):
 def get_shortened_url(url: str):
     for service_url in ["https://clck.ru/--", "https://tinyurl.com/api-create.php"]:
         with handle_unhandled_error_in_link_request():
-            response = BotVars.session_for_other_requests.post(service_url, params={"url": url}, timeout=(3, 6))
+            response = BotVars.session_for_other_requests.post(service_url, params={"url": url}, timeout=(10, None))
             if response.ok and len(response.text) > 0:
                 return response.text
     print(get_translation("Bot Error: {0}").format(
