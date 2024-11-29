@@ -411,6 +411,7 @@ class User:
 @dataclass
 class Settings:
     bot_settings: Bot_settings = field(default_factory=Bot_settings)
+    force_create_server_properties_and_eula: bool = None
     ask_to_change_servers_list: bool = True
     selected_server_number: int = 1
     servers_list: List[Server_settings] = field(default_factory=list)
@@ -468,22 +469,21 @@ class Server_config:
     rcon_password = ""
 
 
-class ServerProperties:
+class Properties:
     filepath: Path
-    properties: dict = {}
+    properties: dict
 
-    def __init__(self, filepath: Path = None):
-        if filepath is None:
-            filepath = Path(Config.get_selected_server_from_list().working_directory, "server.properties")
+    def __init__(self, filepath: Path, create_if_not_exists: bool = False):
+        self.filepath = filepath
+        self.properties = {}
         if filepath.exists():
-            self.filepath = filepath
             with open(filepath, "r", encoding="utf8") as f:
                 for line in f.readlines():
                     if line.startswith("#") or len(line) == 0 or line.find("=") == -1:
                         continue
                     ctx = iter(reversed(line.split("=", maxsplit=1)))
                     self.properties[next(ctx)] = next(ctx, "").strip()
-        else:
+        elif not create_if_not_exists:
             raise FileNotFoundError(get_translation("File '{0}' doesn't exist!").format(filepath.as_posix()))
 
     def save(self):
@@ -497,7 +497,8 @@ class ServerProperties:
         self.properties[key] = value
 
     def __delitem__(self, key):
-        del self.properties[key]
+        with suppress(KeyError):
+            del self.properties[key]
 
     def __contains__(self, item):
         return item in self.properties
@@ -544,6 +545,28 @@ class ServerProperties:
                 return value
             else:
                 raise ValueError(f"Wrong passed value {value!r}!")
+
+
+class Eula(Properties):
+    def __init__(self, filepath: Optional[Path] = None, create_if_not_exists: bool = False):
+        if filepath is None:
+            filepath = Path(Config.get_selected_server_from_list().working_directory, "eula.txt")
+        super().__init__(filepath, create_if_not_exists)
+
+    @property
+    def eula(self) -> bool:
+        return self._parse_from_parameter(self["eula"], is_bool=True)
+
+    @eula.setter
+    def eula(self, value: bool):
+        self["eula"] = self._parse_to_parameter(value)
+
+
+class ServerProperties(Properties):
+    def __init__(self, filepath: Optional[Path] = None, create_if_not_exists: bool = False):
+        if filepath is None:
+            filepath = Path(Config.get_selected_server_from_list().working_directory, "server.properties")
+        super().__init__(filepath, create_if_not_exists)
 
     @property
     def enable_query(self) -> bool:
@@ -978,24 +1001,51 @@ class Config:
                                                  max([b.file_creation_date for b in cls.get_server_config().backups])
             else:
                 BotVars.is_auto_backup_disable = True
-
+        if cls.get_settings().force_create_server_properties_and_eula:
+            # Check eula.txt
+            filepath = Path(cls.get_selected_server_from_list().working_directory, "eula.txt")
+            if not filepath.exists():
+                print(get_translation("File '{0}' doesn't exist!").format(filepath.as_posix()))
+                print(get_translation("Bot will create a new one!"))
+            eula_txt = Eula(filepath, create_if_not_exists=True)
+            # Check eula parameters
+            changed_parameters = []
+            if not eula_txt.eula:
+                eula_txt.eula = True
+                changed_parameters.append("eula=true")
+            if len(changed_parameters) > 0:
+                eula_txt.save()
+                print("------")
+                print(get_translation("Note: In '{0}' bot set these parameters:").format(filepath.as_posix()))
+                for line in changed_parameters:
+                    print(line)
+                print("------")
+        # Check server.properties
         filepath = Path(cls.get_selected_server_from_list().working_directory, "server.properties")
         if not filepath.exists():
-            raise FileNotFoundError(get_translation("File '{0}' doesn't exist! "
-                                                    "Run Minecraft server manually to create one and accept eula!")
-                                    .format(filepath.as_posix()))
-        server_properties = ServerProperties(filepath)
-        if len(server_properties) == 0:
-            raise RuntimeError(get_translation("File '{0}' doesn't have any parameters! Accept eula and "
-                                               "run Minecraft server manually to fill it with parameters!")
-                               .format(filepath.as_posix()))
+            if not cls.get_settings().force_create_server_properties_and_eula:
+                raise FileNotFoundError(get_translation(
+                    "File '{0}' doesn't exist! Run Minecraft server manually to create one and accept EULA!"
+                ).format(filepath.as_posix()))
+            print(get_translation("File '{0}' doesn't exist!").format(filepath.as_posix()))
+            print(get_translation("Bot will create a new one!"))
+        server_properties = ServerProperties(
+            filepath,
+            create_if_not_exists=cls.get_settings().force_create_server_properties_and_eula
+        )
+        if not cls.get_settings().force_create_server_properties_and_eula and len(server_properties) == 0:
+            raise RuntimeError(get_translation(
+                "File '{0}' doesn't have any parameters! Accept EULA and "
+                "run Minecraft server manually to fill it with parameters!"
+            ).format(filepath.as_posix()))
         # Check server parameters
         changed_parameters = []
         if cls.get_selected_server_from_list().enforce_offline_mode:
-            if server_properties.online_mode:
+            if server_properties.online_mode or server_properties.online_mode is None:
                 server_properties.online_mode = False
                 changed_parameters.append("online-mode=false")
-            if server_properties.enforce_secure_profile:
+            if server_properties.enforce_secure_profile or (server_properties.enforce_secure_profile is None and
+                                                            cls.get_settings().force_create_server_properties_and_eula):
                 server_properties.enforce_secure_profile = False
                 changed_parameters.append("enforce-secure-profile=false")
         if cls.get_selected_server_from_list().enforce_default_gamemode and not server_properties.force_gamemode:
@@ -1701,6 +1751,13 @@ class Config:
 
     @classmethod
     def _setup_servers(cls):
+        if cls._settings_instance.force_create_server_properties_and_eula is None:
+            cls._need_to_rewrite = True
+            cls._settings_instance.force_create_server_properties_and_eula = cls._ask_for_data(
+                get_translation("Do you want the bot to create files 'server.properties' and 'eula.txt' "
+                                "if they don't exist or empty? (EULA will always be accepted)") + " Y/n\n> ",
+                "y"
+            )
         if not 0 < cls._settings_instance.selected_server_number <= len(cls._settings_instance.servers_list):
             cls._settings_instance.selected_server_number = 1
             print(get_translation("Selected Minecraft server number is out of range! Bot set it to '1'."))
