@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
-"POT-Creation-Date: 2024-11-30 01:33+0300\n"
-"PO-Revision-Date: 2024-11-30 01:34+0300\n"
+"POT-Creation-Date: 2024-12-04 22:32+0300\n"
+"PO-Revision-Date: 2024-12-04 22:33+0300\n"
 "Last-Translator: Druzai\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -3095,60 +3095,68 @@ msgstr ""
 msgid "Starting Minecraft server check-ups"
 msgstr "Запускаем проверки майнкрафт сервера"
 
-#: ../commands\poll.py:68
+#: ../commands\poll.py:55
+msgid ""
+"Bot changed poll timeout due to exceeding the Discord limit from {0} "
+"second(s) to {1} seconds!"
+msgstr ""
+"Бот изменил время ожидания опроса из-за превышения лимита дискорда с {0} "
+"секунд(ы) на {1} секунд(у)!"
+
+#: ../commands\poll.py:80
 msgid "To win the poll needed {0} vote(s)!"
 msgstr "Для победы в опросе необходимо {0} голос(ов)!"
 
-#: ../commands\poll.py:94
+#: ../commands\poll.py:106
 msgid "Poll result: canceled!"
 msgstr "Результат опроса: отменён!"
 
-#: ../commands\poll.py:96
+#: ../commands\poll.py:108
 msgid "granted"
 msgstr "получено"
 
-#: ../commands\poll.py:97
+#: ../commands\poll.py:109
 msgid "refused"
 msgstr "отказано"
 
-#: ../commands\poll.py:98
+#: ../commands\poll.py:110
 msgid "Poll result: permission {0}!"
 msgstr "Результат опроса: разрешение {0}!"
 
-#: ../commands\poll.py:112
+#: ../commands\poll.py:124
 msgid "Voting!"
 msgstr "Голосовалочка!"
 
-#: ../commands\poll.py:115
+#: ../commands\poll.py:127
 msgid "yes"
 msgstr "да"
 
-#: ../commands\poll.py:116
+#: ../commands\poll.py:128
 msgid "no"
 msgstr "нет"
 
-#: ../commands\poll.py:185
+#: ../commands\poll.py:197
 msgid "what are you doing? Time hasn't passed yet. Waiting {0} sec..."
 msgstr "что вы делаете? Время ещё не прошло. Ждём {0} сек..."
 
-#: ../commands\poll.py:231 ../commands\poll.py:282
+#: ../commands\poll.py:243 ../commands\poll.py:294
 msgid "poll have already finished!"
 msgstr "опрос уже завершён!"
 
-#: ../commands\poll.py:238
+#: ../commands\poll.py:250
 msgid "you've already voted!"
 msgstr "вы уже проголосовали!"
 
-#: ../commands\poll.py:239 ../commands\poll.py:247 ../commands\poll.py:257
-#: ../commands\poll.py:263
+#: ../commands\poll.py:251 ../commands\poll.py:259 ../commands\poll.py:269
+#: ../commands\poll.py:275
 msgid "This vote will not be counted!"
 msgstr "Этот голос не будет засчитан!"
 
-#: ../commands\poll.py:246 ../commands\poll.py:256
+#: ../commands\poll.py:258 ../commands\poll.py:268
 msgid "you don't have needed '{0}' role!"
 msgstr "у вас нету нужной роли '{0}'!"
 
-#: ../commands\poll.py:262
+#: ../commands\poll.py:274
 msgid "you don't have permission 'Administrator'!"
 msgstr "у вас нету права доступа 'Администратор'!"
 

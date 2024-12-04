@@ -155,13 +155,13 @@ Options:
 If `inputfile' is -, standard input is read.
 """)
 
-import os
+import getopt
+import glob
 import importlib.machinery
 import importlib.util
+import os
 import sys
-import glob
 import time
-import getopt
 import token
 import tokenize
 

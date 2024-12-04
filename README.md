@@ -116,15 +116,18 @@ Supported 2 languages:
 
 ## Requirements
 
-* [Python 3.8-3.13](https://www.python.org/downloads/)
+* [Python 3.8-3.13](https://www.python.org/downloads/) - only for developing or building an app locally
 * For Linux and macOS
     * Required installed screen command ([Linux](https://linuxize.com/post/how-to-use-linux-screen/)
       [macOS](https://brewinstall.org/install-screen-mac-osx/))
 * Minecraft server not lower than version `1.0.0` (vanilla or a modded one)
-    * Run server 1 or 2 times to accept `eula` and generate `server.properties`
+    * Run server 1 or 2 times to accept EULA and generate `server.properties`
+    * Query and RCON protocols must be enabled on a server
+        * Bot can automatically enable `query` and `rcon` in `server.properties`
 
-Bot can automatically enable `query` and `rcon` in `server.properties` if file exists, but you can enable and enter them
-manually if you want.
+> [!TIP]
+> You can enable config setting to automatically create `server.properties` and `eula.txt` filled with required
+> properties and accepted EULA.
 
 ### Required bot intents
 

@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Minecraft bot\n"
-"POT-Creation-Date: 2024-11-30 01:33+0300\n"
-"PO-Revision-Date: 2024-11-30 01:33+0300\n"
+"POT-Creation-Date: 2024-12-04 22:32+0300\n"
+"PO-Revision-Date: 2024-12-04 22:33+0300\n"
 "Last-Translator: Druzai\n"
 "Language-Team: \n"
 "Language: en\n"
@@ -3073,60 +3073,68 @@ msgstr ""
 msgid "Starting Minecraft server check-ups"
 msgstr "Starting Minecraft server check-ups"
 
-#: ../commands\poll.py:68
+#: ../commands\poll.py:55
+msgid ""
+"Bot changed poll timeout due to exceeding the Discord limit from {0} "
+"second(s) to {1} seconds!"
+msgstr ""
+"Bot changed poll timeout due to exceeding the Discord limit from {0} "
+"second(s) to {1} seconds!"
+
+#: ../commands\poll.py:80
 msgid "To win the poll needed {0} vote(s)!"
 msgstr "To win the poll needed {0} vote(s)!"
 
-#: ../commands\poll.py:94
+#: ../commands\poll.py:106
 msgid "Poll result: canceled!"
 msgstr "Poll result: canceled!"
 
-#: ../commands\poll.py:96
+#: ../commands\poll.py:108
 msgid "granted"
 msgstr "granted"
 
-#: ../commands\poll.py:97
+#: ../commands\poll.py:109
 msgid "refused"
 msgstr "refused"
 
-#: ../commands\poll.py:98
+#: ../commands\poll.py:110
 msgid "Poll result: permission {0}!"
 msgstr "Poll result: permission {0}!"
 
-#: ../commands\poll.py:112
+#: ../commands\poll.py:124
 msgid "Voting!"
 msgstr "Voting!"
 
-#: ../commands\poll.py:115
+#: ../commands\poll.py:127
 msgid "yes"
 msgstr "yes"
 
-#: ../commands\poll.py:116
+#: ../commands\poll.py:128
 msgid "no"
 msgstr "no"
 
-#: ../commands\poll.py:185
+#: ../commands\poll.py:197
 msgid "what are you doing? Time hasn't passed yet. Waiting {0} sec..."
 msgstr "what are you doing? Time hasn't passed yet. Waiting {0} sec..."
 
-#: ../commands\poll.py:231 ../commands\poll.py:282
+#: ../commands\poll.py:243 ../commands\poll.py:294
 msgid "poll have already finished!"
 msgstr "poll have already finished!"
 
-#: ../commands\poll.py:238
+#: ../commands\poll.py:250
 msgid "you've already voted!"
 msgstr "you've already voted!"
 
-#: ../commands\poll.py:239 ../commands\poll.py:247 ../commands\poll.py:257
-#: ../commands\poll.py:263
+#: ../commands\poll.py:251 ../commands\poll.py:259 ../commands\poll.py:269
+#: ../commands\poll.py:275
 msgid "This vote will not be counted!"
 msgstr "This vote will not be counted!"
 
-#: ../commands\poll.py:246 ../commands\poll.py:256
+#: ../commands\poll.py:258 ../commands\poll.py:268
 msgid "you don't have needed '{0}' role!"
 msgstr "you don't have needed '{0}' role!"
 
-#: ../commands\poll.py:262
+#: ../commands\poll.py:274
 msgid "you don't have permission 'Administrator'!"
 msgstr "you don't have permission 'Administrator'!"
 

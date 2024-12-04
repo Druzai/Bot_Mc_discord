@@ -3,6 +3,7 @@ from asyncio import sleep as asleep
 from contextlib import suppress
 from datetime import datetime
 from enum import Enum, auto
+from math import ceil
 from typing import Union, Optional
 
 from discord import (
@@ -10,12 +11,11 @@ from discord import (
     GroupChannel, Thread, Interaction, User, Poll as DiscordPoll, ClientException, RawPollVoteActionEvent, Message
 )
 from discord.abc import Messageable
-from discord.enums import ButtonStyle
 from discord.ext import commands
 from discord.ext.commands import Context
-from discord.ui import button, Button, View
 
 from components.additional_funcs import handle_unhandled_error_in_events, send_msg
+from components.constants import DISCORD_MAX_SECONDS_TIMEOUT_FOR_POLL, DISCORD_MIN_SECONDS_TIMEOUT_FOR_POLL
 from components.localization import get_translation
 
 
@@ -45,6 +45,18 @@ class Poll(commands.Cog):
     ):
         if message is None and poll_message is None:
             raise ValueError("'message' and 'poll_message' is not stated!")
+        # Handle Discord Poll timeout limits
+        poll_timeout = timeout
+        if DISCORD_MAX_SECONDS_TIMEOUT_FOR_POLL != timeout and timeout != DISCORD_MIN_SECONDS_TIMEOUT_FOR_POLL:
+            if DISCORD_MAX_SECONDS_TIMEOUT_FOR_POLL > timeout > DISCORD_MIN_SECONDS_TIMEOUT_FOR_POLL:
+                poll_timeout = ceil(timeout / 3600) * 3600
+            elif DISCORD_MAX_SECONDS_TIMEOUT_FOR_POLL < timeout:
+                poll_timeout = timeout = DISCORD_MAX_SECONDS_TIMEOUT_FOR_POLL
+                print(get_translation(
+                    "Bot changed poll timeout due to exceeding the Discord limit from {0} second(s) to {1} seconds!"
+                ))
+            else:
+                poll_timeout = DISCORD_MIN_SECONDS_TIMEOUT_FOR_POLL
         if not isinstance(channel, Member) and not isinstance(channel, DMChannel):
             if isinstance(channel, GroupChannel):
                 members_count = len([m for m in channel.recipients if not m.bot])
@@ -69,7 +81,7 @@ class Poll(commands.Cog):
                          if add_votes_count else "")
             )
         current_poll = PollContent(channel, command, need_for_voting, needed_role, remove_logs_after, admin_needed)
-        poll_msg = await self.make_poll(channel, timeout, current_poll, poll_message)
+        poll_msg = await self.make_poll(channel, poll_timeout, current_poll, poll_message)
         self._polls[poll_msg.id] = current_poll
         seconds = 0
         while current_poll.state == States.NONE:
@@ -110,7 +122,7 @@ class Poll(commands.Cog):
     ):
         poll = DiscordPoll(
             question=get_translation("Voting!") if poll_message is None else poll_message,
-            duration=dt.timedelta(seconds=duration_seconds if duration_seconds >= 3600 else 3600)
+            duration=dt.timedelta(seconds=duration_seconds)
         )
         poll.add_answer(text=get_translation("yes").capitalize(), emoji=self._emoji_symbols["yes"])
         poll.add_answer(text=get_translation("no").capitalize(), emoji=self._emoji_symbols["no"])
