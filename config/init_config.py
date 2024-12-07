@@ -1285,11 +1285,22 @@ class Config:
 
     @classmethod
     def _load_from_yaml(cls, filepath: Path, baseclass):
+        class_object = Conf.to_object(Conf.load(filepath))
+        if isinstance(Settings(), baseclass):
+            if class_object.get("servers_list", None) is not None \
+                    and isinstance(class_object.get("servers_list"), list):
+                for i in range(len(class_object["servers_list"])):
+                    # Migrate from 'server_loading_time' to 'server_avg_loading_times'
+                    if class_object["servers_list"][i].get("server_loading_time", None) is not None:
+                        class_object["servers_list"][i]["server_avg_loading_times"] = [
+                            class_object["servers_list"][i]["server_loading_time"]
+                        ]
+                        del class_object["servers_list"][i]["server_loading_time"]
         try:
-            return sload(json_obj=Conf.to_object(Conf.load(filepath)), cls=baseclass)
+            return sload(json_obj=class_object, cls=baseclass)
         except DeserializationError as e:
             print(get_translation("Bot Error: {0}").format(
-                get_translation("Couldn't parse config file - '{0}'").format(e)
+                get_translation("Couldn't parse config file in path '{0}' - '{1}'").format(filepath.as_posix(), e)
             ))
             print(get_translation("Note: You can stop bot and fix config file manually."))
             print(get_translation("Setting up a new config..."))

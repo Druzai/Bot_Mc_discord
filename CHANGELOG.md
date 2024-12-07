@@ -4,7 +4,7 @@ All important changes to this project will be documented in this file.
 
 ### [1.4.6 Unreleased](https://github.com/Druzai/Bot_Mc_discord/compare/1.4.5...1.4.6) (2024-xx-xx)
 
-### This is the last version that supports Windows 7! (support for Python 3.8 will be dropped in next release)
+### This is the last version that supports Windows 7! (support for Python 3.8-3.10 will be dropped in next release)
 
 #### Improvements:
 
@@ -28,7 +28,7 @@ All important changes to this project will be documented in this file.
 #### Breaking changes:
 
 * Renamed setting `server_loading_time` to `server_avg_loading_times`
-    * If you want to save old loading time - rename setting and set value as a list element in yaml notation, line in `help_arguments` setting
+    * Bot handles migration automatically
 
 ### [1.4.5](https://github.com/Druzai/Bot_Mc_discord/compare/1.4.4...1.4.5) (2024-09-21)
 
