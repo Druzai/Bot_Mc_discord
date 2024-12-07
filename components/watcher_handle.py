@@ -603,10 +603,10 @@ def _check_log_file(
                             async def send_message_and_poll(
                                     member: Member,
                                     msg: str,
-                                    poll: Poll,
+                                    poll: 'Poll',
                                     nick: str,
                                     ip_address: Union[IPv4Address, IPv6Address],
-                                    server_version: ServerVersion
+                                    server_version: 'ServerVersion'
                             ):
                                 await member.send(msg)
                                 if await poll.run(channel=member,
