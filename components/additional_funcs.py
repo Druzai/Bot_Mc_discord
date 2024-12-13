@@ -25,7 +25,7 @@ from urllib.parse import unquote
 from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA, Path as Zip_Path
 
 from PIL import Image, UnidentifiedImageError
-from aiohttp import ClientSession
+from aiohttp import ClientSession, ClientTimeout, BasicAuth
 from colorama import Style, Fore
 from discord import (
     Activity, ActivityType, Message, Status, Member, Role, MessageType, NotFound, HTTPException, Forbidden, Emoji,
@@ -50,7 +50,7 @@ from components.decorators import MissingAdminPermissions, is_admin, is_minecraf
 from components.localization import get_translation, get_locales, get_current_locale, set_locale
 from components.rss_feed_handle import get_feed_webhook
 from components.watcher_handle import create_watcher, get_chat_webhook
-from config.init_config import Config, BotVars, ServerProperties, OS
+from config.init_config import Config, BotVars, ServerProperties, OS, UserAgent
 
 if TYPE_CHECKING:
     from commands.poll import Poll
@@ -1946,8 +1946,16 @@ async def get_avatar_info(ctx: commands.Context, url: Optional[str]):
     avatar_url = None
     if url is not None:
         avatar_url = url
-        async with ClientSession(timeout=30) as session:
-            async with session.get(url=url) as response:
+        async with ClientSession(
+                headers={"User-Agent": UserAgent.get_header()},
+                timeout=ClientTimeout(sock_connect=10)
+        ) as session:
+            async with session.get(
+                    proxy=Config.get_proxy_url(),
+                    proxy_auth=BasicAuth(*Config.get_proxy_credentials()) if Config.get_proxy_url() is not None and
+                                                                             Config.get_proxy_credentials() is not None else None,
+                    url=url
+            ) as response:
                 avatar_blob = await response.read()
                 try:
                     _get_mime_type_for_image(avatar_blob)
@@ -4807,13 +4815,13 @@ def disable_logging(disable_log_admin_commands: bool = False, disable_send_comma
                 if disable_log_admin_commands:
                     match = search(command_regex, cl_r.run("gamerule logAdminCommands"))
                     if match is not None:
-                        log_admin_commands = not (match.group("value") == "false")
+                        log_admin_commands = not (match.group("value").lower() == "false")
                         if log_admin_commands:
                             cl_r.run("gamerule logAdminCommands false")
                 if disable_send_command_feedback:
                     match = search(command_regex, cl_r.run("gamerule sendCommandFeedback"))
                     if match is not None:
-                        send_command_feedback = not (match.group("value") == "false")
+                        send_command_feedback = not (match.group("value").lower() == "false")
                         if send_command_feedback:
                             cl_r.run("gamerule sendCommandFeedback false")
     yield
@@ -4874,7 +4882,7 @@ def parse_snapshot(version: str) -> Optional[str]:
                 "prop": "categories",
                 "format": "json"
             },
-            timeout=10
+            timeout=(10, None)
         )
         if not answer.ok and len(answer.content) == 0:
             return
