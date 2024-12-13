@@ -1292,9 +1292,13 @@ class Config:
                 for i in range(len(class_object["servers_list"])):
                     # Migrate from 'server_loading_time' to 'server_avg_loading_times'
                     if class_object["servers_list"][i].get("server_loading_time", None) is not None:
-                        class_object["servers_list"][i]["server_avg_loading_times"] = [
-                            class_object["servers_list"][i]["server_loading_time"]
-                        ]
+                        wa = WindowedAverage(WINDOW_AVERAGE_LENGTH)
+                        if class_object["servers_list"][i].get("server_avg_loading_times", None) is not None \
+                                and isinstance(class_object["servers_list"][i]["server_avg_loading_times"], list):
+                            wa.add_all(class_object["servers_list"][i]["server_avg_loading_times"])
+                        wa.add(class_object["servers_list"][i]["server_loading_time"])
+                        class_object["servers_list"][i]["server_avg_loading_times"] = wa.dump_list()
+                        del wa
                         del class_object["servers_list"][i]["server_loading_time"]
         try:
             return sload(json_obj=class_object, cls=baseclass)
