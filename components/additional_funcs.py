@@ -4732,11 +4732,19 @@ def send_image_to_chat(url: str, image_name: str, required_width: int = None, re
         calc_height = max_height
     img = img.resize((calc_width if calc_width > 0 else 1, calc_height if calc_height > 0 else 1))
 
+    def handle_convertion(im: Image.Image, mode: str):
+        if "I;16" in im.mode:
+            pixs = im.load()
+            for y in range(im.height):
+                for x in range(im.width):
+                    pixs[x, y] //= 256  # Fixing convertion bug in Pillow from "I;16" to "RGB" mode
+        return im.convert(mode)
+
     img_has_transparency = has_transparency(img)
     if img_has_transparency and img.mode != "RGBA":
-        img = img.convert("RGBA")
+        img = handle_convertion(img, "RGBA")
     elif not img_has_transparency and img.mode != "RGB":
-        img = img.convert("RGB")
+        img = handle_convertion(img, "RGB")
 
     pixels = img.load()
     width, height = img.size

@@ -24,6 +24,7 @@ All important changes to this project will be documented in this file.
 #### Fixed:
 
 * Fixed proxy for HTTPS connections
+* Added fix for a convertion bug in Pillow from `I;16` to `RGB` image mode
 
 #### Breaking changes:
 
