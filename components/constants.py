@@ -1,6 +1,6 @@
 from re import sub, compile
 
-VERSION = "1.4.6a"
+VERSION = "1.4.6"
 
 UNITS = ("B", "KB", "MB", "GB", "TB", "PB")
 WINDOW_AVERAGE_LENGTH = 5
