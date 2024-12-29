@@ -175,7 +175,7 @@ class MinecraftCommands(commands.Cog):
     @commands.guild_only()
     async def o_info(self, ctx: commands.Context, for_who: Literal['me', 'everyone'], show: Literal['seen', 'all']):
         """Get info about ops"""
-        message = await bot_associate_info(ctx, for_me=for_who == "me", show=show)
+        message = await bot_associate_info(ctx, bot=self._bot, for_me=for_who == "me", show=show)
         await ctx.send(message)
 
     @op.command(pass_context=True, name="timeout", ignore_extra=False)
@@ -210,7 +210,7 @@ class MinecraftCommands(commands.Cog):
     @commands.guild_only()
     async def associate(self, ctx: commands.Context, for_who: Literal['me', 'everyone']):
         """Associates discord user with nick in Minecraft"""
-        message = await bot_associate_info(ctx, for_me=for_who == "me")
+        message = await bot_associate_info(ctx, bot=self._bot, for_me=for_who == "me")
         await ctx.send(message)
 
     @associate.command(pass_context=True, name="add")

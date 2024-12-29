@@ -1769,7 +1769,7 @@ async def bot_associate(
         Config.save_config()
 
 
-async def bot_associate_info(ctx: commands.Context, for_me: bool, show: str = None):
+async def bot_associate_info(ctx: commands.Context, bot: commands.Bot, for_me: bool, show: str = None):
     if show is not None:
         message = get_translation("{0}, bot has this data on nicks and number of remaining uses:") \
                       .format(ctx.author.mention) + "\n```"
@@ -1815,8 +1815,8 @@ async def bot_associate_info(ctx: commands.Context, for_me: bool, show: str = No
         for k, v in users_to_nicks.items():
             if not len(v) or (show is not None and show == "seen" and all([isinstance(i, str) for i in v])):
                 continue
-            member = await ctx.guild.fetch_member(k)
-            message += f"{get_user_name(member)}:\n"
+            member_string = await get_member_string(bot, k)
+            message += f"{member_string}:\n"
             for item in v:
                 if show is None:
                     message += f"- {item}\n"
