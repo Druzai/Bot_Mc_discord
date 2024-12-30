@@ -116,7 +116,7 @@ Supported 2 languages:
 
 ## Requirements
 
-* [Python 3.8-3.13](https://www.python.org/downloads/) - only for developing or building an app locally
+* [Python 3.11-3.13](https://www.python.org/downloads/) - only for developing or building an app locally
 * For Linux and macOS
     * Required installed screen command ([Linux](https://linuxize.com/post/how-to-use-linux-screen/)
       [macOS](https://brewinstall.org/install-screen-mac-osx/))
@@ -276,7 +276,8 @@ On Linux or macOS you may need to install `gettext`:
 
 ## Tested platforms
 
-* Windows 7 or higher (64 bit)
-    * For Windows 7 you have to use executable file built with Python 3.8! (It has the string `p3.8` in its name)
+* Windows 10 21H2 or higher (64 bit)
+    * Support for Windows 7 was dropped. Last release built for Python 3.8
+      was [1.4.6](https://github.com/Druzai/Bot_Mc_discord/releases/tag/1.4.6).
 * Linux (Debian-based) (64 bit)
-* macOS 11 or higher (64 bit)
+* macOS 14 or higher (64 bit)

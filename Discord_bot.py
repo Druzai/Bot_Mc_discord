@@ -1,6 +1,6 @@
-from asyncio import run, set_event_loop_policy
+from asyncio import run
 from logging import ERROR, Formatter
-from sys import exit, argv, version_info
+from sys import exit, argv
 from threading import enumerate as threads
 from traceback import format_exc
 
@@ -24,7 +24,6 @@ from config.init_config import Config, BotVars, OS
 
 if Config.get_os() == OS.Windows:
     from colorama import init
-    from asyncio import WindowsSelectorEventLoopPolicy
 
 
 def get_prefix(bot, msg):
@@ -40,9 +39,6 @@ def build_bot(create_pot_lines=False) -> commands.Bot:
         proxy_auth=BasicAuth(*Config.get_proxy_credentials()) if Config.get_proxy_url() is not None and
                                                                  Config.get_proxy_credentials() is not None else None
     )
-    if Config.get_os() == OS.Windows and Config.get_proxy_url() is not None and version_info[:2] < (3, 9):
-        set_event_loop_policy(WindowsSelectorEventLoopPolicy())
-
     async def add_cogs(bot: commands.Bot):
         for i in [Poll, MinecraftCommands, ChatCommands]:
             await bot.add_cog(i(bot, create_pot_lines))
