@@ -4845,33 +4845,32 @@ def disable_logging(disable_log_admin_commands: bool = False, disable_send_comma
 class ServerVersion:
     def __init__(self, version_string: str):
         parsed_version = version_string
-        snapshot_version = False
-        snapshot_regex = r"(?P<version>\d+w\d+[a-e~])"
-        snapshot_match = search(snapshot_regex, parsed_version)
+        decrease_version = False
+        snapshot_match = search(r"(?P<version>\d{2}w\d{2}[a-z0-9_])", parsed_version)
         if any(i in parsed_version.lower() for i in ["snapshot", "release"]) or snapshot_match is not None:
             print(get_translation("Minecraft server is not in release state! Proceed with caution!"))
             if "snapshot" in parsed_version.lower():
                 parsed_version = parsed_version.lower().split("snapshot")[0]
-                snapshot_version = True
+                decrease_version = True
             elif "release" in parsed_version.lower():
                 parsed_version = parsed_version.lower().split("release")[0]
             elif snapshot_match is not None:
                 parsed_version = parse_snapshot(snapshot_match.group("version"))
                 if parsed_version is None:
                     parsed_version = ""
-                snapshot_version = True
-        matches = findall(r"\d+", parsed_version)
+        matches = findall(r"\d{1,2}", parsed_version)
         if len(matches) < 2:
             raise ValueError(f"Can't parse server version '{version_string}'!")
         self.major = int(matches[0])
         self.minor = int(matches[1])
         self.patch = int(matches[2]) if len(matches) > 2 else 0
         self.version_string = version_string
-        if snapshot_version and self.patch > 0:
-            self.patch -= 1
-        elif snapshot_version and self.minor > 0 and self.patch == 0:
-            self.minor -= 1
-            self.patch = 10
+        if decrease_version:
+            if self.patch > 0:
+                self.patch -= 1
+            elif self.minor > 0 and self.patch == 0:
+                self.minor -= 1
+                self.patch = 10
 
 
 def get_server_version() -> ServerVersion:
@@ -4880,25 +4879,22 @@ def get_server_version() -> ServerVersion:
     return ServerVersion(version)
 
 
-def parse_snapshot(version: str) -> Optional[str]:
+def parse_snapshot(snapshot_version: str) -> Optional[str]:
     with handle_unhandled_error_in_link_request():
         answer = BotVars.session_for_other_requests.get(
-            url="https://minecraft.wiki/api.php",
-            params={
-                "action": "parse",
-                "page": f"Java Edition {version}",
-                "prop": "categories",
-                "format": "json"
-            },
+            url="https://launchermeta.mojang.com/mc/game/version_manifest.json",
             timeout=(10, None)
         )
-        if not answer.ok and len(answer.content) == 0:
+        if not answer.ok:
             return
         answer = answer.json()
-        if answer.get("parse", None) is not None and answer["parse"].get("categories", None) is not None:
-            for category in answer["parse"]["categories"]:
-                if search(r"(?i)java_edition\D+(?:\d{1,2}\.?){2,3}\D+snapshots", category["*"]):
-                    return category["*"]
+        if answer.get("versions", None) is not None and len(answer["versions"]) > 0:
+            found_snapshot = False
+            for version in answer["versions"]:
+                if not found_snapshot and version["type"] == "snapshot" and version["id"] == snapshot_version:
+                    found_snapshot = True
+                elif found_snapshot and version["type"] == "release":
+                    return version["id"]
 
 
 def get_server_full_stats() -> FullStats:

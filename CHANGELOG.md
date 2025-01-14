@@ -6,7 +6,7 @@ All important changes to this project will be documented in this file.
 
 #### Improvements:
 
-* --
+* Switched to using Mojang API to get info about versions
 
 #### Fixed:
 
