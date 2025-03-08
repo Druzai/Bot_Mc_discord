@@ -998,7 +998,12 @@ def delete_oldest_auto_backup_if_exists(reason: str, bot: commands.Bot):
     Config.get_server_config().backups.remove(backup)
 
 
-def send_message_of_deleted_backup(bot: commands.Bot, reason_user: Union[User, Member, str], backup=None, member: Union[User, Member] = None):
+def send_message_of_deleted_backup(
+        bot: commands.Bot,
+        reason_user: Union[User, Member, str],
+        backup=None,
+        member: Union[User, Member] = None
+):
     if backup is not None:
         if backup.initiator is None:
             msg = get_translation(
@@ -4012,7 +4017,7 @@ async def handle_message_for_chat(
                 for m in messages:
                     cl_r.say(m if m != "" else space)
         else:
-            content_name = "contents" if server_version.minor >= 16 else "value"
+            tellraw_components_names = TellrawComponentsNames(server_version)
             result_msg = _clean_message(message, edit_command_content)
             if not edit_command:
                 result_msg, reply_from_minecraft_user = await _handle_reply_in_message(message, result_msg)
@@ -4029,7 +4034,7 @@ async def handle_message_for_chat(
                     res_obj += _build_nickname_tellraw_for_discord_member(
                         server_version,
                         result_msg["reply"][1],
-                        content_name,
+                        tellraw_components_names,
                         brackets_color="gray",
                         left_bracket=result_msg["reply"][0],
                         right_bracket=result_msg["reply"][2]
@@ -4038,17 +4043,29 @@ async def handle_message_for_chat(
                     res_obj += _build_nickname_tellraw_for_minecraft_player(
                         server_version,
                         result_msg["reply"][1],
-                        content_name,
+                        tellraw_components_names,
                         default_text_color="gray",
                         left_bracket=result_msg["reply"][0],
                         right_bracket=result_msg["reply"][2]
                     )
-                _build_components_in_message(res_obj, content_name, result_msg["reply"][-1], "gray")
+                _build_components_in_message(
+                    res_obj,
+                    tellraw_components_names,
+                    result_msg["reply"][-1],
+                    "gray"
+                )
             if not edit_command:
-                res_obj += _build_nickname_tellraw_for_discord_member(server_version, message.author, content_name)
+                res_obj += _build_nickname_tellraw_for_discord_member(
+                    server_version,
+                    message.author,
+                    tellraw_components_names
+                )
             else:
-                res_obj += _build_nickname_tellraw_for_minecraft_player(server_version,
-                                                                        before_message.author.name, content_name)
+                res_obj += _build_nickname_tellraw_for_minecraft_player(
+                    server_version,
+                    before_message.author.name,
+                    tellraw_components_names
+                )
             if on_edit:
                 if before_message is not None:
                     result_before = _clean_message(before_message)
@@ -4059,11 +4076,18 @@ async def handle_message_for_chat(
                         only_replace_links=True
                     )
                     res_obj.append({"text": "*", "color": "gold",
-                                    "hoverEvent": {"action": "show_text",
-                                                   content_name: shorten_string(result_before["content"], 250)}})
+                                    tellraw_components_names.hover_event_name: {
+                                        "action": "show_text",
+                                        tellraw_components_names.hover_content_name: shorten_string(
+                                            result_before["content"], 250
+                                        )}})
                 else:
                     res_obj.append({"text": "*", "color": "gold"})
-            _build_components_in_message(res_obj, content_name, result_msg["content"])
+            _build_components_in_message(
+                res_obj,
+                tellraw_components_names,
+                result_msg["content"]
+            )
             res_obj = _handle_long_tellraw_object(res_obj)
 
             with connect_rcon() as cl_r:
@@ -4103,6 +4127,9 @@ async def handle_message_for_chat(
                         send_image_to_chat(
                             url=image["url"],
                             image_name=image["name"],
+                            tcn=tellraw_components_names,
+                            is_breaking_version=server_version.minor > 21 or
+                                                (server_version.minor == 21 and server_version.patch > 4),
                             required_width=image.get("width", None),
                             required_height=image.get("height", None)
                         )
@@ -4121,8 +4148,9 @@ def _handle_long_tellraw_object(tellraw_obj: list):
         elif isinstance(tellraw_obj[e], dict):
             calc_size += len(dumps(tellraw_obj[e])) + 2
             if calc_size <= MAX_TELLRAW_OBJECT_WITH_STANDARD_MENTION_STR_LENGTH and \
-                    not (tellraw_obj_length - e > 1 and any(i in tellraw_obj[e + 1].keys()
-                                                            for i in ["insertion", "selector", "hoverEvent"]) and
+                    not (tellraw_obj_length - e > 1 and
+                         any(i in tellraw_obj[e + 1].keys()
+                             for i in ["insertion", "selector", "hoverEvent", "hover_event"]) and
                          tellraw_obj[e]["text"] == "<" and len(res[-1]) > 1):
                 res[-1] += [tellraw_obj[e]]
                 continue
@@ -4483,7 +4511,12 @@ def _handle_attachments_in_message(message: Message, store_images_for_preview=Fa
     return attachments, images_for_preview
 
 
-def _build_components_in_message(res_obj: list, content_name: str, obj, default_text_color: str = None):
+def _build_components_in_message(
+        res_obj: list,
+        tcn: 'TellrawComponentsNames',
+        obj,
+        default_text_color: str = None
+):
     if isinstance(obj, list):
         for elem in obj:
             if isinstance(elem, dict):
@@ -4494,11 +4527,13 @@ def _build_components_in_message(res_obj: list, content_name: str, obj, default_
                 else:
                     res_obj.append({"text": elem["text"]})
                 if "hover" in elem.keys():
-                    res_obj[-1].update({"hoverEvent": {"action": "show_text",
-                                                       content_name: shorten_string(elem["hover"], 250)}})
+                    res_obj[-1].update({tcn.hover_event_name: {"action": "show_text",
+                                                               tcn.hover_content_name: shorten_string(elem["hover"],
+                                                                                                      250)}})
                 if "hyperlink" in elem.keys():
                     res_obj[-1].update({"underlined": True, "color": "blue",
-                                        "clickEvent": {"action": "open_url", "value": elem["hyperlink"]}})
+                                        tcn.click_event_name: {"action": "open_url",
+                                                               tcn.click_value_open_name: elem["hyperlink"]}})
             elif isinstance(elem, str):
                 if default_text_color is not None:
                     res_obj.append({"text": elem, "color": default_text_color})
@@ -4557,7 +4592,7 @@ def _search_mentions_in_message(message: Message, edit_command=False) -> set:
 def _build_nickname_tellraw_for_minecraft_player(
         server_version: 'ServerVersion',
         nick: str,
-        content_name: str,
+        tcn: 'TellrawComponentsNames',
         default_text_color: str = None,
         left_bracket: str = "<",
         right_bracket: str = "> "
@@ -4585,14 +4620,15 @@ def _build_nickname_tellraw_for_minecraft_player(
             hover_component = "".join(hover_component)
         tellraw_obj += [{
             "text": nick,
-            "clickEvent": {"action": "suggest_command", "value": f"tell {nick} "},
-            "hoverEvent": {"action": "show_text", content_name: hover_component}
+            tcn.click_event_name: {"action": "suggest_command", tcn.click_value_suggest_name: f"tell {nick} "},
+            tcn.hover_event_name: {"action": "show_text", tcn.hover_content_name: hover_component}
         }]
     else:
         tellraw_obj += [{
             "text": nick,
-            "clickEvent": {"action": "suggest_command", "value": f"tell {nick} "},
-            "hoverEvent": {"action": "show_text", content_name: f"{nick}\n{Config.get_offline_uuid(nick)}"}
+            tcn.click_event_name: {"action": "suggest_command", tcn.click_value_suggest_name: f"tell {nick} "},
+            tcn.hover_event_name: {"action": "show_text",
+                                   tcn.hover_content_name: f"{nick}\n{Config.get_offline_uuid(nick)}"}
         }]
     tellraw_obj += [{"text": right_bracket}]
     if default_text_color is not None:
@@ -4604,7 +4640,7 @@ def _build_nickname_tellraw_for_minecraft_player(
 def _build_nickname_tellraw_for_discord_member(
         server_version: 'ServerVersion',
         author: Member,
-        content_name: str,
+        tcn: 'TellrawComponentsNames',
         brackets_color: str = None,
         left_bracket: str = "<",
         right_bracket: str = "> "
@@ -4618,7 +4654,7 @@ def _build_nickname_tellraw_for_discord_member(
         {
             "text": author.display_name,
             "color": "dark_gray",
-            "hoverEvent": {"action": "show_text", content_name: hover_component}
+            tcn.hover_event_name: {"action": "show_text", tcn.hover_content_name: hover_component}
         },
         {"text": right_bracket}
     ]
@@ -4637,7 +4673,7 @@ def build_nickname_tellraw_for_bot(
         left_bracket: str = "<",
         right_bracket: str = "> "
 ) -> List[Dict[str, str]]:
-    content_name = "contents" if server_version.minor >= 16 else "value"
+    tcn = TellrawComponentsNames(server_version)
     tellraw_obj = [{"text": left_bracket}]
     if server_version.minor > 7:
         if server_version.minor > 15:
@@ -4652,13 +4688,14 @@ def build_nickname_tellraw_for_bot(
         tellraw_obj += [{
             "text": nick,
             "color": "dark_gray",
-            "hoverEvent": {"action": "show_text", content_name: hover_component}
+            tcn.hover_event_name: {"action": "show_text", tcn.hover_content_name: hover_component}
         }]
     else:
         tellraw_obj += [{
             "text": nick,
             "color": "dark_gray",
-            "hoverEvent": {"action": "show_text", content_name: f"{nick}\n{Config.get_offline_uuid(nick)}"}
+            tcn.hover_event_name: {"action": "show_text",
+                                   tcn.hover_content_name: f"{nick}\n{Config.get_offline_uuid(nick)}"}
         }]
     tellraw_obj += [{"text": right_bracket}]
     return tellraw_obj
@@ -4705,7 +4742,14 @@ def get_image_data(url: str):
             )
 
 
-def send_image_to_chat(url: str, image_name: str, required_width: int = None, required_height: int = None):
+def send_image_to_chat(
+        url: str,
+        image_name: str,
+        tcn: 'TellrawComponentsNames',
+        is_breaking_version: bool,
+        required_width: int = None,
+        required_height: int = None
+):
     image_data = get_image_data(url)
     if image_data is None:
         return
@@ -4751,6 +4795,11 @@ def send_image_to_chat(url: str, image_name: str, required_width: int = None, re
 
     storage_unit = "mc_chat"
 
+    url_link = url if len(url) < 257 else get_shortened_url(url)
+
+    def add_single_quote(line: str, is_breaking_version: bool):
+        return line if is_breaking_version else f"'{line}'"
+
     with disable_logging(disable_log_admin_commands=True, disable_send_command_feedback=True):
         with suppress(ConnectionError, socket.error):
             with connect_rcon() as cl_r:
@@ -4759,9 +4808,10 @@ def send_image_to_chat(url: str, image_name: str, required_width: int = None, re
                     tellraw = [
                         {
                             "text": "",
-                            "clickEvent": {"action": "open_url",
-                                           "value": url if len(url) < 257 else get_shortened_url(url)},
-                            "hoverEvent": {"action": "show_text", "contents": shorten_string(image_name, 250)}
+                            tcn.click_event_name: {"action": "open_url",
+                                                   tcn.click_value_open_name: url_link},
+                            tcn.hover_event_name: {"action": "show_text",
+                                                   tcn.hover_content_name: shorten_string(image_name, 250)}
                         }
                     ]
                     array_count = 0
@@ -4781,13 +4831,14 @@ def send_image_to_chat(url: str, image_name: str, required_width: int = None, re
                         pixel_text_str_length = len(pixel["text"].encode())
                         able_to_merge = tellraw[-1].get("color", "") == pixel["color"]
 
-                        if len(f"data modify storage {storage_unit} {array_count + 1} set value ''") + \
+                        if len(f"data modify storage {storage_unit} {array_count + 1} set value ") + \
+                                (0 if is_breaking_version else 2) + \
                                 tellraw_str_length + \
                                 (pixel_text_str_length if able_to_merge
                                 else full_pixel_str_length) > MAX_RCON_COMMAND_STR_LENGTH:
                             array_count += 1
                             cl_r.run(f"data modify storage {storage_unit} {array_count} "
-                                     f"set value '{dumps(tellraw, ensure_ascii=False)}'")
+                                     f"set value {add_single_quote(dumps(tellraw, ensure_ascii=False), is_breaking_version)}")
                             tellraw = [pixel]
                             tellraw_str_length = full_pixel_str_length
                         else:
@@ -4800,7 +4851,7 @@ def send_image_to_chat(url: str, image_name: str, required_width: int = None, re
                     if len(tellraw) > 0:
                         array_count += 1
                         cl_r.run(f"data modify storage {storage_unit} {array_count} "
-                                 f"set value '{dumps(tellraw, ensure_ascii=False)}'")
+                                 f"set value {add_single_quote(dumps(tellraw, ensure_ascii=False), is_breaking_version)}")
                     cl_r.tellraw("@a", [
                         {"nbt": str(i), "storage": storage_unit, "interpret": True}
                         for i in range(1, array_count + 1)
@@ -4871,6 +4922,21 @@ class ServerVersion:
             elif self.minor > 0 and self.patch == 0:
                 self.minor -= 1
                 self.patch = 10
+
+
+class TellrawComponentsNames:
+    def __init__(self, server_version: ServerVersion):
+        if server_version.minor > 21 or (server_version.minor == 21 and server_version.patch > 4):
+            self.hover_event_name = "hover_event"
+            self.hover_content_name = "value"
+            self.click_event_name = "click_event"
+            self.click_value_open_name = "url"
+            self.click_value_suggest_name = "command"
+        else:
+            self.hover_event_name = "hoverEvent"
+            self.hover_content_name = "contents" if server_version.minor >= 16 else "value"
+            self.click_event_name = "clickEvent"
+            self.click_value_open_name = self.click_value_suggest_name = "value"
 
 
 def get_server_version() -> ServerVersion:

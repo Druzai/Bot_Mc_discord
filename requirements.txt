@@ -1,12 +1,11 @@
-cryptography==44.0.0
-discord.py==2.4.0
+cryptography==44.0.2
+discord.py==2.5.2
 mcipc==1.5.4
-psutil==6.1.1
+psutil==7.0.0
 feedparser==6.0.11
 jsons==1.6.3
 omegaconf==2.3.0
 colorama==0.4.6
 requests==2.32.3
 sshkeyboard==2.3.1
-Pillow==11.0.0
-audioop-lts; python_version>='3.13'
+Pillow==11.1.0
