@@ -8,7 +8,8 @@ from typing import Union, Optional
 
 from discord import (
     Status, Role, NotFound, Forbidden, HTTPException, DMChannel, Member, InvalidData, TextChannel,
-    GroupChannel, Thread, Interaction, User, Poll as DiscordPoll, ClientException, RawPollVoteActionEvent, Message
+    GroupChannel, Thread, Interaction, User, Poll as DiscordPoll, ClientException, RawPollVoteActionEvent, Message,
+    MessageType
 )
 from discord.abc import Messageable
 from discord.ext import commands
@@ -132,9 +133,13 @@ class Poll(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: Message):
-        with handle_unhandled_error_in_events():
-            if message.author == self._bot.user and message.reference is not None \
-                    and message.reference.message_id in self._polls:
+        with (handle_unhandled_error_in_events()):
+            if (
+                    message.author == self._bot.user
+                    and message.reference is not None
+                    and message.type == MessageType.poll_result
+                    and message.reference.message_id in self._polls
+            ):
                 if self._polls[message.reference.message_id].RLA is not None:
                     await message.delete(delay=self._polls[message.reference.message_id].RLA)
                 del self._polls[message.reference.message_id]

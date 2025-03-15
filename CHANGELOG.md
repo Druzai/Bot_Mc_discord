@@ -8,7 +8,9 @@ All important changes to this project will be documented in this file.
 
 * Switched to using Mojang API to get info about versions
 * Added handling of SNBT components in `tellraw` introduced in snapshot `25w02a`
-* Updated dependencies
+* Added support for forwarded messages to parse in game chat
+    * Changed representation of reply and forwarded messages
+* Updated dependencies and discord.py
 
 #### Fixed:
 

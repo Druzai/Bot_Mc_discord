@@ -30,7 +30,7 @@ from colorama import Style, Fore
 from discord import (
     Activity, ActivityType, Message, Status, Member, Role, MessageType, NotFound, HTTPException, Forbidden, Emoji,
     ChannelType, TextChannel, VoiceChannel, Thread as ChannelThread, GroupChannel, Webhook, InvalidData, SelectOption,
-    Interaction, Client, ButtonStyle, TextStyle, User, ClientUser
+    Interaction, Client, ButtonStyle, TextStyle, User, ClientUser, MessageReferenceType
 )
 from discord.abc import Messageable
 from discord.ext import commands
@@ -628,9 +628,12 @@ async def get_message_and_channel(bot: Union[commands.Bot, Client], message_id: 
         return None, None
     else:
         with suppress(NotFound, Forbidden, HTTPException, InvalidData):
-            channel = await bot.fetch_channel(channel_id)
-            message = await channel.fetch_message(message_id)
-            return message, channel
+            channel = bot.get_channel(channel_id)
+            if channel is None:
+                channel = await bot.fetch_channel(channel_id)
+            if channel is not None:
+                message = await channel.fetch_message(message_id)
+                return message, channel
         return None, None
 
 
@@ -1441,6 +1444,13 @@ async def bot_restart(
         await send_status(ctx, is_reaction=is_reaction)
 
 
+async def get_reference_message(ctx: commands.Context):
+    if ctx.message.reference.resolved is not None:
+        return ctx.message.reference.resolved
+    ref_msg, _ = await _get_reference_from_message(ctx.bot, ctx.message, replace_if_none=False)
+    return ref_msg
+
+
 async def bot_clear(
         ctx: commands.Context,
         poll: 'Poll',
@@ -1491,7 +1501,14 @@ async def bot_clear(
             await clear_with_none_limit(ctx, check_condition=check_condition)
             return
     elif subcommand == "reply":
-        message_created = ctx.message.reference.resolved
+        message_created = await get_reference_message(ctx)
+        if message_created is None:
+            await send_msg(
+                ctx,
+                get_translation("Bot couldn't find reply message!") + " " + get_translation("Nothing's done!"),
+                is_reaction=True
+            )
+            return
         if delete_limit == 0 or len([m async for m in ctx.channel.history(limit=delete_limit + 1,
                                                                           after=message_created,
                                                                           oldest_first=True)]) <= delete_limit:
@@ -1569,7 +1586,14 @@ async def bot_dm_clear(ctx: commands.Context, bot: commands.Bot, subcommand: str
             await send_msg(ctx, get_translation("Nothing's done!"), is_reaction=True)
             return
     elif subcommand == "reply":
-        message_created = ctx.message.reference.resolved
+        message_created = await get_reference_message(ctx)
+        if message_created is None:
+            await send_msg(
+                ctx,
+                get_translation("Bot couldn't find reply message!") + " " + get_translation("Nothing's done!"),
+                is_reaction=True
+            )
+            return
 
     async for msg in ctx.channel.history(limit=count, after=message_created):
         if msg.author == bot.user and msg.type == MessageType.default:
@@ -3917,7 +3941,8 @@ async def handle_message_for_chat(
     if message.author.id == bot.user.id or \
             (message.content.startswith(Config.get_settings().bot_settings.prefix) and not edit_command) or \
             is_user_webhook(message.author) or \
-            (len(message.content) == 0 and len(message.attachments) == 0 and len(message.stickers) == 0):
+            (len(message.content) == 0 and len(message.attachments) == 0 and len(message.stickers) == 0
+            and (message.reference is None or message.reference.type != MessageReferenceType.forward)):
         return
 
     author = get_author(message, bot, False)
@@ -3944,7 +3969,8 @@ async def handle_message_for_chat(
             return
 
         server_version = get_server_version()
-        reply_from_minecraft_user = None
+        reference_from_minecraft_user = None
+        pure_forward = False
         if server_version.minor < 7 or (server_version.minor == 7 and server_version.patch < 2):
             if server_version.minor < 3:
                 message_length = 108
@@ -3955,37 +3981,45 @@ async def handle_message_for_chat(
             space = u"\U000e0020"
             result_msg = _clean_message(message, edit_command_content)
             if not edit_command:
-                result_msg, reply_from_minecraft_user = await _handle_reply_in_message(message, result_msg)
+                result_msg, (reference_from_minecraft_user, pure_forward) = await _handle_reference_in_message(
+                    message, result_msg, bot,
+                    version_1_0_0=server_version.major == 1 and server_version.minor == 0 and server_version.patch == 0
+                )
             result_msg, _ = await _handle_components_in_message(
                 result_msg,
                 message,
                 bot,
+                pure_forward=pure_forward,
                 only_replace_links=True,
                 version_lower_1_7_2=True,
                 version_1_0_0=server_version.major == 1 and server_version.minor == 0 and server_version.patch == 0
             )
             msg = ""
-            if result_msg.get("reply", None) is not None:
-                msg += space
-                if not reply_from_minecraft_user:
-                    result_msg["reply"][1] = result_msg["reply"][1].display_name
-                if isinstance(result_msg["reply"][-1], list):
-                    msg += "".join(result_msg["reply"][:-1] + ["".join(result_msg["reply"][-1])])
+            if result_msg.get("reference", None) is not None:
+                if pure_forward:
+                    msg += f"<{message.author.display_name}>"
                 else:
-                    msg += "".join(result_msg["reply"])
-            if not edit_command:
-                msg += f"<{message.author.display_name}> "
-            else:
-                msg += f"<{before_message.author.name}> "
-            if on_edit:
-                msg += "*"
-            msg += result_msg["content"]
+                    msg += space
+                if not reference_from_minecraft_user:
+                    result_msg["reference"][2] = result_msg["reference"][2].display_name
+                if isinstance(result_msg["reference"][-1], list):
+                    msg += "".join(result_msg["reference"][:-1] + ["".join(result_msg["reference"][-1])])
+                else:
+                    msg += "".join(result_msg["reference"])
+            if not pure_forward:
+                if not edit_command:
+                    msg += f"<{message.author.display_name}> "
+                else:
+                    msg += f"<{before_message.author.name}> "
+                if on_edit:
+                    msg += "*"
+                msg += result_msg["content"]
             if (server_version.minor < 6 and len(msg) <= message_length) or \
                     (server_version.minor == 6 and len(msg.encode()) <= message_length):
                 if server_version.minor < 3 and "\n" in msg:
                     messages = [m.strip() for m in msg.split("\n")]
                 else:
-                    messages = [msg if reply_from_minecraft_user is None else msg[1:]]
+                    messages = [msg if reference_from_minecraft_user is None else msg[1:]]
             else:
                 messages = []
                 if server_version.minor < 6:
@@ -3997,13 +4031,13 @@ async def handle_message_for_chat(
                                 for m_split in wrap(m, message_length, replace_whitespace=False):
                                     messages.append(m_split)
                     else:
-                        for m_split in wrap((msg if reply_from_minecraft_user is None else msg[1:]),
+                        for m_split in wrap((msg if reference_from_minecraft_user is None else msg[1:]),
                                             message_length, replace_whitespace=False):
                             messages.append(m_split)
                 else:
                     split_line = ""
                     byte_line_length = 0
-                    for symb in (msg if reply_from_minecraft_user is None else msg[1:]):
+                    for symb in (msg if reference_from_minecraft_user is None else msg[1:]):
                         byte_line_length += len(symb.encode())
                         if byte_line_length > message_length:
                             messages.append(split_line)
@@ -4020,74 +4054,88 @@ async def handle_message_for_chat(
             tellraw_components_names = TellrawComponentsNames(server_version)
             result_msg = _clean_message(message, edit_command_content)
             if not edit_command:
-                result_msg, reply_from_minecraft_user = await _handle_reply_in_message(message, result_msg)
+                result_msg, (reference_from_minecraft_user, pure_forward) = await _handle_reference_in_message(
+                    message, result_msg, bot
+                )
             result_msg, images_for_preview = await _handle_components_in_message(
                 result_msg,
                 message, bot,
+                pure_forward=pure_forward,
                 store_images_for_preview=server_version.minor >= 16 and
                                          Config.get_image_preview_settings().enable_image_preview
             )
             # Building object for tellraw
             res_obj = [""]
-            if result_msg.get("reply", None) is not None:
-                if not reply_from_minecraft_user:
+            if result_msg.get("reference", None) is not None:
+                if pure_forward:
                     res_obj += _build_nickname_tellraw_for_discord_member(
                         server_version,
-                        result_msg["reply"][1],
+                        message.author,
+                        tellraw_components_names
+                    )
+                if not reference_from_minecraft_user:
+                    res_obj += _build_nickname_tellraw_for_discord_member(
+                        server_version,
+                        result_msg["reference"][2],
                         tellraw_components_names,
+                        reference_color="blue",
+                        reference_symbols=result_msg["reference"][0],
                         brackets_color="gray",
-                        left_bracket=result_msg["reply"][0],
-                        right_bracket=result_msg["reply"][2]
+                        left_bracket=result_msg["reference"][1],
+                        right_bracket=result_msg["reference"][3]
                     )
                 else:
                     res_obj += _build_nickname_tellraw_for_minecraft_player(
                         server_version,
-                        result_msg["reply"][1],
+                        result_msg["reference"][2],
                         tellraw_components_names,
+                        reference_color="blue",
+                        reference_symbols=result_msg["reference"][0],
                         default_text_color="gray",
-                        left_bracket=result_msg["reply"][0],
-                        right_bracket=result_msg["reply"][2]
+                        left_bracket=result_msg["reference"][1],
+                        right_bracket=result_msg["reference"][3]
                     )
                 _build_components_in_message(
                     res_obj,
                     tellraw_components_names,
-                    result_msg["reply"][-1],
+                    result_msg["reference"][-1],
                     "gray"
                 )
-            if not edit_command:
-                res_obj += _build_nickname_tellraw_for_discord_member(
-                    server_version,
-                    message.author,
-                    tellraw_components_names
-                )
-            else:
-                res_obj += _build_nickname_tellraw_for_minecraft_player(
-                    server_version,
-                    before_message.author.name,
-                    tellraw_components_names
-                )
-            if on_edit:
-                if before_message is not None:
-                    result_before = _clean_message(before_message)
-                    result_before, _ = await _handle_components_in_message(
-                        result_before,
-                        before_message,
-                        bot,
-                        only_replace_links=True
+            if not pure_forward:
+                if not edit_command:
+                    res_obj += _build_nickname_tellraw_for_discord_member(
+                        server_version,
+                        message.author,
+                        tellraw_components_names
                     )
-                    res_obj.append({"text": "*", "color": "gold",
-                                    tellraw_components_names.hover_event_name: {
-                                        "action": "show_text",
-                                        tellraw_components_names.hover_content_name: shorten_string(
-                                            result_before["content"], 250
-                                        )}})
                 else:
-                    res_obj.append({"text": "*", "color": "gold"})
-            _build_components_in_message(
-                res_obj,
-                tellraw_components_names,
-                result_msg["content"]
-            )
+                    res_obj += _build_nickname_tellraw_for_minecraft_player(
+                        server_version,
+                        before_message.author.name,
+                        tellraw_components_names
+                    )
+                if on_edit:
+                    if before_message is not None:
+                        result_before = _clean_message(before_message)
+                        result_before, _ = await _handle_components_in_message(
+                            result_before,
+                            before_message,
+                            bot,
+                            only_replace_links=True
+                        )
+                        res_obj.append({"text": "*", "color": "gold",
+                                        tellraw_components_names.hover_event_name: {
+                                            "action": "show_text",
+                                            tellraw_components_names.hover_content_name: shorten_string(
+                                                result_before["content"], 250
+                                            )}})
+                    else:
+                        res_obj.append({"text": "*", "color": "gold"})
+                _build_components_in_message(
+                    res_obj,
+                    tellraw_components_names,
+                    result_msg["content"]
+                )
             res_obj = _handle_long_tellraw_object(res_obj)
 
             with connect_rcon() as cl_r:
@@ -4261,27 +4309,86 @@ def _clean_message(message: Message, edit_command_content: str = ""):
     return result_msg
 
 
-async def _handle_reply_in_message(message: Message, result_msg: dict) -> Tuple[dict, bool]:
-    reply_from_minecraft_user = None
-    if message.type == MessageType.reply and message.reference is not None:
-        reply_msg = message.reference.resolved
+async def _get_reference_from_message(bot: commands.Bot, message: Message, replace_if_none=True):
+    ref_message, _ = await get_message_and_channel(
+        bot, message.reference.message_id, message.reference.channel_id
+    )
+    if ref_message is not None:
+        reply_msg = ref_message
         cnt = reply_msg.clean_content.replace("\u200b", "").strip()
-        if is_user_webhook(reply_msg.author):
-            # Reply to Minecraft player (Webhook)
-            nick = reply_msg.author.display_name
-            reply_from_minecraft_user = True
+    else:
+        if replace_if_none:
+            reply_msg = message
+            cnt = message.reference.jump_url
         else:
-            # Reply to Discord user
-            nick = await message.guild.fetch_member(reply_msg.author.id)
-            reply_from_minecraft_user = False
-        result_msg["reply"] = ["\n -> <", nick, "> ", cnt]
-    return result_msg, reply_from_minecraft_user
+            reply_msg = None
+            cnt = ""
+    return reply_msg, cnt
+
+
+async def _handle_reference_in_message(message: Message, result_msg: dict, bot: commands.Bot, version_1_0_0=False):
+    reference_from_minecraft_user = None
+    forward_in_reply = False
+    pure_forward = False
+
+    if message.reference is not None:
+        if message.reference.resolved is not None:
+            reference_msg = message.reference.resolved
+            cnt = reference_msg.clean_content.replace("\u200b", "").strip()
+
+            if (
+                    message.reference.type == MessageReferenceType.reply and
+                    reference_msg.reference is not None and
+                    reference_msg.reference.type == MessageReferenceType.forward
+            ):
+                while True:
+                    reference_msg, cnt = await _get_reference_from_message(bot, reference_msg)
+                    if reference_msg.reference is None or reference_msg.reference.type != MessageReferenceType.forward:
+                        break
+                message.reference.resolved = reference_msg
+                forward_in_reply = True
+        else:
+            reference_msg, cnt = await _get_reference_from_message(bot, message)
+            message.reference.resolved = reference_msg
+
+            if (
+                    message.reference.type == MessageReferenceType.forward and
+                    reference_msg.reference is not None and
+                    reference_msg.reference.type == MessageReferenceType.forward
+            ):
+                while True:
+                    reference_msg, cnt = await _get_reference_from_message(bot, reference_msg)
+                    if reference_msg.reference is None or reference_msg.reference.type != MessageReferenceType.forward:
+                        break
+                message.reference.resolved = reference_msg
+        if is_user_webhook(reference_msg.author):
+            # Reference to Minecraft player (Webhook)
+            nick = reference_msg.author.display_name
+            reference_from_minecraft_user = True
+        else:
+            # Reference to Discord user
+            nick = await message.guild.fetch_member(reference_msg.author.id)
+            reference_from_minecraft_user = False
+
+        if forward_in_reply:
+            stylized_str = "\n--> " if version_1_0_0 else "\n╔══▶ "
+        elif message.reference.type == MessageReferenceType.reply:
+            stylized_str = "\n-- " if version_1_0_0 else "\n╔═"
+        elif message.reference.type == MessageReferenceType.forward:
+            stylized_str = "\n |\n --> " if version_1_0_0 else "\n ║\n ╚═▶ "
+            pure_forward = True
+        else:
+            stylized_str = "\n == "
+
+        result_msg["reference"] = [f"{stylized_str}", "<", nick, "> ", cnt]
+    return result_msg, (reference_from_minecraft_user, pure_forward)
 
 
 async def _handle_components_in_message(
         result_msg: dict,
         message: Message,
         bot: commands.Bot,
+        pure_forward=False,
         only_replace_links=False,
         version_lower_1_7_2=False,
         store_images_for_preview=False,
@@ -4296,7 +4403,7 @@ async def _handle_components_in_message(
     markdown_hyperlink_regex = r"\[.+\]\([^ ]+(?: \".+\")?\)"
     markdown_hyperlink_regex_groups = rf"\[(?P<text>.+)\]\((?P<url>{URL_REGEX})(?: \"(?P<title>.+)\")?\)"
 
-    async def repl_emoji(match: str, is_reply: bool):
+    async def repl_emoji(match: str, is_reference: bool):
         obj = search(emoji_regex_groups, match)
         emoji_name = f":{obj.group('name')}:"
         if only_replace_links:
@@ -4310,7 +4417,7 @@ async def _handle_components_in_message(
                 with suppress(NotFound, HTTPException):
                     emoji = await bot.guilds[0].fetch_emoji(emoji_id)
             if isinstance(emoji, Emoji):
-                if store_images_for_preview and not is_reply:
+                if store_images_for_preview and not is_reference:
                     images_for_preview.append({
                         "type": "emoji",
                         "url": emoji.url,
@@ -4321,7 +4428,7 @@ async def _handle_components_in_message(
             else:
                 return emoji_name
 
-    async def repl_md_hyperlink(match: str, is_reply: bool):
+    async def repl_md_hyperlink(match: str, is_reference: bool):
         obj = search(markdown_hyperlink_regex_groups, match)
         if obj is None:
             return match
@@ -4329,7 +4436,7 @@ async def _handle_components_in_message(
         link = obj.group("url")
         title = obj.group("title")
 
-        if store_images_for_preview and not is_reply:
+        if store_images_for_preview and not is_reference:
             with handle_unhandled_error_in_link_request(image_preview=True):
                 resp = BotVars.session_for_other_requests.head(link, timeout=(10, None))
                 if resp.status_code == 200 and resp.headers.get("content-length") is not None and \
@@ -4360,9 +4467,9 @@ async def _handle_components_in_message(
                 result_dict.update({"hover": title})
             return result_dict
 
-    async def repl_url(link: str, is_reply: bool):
+    async def repl_url(link: str, is_reference: bool):
         is_tenor = bool(search(tenor_regex, link))
-        if store_images_for_preview and not is_reply:
+        if store_images_for_preview and not is_reference:
             if is_tenor:
                 images_for_preview.append({
                     "type": "link",
@@ -4406,11 +4513,11 @@ async def _handle_components_in_message(
     }
     mass_regex = "|".join(transformations.keys())
 
-    async def repl(obj, is_reply: bool):
+    async def repl(obj, is_reference: bool):
         match = obj.group(0)
         for pattern in transformations.keys():
             if search(pattern, match):
-                return await transformations.get(pattern)(match, is_reply)
+                return await transformations.get(pattern)(match, is_reference)
 
     for key, ms in result_msg.items():
         if isinstance(ms, list):
@@ -4424,7 +4531,7 @@ async def _handle_components_in_message(
             temp_split = split(mass_regex, msg)
             i = 1
             for m in compile(mass_regex).finditer(msg):
-                temp_split.insert(i, (await repl(m, key == "reply")))
+                temp_split.insert(i, (await repl(m, key == "reference")))
                 i += 2
         else:
             temp_split.append(msg)
@@ -4442,7 +4549,7 @@ async def _handle_components_in_message(
                 else:
                     temp_split.append(i)
 
-        if key == "reply":
+        if key == "reference" and not pure_forward:
             if isinstance(temp_split[-1], dict):
                 temp_split.append("\n")
             else:
@@ -4451,7 +4558,10 @@ async def _handle_components_in_message(
         temp_split = [s for s in temp_split if (isinstance(s, str) and len(s) > 0) or not isinstance(s, str)]
 
         if isinstance(ms, list):
-            result_msg[key] = [ms[0], ms[1], ms[2], "".join(temp_split) if only_replace_links else temp_split]
+            if key == "reference":
+                result_msg[key] = [ms[0], ms[1], ms[2], ms[3], "".join(temp_split) if only_replace_links else temp_split]
+            else:
+                result_msg[key] = [ms[0], ms[1], ms[2], "".join(temp_split) if only_replace_links else temp_split]
         else:
             result_msg[key] = "".join(temp_split) if only_replace_links else temp_split
     return result_msg, images_for_preview
@@ -4464,14 +4574,15 @@ def _handle_attachments_in_message(message: Message, store_images_for_preview=Fa
     if message.reference is not None:
         messages.append(message.reference.resolved)
     for i in range(len(messages)):
-        stickers = messages[i].stickers
-        if len(stickers) != 0 or len(messages[i].attachments) != 0:
+        stickers = getattr(messages[i], "stickers", [])
+        attachments_msg = getattr(messages[i], "attachments", [])
+        if len(stickers) != 0 or len(attachments_msg) != 0:
             if i == 0:
                 attachments["content"] = []
                 iattach = attachments["content"]
             else:
-                attachments["reply"] = []
-                iattach = attachments["reply"]
+                attachments["reference"] = []
+                iattach = attachments["reference"]
             if len(stickers) != 0:
                 for sticker in stickers:
                     iattach.append({
@@ -4484,8 +4595,8 @@ def _handle_attachments_in_message(message: Message, store_images_for_preview=Fa
                             "url": sticker.url,
                             "name": sticker.name
                         })
-            if len(messages[i].attachments) != 0:
-                for attachment in messages[i].attachments:
+            if len(attachments_msg) != 0:
+                for attachment in attachments_msg:
                     need_hover = True
                     if "." in attachment.filename:
                         a_type = f"[{attachment.filename.split('.')[-1]}]"
@@ -4593,6 +4704,8 @@ def _build_nickname_tellraw_for_minecraft_player(
         server_version: 'ServerVersion',
         nick: str,
         tcn: 'TellrawComponentsNames',
+        reference_color: str = None,
+        reference_symbols: str = None,
         default_text_color: str = None,
         left_bracket: str = "<",
         right_bracket: str = "> "
@@ -4634,6 +4747,13 @@ def _build_nickname_tellraw_for_minecraft_player(
     if default_text_color is not None:
         for i in range(len(tellraw_obj)):
             tellraw_obj[i]["color"] = default_text_color
+    if reference_symbols is not None:
+        tellraw_obj = [
+            {
+                "text": reference_symbols,
+                "color": reference_color
+            }
+        ] + tellraw_obj
     return tellraw_obj
 
 
@@ -4641,6 +4761,8 @@ def _build_nickname_tellraw_for_discord_member(
         server_version: 'ServerVersion',
         author: Member,
         tcn: 'TellrawComponentsNames',
+        reference_color: str = None,
+        reference_symbols: str = None,
         brackets_color: str = None,
         left_bracket: str = "<",
         right_bracket: str = "> "
@@ -4660,6 +4782,13 @@ def _build_nickname_tellraw_for_discord_member(
     ]
     if server_version.minor > 7:
         tellraw_obj[-2].update({"insertion": f"@{author.display_name}"})
+    if reference_symbols is not None:
+        tellraw_obj = [
+            {
+                "text": reference_symbols,
+                "color": reference_color
+            }
+        ] + tellraw_obj
     if brackets_color is not None:
         for i in range(len(tellraw_obj)):
             if len(tellraw_obj[i].keys()) == 1:
@@ -4980,7 +5109,7 @@ def shorten_string(string: str, max_length: int, use_long_ellipsis_symbol: bool 
 
 
 def get_shortened_url(url: str):
-    for service_url in ["https://clck.ru/--", "https://tinyurl.com/api-create.php"]:
+    for service_url in ["https://tinyurl.com/api-create.php", "https://clck.ru/--"]:
         with handle_unhandled_error_in_link_request():
             response = BotVars.session_for_other_requests.post(service_url, params={"url": url}, timeout=(10, None))
             if response.ok and len(response.text) > 0:
