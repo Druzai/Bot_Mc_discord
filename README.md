@@ -48,7 +48,7 @@
     * Supported edited messages from Discord and editing messages from Minecraft
         * Message should start with single `*` or with `*` and space if edited message should start with `**`
     * Supported Discord reply in message
-    * Supported url links (shortens via `clck.ru` or `tinyURL` if link longer than 256 symbols)
+    * Supported url links (shortens via `tinyURL` or `clck.ru` if link longer than 256 symbols)
     * Supported Markdown hyperlinks (e.g. `[link](http://example.com "title")`)
     * Supported stickers in message
     * Supported attached files to message in Discord

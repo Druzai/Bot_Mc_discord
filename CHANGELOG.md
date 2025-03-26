@@ -2,7 +2,7 @@
 
 All important changes to this project will be documented in this file.
 
-### [1.4.7 Unreleased](https://github.com/Druzai/Bot_Mc_discord/compare/1.4.6...1.4.7) (2025-xx-xx)
+### [1.4.7](https://github.com/Druzai/Bot_Mc_discord/compare/1.4.6...1.4.7) (2025-03-27)
 
 #### Improvements:
 
@@ -11,14 +11,6 @@ All important changes to this project will be documented in this file.
 * Added support for forwarded messages to parse in game chat
     * Changed representation of reply and forwarded messages
 * Updated dependencies and discord.py
-
-#### Fixed:
-
-* --
-
-#### Breaking changes:
-
-* --
 
 ### [1.4.6](https://github.com/Druzai/Bot_Mc_discord/compare/1.4.5...1.4.6) (2024-12-30)
 
